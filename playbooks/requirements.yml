@@ -5,6 +5,11 @@ roles:
     src: git+https://github.com/geerlingguy/ansible-role-docker.git
     version: origin/master
 
+  - name: geerlingguy.pip
+    scm: git
+    src: git+https://github.com/geerlingguy/ansible-role-pip.git
+    version: origin/master
+    
   - name: geerlingguy.security
     scm: git
     src: git+https://github.com/geerlingguy/ansible-role-security.git
