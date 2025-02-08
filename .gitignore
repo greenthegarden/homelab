@@ -171,5 +171,7 @@ cython_debug/
 .pypirc
 
 # Ansible
+.ansible/*
+.vscode/*
 hosts.yaml
 roles/*
