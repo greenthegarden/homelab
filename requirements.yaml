@@ -1,0 +1,32 @@
+---
+roles:
+  - name: geerlingguy.docker
+    scm: git
+    src: git+https://github.com/geerlingguy/ansible-role-docker.git
+    version: origin/master
+
+  - name: geerlingguy.security
+    scm: git
+    src: git+https://github.com/geerlingguy/ansible-role-security.git
+    version: origin/master
+
+collections:
+  # required for shutdown module
+  - name: community.general
+
+  # required to use Docker
+  - name: community.docker
+
+  # required for Grafana
+  - name: community.grafana
+
+  # required to use posix.mount
+  - name: ansible.posix
+
+  # required for Kubernetes
+  # - name: kubernetes.core
+
+  # required for Uptime Kuma
+  - name: lucasheld.uptime-kuma
+    type: git
+    source: git+https://github.com/lucasheld/ansible-uptime-kuma.git
