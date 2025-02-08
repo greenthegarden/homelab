@@ -23,9 +23,6 @@ collections:
   # required to use posix.mount
   - name: ansible.posix
 
-  # required for Kubernetes
-  # - name: kubernetes.core
-
   # required for Uptime Kuma
   - name: lucasheld.uptime-kuma
     type: git
