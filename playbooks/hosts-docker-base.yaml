@@ -1,0 +1,920 @@
+---
+- name: Install and configure Docker and base containers
+
+  hosts: all
+
+  tasks:
+
+    - name: Install and configure Docker base
+      tags:
+        - always
+
+      block:
+        - name: Install Docker
+          ansible.builtin.import_role:
+            name: geerlingguy.docker
+          vars:
+            docker_install_compose: false
+            docker_users:
+              - root
+
+        # # https://www.techrepublic.com/article/how-to-add-docker-scout-feature/
+        # - name: Install Docker Scout
+        #   block:
+        #     - name: Log into DockerHub
+        #       community.docker.docker_login:
+        #         username: greenthegarden
+        #         password: "NGT#5^HDtBeY$5"
+
+        #     - name: Create installation directory
+        #       ansible.builtin.file:
+        #         path: /root/.docker/cli-plugins
+        #         owner: root
+        #         group: root
+        #         mode: "u=rw,g=r,o=r"
+        #         state: directory
+
+        #     - name: Define release version
+        #       ansible.builtin.set_fact:
+        #         docker_scout_release: 1.14.0
+
+        #     # https://github.com/docker/scout-cli/releases/download/v1.14.0/docker-scout_1.14.0_linux_amd64.tar.gz
+        #     - name: Get docker-scout binary
+        #       ansible.builtin.get_url:
+        #         url: "https://github.com/docker/scout-cli/releases/download/v{{ docker_scout_release }}/docker-scout_{{ docker_scout_release }}_linux_amd64.tar.gz"
+        #         dest: /tmp/docker-scout.tar.gz
+        #         mode: "u+rw"
+
+        #     - name: Unarchive docker-scout binary
+        #       ansible.builtin.unarchive:
+        #         src: /tmp/docker-scout.tar.gz
+        #         dest: /root/.docker/cli-plugins
+        #         remote_src: true
+        #         owner: root
+        #         group: root
+        #         mode: "u+rwx"
+
+        - name: Set host aggregated facts
+          ansible.builtin.set_fact:
+            host_fqdn: "{{ hostvars[remote_hostname].inventory_hostname }}.{{ lan_dns_domain }}"
+
+        ####### DOCKER NETWORK SECTION
+
+        - name: Set Docker Network facts
+          ansible.builtin.set_fact:
+            docker_socket_proxy_network_name: "{{ hostvars[remote_hostname].docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+            monitoring_network_name: "{{ hostvars[remote_hostname].monitoring_network_name | default('monitoring') }}"
+            web_network_name: "{{ hostvars[remote_hostname].web_network_name | default('web') }}"
+
+        # Based on https://github.com/wollomatic/traefik2-hardened/blob/master/docker-compose.yaml
+        - name: Create a Docker Socket Proxy Docker network
+          community.docker.docker_network:
+            name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+            driver: bridge
+            internal: true
+
+        - name: Create a Monitoring Docker Network
+          community.docker.docker_network:
+            name: "{{ monitoring_network_name | default('monitoring') }}"
+            internal: true
+
+        - name: Create a Web Docker Network
+          community.docker.docker_network:
+            name: "{{ web_network_name | default('web') }}"
+            internal: false
+
+        # ####### TRAEFIK (REVERSE PROXY) CONFIGURATION
+
+        # # FIXME:
+        # # Retrieve facts from inventory. I am sure this is not required
+        # # but could not find a better way with delegation
+        # - name: Set Traefik facts
+        #   ansible.builtin.set_fact:
+        #     traefik_image_name: "{{ hostvars[remote_hostname].traefik_image_name | default('traefik') }}"
+        #     traefik_image_tag: "{{ hostvars[remote_hostname].traefik_image_tag | default('latest') }}"
+        #     traefik_service_name: "{{ hostvars[remote_hostname].traefik_service_name | default('traefik') }}"
+        #     traefik_service_port_http: "{{ hostvars[remote_hostname].traefik_service_port_http | default(80) }}"
+        #     traefik_service_port_secure: "{{ hostvars[remote_hostname].traefik_service_port_secure | default(443) }}"
+        #     traefik_provider: "{{ hostvars[remote_hostname].traefik_provider | default('docker') }}"
+        #     traefik_volume_letsencrypt_name: "{{ hostvars[remote_hostname].traefik_volume_letsencrypt_name | default('letsencrypt') }}"
+
+        # - name: Set Traefik aggregated facts
+        #   ansible.builtin.set_fact:
+        #     traefik_image: "{{ traefik_image_name }}:{{ traefik_image_tag }}"
+        #     traefik_fqdn: "{{ traefik_service_name }}.{{ host_fqdn }}"
+
+        ####### LOAD DOCKER IMAGES
+
+        - name: Load images
+          ansible.builtin.include_tasks: load-images.yaml
+          loop: "{{ hostvars[remote_hostname].docker_base_images }}"
+
+    ####### DOCKER SOCKET PROXY SECTION
+
+    # Docker Socket Proxy - Security Enhanced Proxy for Docker Socket
+
+    - name: Deploy Docker Socket Proxy
+      tags:
+        - docker_socket_proxy
+      block:
+        - name: Set Docker Socket Proxy facts
+          ansible.builtin.set_fact:
+            docker_socket_proxy_image_name: "{{ hostvars[remote_hostname].docker_socket_proxy_image_name | default('ghcr.io/tecnativa/docker-socket-proxy') }}"
+            docker_socket_proxy_image_tag: "{{ hostvars[remote_hostname].docker_socket_proxy_image_tag | default('latest') }}"
+            docker_socket_proxy_service_name: "{{ hostvars[remote_hostname].docker_socket_proxy_service_name | default('docker-socket-proxy') }}"
+            docker_socket_proxy_service_port: "{{ hostvars[remote_hostname].docker_socket_proxy_service_port | default(2375) }}"
+
+        - name: Set Docker Socket Proxy aggregated facts
+          ansible.builtin.set_fact:
+            docker_socket_proxy_image: "{{ docker_socket_proxy_image_name }}:{{ docker_socket_proxy_image_tag }}"
+            docker_socket_proxy_fqdn: "{{ docker_socket_proxy_service_name }}.{{ hostvars[remote_hostname].inventory_hostname }}.{{ lan_dns_domain }}"
+
+        - name: Set Docker Socket Proxy service facts
+          ansible.builtin.set_fact:
+            docker_socket_proxy_networks:
+              - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+              - name: "{{ web_network_name | default('web') }}"
+              #     ipv4_address: 192.168.91.254 # You can specify a static IP
+              # published_ports:
+              #   - "127.0.0.1:2375:2375" # Port 2375 should only ever get exposed to the internal network. When possible use this line.
+              # I use the next line instead, as I want portainer to manage multiple docker endpoints within my home network.
+              # - "2375:2375"
+            docker_socket_proxy_ports:
+              - "{{ docker_socket_proxy_service_port | default(2375) }}:2375"
+            docker_socket_proxy_volumes:
+              - /var/run/docker.sock:/var/run/docker.sock
+              - /etc/localtime:/etc/localtime:ro
+
+        - name: Create Docker Socket Proxy container labels
+          ansible.builtin.set_fact:
+            docker_socket_proxy_container_labels: "{{ docker_socket_proxy_container_labels | default({}) | combine({item.key: item.value}) }}"
+          with_items:
+            # What's up Docker? labels
+            - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+            - {
+                "key": "wud.link.template",
+                "value": "https://github.com/Tecnativa/docker-socket-proxy/releases/tag/v$${major}.$${minor}.$${patch}",
+              }
+
+        - name: Check if Docker Socket Proxy is running
+          community.docker.docker_container_info:
+            name: "{{ docker_socket_proxy_service_name | default('docker-socket-proxy') }}"
+          register: docker_socket_proxy_state
+
+        - name: Remove Docker Socket Proxy container if changing version
+          when:
+            - docker_socket_proxy_state.exists
+            - docker_socket_proxy_image_tag != docker_socket_proxy_state.container.Config.Image | split(':') | last
+          block:
+            - name: Stop and remove existing Docker Socket Proxy container
+              community.docker.docker_container:
+                name: "{{ docker_socket_proxy_service_name | default('docker-socket-proxy') }}"
+                state: absent
+
+            - name: Set update Docker Socket Proxy
+              ansible.builtin.set_fact:
+                docker_socket_proxy_update: true
+
+        - name: Deploy Docker Socket Proxy if not running
+          when: not docker_socket_proxy_state.exists or (docker_socket_proxy_update | default(false))
+          block:
+            - name: Pull Docker Socket Proxy image
+              community.docker.docker_image:
+                name: "{{ docker_socket_proxy_image }}"
+                source: pull
+
+            - name: Deploy Docker Socket Proxy
+              community.docker.docker_container:
+                name: "{{ docker_socket_proxy_service_name }}"
+                image: "{{ docker_socket_proxy_image }}"
+                env:
+                  LOG_LEVEL: info # debug,info,notice,warning,err,crit,alert,emerg
+                  ## Variables match the URL prefix (i.e. AUTH blocks access to /auth/* parts of the API, etc.).
+                  # 0 to revoke access.
+                  # 1 to grant access.
+                  ## Granted by Default
+                  EVENTS: "1"
+                  PING: "1"
+                  VERSION: "1"
+                  ## Revoked by Default
+                  # Security critical
+                  AUTH: "0"
+                  SECRETS: "0"
+                  POST: "1" # Allow access for Docker Volume Backup to stop containers
+                  ## Not always needed
+                  BUILD: "0"
+                  COMMIT: "0"
+                  CONFIGS: "0"
+                  CONTAINERS: "1" # Allow access to viewing containers (Traefik, Portainer, Docker Volume Backup.)
+                  DISTRIBUTION: "0"
+                  EXEC: "0"
+                  IMAGES: "1" # Allow access to viewing images (Portainer)
+                  INFO: "1" # Allow access to viewing info (Portainer, Docker Volume Backup)
+                  NETWORKS: "1" # Allow access to viewing networks (Portainer)
+                  NODES: "1" # Allow access for Docker Volume Backup to stop containers
+                  PLUGINS: "0"
+                  SERVICES: "1" # Allow access to viewing services (Portainer)
+                  SESSION: "0"
+                  SWARM: "0"
+                  SYSTEM: "0"
+                  TASKS: "1" # Allow access to viewing tasks (Portainer, Docker Volume Backup)
+                  VOLUMES: "1" # Allow access to viewing volumes (Portainer)
+                labels: "{{ docker_socket_proxy_container_labels }}"
+                networks: "{{ docker_socket_proxy_networks }}"
+                # privileged: true
+                published_ports: "{{ docker_socket_proxy_ports }}"
+                restart: true
+                restart_policy: unless-stopped
+                security_opts:
+                  - no-new-privileges=true
+                state: started
+                volumes: "{{ docker_socket_proxy_volumes }}"
+              register: docker_socket_proxy_container_state
+
+            - name: Wait for Docker Socket Proxy to accept connections
+              ansible.builtin.wait_for:
+                host: "{{ docker_socket_proxy_container_state['container']\
+                  ['NetworkSettings']\
+                  ['Networks']\
+                  ['docker-socket-proxy']\
+                  ['IPAddress'] }}"
+                port: "{{ docker_socket_proxy_service_port | default(2375) }}"
+                connect_timeout: 1
+                delay: 10
+                state: started
+                timeout: 30
+              register: docker_socket_proxy_running
+              retries: 10
+              until: docker_socket_proxy_running is success
+
+    ####### PORTAINER AGENT SECTION
+
+    - name: Deploy Portainer Agent
+      tags:
+        - portainer_agent
+      block:
+        # FIXME:
+        # Retrieve facts from inventory. I am sure this is not required
+        # but could not find a better way with delegation
+        - name: Set Portainer Agent facts
+          ansible.builtin.set_fact:
+            portainer_agent_image_name: "{{ hostvars[remote_hostname].portainer_agent_image_name | default('portainer/agent') }}"
+            portainer_agent_image_tag: "{{ hostvars[remote_hostname].portainer_agent_image_tag | default('latest') }}"
+            portainer_agent_service_name: "{{ hostvars[remote_hostname].portainer_agent_service_name | default('portainer_agent') }}"
+            portainer_agent_service_port: "{{ hostvars[remote_hostname].portainer_agent_service_port | default(9001) }}"
+
+        - name: Set Portainer Agent aggregated facts
+          ansible.builtin.set_fact:
+            portainer_agent_image: "{{ portainer_agent_image_name }}:{{ portainer_agent_image_tag }}"
+
+        - name: Set Portainer Agent service facts
+          ansible.builtin.set_fact:
+            portainer_agent_ports:
+              - "{{ portainer_agent_service_port | default(9001) }}:9001"
+            portainer_agent_volumes:
+              - /var/run/docker.sock:/var/run/docker.sock
+              - /var/lib/docker/volumes:/var/lib/docker/volumes
+
+        - name: Create Portainer Agent container labels
+          ansible.builtin.set_fact:
+            portainer_agent_container_labels: "{{ portainer_agent_container_labels | default({}) | combine({item.key: item.value}) }}"
+          with_items:
+            # What's up Docker? labels
+            - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-alpine+$$' }
+            - {
+                "key": "wud.link.template",
+                "value": "https://github.com/portainer/agent/releases/tag/$${major}.$${minor}.$${patch}",
+              }
+
+        - name: Check if Portainer Agent is running
+          community.docker.docker_container_info:
+            name: "{{ portainer_agent_service_name }}"
+          register: portainer_agent_state
+
+        - name: Remove Portainer Agent container if changing version
+          when:
+            - portainer_agent_state.exists
+            - portainer_agent_image_tag != portainer_agent_state.container.Config.Image | split(':') | last
+          block:
+            - name: Stop and remove existing Portainer Agent container
+              community.docker.docker_container:
+                name: "{{ portainer_agent_service_name }}"
+                state: absent
+
+            - name: Set update Portainer Agent
+              ansible.builtin.set_fact:
+                portainer_agent_update: true
+
+        - name: Deploy Portainer Agent if not running
+          when: not portainer_agent_state.exists or (portainer_agent_update | default(false))
+          block:
+            - name: Pull Portainer Agent image
+              community.docker.docker_image:
+                name: "{{ portainer_agent_image }}"
+                source: pull
+
+        # docker run -d \
+        #   -p 9001:9001 \
+        #   --name portainer_agent \
+        #   --restart=always \
+        #   -v /var/run/docker.sock:/var/run/docker.sock \
+        #   -v /var/lib/docker/volumes:/var/lib/docker/volumes \
+        #   portainer/agent:2.18.3
+
+        - name: Deploy Portainer Agent
+          community.docker.docker_container:
+            name: "{{ portainer_agent_service_name }}"
+            image: "{{ portainer_agent_image }}"
+            detach: true
+            labels: "{{ portainer_agent_container_labels }}"
+            published_ports: "{{ portainer_agent_ports }}"
+            restart: true
+            restart_policy: unless-stopped
+            state: started
+            volumes: "{{ portainer_agent_volumes }}"
+          register: portainer_agent_container_state
+
+        # - name: Wait for Portainer Agent to accept connections
+        #   ansible.builtin.wait_for:
+        #     host: "{{ portainer_agent_fqdn }}"
+        #     port: "{{ portainer_agent_service_port }}"
+        #     connect_timeout: 1
+        #     delay: 10
+        #     state: started
+        #     timeout: 30
+        #   register: portainer_agent_running
+        #   retries: 10
+        #   until: portainer_agent_running is success
+
+    # ####### TRAEFIK SECTION
+
+    # # https://stackoverflow.com/questions/58554731/traefik-v2-0-metrics-with-prometheus
+    # # https://doc.traefik.io/traefik/reference/static-configuration/env/
+    # # https://medium.com/@joshuaavalon/setup-traefik-v2-step-by-step-fae44ed8f76d
+    # # https://github.com/scafer/traefik-duckdns-letsencrypt/tree/main
+
+    - name: Deploy Traefik
+      tags:
+        - traefik
+      block:
+        # FIXME:
+        # Retrieve facts from inventory. I am sure this is not required
+        # but could not find a better way with delegation
+        - name: Set Traefik facts
+          ansible.builtin.set_fact:
+            traefik_image_name: "{{ hostvars[remote_hostname].traefik_image_name | default('traefik') }}"
+            traefik_image_tag: "{{ hostvars[remote_hostname].traefik_image_tag | default('latest') }}"
+            traefik_service_name: "{{ hostvars[remote_hostname].traefik_service_name | default('traefik') }}"
+            traefik_service_port_http: "{{ hostvars[remote_hostname].traefik_service_port_http | default(80) }}"
+            traefik_service_port_secure: "{{ hostvars[remote_hostname].traefik_service_port_secure | default(443) }}"
+            traefik_provider: "{{ hostvars[remote_hostname].traefik_provider | default('docker') }}"
+            traefik_volume_letsencrypt_name: "{{ hostvars[remote_hostname].traefik_volume_letsencrypt_name | default('letsencrypt') }}"
+
+        - name: Set Traefik aggregated facts
+          ansible.builtin.set_fact:
+            traefik_image: "{{ traefik_image_name }}:{{ traefik_image_tag }}"
+            traefik_fqdn: "{{ traefik_service_name }}.{{ host_fqdn }}"
+
+        # https://github.com/karvounis/traefik-tutorial-docker-compose-files/blob/master/standalone/advanced/docker-compose.ping.yml
+        # https://github.com/ChristianLempa/homelab/blob/main/traefik/traefik-demo-1/config/traefik.yaml
+        - name: Set Traefik service facts
+          ansible.builtin.set_fact:
+            traefik_command:
+              #### These are the CLI commands that will configure Traefik and tell it how to work! ####
+              ## Global settings
+              - "--global.checkNewVersion=false"
+              - "--global.sendAnonymousUsage=false"
+              ## Log Settings (options: ERROR, DEBUG, PANIC, FATAL, WARN, INFO) - https://docs.traefik.io/observability/logs/ ##
+              - "--log.level=DEBUG" # <== Setting the level of the logs from traefik
+              - "--log.format=json"
+              ## API Settings - https://docs.traefik.io/operations/api/, endpoints - https://docs.traefik.io/operations/api/#endpoints ##
+              - "--api.dashboard=true" # <== Enabling the dashboard to view services, middlewares, routers, etc...
+              - "--api.insecure=true" # <== Enabling insecure api, NOT RECOMMENDED FOR PRODUCTION
+              - "--api.debug=true" # <== Enabling additional endpoints for debugging and profiling
+              ## Entrypoints Settings - https://docs.traefik.io/routing/entrypoints/#configuration ##
+              - "--entryPoints.web.address=:10080" # <== Defining an entrypoint for port :80 named web
+              - "--entryPoints.web.http.redirections.entryPoint.to=websecure"
+              - "--entryPoints.web.http.redirections.entryPoint.scheme=https"
+              - "--entryPoints.websecure.address=:10443"
+              ## Certificate Settings (Let's Encrypt) -  https://docs.traefik.io/https/acme/#configuration-examples ##
+              - "--certificatesResolvers.cloudflare.acme.email=greenthegarden@gmail.com"
+              - "--certificatesResolvers.cloudflare.acme.storage=/letsencrypt/acme.json"
+              # CA server to use.
+              # Uncomment the line to use Let's Encrypt's staging server,
+              # leave commented to go to prod.
+              #
+              # Optional
+              # Default: "https://acme-v02.api.letsencrypt.org/directory"
+              # - "--certificatesResolvers.cloudflare.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
+              - "--certificatesResolvers.cloudflare.acme.dnsChallenge.provider=cloudflare"
+              - "--certificatesResolvers.cloudflare.acme.dnsChallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
+              - "--serversTransport.insecureSkipVerify=true"
+              ## Docker Provider Settings - https://docs.traefik.io/providers/docker/#provider-configuration ##
+              - "--providers.docker=true"
+              # https://medium.com/@containeroo/traefik-2-0-paranoid-about-mounting-var-run-docker-sock-22da9cb3e78c
+              - "--providers.docker.exposedByDefault=false"
+              - "--providers.docker.endpoint=tcp://{{ docker_socket_proxy_service_name }}:{{ docker_socket_proxy_service_port }}"
+              - "--providers.docker.network={{ web_network_name }}"
+              - "--providers.docker.watch=true"
+              # Configure ping for health check
+              - "--ping=true"
+              # ## Prometheus metrics - https://doc.traefik.io/traefik/observability/metrics/prometheus/
+              - "--entryPoints.metrics.address=:8082"
+              - "--metrics.prometheus=true"
+              - "--metrics.prometheus.addServicesLabels=true"
+              # ## Create a manual router instead of the default one
+              - --metrics.prometheus.manualRouting=true
+              - --metrics.prometheus.addRoutersLabels=true
+              - "--metrics.prometheus.entryPoint=metrics"
+              - "--metrics.prometheus.addEntryPointsLabels=true"
+            traefik_networks:
+              - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+              - name: "{{ monitoring_network_name | default('monitoring') }}"
+              - name: "{{ web_network_name | default('web') }}" # <== Placing traefik on the network named web, to access containers on this network
+            traefik_ports:
+              # use high ports inside the container so
+              # we don't need to be root to bind the ports
+              - "{{ traefik_service_port_http }}:10080"
+              - "{{ traefik_service_port_secure }}:10443"
+            traefik_volumes:
+              # - /var/run/docker.sock:/var/run/docker.sock:ro
+              # - /root/.env:./env-file:ro
+              - /root/letsencrypt:/letsencrypt:rw
+              - /etc/localtime:/etc/localtime:ro
+
+        - name: Create Traefik container labels
+          ansible.builtin.set_fact:
+            traefik_container_labels: "{{ traefik_container_labels | default({}) | combine({item.key: item.value}) }}"
+          with_items:
+            # - "traefik.enable=true"
+            - { "key": "traefik.enable", "value": "true" }
+            - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+            # - "traefik.http.routers.traefik.entrypoints=http"
+            # - "traefik.http.routers.traefik.rule=Host(`traefik.homelab.greenthegarden.com`)"
+            - {
+                "key": "traefik.http.routers.{{ traefik_service_name }}-http.entrypoints",
+                "value": "web",
+              }
+            - {
+                "key": "traefik.http.routers.{{ traefik_service_name }}-http.rule",
+                "value": "Host(`{{ traefik_fqdn }}`)",
+              }
+            # - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
+            # - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
+            # - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
+            - {
+                "key": "traefik.http.middlewares.traefik-auth.basicauth.users",
+                "value": "admin:$$2y$$05$$Dkh7QIkBIex/l3hxH6oCXumT3DaJkbbWDW7cveoRLLrB0syGU5nze",
+              }
+            - {
+                "key": "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme",
+                "value": "https",
+              }
+            - {
+                "key": "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto",
+                "value": "https",
+              }
+            # - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
+            - {
+                "key": "traefik.http.routers.{{ traefik_service_name }}-http.middlewares",
+                "value": "traefik-https-redirect",
+              }
+            # - "traefik.http.routers.traefik-secure.entrypoints=https"
+            # - "traefik.http.routers.traefik-secure.rule=Host(`traefik.homelab.greenthegarden.com`)"
+            # - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
+            - {
+                "key": "traefik.http.routers.{{ traefik_service_name }}-https.entrypoints",
+                "value": "websecure",
+              }
+            - {
+                "key": "traefik.http.routers.{{ traefik_service_name }}-https.rule",
+                "value": "Host(`{{ traefik_fqdn }}`)",
+              }
+            # - {
+            #     "key": "traefik.http.routers.{{ traefik_service_name }}-https.middlewares",
+            #     "value": "traefik-auth",
+            #   }
+            # - "traefik.http.routers.traefik-secure.tls=true"
+            # - "traefik.http.routers.traefik-secure.tls.certresolver=cloudflare"
+            # - "traefik.http.routers.traefik-secure.tls.domains[0].main=homelab.greenthegarden.com"
+            # - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.homelab.greenthegarden.com"
+            - {
+                "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls",
+                "value": "true",
+              }
+            - {
+                "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.certresolver",
+                "value": "cloudflare",
+              }
+            - {
+                "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.domains[0].main",
+                "value": "{{ host_fqdn }}",
+              }
+            - {
+                "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.domains[0].sans",
+                "value": "*.{{ host_fqdn }}",
+              }
+            # - "traefik.http.routers.traefik-secure.service=api@internal"
+            - {
+                "key": "traefik.http.routers.{{ traefik_service_name }}-https.service",
+                "value": "api@internal",
+              }
+            # Metrics router configuration
+            - {
+                "key": "traefik.http.routers.metrics.rule",
+                "value": "Host(`{{ traefik_fqdn }}`) && PathPrefix(`/metrics`)",
+              }
+            - { "key": "traefik.http.routers.metrics.tls", "value": "true" }
+            - {
+                "key": "traefik.http.routers.metrics.entrypoints",
+                "value": "websecure",
+              }
+            - {
+                "key": "traefik.http.routers.metrics.service",
+                "value": "prometheus@internal",
+              }
+            # What's up Docker? labels
+            - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+            - {
+                "key": "wud.link.template",
+                "value": "https://github.com/traefik/traefik/releases/tag/v$${major}.$${minor}.$${patch}",
+              }
+
+        - name: Check if Traefik is running
+          community.docker.docker_container_info:
+            name: "{{ traefik_service_name }}"
+          register: traefik_state
+
+        # - name: Create a volume for acme
+        #   community.docker.docker_volume:
+        #     name: "{{ traefik_volume_letsencrypt_name }}"
+
+        - name: Create acme directory
+          ansible.builtin.file:
+            path: /root/letsencrypt
+            mode: "644"
+            state: directory
+          register: acme_directory_creation
+
+        - name: Create acme configuration file
+          ansible.builtin.file:
+            path: /root/letsencrypt/acme.json
+            state: touch
+            mode: "600"
+          register: acme_configuration_creation
+
+        - name: Copy env file to host
+          ansible.builtin.copy:
+            src: files/traefik/env_file-traefik
+            dest: /root/
+            mode: "644"
+          register: env_file_creation
+
+        - name: Remove Traefik container if changing version
+          when:
+            - traefik_state.exists
+            - traefik_image_tag != traefik_state.container.Config.Image | split(':') | last
+          block:
+            - name: Stop and remove existing Traefik container
+              community.docker.docker_container:
+                name: "{{ traefik_service_name }}"
+                state: absent
+
+            - name: Set update Traefik
+              ansible.builtin.set_fact:
+                traefik_update: true
+
+        - name: Deploy Traefik if not running
+          when: not traefik_state.exists or (traefik_update | default(false))
+          block:
+            - name: Pull image
+              community.docker.docker_image:
+                name: "{{ traefik_image_name }}"
+                source: pull
+
+            - name: Deploy Traefik with Docker as provider
+              community.docker.docker_container:
+                name: "{{ traefik_service_name }}"
+                image: "{{ traefik_image }}"
+                command: "{{ traefik_command }}"
+                detach: true
+                env_file: ./env_file-traefik
+                healthcheck:
+                  test: ["CMD", "traefik", "healthcheck", "--ping"]
+                  interval: 10s
+                  timeout: 5s
+                  retries: 3
+                  start_period: 5s
+                labels: "{{ traefik_container_labels }}"
+                networks: "{{ traefik_networks }}"
+                published_ports: "{{ traefik_ports }}"
+                # read_only: true
+                restart: true
+                restart_policy: unless-stopped
+                security_opts:
+                  - "no-new-privileges:true"
+                state: started
+                volumes: "{{ traefik_volumes }}"
+              register: traefik_container_state
+              when: traefik_provider == "docker"
+
+            # - name: Wait for Traefik to accept connections
+            #   ansible.builtin.wait_for:
+            #     host: "{{ traefik_fqdn }}"
+            #     port: "{{ traefik_service_port | default(80) }}"
+            #     connect_timeout: 1
+            #     delay: 10
+            #     state: started
+            #     timeout: 30
+            #   register: traefik_running
+            #   until: traefik_running is success
+            #   retries: 10
+
+    ###### NODE EXPORTER SECTION
+
+    - name: Deploy Node Exporter
+      tags:
+        - node-exporter
+      block:
+        # FIXME:
+        # Retrieve facts from inventory. I am sure this is not required
+        # but could not find a better way with delegation
+        - name: Set Node Exporter facts
+          ansible.builtin.set_fact:
+            node_exporter_image_name: "{{ hostvars[remote_hostname].node_exporter_image_name | default('prom/node-exporter') }}"
+            node_exporter_image_tag: "{{ hostvars[remote_hostname].node_exporter_image_tag | default('latest') }}"
+            node_exporter_service_name: "{{ hostvars[remote_hostname].node_exporter_service_name | default('node-exporter') }}"
+            node_exporter_service_port: "{{ hostvars[remote_hostname].node_exporter_service_port | default(9100) }}"
+            node_exporter_service_protocol: "{{ hostvars[remote_hostname].node_exporter_service_protocol | default('http') }}"
+
+        - name: Set Node Exporter aggregated facts
+          ansible.builtin.set_fact:
+            node_exporter_image: "{{ node_exporter_image_name }}:{{ node_exporter_image_tag }}"
+            node_exporter_fqdn: "{{ node_exporter_service_name }}.{{ host_fqdn }}"
+
+        - name: Set Node Exporter service facts
+          ansible.builtin.set_fact:
+            node_exporter_networks:
+              - name: "{{ monitoring_network_name | default('monitoring') }}"
+              - name: "{{ web_network_name | default('web') }}"
+            node_exporter_ports:
+              - "{{ node_exporter_service_port | default(9100) }}:9100"
+            node_exporter_volumes:
+              - /proc:/host/proc:ro
+              - /sys/:/host/sys:ro
+              - /:/rootfs:ro
+              - /etc/localtime:/etc/localtime:ro
+
+        - name: Create Node Exporter container labels
+          ansible.builtin.set_fact:
+            node_exporter_container_labels: "{{ node_exporter_container_labels | default({}) | combine({item.key: item.value}) }}"
+          with_items:
+            # Traefik labels
+            - { "key": "traefik.enable", "value": "true" }
+            - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+            - {
+                "key": "traefik.http.routers.{{ node_exporter_service_name }}-http.rule",
+                "value": "Host(`{{ node_exporter_fqdn }}`)",
+              }
+            - {
+                "key": "traefik.http.routers.{{ node_exporter_service_name }}-http.entrypoints",
+                "value": "websecure",
+              }
+            - {
+                "key": "traefik.http.routers.{{ node_exporter_service_name }}-http.service",
+                "value": "{{ node_exporter_service_name }}",
+              }
+            - {
+                "key": "traefik.http.routers.{{ node_exporter_service_name }}-http.tls",
+                "value": "true",
+              }
+            # What's up Docker? labels
+            - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+            - {
+                "key": "wud.link.template",
+                "value": "https://github.com/prometheus/node_exporter/releases/tag/v$${major}.$${minor}.$${patch}",
+              }
+
+        - name: Check if Node Exporter is running
+          community.docker.docker_container_info:
+            name: "{{ node_exporter_service_name }}"
+          register: node_exporter_state
+
+        - name: Remove Node Exporter container if changing version
+          when:
+            - node_exporter_state.exists
+            - node_exporter_image_tag != node_exporter_state.container.Config.Image | split(':') | last
+          block:
+            - name: Stop and remove existing Node Exporter container
+              community.docker.docker_container:
+                name: "{{ node_exporter_service_name }}"
+                state: absent
+
+            - name: Set update Node Exporter
+              ansible.builtin.set_fact:
+                node_exporter_update: true
+
+        - name: Deploy Node Exporter if not running
+          when: not node_exporter_state.exists or (node_exporter_update | default(false))
+          block:
+            - name: Pull Node Exporter image
+              community.docker.docker_image:
+                name: "{{ node_exporter_image }}"
+                source: pull
+
+            - name: Deploy Node Exporter
+              community.docker.docker_container:
+                name: "{{ node_exporter_service_name }}"
+                image: "{{ node_exporter_image }}"
+                detach: true
+                labels: "{{ node_exporter_container_labels }}"
+                networks_cli_compatible: true
+                networks: "{{ node_exporter_networks }}"
+                restart: true
+                restart_policy: unless-stopped
+                state: started
+                volumes: "{{ node_exporter_volumes }}"
+              register: node_exporter_container_state
+
+            # - name: Wait for Node Exporter to accept connections
+            #   ansible.builtin.wait_for:
+            #     host: "{{ node_exporter_fqdn }}"
+            #     port: 80
+            #     connect_timeout: 1
+            #     delay: 10
+            #     state: started
+            #     timeout: 30
+            #   register: node_exporter_running
+            #   until: node_exporter_running is success
+            #   retries: 10
+
+    ####### PROMETHEUS SECTION
+
+    # https://hub.docker.com/r/prom/prometheus
+    # https://medium.com/platform-engineering/monitoring-traefik-with-grafana-1d037af5b952
+
+    - name: Deploy Prometheus
+      tags:
+        - prometheus
+      block:
+        # FIXME:
+        # Retrieve facts from inventory. I am sure this is not required
+        # but could not find a better way with delegation
+        - name: Set Prometheus facts
+          ansible.builtin.set_fact:
+            prometheus_image_name: "{{ hostvars[remote_hostname].prometheus_image_name | default('prom/prometheus') }}"
+            prometheus_image_tag: "{{ hostvars[remote_hostname].prometheus_image_tag | default('v2.45.0') }}"
+            prometheus_service_name: "{{ hostvars[remote_hostname].prometheus_service_name | default('prometheus') }}"
+            prometheus_service_port: "{{ hostvars[remote_hostname].prometheus_service_port | default(9090) }}"
+            prometheus_volume_name: "{{ hostvars[remote_hostname].prometheus_volume_name | default('prometheus') }}"
+
+        - name: Set Prometheus aggregated facts
+          ansible.builtin.set_fact:
+            prometheus_image: "{{ prometheus_image_name }}:{{ prometheus_image_tag }}"
+            prometheus_fqdn: "{{ prometheus_service_name }}.{{ host_fqdn }}"
+
+        - name: Set Prometheus service facts
+          ansible.builtin.set_fact:
+            prometheus_command:
+              - --config.file=/etc/prometheus/prometheus.yml
+              # runs Prometheus in agent mode. The agent mode is limited to discovery, scrape and remote write.
+              # https://prometheus.io/docs/prometheus/latest/feature_flags/
+              # - --enable-feature=agent
+              # FIXME: federation did not appear to work for an agent
+              # controls HTTP reloads and shutdowns of Prometheus. Disabled by default
+              # https://prometheus.io/docs/operating/security/
+              # - --web.enable-lifecycle
+              # no longer required as using a configuration file
+            prometheus_networks:
+              - name: "{{ monitoring_network_name | default('monitoring') }}"
+              - name: "{{ web_network_name | default('web') }}"
+            prometheus_ports:
+              - "{{ prometheus_service_port | default(9090) }}:9090"
+            prometheus_volumes:
+              - /root/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+              - "{{ prometheus_volume_name }}:/prometheus"
+              - /etc/localtime:/etc/localtime:ro
+
+        - name: Create Prometheus container labels
+          ansible.builtin.set_fact:
+            prometheus_container_labels: "{{ prometheus_container_labels | default({}) | combine({item.key: item.value}) }}"
+          with_items:
+            # Traefik labels
+            - { "key": "traefik.enable", "value": "true" }
+            - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+            - {
+                "key": "traefik.http.routers.{{ prometheus_service_name }}-http.rule",
+                "value": "Host(`{{ prometheus_fqdn }}`)",
+              }
+            - {
+                "key": "traefik.http.routers.{{ prometheus_service_name }}-http.entrypoints",
+                "value": "websecure",
+              }
+            - {
+                "key": "traefik.http.routers.{{ prometheus_service_name }}-http.service",
+                "value": "{{ prometheus_service_name }}",
+              }
+            - {
+                "key": "traefik.http.routers.{{ prometheus_service_name }}-http.tls",
+                "value": "true",
+              }
+            # What's up Docker? labels
+            - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+            - {
+                "key": "wud.link.template",
+                "value": "https://github.com/prometheus/prometheus/releases/tag/v$${major}.$${minor}.$${patch}",
+              }
+
+        - name: Create Prometheus configuration directory
+          ansible.builtin.file:
+            path: /root/prometheus
+            mode: "644"
+            state: directory
+          register: prometheus_configuration_creation
+
+        - name: Create Prometheus configuration file
+          ansible.builtin.template:
+            src: templates/prometheus/prometheus-min.yml.j2
+            dest: /root/prometheus/prometheus.yml
+            mode: "644"
+          register: prometheus_configuration_creation
+
+        - name: Check if Prometheus is running
+          community.docker.docker_container_info:
+            name: "{{ prometheus_service_name }}"
+          register: prometheus_state
+
+        - name: Remove Prometheus container if changing version
+          when:
+            - prometheus_state.exists
+            - prometheus_image_tag != prometheus_state.container.Config.Image | split(':') | last
+          block:
+            - name: Stop and remove existing Prometheus container
+              community.docker.docker_container:
+                name: "{{ prometheus_service_name }}"
+                state: absent
+
+            - name: Set update Prometheus
+              ansible.builtin.set_fact:
+                prometheus_update: true
+
+        - name: Deploy Prometheus if not running
+          when: not prometheus_state.exists or (prometheus_update | default(false))
+          block:
+            - name: Pull Prometheus image
+              community.docker.docker_image:
+                name: "{{ prometheus_image_name }}:{{ prometheus_image_tag | default('latest') }}"
+                source: pull
+
+            - name: Deploy Prometheus
+              community.docker.docker_container:
+                name: "{{ prometheus_service_name | default('prometheus') }}"
+                image: "{{ prometheus_image }}"
+                command: "{{ prometheus_command }}"
+                detach: true
+                labels: "{{ prometheus_container_labels }}"
+                memory: 300M
+                memory_reservation: 100M
+                networks_cli_compatible: true
+                networks: "{{ prometheus_networks }}"
+                restart: true
+                restart_policy: unless-stopped
+                state: started
+                volumes: "{{ prometheus_volumes }}"
+              register: prometheus_container_state
+
+            # - name: Wait for Prometheus to accept connections
+            #   ansible.builtin.wait_for:
+            #     host: "{{ prometheus_fqdn }}"
+            #     port: 80
+            #     connect_timeout: 1
+            #     delay: 10
+            #     state: started
+            #     timeout: 30
+            #   register: prometheus_running
+            #   until: prometheus_running is success
+            #   retries: 10
+        # - name: Create Prometheus configuration file
+        #   ansible.builtin.template:
+        #     src: templates/prometheus/prometheus-min.yml.j2
+        #     dest: /tmp/prometheus.yml
+        #     mode: "644"
+        #   register: prometheus_configuration_creation
+        #   tags:
+        #     - prometheus
+
+        # - name: Load Prometheus configuration if changed
+        #   tags:
+        #     - prometheus
+        #   when: prometheus_configuration_creation.changed or (prometheus_running is defined and prometheus_running is success)
+        #   block:
+        #     - name: Copy configuration file into Prometheus container
+        #       ansible.builtin.command: docker cp /tmp/prometheus.yml {{ prometheus_service_name }}:/etc/prometheus/prometheus.yml
+        #       when: prometheus_configuration_creation.changed or (prometheus_running is defined and prometheus_running is success)
+
+        #     #   # curl -X POST :9090/-/reload
+        #     # - name: Restart Prometheus via curl
+        #     #   ansible.builtin.uri:
+        #     #     url: "https://{{ prometheus_fqdn }}/-/reload"
+        #     #     method: POST
+        #     #     validate_certs: false
