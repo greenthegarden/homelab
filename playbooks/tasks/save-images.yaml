@@ -11,5 +11,5 @@
 - name: Copy image {{ item.name }} to ansible host
   ansible.builtin.fetch:
     src: /tmp/{{ item.name }}.tar
-    dest: /root/images/
+    dest: /tmp/images/
     flat: true

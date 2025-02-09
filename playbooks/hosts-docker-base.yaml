@@ -143,25 +143,6 @@
             name: "{{ web_network_name | default('web') }}"
             internal: false
 
-        # ####### TRAEFIK (REVERSE PROXY) CONFIGURATION
-
-        # # FIXME:
-        # # Retrieve facts from inventory. I am sure this is not required
-        # # but could not find a better way with delegation
-        # - name: Set Traefik facts
-        #   ansible.builtin.set_fact:
-        #     traefik_image_name: "{{ hostvars[remote_hostname].traefik_image_name | default('traefik') }}"
-        #     traefik_image_tag: "{{ hostvars[remote_hostname].traefik_image_tag | default('latest') }}"
-        #     traefik_service_name: "{{ hostvars[remote_hostname].traefik_service_name | default('traefik') }}"
-        #     traefik_service_port_http: "{{ hostvars[remote_hostname].traefik_service_port_http | default(80) }}"
-        #     traefik_service_port_secure: "{{ hostvars[remote_hostname].traefik_service_port_secure | default(443) }}"
-        #     traefik_provider: "{{ hostvars[remote_hostname].traefik_provider | default('docker') }}"
-        #     traefik_volume_letsencrypt_name: "{{ hostvars[remote_hostname].traefik_volume_letsencrypt_name | default('letsencrypt') }}"
-
-        # - name: Set Traefik aggregated facts
-        #   ansible.builtin.set_fact:
-        #     traefik_image: "{{ traefik_image_name }}:{{ traefik_image_tag }}"
-        #     traefik_fqdn: "{{ traefik_service_name }}.{{ host_fqdn }}"
 
         ####### LOAD DOCKER IMAGES
 
@@ -204,9 +185,12 @@
                   tag: "{{ traefik_image_tag | default('latest') }}"
                 }
 
-        - name: Load images
-          ansible.builtin.include_tasks: load-images.yaml
-          loop: "{{ docker_base_images }}"
+        # - name: Save images
+        #   ansible.builtin.include_tasks: tasks/save-images
+            
+        # - name: Load images
+        #   ansible.builtin.include_tasks: tasks/load-images.yaml
+        #   loop: "{{ docker_base_images }}"
 
     ####### DOCKER SOCKET PROXY SECTION
 

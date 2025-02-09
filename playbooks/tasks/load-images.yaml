@@ -2,7 +2,7 @@
 
 - name: "Copy to host image {{ item.name }}"
   ansible.builtin.copy:
-    src: /root/images/{{ item.name }}.tar
+    src: /tmp/images/{{ item.name }}.tar
     dest: /tmp/{{ item.name }}.tar
 
 - name: "Load image {{ item.name }}"
