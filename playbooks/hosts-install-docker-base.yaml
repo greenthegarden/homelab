@@ -5,11 +5,11 @@
 
   vars:
 
-    # Docker Network names
-    #TODO: Define as an array
-    docker_socket_proxy_network_name: docker-socket-proxy
-    monitoring_network_name: monitoring
-    web_network_name: web
+    # # Docker Network names
+    # #TODO: Define as an array
+    # docker_socket_proxy_network_name: docker-socket-proxy
+    # monitoring_network_name: monitoring
+    # web_network_name: web
 
     # Base Docker container image details
     # Docker Socket Proxy facts
