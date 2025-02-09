@@ -1,0 +1,4 @@
+---
+collections:
+  # required to use Docker
+  - name: community.docker

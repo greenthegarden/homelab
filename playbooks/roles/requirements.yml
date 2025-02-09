@@ -9,7 +9,3 @@ roles:
     scm: git
     src: git+https://github.com/geerlingguy/ansible-role-pip.git
     version: origin/master
-    
-collections:
-  # required to use Docker
-  - name: community.docker
