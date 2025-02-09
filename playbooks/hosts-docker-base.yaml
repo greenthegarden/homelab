@@ -175,7 +175,7 @@
                 }
               - {
                   image: "{{ docker_volume_backup_image_name | default('offen/docker-volume-backup') }}",
-                  name: "{{ docker_volume_backup_service_name | default('docker-volume-backup') }}"
+                  name: "{{ docker_volume_backup_service_name | default('docker-volume-backup') }}",
                   tag: "{{ docker_volume_backup_image_tag | default('latest') }}"
                 }
               - { 
