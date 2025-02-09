@@ -4,42 +4,53 @@
   hosts: all
 
   vars:
-      docker_base_images:
-        - {
-            name: "docker-socket-proxy",
-            image: "ghcr.io/tecnativa/docker-socket-proxy",
-            tag: "edge",
-          }
-        - {
-            name: "docker-volume-backup",
-            image: "offen/docker-volume-backup",
-            tag: "v2.43.1"
-          }
-        - { 
-            name: "duplicati",
-            image: "lscr.io/linuxserver/duplicati",
-            tag: "latest"
-          }
-        - { 
-            name: "node-exporter",
-            image: "prom/node-exporter",
-            tag: "v1.8.2"
-          }
-        - {
-            name: "portainer_agent",
-            image: "portainer/agent",
-            tag: "2.26.1-alpine",
-          }
-        - { 
-            name: "prometheus",
-            image: "prom/prometheus",
-            tag: "v3.1.0"
-          }
-        - {
-            name: "traefik",
-            image: "traefik",
-            tag: "3.3.3"
-          }
+
+    docker_socket_proxy_image_name: "ghcr.io/tecnativa/docker-socket-proxy"
+    docker_socket_proxy_image_tag: "edge"
+    docker_socket_proxy_service_name: "docker-socket-proxy"
+    docker_socket_proxy_service_port: 2375
+
+    # docker_base_images:
+    #   - {
+    #       name: "docker-socket-proxy",
+    #       image: "ghcr.io/tecnativa/docker-socket-proxy",
+    #       tag: "edge",
+    #     }
+    #   - {
+    #       name: "docker-volume-backup",
+    #       image: "offen/docker-volume-backup",
+    #       tag: "v2.43.1"
+    #     }
+    #   - { 
+    #       name: "duplicati",
+    #       image: "lscr.io/linuxserver/duplicati",
+    #       tag: "latest"
+    #     }
+    #   - { 
+    #       name: "node-exporter",
+    #       image: "prom/node-exporter",
+    #       tag: "v1.8.2"
+    #     }
+    #   - {
+    #       name: "portainer_agent",
+    #       image: "portainer/agent",
+    #       tag: "2.26.1-alpine",
+    #     }
+    #   - { 
+    #       name: "prometheus",
+    #       image: "prom/prometheus",
+    #       tag: "v3.1.0"
+    #     }
+    #   - {
+    #       name: "traefik",
+    #       image: "traefik",
+    #       tag: "3.3.3"
+    #     }
+
+    #TODO: create as array
+    docker_socket_proxy_network_name: "docker-socket-proxy"
+    monitoring_network_name: "monitoring"
+    web_network_name: "web"
 
   tasks:
 
@@ -94,15 +105,15 @@
 
         - name: Set host aggregated facts
           ansible.builtin.set_fact:
-            host_fqdn: "{{ hostvars[remote_hostname].ansible_hostname }}.{{ lan_dns_domain }}"
+            host_fqdn: "{{ ansible_hostname }}.{{ lan_dns_domain }}"
 
         ####### DOCKER NETWORK SECTION
 
-        - name: Set Docker Network facts
-          ansible.builtin.set_fact:
-            docker_socket_proxy_network_name: "{{ hostvars[remote_hostname].docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-            monitoring_network_name: "{{ hostvars[remote_hostname].monitoring_network_name | default('monitoring') }}"
-            web_network_name: "{{ hostvars[remote_hostname].web_network_name | default('web') }}"
+        # - name: Set Docker Network facts
+        #   ansible.builtin.set_fact:
+        #     docker_socket_proxy_network_name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+        #     monitoring_network_name: "{{ monitoring_network_name | default('monitoring') }}"
+        #     web_network_name: "{{ web_network_name | default('web') }}"
 
         # Based on https://github.com/wollomatic/traefik2-hardened/blob/master/docker-compose.yaml
         - name: Create a Docker Socket Proxy Docker network
@@ -143,6 +154,45 @@
 
         ####### LOAD DOCKER IMAGES
 
+        - name: Create default images arrar
+          ansible.builtin.set_fact:
+            docker_base_images:
+              - {
+                  name: "{{ docker_socket_proxy_service_name | default('docker-socket-proxy') }}",
+                  image: "{{ docker_socket_proxy_image_name | default('ghcr.io/tecnativa/docker-socket-proxy') }}",
+                  tag: "{{ docker_socket_proxy_image_tag | default('latest') }}",
+                }
+              - {
+                  name: "docker-volume-backup",
+                  image: "offen/docker-volume-backup",
+                  tag: "v2.43.1"
+                }
+              - { 
+                  name: "duplicati",
+                  image: "lscr.io/linuxserver/duplicati",
+                  tag: "latest"
+                }
+              - { 
+                  name: "node-exporter",
+                  image: "prom/node-exporter",
+                  tag: "v1.8.2"
+                }
+              - {
+                  name: "portainer_agent",
+                  image: "portainer/agent",
+                  tag: "2.26.1-alpine",
+                }
+              - { 
+                  name: "prometheus",
+                  image: "prom/prometheus",
+                  tag: "v3.1.0"
+                }
+              - {
+                  name: "traefik",
+                  image: "traefik",
+                  tag: "3.3.3"
+                }
+
         - name: Load images
           ansible.builtin.include_tasks: load-images.yaml
           loop: "{{ docker_base_images }}"
@@ -182,6 +232,7 @@
             docker_socket_proxy_volumes:
               - /var/run/docker.sock:/var/run/docker.sock
               - /etc/localtime:/etc/localtime:ro
+              - /etc/timezone:/etc/timezone:ro
 
         - name: Create Docker Socket Proxy container labels
           ansible.builtin.set_fact:
