@@ -48,7 +48,7 @@
           }
         - { 
             "key": "traefik.docker.network", 
-            "value": "{{ web_network_name }}" 
+            "value": "{{ web_network_name | default('web') }}" 
           }
         - {
             "key": "traefik.http.routers.{{ portainer_service_name }}.entrypoints",
