@@ -1,3 +1,8 @@
 {
-    "ansible.python.interpreterPath": "/bin/python3"
+    "ansible.python.interpreterPath": "/bin/python3",
+    "editor.formatOnSave": true, // Used to autoformat on save
+    "files.associations": {
+        "*.j2": "yaml"
+    },
+    "workbench.colorTheme": "Default Dark Modern",
 }
