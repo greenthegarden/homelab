@@ -1,0 +1,6 @@
+{
+  "recommendations": [
+     "redhat.ansible",
+     "ms-python.python"
+  ]
+}

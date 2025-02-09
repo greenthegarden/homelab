@@ -172,6 +172,5 @@ cython_debug/
 
 # Ansible
 .ansible/*
-.vscode/*
 hosts.yaml
 
