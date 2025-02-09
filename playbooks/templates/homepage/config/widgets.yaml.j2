@@ -1,0 +1,32 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/latest/configs/service-widgets/
+
+- resources:
+      cpu: true
+      memory: true
+      disk: /
+
+- datetime:
+      text_size: xl
+      format:
+          dateStyle: long
+          timeStyle: short
+          hour12: true
+
+- search:
+      provider: duckduckgo
+      target: _blank
+
+- openmeteo:
+      label: Adelaide # optional
+      latitude: "{{ home.latitude }}"
+      longitude: "{{ home.longitude }}"
+      timezone: Australia/Adelaide # optional
+      units: metric # or imperial
+      cache: 15 # Time in minutes to cache API responses, to stay within limits
+
+- unifi_console:
+      url: "{{ unifi_consule.url }}"
+      username: "{{ unifi_console.username }}"
+      password: "{{ unifi_console.password }}"

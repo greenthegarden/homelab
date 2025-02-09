@@ -1,7 +1,7 @@
 ---
+
 # The variables file used by the playbooks in the homelab_lxc group.
 # These don't have to be explicitly imported by vars_files: they are autopopulated.
-
 
 # Docker Network names
 #TODO: Define as an array

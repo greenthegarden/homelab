@@ -1,0 +1,63 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/latest/configs/docker/
+
+docker-local:
+  host: docker-socket-proxy
+  port: 2375
+
+docker-ansible:
+  host: ansible.localdomain
+  port: 2375
+
+docker-authentik:
+  host: authentik.localdomain
+  port: 2375
+
+docker-broker:
+  host: broker.localdomain
+  port: 2375
+
+docker-fireflyiii:
+  host: fireflyiii.localdomain
+  port: 2375
+
+docker-frigate:
+  host: frigate.localdomain
+  port: 2375
+
+docker-grafana:
+  host: grafana.localdomain
+  port: 2375
+
+docker-grocy:
+  host: grocy.localdomain
+  port: 2375
+
+docker-homebox:
+  host: homebox.localdomain
+  port: 2375
+
+docker-hortusfox:
+  host: hortusfox.localdomain
+  port: 2375
+
+docker-influxdb:
+  host: influxdb.localdomain
+  port: 2375
+
+docker-portainer:
+  host: portainer.localdomain
+  port: 2375
+
+docker-uptimekuma:
+  host: uptimekuma.localdomain
+  port: 2375
+
+docker-vaultwarden:
+  host: vaultwarden.localdomain
+  port: 2375
+
+docker-whatsupdocker:
+  host: whatsupdocker.localdomain
+  port: 2375
