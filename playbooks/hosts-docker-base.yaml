@@ -5,52 +5,63 @@
 
   vars:
 
-    docker_socket_proxy_image_name: "ghcr.io/tecnativa/docker-socket-proxy"
-    docker_socket_proxy_image_tag: "edge"
+    # Docker Network names
+    #TODO: Define as an array
+    database_network_name: database
+    docker_socket_proxy_network_name: docker-socket-proxy
+    monitoring_network_name: monitoring
+    web_network_name: web
+
+    # Base Docker container image details
+    # Docker Socket Proxy facts
+    docker_socket_proxy_image_name: ghcr.io/tecnativa/docker-socket-proxy
+    docker_socket_proxy_image_tag: edge
     docker_socket_proxy_service_name: "docker-socket-proxy"
     docker_socket_proxy_service_port: 2375
+    # docker-volume-backup facts
+    docker_volume_backup_image_name: offen/docker-volume-backup
+    docker_volume_backup_image_tag: v2.43.1
+    docker_volume_backup_service_name: "docker-volume-backup"
+    # Duplicati facts
+    duplicati_image_name: lscr.io/linuxserver/duplicati
+    duplicati_image_tag: v2.1.0.3_beta_2025-01-22-ls232
+    duplicati_service_name: duplicati
+    duplicati_service_port: 8200
+    duplicati_volume_config: config
+    duplicati_volume_backups: backups
+    duplicati_volume_source: source
+    # Node Exporter facts
+    node_exporter_image_name: prom/node-exporter
+    node_exporter_image_tag: v1.8.2
+    node_exporter_service_name: node-exporter
+    node_exporter_service_port: 9100
+    node_exporter_service_protocol: http 
+    # Portainer Agent facts
+    portainer_agent_image_name: portainer/agent
+    portainer_agent_image_tag: 2.26.1-alpine
+    portainer_agent_service_name: portainer_agent
+    portainer_agent_service_port: 9001
+    # Prometheus facts
+    prometheus_image_name: prom/prometheus
+    prometheus_image_tag: v3.1.0
+    prometheus_service_name: prometheus
+    prometheus_service_port: 9090
+    prometheus_volume_name: prometheus
+    # Traefik facts
+    traefik_image_name: traefik
+    traefik_image_tag: 3.3.3
+    traefik_service_name: traefik
+    traefik_service_port: 80
+    traefik_service_port_http: 80
+    traefik_service_port_secure: 443
+    traefik_provider: docker
+    traefik_volume_letsencrypt_name: letsencrypt
+    # Watchtower facts
+    watchtower_image_name: containrrr/watchtower
+    watchtower_image_tag: 1.7.1
+    watchtower_service_name: watchtower
+    watchtower_service_port: 8080
 
-    # docker_base_images:
-    #   - {
-    #       name: "docker-socket-proxy",
-    #       image: "ghcr.io/tecnativa/docker-socket-proxy",
-    #       tag: "edge",
-    #     }
-    #   - {
-    #       name: "docker-volume-backup",
-    #       image: "offen/docker-volume-backup",
-    #       tag: "v2.43.1"
-    #     }
-    #   - { 
-    #       name: "duplicati",
-    #       image: "lscr.io/linuxserver/duplicati",
-    #       tag: "latest"
-    #     }
-    #   - { 
-    #       name: "node-exporter",
-    #       image: "prom/node-exporter",
-    #       tag: "v1.8.2"
-    #     }
-    #   - {
-    #       name: "portainer_agent",
-    #       image: "portainer/agent",
-    #       tag: "2.26.1-alpine",
-    #     }
-    #   - { 
-    #       name: "prometheus",
-    #       image: "prom/prometheus",
-    #       tag: "v3.1.0"
-    #     }
-    #   - {
-    #       name: "traefik",
-    #       image: "traefik",
-    #       tag: "3.3.3"
-    #     }
-
-    #TODO: create as array
-    docker_socket_proxy_network_name: "docker-socket-proxy"
-    monitoring_network_name: "monitoring"
-    web_network_name: "web"
 
   tasks:
 
@@ -59,13 +70,13 @@
         - always
 
       block:
-        - name: Install Docker
-          ansible.builtin.import_role:
-            name: geerlingguy.docker
-          vars:
-            docker_install_compose: false
-            docker_users:
-              - root
+        # - name: Install Docker
+        #   ansible.builtin.import_role:
+        #     name: geerlingguy.docker
+        #   vars:
+        #     docker_install_compose: false
+        #     docker_users:
+        #       - root
 
         # # https://www.techrepublic.com/article/how-to-add-docker-scout-feature/
         # - name: Install Docker Scout
@@ -154,43 +165,43 @@
 
         ####### LOAD DOCKER IMAGES
 
-        - name: Create default images arrar
+        - name: Create default images array
           ansible.builtin.set_fact:
             docker_base_images:
               - {
-                  name: "{{ docker_socket_proxy_service_name | default('docker-socket-proxy') }}",
                   image: "{{ docker_socket_proxy_image_name | default('ghcr.io/tecnativa/docker-socket-proxy') }}",
-                  tag: "{{ docker_socket_proxy_image_tag | default('latest') }}",
+                  name: "{{ docker_socket_proxy_service_name | default('docker-socket-proxy') }}",
+                  tag: "{{ docker_socket_proxy_image_tag | default('latest') }}"
                 }
               - {
-                  name: "docker-volume-backup",
-                  image: "offen/docker-volume-backup",
-                  tag: "v2.43.1"
+                  image: "{{ docker_volume_backup_image_name | default('offen/docker-volume-backup') }}",
+                  name: "{{ docker_volume_backup_service_name | default('docker-volume-backup') }}"
+                  tag: "{{ docker_volume_backup_image_tag | default('latest') }}"
                 }
               - { 
-                  name: "duplicati",
-                  image: "lscr.io/linuxserver/duplicati",
-                  tag: "latest"
+                  image: "{{ duplicati_image_name | default('lscr.io/linuxserver/duplicati') }}",
+                  name: "{{ duplicati_service_name | default('duplicati') }}",
+                  tag: "{{ duplicati_image_tag | default('latest') }}"
                 }
               - { 
-                  name: "node-exporter",
-                  image: "prom/node-exporter",
-                  tag: "v1.8.2"
+                  image: "{{ node_exporter_image_name | default('prom/node-exporter') }}",
+                  name: "{{ node_exporter_service_name | default('node-exporter') }}",
+                  tag: "{{ node_exporter_image_tag | default('latest') }}"
                 }
               - {
-                  name: "portainer_agent",
-                  image: "portainer/agent",
-                  tag: "2.26.1-alpine",
-                }
-              - { 
-                  name: "prometheus",
-                  image: "prom/prometheus",
-                  tag: "v3.1.0"
+                  image: "{{ portainer_agent_image_name | default('portainer/agent') }}",
+                  name: "{{ portainer_agent_service_name | default('portainer_agent') }}",
+                  tag: "{{ portainer_agent_image_tag | default('latest-alpine') }}"
                 }
               - {
-                  name: "traefik",
-                  image: "traefik",
-                  tag: "3.3.3"
+                  image: "{{ prometheus_image_name | default('prom/prometheus') }}",
+                  name: "{{ prometheus_service_name | default('prometheus') }}",
+                  tag: "{{ prometheus_image_tag | default('latest') }}"
+                }
+              - {
+                  image: "{{ traefik_image_name | default('traefik') }}",
+                  name: "{{ traefik_service_name | default('traefik') }}",
+                  tag: "{{ traefik_image_tag | default('latest') }}"
                 }
 
         - name: Load images
@@ -205,13 +216,6 @@
       tags:
         - docker_socket_proxy
       block:
-        - name: Set Docker Socket Proxy facts
-          ansible.builtin.set_fact:
-            docker_socket_proxy_image_name: "{{ hostvars[remote_hostname].docker_socket_proxy_image_name | default('ghcr.io/tecnativa/docker-socket-proxy') }}"
-            docker_socket_proxy_image_tag: "{{ hostvars[remote_hostname].docker_socket_proxy_image_tag | default('latest') }}"
-            docker_socket_proxy_service_name: "{{ hostvars[remote_hostname].docker_socket_proxy_service_name | default('docker-socket-proxy') }}"
-            docker_socket_proxy_service_port: "{{ hostvars[remote_hostname].docker_socket_proxy_service_port | default(2375) }}"
-
         - name: Set Docker Socket Proxy aggregated facts
           ansible.builtin.set_fact:
             docker_socket_proxy_image: "{{ docker_socket_proxy_image_name }}:{{ docker_socket_proxy_image_tag }}"
@@ -239,7 +243,10 @@
             docker_socket_proxy_container_labels: "{{ docker_socket_proxy_container_labels | default({}) | combine({item.key: item.value}) }}"
           with_items:
             # What's up Docker? labels
-            - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+            - {
+                "key": "wud.tag.include",
+                "value": '^\d+\.\d+\.\d+$$'
+              }
             - {
                 "key": "wud.link.template",
                 "value": "https://github.com/Tecnativa/docker-socket-proxy/releases/tag/v$${major}.$${minor}.$${patch}",
@@ -342,15 +349,6 @@
       tags:
         - portainer_agent
       block:
-        # FIXME:
-        # Retrieve facts from inventory. I am sure this is not required
-        # but could not find a better way with delegation
-        - name: Set Portainer Agent facts
-          ansible.builtin.set_fact:
-            portainer_agent_image_name: "{{ hostvars[remote_hostname].portainer_agent_image_name | default('portainer/agent') }}"
-            portainer_agent_image_tag: "{{ hostvars[remote_hostname].portainer_agent_image_tag | default('latest') }}"
-            portainer_agent_service_name: "{{ hostvars[remote_hostname].portainer_agent_service_name | default('portainer_agent') }}"
-            portainer_agent_service_port: "{{ hostvars[remote_hostname].portainer_agent_service_port | default(9001) }}"
 
         - name: Set Portainer Agent aggregated facts
           ansible.builtin.set_fact:
@@ -446,19 +444,6 @@
       tags:
         - traefik
       block:
-        # FIXME:
-        # Retrieve facts from inventory. I am sure this is not required
-        # but could not find a better way with delegation
-        - name: Set Traefik facts
-          ansible.builtin.set_fact:
-            traefik_image_name: "{{ hostvars[remote_hostname].traefik_image_name | default('traefik') }}"
-            traefik_image_tag: "{{ hostvars[remote_hostname].traefik_image_tag | default('latest') }}"
-            traefik_service_name: "{{ hostvars[remote_hostname].traefik_service_name | default('traefik') }}"
-            traefik_service_port_http: "{{ hostvars[remote_hostname].traefik_service_port_http | default(80) }}"
-            traefik_service_port_secure: "{{ hostvars[remote_hostname].traefik_service_port_secure | default(443) }}"
-            traefik_provider: "{{ hostvars[remote_hostname].traefik_provider | default('docker') }}"
-            traefik_volume_letsencrypt_name: "{{ hostvars[remote_hostname].traefik_volume_letsencrypt_name | default('letsencrypt') }}"
-
         - name: Set Traefik aggregated facts
           ansible.builtin.set_fact:
             traefik_image: "{{ traefik_image_name }}:{{ traefik_image_tag }}"
@@ -725,17 +710,6 @@
       tags:
         - node-exporter
       block:
-        # FIXME:
-        # Retrieve facts from inventory. I am sure this is not required
-        # but could not find a better way with delegation
-        - name: Set Node Exporter facts
-          ansible.builtin.set_fact:
-            node_exporter_image_name: "{{ hostvars[remote_hostname].node_exporter_image_name | default('prom/node-exporter') }}"
-            node_exporter_image_tag: "{{ hostvars[remote_hostname].node_exporter_image_tag | default('latest') }}"
-            node_exporter_service_name: "{{ hostvars[remote_hostname].node_exporter_service_name | default('node-exporter') }}"
-            node_exporter_service_port: "{{ hostvars[remote_hostname].node_exporter_service_port | default(9100) }}"
-            node_exporter_service_protocol: "{{ hostvars[remote_hostname].node_exporter_service_protocol | default('http') }}"
-
         - name: Set Node Exporter aggregated facts
           ansible.builtin.set_fact:
             node_exporter_image: "{{ node_exporter_image_name }}:{{ node_exporter_image_tag }}"
@@ -846,17 +820,6 @@
       tags:
         - prometheus
       block:
-        # FIXME:
-        # Retrieve facts from inventory. I am sure this is not required
-        # but could not find a better way with delegation
-        - name: Set Prometheus facts
-          ansible.builtin.set_fact:
-            prometheus_image_name: "{{ hostvars[remote_hostname].prometheus_image_name | default('prom/prometheus') }}"
-            prometheus_image_tag: "{{ hostvars[remote_hostname].prometheus_image_tag | default('v2.45.0') }}"
-            prometheus_service_name: "{{ hostvars[remote_hostname].prometheus_service_name | default('prometheus') }}"
-            prometheus_service_port: "{{ hostvars[remote_hostname].prometheus_service_port | default(9090) }}"
-            prometheus_volume_name: "{{ hostvars[remote_hostname].prometheus_volume_name | default('prometheus') }}"
-
         - name: Set Prometheus aggregated facts
           ansible.builtin.set_fact:
             prometheus_image: "{{ prometheus_image_name }}:{{ prometheus_image_tag }}"

@@ -1,0 +1,15 @@
+---
+
+- name: Archive image {{ item.image }}
+  community.docker.docker_image:
+    name: "{{ item.image }}"
+    tag: "{{ item.tag }}"
+    archive_path: "/tmp/{{ item.name }}.tar"
+    source: pull
+    state: present
+
+- name: Copy image {{ item.name }} to ansible host
+  ansible.builtin.fetch:
+    src: /tmp/{{ item.name }}.tar
+    dest: /root/images/
+    flat: true
