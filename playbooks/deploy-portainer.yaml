@@ -1,5 +1,5 @@
 ---
-- name: Install and configure Portainer container
+- name: Deploy Portainer container
 
   hosts: portainer
 
