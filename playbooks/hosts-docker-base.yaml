@@ -3,6 +3,44 @@
 
   hosts: all
 
+  vars:
+      docker_base_images:
+        - {
+            name: "docker-socket-proxy",
+            image: "ghcr.io/tecnativa/docker-socket-proxy",
+            tag: "edge",
+          }
+        - {
+            name: "docker-volume-backup",
+            image: "offen/docker-volume-backup",
+            tag: "v2.43.1"
+          }
+        - { 
+            name: "duplicati",
+            image: "lscr.io/linuxserver/duplicati",
+            tag: "latest"
+          }
+        - { 
+            name: "node-exporter",
+            image: "prom/node-exporter",
+            tag: "v1.8.2"
+          }
+        - {
+            name: "portainer_agent",
+            image: "portainer/agent",
+            tag: "2.26.1-alpine",
+          }
+        - { 
+            name: "prometheus",
+            image: "prom/prometheus",
+            tag: "v3.1.0"
+          }
+        - {
+            name: "traefik",
+            image: "traefik",
+            tag: "3.3.3"
+          }
+
   tasks:
 
     - name: Install and configure Docker base
@@ -56,7 +94,7 @@
 
         - name: Set host aggregated facts
           ansible.builtin.set_fact:
-            host_fqdn: "{{ hostvars[remote_hostname].inventory_hostname }}.{{ lan_dns_domain }}"
+            host_fqdn: "{{ hostvars[remote_hostname].ansible_hostname }}.{{ lan_dns_domain }}"
 
         ####### DOCKER NETWORK SECTION
 
@@ -107,7 +145,7 @@
 
         - name: Load images
           ansible.builtin.include_tasks: load-images.yaml
-          loop: "{{ hostvars[remote_hostname].docker_base_images }}"
+          loop: "{{ docker_base_images }}"
 
     ####### DOCKER SOCKET PROXY SECTION
 
@@ -127,7 +165,7 @@
         - name: Set Docker Socket Proxy aggregated facts
           ansible.builtin.set_fact:
             docker_socket_proxy_image: "{{ docker_socket_proxy_image_name }}:{{ docker_socket_proxy_image_tag }}"
-            docker_socket_proxy_fqdn: "{{ docker_socket_proxy_service_name }}.{{ hostvars[remote_hostname].inventory_hostname }}.{{ lan_dns_domain }}"
+            docker_socket_proxy_fqdn: "{{ docker_socket_proxy_service_name }}.{{ hostvars[remote_hostname].ansible_hostname }}.{{ lan_dns_domain }}"
 
         - name: Set Docker Socket Proxy service facts
           ansible.builtin.set_fact:
