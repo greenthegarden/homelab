@@ -7,7 +7,6 @@
 
     # Docker Network names
     #TODO: Define as an array
-    database_network_name: database
     docker_socket_proxy_network_name: docker-socket-proxy
     monitoring_network_name: monitoring
     web_network_name: web
