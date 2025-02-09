@@ -626,7 +626,7 @@
 
         - name: Copy env file to host
           ansible.builtin.copy:
-            src: files/traefik/env_file-traefik
+            src: files/traefik/traefik.env
             dest: /root/
             mode: "644"
           register: env_file_creation
@@ -664,7 +664,7 @@
                 image: "{{ traefik_image }}"
                 command: "{{ traefik_command }}"
                 detach: true
-                env_file: ./env_file-traefik
+                env_file: ./traefik.env
                 healthcheck:
                   test: ["CMD", "traefik", "healthcheck", "--ping"]
                   interval: 10s
