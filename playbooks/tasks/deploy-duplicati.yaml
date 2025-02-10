@@ -1,0 +1,124 @@
+---
+
+###### DUPLICATI SECTION
+
+- name: Set Duplicati aggregated facts
+  ansible.builtin.set_fact:
+    duplicati_image: "{{ duplicati_image_name }}:{{ duplicati_image_tag }}"
+    duplicati_fqdn: "{{ duplicati_service_name }}.{{ host_fqdn }}"
+
+- name: Set Duplicati service facts
+  ansible.builtin.set_fact:
+    duplicati_networks:
+      - name: "{{ web_network_name | default('web') }}"
+    duplicati_ports:
+      - "{{ duplicati_service_port | default(8200) }}:8200"
+    duplicati_volumes:
+      - "{{ duplicati_volume_config }}:/config"
+      # - "{{ duplicati_volume_backups }}:/backups"
+      - "{{ duplicati_volume_source }}:/source"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: Create Duplicati container labels
+  ansible.builtin.set_fact:
+    duplicati_container_labels: "{{ duplicati_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - {
+      "key": "traefik.enable",
+      "value": "true"
+    }
+    - {
+      "key": "traefik.docker.network",
+      "value": "{{ web_network_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ duplicati_service_name }}-http.rule",
+      "value": "Host(`{{ duplicati_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ duplicati_service_name }}-http.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ duplicati_service_name }}-http.service",
+      "value": "{{ duplicati_service_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ duplicati_service_name }}-http.tls",
+      "value": "true",
+    }
+    # What's up Docker? labels
+    - {
+      "key": "wud.tag.include",
+      "value": '^v\d+\.\d+\.\d+\.\d+-\d+\.\d+\.\d+\.\d+.*$$',
+    }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/linuxserver/docker-duplicati/releases/tag/v$${major}.$${minor}.$${patch}",
+    }
+
+- name: Check if Duplicati is running
+  community.docker.docker_container_info:
+    name: "{{ duplicati_service_name }}"
+  register: duplicati_state
+
+- name: Remove Duplicati container if changing version
+  when:
+    - duplicati_state.exists
+    - duplicati_image_tag != duplicati_state.container.Config.Image | split(':') | last
+  block:
+    - name: Stop and remove existing Duplicati container
+      community.docker.docker_container:
+        name: "{{ duplicati_service_name }}"
+        state: absent
+
+    - name: Set update Duplicati
+      ansible.builtin.set_fact:
+        duplicati_update: true
+
+- name: Deploy Duplicati if not running
+  when: not duplicati_state.exists or (duplicati_update | default(false))
+  block:
+    - name: Create Duplicati config volume
+      community.docker.docker_volume:
+        name: "{{ duplicati_volume_config }}"
+        state: present
+
+    - name: Pull Duplicati image
+      community.docker.docker_image:
+        name: "{{ duplicati_image }}"
+        source: pull
+
+    - name: Deploy Duplicati
+      community.docker.docker_container:
+        name: "{{ duplicati_service_name }}"
+        image: "{{ duplicati_image }}"
+        detach: true
+        env:
+          PUID: "0" # Run as root
+          PGID: "0" # Run as root
+          TZ: "{{ home.timezone }}"
+          SETTINGS_ENCRYPTION_KEY: "5P*6Y&MB%wa#"
+          DUPLICATI__WEBSERVICE_PASSWORD: "h0melab!"
+        labels: "{{ (duplicati_container_labels | default({})) | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ duplicati_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ duplicati_volumes }}"
+      register: duplicati_container_state
+
+    # - name: Wait for Duplicati to accept connections
+    #   ansible.builtin.wait_for:
+    #     host: "{{ duplicati_fqdn }}"
+    #     port: 80
+    #     connect_timeout: 1
+    #     delay: 10
+    #     state: started
+    #     timeout: 30
+    #   register: duplicati_running
+    #   until: duplicati_running is success
+    #   retries: 10

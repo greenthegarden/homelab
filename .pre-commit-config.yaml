@@ -26,7 +26,7 @@ repos:
     hooks:
       - id: ansible-lint
         files: ^playbooks/*.(yaml|yml)$
-        exclude: ^playbooks/(files/homepage/config/bookmarks\.yaml|files/influxdb/influxdb\.yaml|files/authentik/authentik\.env|group_vars/homelab_lxc\.yaml)$
+        exclude: ^playbooks/(files/homepage/config/bookmarks\.yaml|files/influxdb/influxdb\.yaml|files/authentik/authentik\.env|vars/homelab_env\.yaml)$
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.44.0
@@ -45,5 +45,4 @@ repos:
     rev: v1.0
     hooks:
       - id: encryption-check
-        # override files to all files in ./tasks/ directory
-        files: ^playbooks/(files/homepage/config/bookmarks\.yaml|files/influxdb/influxdb\.yaml|files/authentik/authentik\.env|group_vars/homelab_lxc\.yaml)$
+        files: ^playbooks/(files/homepage/config/bookmarks\.yaml|files/influxdb/influxdb\.yaml|files/authentik/authentik\.env|vars/homelab_env\.yaml)$

@@ -13,6 +13,10 @@
 
   tasks:
 
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
     ####### HOMEPAGE SECTION
 
     # https://homepage.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-homepage-dashboard/

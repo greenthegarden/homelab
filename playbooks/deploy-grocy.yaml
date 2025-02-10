@@ -14,6 +14,10 @@
 
   tasks:
 
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
     ####### GROCY SECTION
 
     # https://hub.docker.com/_/grocy
