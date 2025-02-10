@@ -100,8 +100,8 @@
           PUID: "0" # Run as root
           PGID: "0" # Run as root
           TZ: "{{ home.timezone }}"
-          SETTINGS_ENCRYPTION_KEY: "5P*6Y&MB%wa#"
-          DUPLICATI__WEBSERVICE_PASSWORD: "h0melab!"
+          SETTINGS_ENCRYPTION_KEY: "{{ duplicati.settings_encryption_key | default('dummy') }}"
+          DUPLICATI__WEBSERVICE_PASSWORD: "{{ duplicati.webservice_password | default('dummy') }}"
         labels: "{{ (duplicati_container_labels | default({})) | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ duplicati_networks }}"
