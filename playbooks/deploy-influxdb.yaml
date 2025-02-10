@@ -23,7 +23,7 @@
     - name: Set InfluxDB aggregated facts
       ansible.builtin.set_fact:
         influxdb_image: "{{ influxdb_image_name }}:{{ influxdb_image_tag }}"
-        influxdb_fqdn: "{{ influxdb_service_name }}.{{ ansible_hostname }}.{{ lan_dns_domain }}"
+        influxdb_fqdn: "{{ influxdb_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default(localdomain) }}"
 
     - name: Set InfluxDB service facts
       ansible.builtin.set_fact:

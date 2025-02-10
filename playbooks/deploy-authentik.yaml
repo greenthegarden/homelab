@@ -18,17 +18,10 @@
 
     # https://authentik.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-authentik-dashboard/
 
-    - name: Set Authentik facts
-      ansible.builtin.set_fact:
-        authentik_image_name: "{{ hostvars['authentik'].authentik_image_name | default('ghcr.io/benphelps/authentik') }}"
-        authentik_image_tag: "{{ hostvars['authentik'].authentik_image_tag | default('latest') }}"
-        authentik_service_name: "{{ hostvars['authentik'].authentik_service_name | default('authentik') }}"
-        authentik_service_port: "{{ hostvars['authentik'].authentik_service_port | default(3000) }}"
-
     - name: Set Authentik aggregated facts
       ansible.builtin.set_fact:
         authentik_image: "{{ authentik_image_name }}:{{ authentik_image_tag }}"
-        authentik_fqdn: "{{ authentik_service_name }}.{{ hostvars['authentik'].inventory_hostname }}.{{ lan_dns_domain }}"
+        authentik_fqdn: "{{ authentik_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default(localdomain) }}"
 
     - name: Set Authentik API facts
       ansible.builtin.set_fact:

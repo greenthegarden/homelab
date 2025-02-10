@@ -103,7 +103,7 @@
 
         - name: Set host aggregated facts
           ansible.builtin.set_fact:
-            host_fqdn: "{{ ansible_hostname }}.{{ lan_dns_domain }}"
+            host_fqdn: "{{ ansible_hostname }}.{{ homelab.lan_domain | default(localdomain) }}"
 
         ####### DOCKER NETWORK SECTION
 

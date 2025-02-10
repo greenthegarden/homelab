@@ -54,7 +54,7 @@
     - name: Set Grafana aggregated facts
       ansible.builtin.set_fact:
         grafana_image: "{{ grafana_image_name }}:{{ grafana_image_tag }}"
-        grafana_fqdn: "{{ grafana_service_name }}.{{ ansibley_hostname }}.{{ lan_dns_domain }}"
+        grafana_fqdn: "{{ grafana_service_name }}.{{ ansibley_hostname }}.{{ homelab.lan_domain | default(localdomain) }}"
 
     - name: Set Grafana API facts
       ansible.builtin.set_fact:
