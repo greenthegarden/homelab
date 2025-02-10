@@ -5,37 +5,24 @@
 
   vars:
 
-    # # Docker Network names
-    # #TODO: Define as an array
-    # docker_socket_proxy_network_name: docker-socket-proxy
-    # monitoring_network_name: monitoring
-    # web_network_name: web
-
-    # Base Docker container image details
-    # Docker Socket Proxy facts
+    # Base containerised service details
+    # Docker Socket Proxy service facts
     docker_socket_proxy_image_name: ghcr.io/tecnativa/docker-socket-proxy
     docker_socket_proxy_image_tag: edge
     docker_socket_proxy_service_name: "docker-socket-proxy"
     docker_socket_proxy_service_port: 2375
-    # Node Exporter facts
+    # Node Exporter service facts
     # Defined in playbooks/group_vars/homelab_lxc
-    # Portainer Agent facts
+    # Portainer Agent service facts
     portainer_agent_image_name: portainer/agent
     portainer_agent_image_tag: 2.26.1-alpine
     portainer_agent_service_name: portainer_agent
     portainer_agent_service_port: 9001
-    # Prometheus facts
+    # Prometheus service facts
     # Defined in playbooks/group_vars/homelab_lxc
-    # Traefik facts
-    traefik_image_name: traefik
-    traefik_image_tag: 3.3.3
-    traefik_service_name: traefik
-    traefik_service_port: 80
-    traefik_service_port_http: 80
-    traefik_service_port_secure: 443
-    traefik_provider: docker
-    traefik_volume_letsencrypt_name: letsencrypt
-    # Watchtower facts
+    # Traefik service facts
+    # Defined in playbooks/group_vars/homelab_lxc
+    # Watchtower service facts
     watchtower_image_name: containrrr/watchtower
     watchtower_image_tag: 1.7.1
     watchtower_service_name: watchtower
