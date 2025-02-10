@@ -4,13 +4,6 @@
 
 # https://offen.github.io/docker-volume-backup/
 
-- name: Set Docker Volume Backup facts
-  ansible.builtin.set_fact:
-    docker_volume_backup_image_name: offen/docker-volume-backup
-    docker_volume_backup_image_tag:
-    docker_volume_backup_service_name: "{{ hostvars[remote_hostname].docker_volume_backup_service_name | default('docker-volume-backup') }}"
-    docker_volume_backup_local_archive_dir: "/root/local_archive"
-
 - name: Set Docker Volume Backup aggregated facts
   ansible.builtin.set_fact:
     docker_volume_backup_image: "{{ docker_volume_backup_image_name }}:{{ docker_volume_backup_image_tag }}"
