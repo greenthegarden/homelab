@@ -7,7 +7,7 @@ global:
 scrape_configs:
 
   #### MONITORING SERVICES
-  - job_name: "{{ node_exporter_service_name | default('node-exporter') }}"
+  - job_name: '{{ node_exporter_service_name | default("node-exporter") }}'
     scheme: https
     scrape_interval: 5s
     metrics_path: /metrics
