@@ -34,7 +34,7 @@
     node_exporter_image_tag: v1.8.2
     node_exporter_service_name: node-exporter
     node_exporter_service_port: 9100
-    node_exporter_service_protocol: http 
+    node_exporter_service_protocol: http
     # Portainer Agent facts
     portainer_agent_image_name: portainer/agent
     portainer_agent_image_tag: 2.26.1-alpine
@@ -126,7 +126,7 @@
         #     web_network_name: "{{ web_network_name | default('web') }}"
 
         # Based on https://github.com/wollomatic/traefik2-hardened/blob/master/docker-compose.yaml
-        - name: Create a Docker Socket Proxy Docker network
+        - name: Create a Docker Socket Proxy Docker network  # noqa: syntax-check[unknown-module]
           community.docker.docker_network:
             name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
             driver: bridge
@@ -158,12 +158,12 @@
                   name: "{{ docker_volume_backup_service_name | default('docker-volume-backup') }}",
                   tag: "{{ docker_volume_backup_image_tag | default('latest') }}"
                 }
-              - { 
+              - {
                   image: "{{ duplicati_image_name | default('lscr.io/linuxserver/duplicati') }}",
                   name: "{{ duplicati_service_name | default('duplicati') }}",
                   tag: "{{ duplicati_image_tag | default('latest') }}"
                 }
-              - { 
+              - {
                   image: "{{ node_exporter_image_name | default('prom/node-exporter') }}",
                   name: "{{ node_exporter_service_name | default('node-exporter') }}",
                   tag: "{{ node_exporter_image_tag | default('latest') }}"
@@ -186,7 +186,7 @@
 
         # - name: Save images
         #   ansible.builtin.include_tasks: tasks/save-images
-            
+
         # - name: Load images
         #   ansible.builtin.include_tasks: tasks/load-images.yaml
         #   loop: "{{ docker_base_images }}"
@@ -235,7 +235,7 @@
                 "value": "https://github.com/Tecnativa/docker-socket-proxy/releases/tag/v$${major}.$${minor}.$${patch}",
               }
 
-        - name: Check if Docker Socket Proxy is running
+        - name: Check if Docker Socket Proxy is running  # noqa: syntax-check[unknown-module]
           community.docker.docker_container_info:
             name: "{{ docker_socket_proxy_service_name | default('docker-socket-proxy') }}"
           register: docker_socket_proxy_state
@@ -358,7 +358,7 @@
                 "value": "https://github.com/portainer/agent/releases/tag/$${major}.$${minor}.$${patch}",
               }
 
-        - name: Check if Portainer Agent is running
+        - name: Check if Portainer Agent is running  # noqa: syntax-check[unknown-module]
           community.docker.docker_container_info:
             name: "{{ portainer_agent_service_name }}"
           register: portainer_agent_state
@@ -511,7 +511,7 @@
                 "key": "traefik.enable",
                 "value": "true"
               }
-            - { 
+            - {
                 "key": "traefik.docker.network",
                 "value": "{{ web_network_name }}"
               }
@@ -600,7 +600,7 @@
                 "value": "prometheus@internal",
               }
             # What's up Docker? labels
-            - { 
+            - {
                 "key": "wud.tag.include",
                 "value": '^\d+\.\d+\.\d+$$'
               }
@@ -724,11 +724,11 @@
             node_exporter_container_labels: "{{ node_exporter_container_labels | default({}) | combine({item.key: item.value}) }}"
           with_items:
             # Traefik labels
-            - { 
+            - {
                 "key": "traefik.enable",
                 "value": "true"
               }
-            - { 
+            - {
                 "key": "traefik.docker.network",
                 "value": "{{ web_network_name }}"
               }
@@ -749,7 +749,7 @@
                 "value": "true",
               }
             # What's up Docker? labels
-            - { 
+            - {
                 "key": "wud.tag.include",
                 "value": '^\d+\.\d+\.\d+$$'
               }
@@ -758,7 +758,7 @@
                 "value": "https://github.com/prometheus/node_exporter/releases/tag/v$${major}.$${minor}.$${patch}",
               }
 
-        - name: Check if Node Exporter is running
+        - name: Check if Node Exporter is running  # noqa: syntax-check[unknown-module]
           community.docker.docker_container_info:
             name: "{{ node_exporter_service_name }}"
           register: node_exporter_state
@@ -852,11 +852,11 @@
             prometheus_container_labels: "{{ prometheus_container_labels | default({}) | combine({item.key: item.value}) }}"
           with_items:
             # Traefik labels
-            - { 
+            - {
                 "key": "traefik.enable",
                 "value": "true"
               }
-            - { 
+            - {
                 "key": "traefik.docker.network",
                 "value": "{{ web_network_name }}"
               }
@@ -877,7 +877,7 @@
                 "value": "true",
               }
             # What's up Docker? labels
-            - { 
+            - {
                 "key": "wud.tag.include",
                 "value": '^\d+\.\d+\.\d+$$'
               }
@@ -900,7 +900,7 @@
             mode: "644"
           register: prometheus_configuration_creation
 
-        - name: Check if Prometheus is running
+        - name: Check if Prometheus is running  # noqa: syntax-check[unknown-module]
           community.docker.docker_container_info:
             name: "{{ prometheus_service_name }}"
           register: prometheus_state

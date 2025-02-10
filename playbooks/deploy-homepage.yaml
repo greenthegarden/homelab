@@ -98,8 +98,8 @@
         - services
         - widgets
 
-    - name: Check if Homepage is running
-      community.docker.docker_container_info: # noqa: unknown-module
+    - name: Check if Homepage is running  # noqa: syntax-check[unknown-module]
+      community.docker.docker_container_info:
         name: "{{ homepage_service_name }}"
       register: homepage_state
 

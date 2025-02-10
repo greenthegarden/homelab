@@ -6,7 +6,7 @@
     dest: /tmp/{{ item.name }}.tar
     mode: "0644"
 
-- name: Load image {{ item.name }}
+- name: Load image {{ item.name }}  # noqa: syntax-check[unknown-module]
   community.docker.docker_image:
     name: "{{ item.image }}"
     tag: "{{ item.tag }}"

@@ -1,0 +1,159 @@
+---
+
+networks:
+  default:
+  docker_socket_proxy:
+    name: docker-socket-proxy
+    external: true
+  web:
+    name: web
+    external: true
+
+services:
+# https://www.smarthomebeginner.com/authentik-docker-compose-guide-2025/
+
+  postgresql:
+    image: docker.io/library/postgres:16.6-alpine
+    # container_name: postgresql
+    restart: unless-stopped
+    # profiles: ["core", "all"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 5s
+    networks:
+      - default
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - database:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: ${PG_PASS:?database password required}
+      POSTGRES_USER: ${PG_USER:-authentik}
+      POSTGRES_DB: ${PG_DB:-authentik}
+
+  redis:
+    image: docker.io/library/redis:alpine
+    # container_name: redis
+    command: --save 60 1 --loglevel warning
+    restart: unless-stopped
+    # profiles: ["core", "all"]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 3s
+    networks:
+      - default
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - redis:/data
+
+  server:
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2024.10.5}
+    restart: unless-stopped
+    # profiles: ["core", "all"]
+    command: server
+    environment:
+      DOCKER_HOST: tcp://docker-socket-proxy:2375
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_REDIS__DB: 1
+      AUTHENTIK_POSTGRESQL__HOST: postgresql
+      AUTHENTIK_POSTGRESQL__USER: ${PG_USER:-authentik}
+      AUTHENTIK_POSTGRESQL__NAME: ${PG_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${PG_PASS}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_ERROR_REPORTING__ENABLED: ${AUTHENTIK_ERROR_REPORTING__ENABLED}
+      AUTHENTIK_LOG_LEVEL: info # debug, info, warning, error, trace
+      AUTHENTIK_DISABLE_STARTUP_ANALYTICS: true
+      AUTHENTIK_DISABLE_UPDATE_CHECK: false
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      # HTTP Routers
+      - "traefik.http.routers.authentik.entrypoints=websecure"
+      - "traefik.http.routers.authentik.rule=Host(`authentik.authentik.homelab.greenthegarden.com`)"
+      # # Middlewares
+      # - "traefik.http.routers.authentik.middlewares=chain-no-auth@file"
+      # Catch any subdomain using individual application forward authentication
+      - "traefik.http.routers.authentik-output.rule=
+          HostRegexp(`{subdomain:[a-z0-9-]+}.authentik.homelab.greenthegarden.com}`) &&
+          PathPrefix(`/outpost.goauthentik.io/`)"
+      # HTTP Services
+      - "traefik.http.routers.authentik.service=authentik"
+      - "traefik.http.services.authentik.loadbalancer.server.port=9000"
+      - "traefik.http.routers.authentik.tls=true"
+      # Homepage labels
+      - "homepage.group=System"
+      - "homepage.name=authentik"
+      - "homepage.description=Centralised logins"
+      - "homepage.icon=authentik.png"
+      - "homepage.href=https://authentik.authentik.homelab.greenthegarden.com"
+      - "homepage.siteMonitor=https://authentik.authentik.homelab.greenthegarden.com/"
+    networks:
+      - default
+      - docker_socket_proxy
+      - web
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./media:/media
+      - ./custom-templates:/templates
+    ports:
+      - "${COMPOSE_PORT_HTTP:-9000}:9000"
+      # - "${COMPOSE_PORT_HTTPS:-9443}:9443"
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2024.10.5}
+    restart: unless-stopped
+    command: worker
+    environment:
+      DOCKER_HOST: tcp://docker-socket-proxy:2375
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_REDIS__DB: 1
+      AUTHENTIK_POSTGRESQL__HOST: postgresql
+      AUTHENTIK_POSTGRESQL__USER: ${PG_USER:-authentik}
+      AUTHENTIK_POSTGRESQL__NAME: ${PG_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${PG_PASS}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_LOG_LEVEL: info # debug, info, warning, error, trace
+      AUTHENTIK_DISABLE_STARTUP_ANALYTICS: true
+      AUTHENTIK_DISABLE_UPDATE_CHECK: false
+      AUTHENTIK_ERROR_REPORTING__ENABLED: false
+    # profiles: ["core", "all"]
+    # `user: root` and the docker socket volume are optional.
+    # See more for the docker socket integration here:
+    # https://goauthentik.io/docs/outposts/integrations/docker
+    # Removing `user: root` also prevents the worker from fixing the permissions
+    # on the mounted folders, so when removing this make sure the folders have the correct UID/GID
+    # (1000:1000 by default)
+    user: root
+    networks:
+      - default
+      - docker_socket_proxy
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./media:/media
+      - ./certs:/certs
+      - ./custom-templates:/templates
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  database:
+    driver: local
+  redis:
+    driver: local

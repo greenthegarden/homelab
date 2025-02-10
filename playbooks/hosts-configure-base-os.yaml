@@ -5,7 +5,7 @@
 
   tasks:
 
-    - name: Set timezone to Australia/Adelaide
+    - name: Set timezone to Australia/Adelaide   # noqa: syntax-check[unknown-module]
       community.general.timezone:
         name: Australia/Adelaide
 

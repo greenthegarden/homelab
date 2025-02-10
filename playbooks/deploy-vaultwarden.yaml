@@ -92,8 +92,8 @@
         group: root
         mode: "0644"
 
-    - name: Check if Vaultwarden is running
-      community.docker.docker_container_info: # noqa: syntax-check[unknown-module]
+    - name: Check if Vaultwarden is running  # noqa: syntax-check[unknown-module]
+      community.docker.docker_container_info:
         name: "{{ vaultwarden_service_name }}"
       register: vaultwarden_state
 

@@ -92,7 +92,7 @@
             "value": "https://{{ influxdb_fqdn }}/"
           }
 
-    - name: Create InfluxDB volumes # noqa: syntax-check[unknown-module]
+    - name: Create InfluxDB volumes  # noqa: syntax-check[unknown-module]
       community.docker.docker_volume:
         name: "{{ item }}"
         state: present

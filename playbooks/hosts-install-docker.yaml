@@ -7,5 +7,5 @@
       - name: docker
 
   roles:
-    - geerlingguy.pip
+    - geerlingguy.pip  # noqa: syntax-check[specific]
     - geerlingguy.docker

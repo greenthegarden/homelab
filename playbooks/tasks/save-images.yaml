@@ -1,6 +1,6 @@
 ---
 
-- name: Archive image {{ item.image }}
+- name: Archive image {{ item.image }}  # noqa: syntax-check[unknown-module]
   community.docker.docker_image:
     name: "{{ item.image }}"
     tag: "{{ item.tag }}"

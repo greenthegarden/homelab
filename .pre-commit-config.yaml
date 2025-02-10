@@ -2,7 +2,7 @@
 # vim:ts=2:sw=2:ai:si:syntax=yaml
 ---
 minimum_pre_commit_version: 1.16.1
-exclude: '^.vscode/'
+exclude: '^.vscode/|.ansible'
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -25,8 +25,8 @@ repos:
     rev: v25.1.2
     hooks:
       - id: ansible-lint
-        files: \.(yaml|yml)$
-        exclude: ^(playbooks/files/homepage/config/bookmarks\.yaml|playbooks/files/influxdb/influxdb\.yaml|playbooks/group_vars/homelab_lxc\.yaml)$
+        files: ^playbooks/*.(yaml|yml)$
+        exclude: ^playbooks/(files/homepage/config/bookmarks\.yaml|files/influxdb/influxdb\.yaml|files/authentik/authentik\.env|group_vars/homelab_lxc\.yaml)$
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.44.0
@@ -48,4 +48,4 @@ repos:
     hooks:
       - id: encryption-check
         # override files to all files in ./tasks/ directory
-        files: ^(playbooks/files/homepage/config/bookmarks\.yaml|playbooks/files/influxdb/influxdb\.yaml|playbooks/group_vars/homelab_lxc\.yaml)$
+        files: ^playbooks/(files/homepage/config/bookmarks\.yaml|files/influxdb/influxdb\.yaml|files/authentik/authentik\.env|group_vars/homelab_lxc\.yaml)$

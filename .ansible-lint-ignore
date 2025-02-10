@@ -1,6 +1,0 @@
-playbooks/deploy-homepage.yaml syntax-check[unknown-module]
-playbooks/deploy-portainer.yaml syntax-check[unknown-module]
-playbooks/deploy-vaultwarden.yaml syntax-check[unknown-module]
-playbooks/hosts-configure-base-os.yaml syntax-check[unknown-module]
-playbooks/hosts-install-docker-base.yaml syntax-check[unknown-module]
-playbooks/hosts-install-docker.yaml syntax-check[specific]

@@ -101,8 +101,8 @@
         #     "value": "ptr_+Au92kp00xt8cbvCSmSH6MfUZbtGnwHlDbuhckEvaIU=",
         #   }
 
-    - name: Create volume for Portainer
-      community.docker.docker_volume: # noqa: syntax-check[unknown-module]
+    - name: Create volume for Portainer  # noqa: syntax-check[unknown-module]
+      community.docker.docker_volume:
         name: "{{ portainer_volume_name }}"
 
     - name: Check if Portainer is running
