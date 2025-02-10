@@ -85,13 +85,13 @@
 
     - name: Copy static configuration
       ansible.builtin.template:
-        src: files/homepage/config
-        dest: /root/config
+        src: playbooks/files/homepage
+        dest: /root/
         mode: "0644"
 
     - name: Copy templated configuration
       ansible.builtin.template:
-        src: "templates/homepage/config/{{ item }}.yaml.j2"
+        src: "playbooks/templates/homepage/config/{{ item }}.yaml.j2"
         dest: "/root/homepage/config/{{ item }}.yaml"
         mode: "0644"
       loop:
