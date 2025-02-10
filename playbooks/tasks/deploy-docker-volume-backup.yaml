@@ -6,6 +6,7 @@
 
 - name: Set Docker Volume Backup aggregated facts
   ansible.builtin.set_fact:
+    docker_volume_backup_local_archive_dir: "/root/local_archive"
     docker_volume_backup_image: "{{ docker_volume_backup_image_name }}:{{ docker_volume_backup_image_tag }}"
     docker_volume_backup_fqdn: "{{ docker_volume_backup_service_name }}.{{ ansible_hostname }}.{{ lan_dns_domain }}"
 
