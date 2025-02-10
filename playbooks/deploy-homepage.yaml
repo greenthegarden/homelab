@@ -84,7 +84,7 @@
           }
 
     - name: Copy static configuration
-      ansible.builtin.template:
+      ansible.builtin.copy:
         src: files/homepage
         dest: /root/
         mode: "0644"
