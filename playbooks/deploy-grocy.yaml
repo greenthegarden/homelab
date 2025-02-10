@@ -164,6 +164,6 @@
 
     - name: Deploy Docker Volume Backup
       ansible.builtin.include_tasks:
-        file: playbooks/tasks/deploy-docker-volume-backup.yaml
+        file: tasks/deploy-docker-volume-backup.yaml
       vars:
         docker_volume_backup_volume: grocy_volume_name
