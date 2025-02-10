@@ -5,6 +5,7 @@
 
   vars:
 
+    # Portainer service facts
     portainer_image_name: portainer/portainer-ce
     portainer_image_tag: 2.26.1-alpine
     portainer_service_name: portainer

@@ -5,7 +5,7 @@
 
   vars:
 
-    # Homepage Service facts
+    # Homepage service facts
     homepage_image_name: ghcr.io/gethomepage/homepage
     homepage_image_tag: v0.10.9
     homepage_service_name: homepage
@@ -13,16 +13,16 @@
 
   tasks:
 
-    ####### homepage SECTION
+    ####### HOMEPAGE SECTION
 
     # https://homepage.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-homepage-dashboard/
 
-    - name: Set homepage aggregated facts
+    - name: Set Homepage aggregated facts
       ansible.builtin.set_fact:
         homepage_image: "{{ homepage_image_name }}:{{ homepage_image_tag }}"
         homepage_fqdn: "{{ homepage_service_name }}.{{ ansible_hostname }}.{{ lan_dns_domain }}"
 
-    - name: Set homepage service facts
+    - name: Set Homepage service facts
       ansible.builtin.set_fact:
         homepage_networks:
           - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
@@ -34,7 +34,7 @@
           - /etc/localtime:/etc/localtime:ro
           - /etc/timezone:/etc/timezone:ro
 
-    - name: Create homepage container labels
+    - name: Create Homepage container labels
       ansible.builtin.set_fact:
         homepage_container_labels: "{{ homepage_container_labels | default({}) | combine({item.key: item.value}) }}"
       with_items:
@@ -85,8 +85,8 @@
 
     - name: Copy static configuration
       ansible.builtin.template:
-        src: files/homepage
-        dest: /root/
+        src: files/homepage/config
+        dest: /root/config
         mode: "0644"
 
     - name: Copy templated configuration
@@ -98,12 +98,12 @@
         - services
         - widgets
 
-    - name: Check if homepage is running
+    - name: Check if Homepage is running
       community.docker.docker_container_info:
         name: "{{ homepage_service_name }}"
       register: homepage_state
 
-    - name: Remove homepage container if changing version
+    - name: Remove Homepage container if changing version
       when:
         - homepage_state.exists
         - homepage_image_tag != homepage_state.container.Config.Image | split(':') | last
@@ -113,20 +113,20 @@
             name: "{{ homepage_service_name }}"
             state: absent
 
-        - name: Set update homepage
+        - name: Set update Homepage
           ansible.builtin.set_fact:
             homepage_update: true
 
-    - name: Deploy homepage if not running
+    - name: Deploy Homepage if not running
       when: not homepage_state.exists or (homepage_update | default(false))
       block:
-        - name: Pull homepage image
+        - name: Pull Homepage image
           community.docker.docker_image:
             name: "{{ homepage_image }}"
             source: pull
 
         # docker run -d -p 3000:3000 homepage/homepage
-        - name: Deploy homepage
+        - name: Deploy Homepage
           community.docker.docker_container:
             name: "{{ homepage_service_name }}"
             image: "{{ homepage_image }}"
@@ -140,7 +140,7 @@
             volumes: "{{ homepage_volumes }}"
           register: homepage_container_state
 
-        - name: Wait for homepage to accept connections
+        - name: Wait for Homepage to accept connections
           ansible.builtin.wait_for:
             host: "{{ homepage_fqdn }}"
             port: 80

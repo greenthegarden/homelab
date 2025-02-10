@@ -6,6 +6,7 @@
 
   vars:
 
+    # InfluxDB service facts
     influxdb_image_name: influxdb
     influxdb_image_tag: 2.7.11-alpine
     influxdb_service_name: influxdb
