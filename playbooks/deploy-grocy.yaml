@@ -1,0 +1,169 @@
+---
+- name: Deploy Grocy container
+
+  hosts: grocy
+
+  vars:
+
+    # Grocy service facts
+    grocy_image_name: linuxserver/grocy
+    grocy_image_tag: 4.4.1
+    grocy_service_name: grocy
+    grocy_service_port: 9283
+    grocy_volume_name: grocy
+
+  tasks:
+
+    ####### GROCY SECTION
+
+    # https://hub.docker.com/_/grocy
+    # https://codeopolis.com/posts/how-to-install-grocy-using-docker/
+    # Initial login: User: admin, Passord: admin
+
+    - name: Set Grocy aggregated facts
+      ansible.builtin.set_fact:
+        grocy_image: "{{ grocy_image_name }}:{{ grocy_image_tag }}"
+        grocy_fqdn: "{{ grocy_service_name }}.{{ ansible_hostname }}.{{ lan_dns_domain }}"
+
+    - name: Set Grocy service facts
+      ansible.builtin.set_fact:
+        grocy_networks:
+          - name: "{{ web_network_name | default('web') }}"
+        grocy_ports:
+          - "{{ grocy_service_port | default(9283) }}:9283"
+        grocy_user: { uid: 1000, gid: 1000 }
+        grocy_volumes:
+          - "{{ grocy_volume_name }}:/config"
+          - /etc/localtime:/etc/localtime:ro
+          - /etc/timezone:/etc/timezone:ro
+
+    - name: Create Grocy container labels
+      ansible.builtin.set_fact:
+        grocy_container_labels: "{{ grocy_container_labels | default({}) | combine({item.key: item.value}) }}"
+      with_items:
+        # Traefik labels
+        - {
+            "key": "traefik.enable",
+            "value": "true"
+          }
+        - {
+            "key": "traefik.docker.network",
+            "value": "{{ web_network_name }}"
+          }
+        - {
+            "key": "traefik.http.routers.{{ grocy_service_name }}.entrypoints",
+            "value": "websecure",
+          }
+        - {
+            "key": "traefik.http.routers.{{ grocy_service_name }}.rule",
+            "value": "Host(`{{ grocy_fqdn }}`)",
+          }
+        - {
+            "key": "traefik.http.routers.{{ grocy_service_name }}.service",
+            "value": "{{ grocy_service_name }}",
+          }
+        - {
+            "key": "traefik.http.routers.{{ grocy_service_name }}.tls",
+            "value": "true",
+          }
+        # What's up Docker? labels
+        - {
+            "key": "wud.tag.include",
+            "value": '^\d+\.\d+\.\d+$$'
+          }
+        - {
+            "key": "wud.link.template",
+            "value": "https://github.com/grocy/grocy/releases/tag/v$${major}.$${minor}.$${patch}",
+          }
+        # Docker Volume Back labels
+        - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+        # Homepage labels
+        - { "key": "homepage.group", "value": "Applications" }
+        - { "key": "homepage.name", "value": "Grocy" }
+        - { "key": "homepage.description", "value": "What's in the pantry?" }
+        - { "key": "homepage.icon", "value": "grocy.png" }
+        - { "key": "homepage.href", "value": "https://{{ grocy_fqdn }}/" }
+        - {
+            "key": "homepage.siteMonitor",
+            "value": "https://{{ grocy_fqdn }}/",
+          }
+
+    - name: Create Grocy volume  # noqa: syntax-check[unknown-module]
+      community.docker.docker_volume:
+        name: "{{ grocy_volume_name }}"
+        state: present
+
+    - name: Check if Grocy is running  # noqa: syntax-check[unknown-module]
+      community.docker.docker_container_info:
+        name: "{{ grocy_service_name }}"
+      register: grocy_state
+
+    - name: Remove Grocy container if changing version
+      when:
+        - grocy_state.exists
+        - grocy_image_tag != grocy_state.container.Config.Image | split(':') | last
+      block:
+        - name: Stop and remove existing Grocy container
+          community.docker.docker_container:
+            name: "{{ grocy_service_name }}"
+            state: absent
+
+        - name: Set update Grocy
+          ansible.builtin.set_fact:
+            grocy_update: true
+
+    - name: Deploy Grocy if not running
+      when:
+        - not grocy_state.exists or (grocy_update | default(false))
+      block:
+        - name: Pull Grocy image
+          community.docker.docker_image:
+            name: "{{ grocy_image }}"
+            source: pull
+
+        # docker run -d \
+        #   --name=grocy \
+        #   -e PUID=1000 \
+        #   -e PGID=1000 \
+        #   -e TZ=Europe/London \
+        #   -p 9283:80 \
+        #   -v /path/to/data:/config \
+        #   --restart unless-stopped \
+        #   lscr.io/linuxserver/grocy:latest
+
+        # initial password: user: admin, password: admin
+        - name: Deploy Grocy
+          community.docker.docker_container:
+            name: "{{ grocy_service_name }}"
+            image: "{{ grocy_image }}"
+            detach: true
+            env:
+              PUID: "{{ grocy_user.uid | default(1000) | quote }}"
+              PGID: "{{ grocy_user.gid | default(1000) | quote }}"
+              TZ: "{{ home.timezone | default(omit) }}"
+            labels: "{{ (grocy_container_labels | default({})) | default(omit) }}"
+            networks_cli_compatible: true
+            networks: "{{ grocy_networks }}"
+            restart: true
+            restart_policy: unless-stopped
+            state: started
+            volumes: "{{ grocy_volumes }}"
+          register: grocy_container_state
+
+        - name: Wait for Grocy to accept connections
+          ansible.builtin.wait_for:
+            host: "{{ grocy_fqdn }}"
+            port: 80
+            connect_timeout: 1
+            delay: 10
+            state: started
+            timeout: 30
+          register: grocy_running
+          retries: 10
+          until: grocy_running is success
+
+    - name: Deploy Docker Volume Backup
+      ansible.builtin.include_tasks:
+        file: playbooks/tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_volume: grocy_volume_name

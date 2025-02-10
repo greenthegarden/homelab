@@ -1,0 +1,104 @@
+---
+
+####### DOCKER VOLUME BACKUP SECTION
+
+# https://offen.github.io/docker-volume-backup/
+
+- name: Set Docker Volume Backup aggregated facts
+  ansible.builtin.set_fact:
+    docker_volume_backup_image: "{{ docker_volume_backup_image_name }}:{{ docker_volume_backup_image_tag }}"
+    docker_volume_backup_fqdn: "{{ docker_volume_backup_service_name }}.{{ ansible_hostname }}.{{ lan_dns_domain }}"
+
+- name: Set Docker Volume Backup service facts
+  ansible.builtin.set_fact:
+    docker_volume_backup_networks:
+      - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+    docker_volume_backup_volumes:
+      # Mounting the Docker socket allows the script to stop and restart
+      # the container during backup and to access the container labels to
+      # specify custom commands. You can omit this if you don't want to
+      # stop the container or run custom commands. In case you need to
+      # proxy the socket, you can also provide a location by setting
+      # `DOCKER_HOST` in the container
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # If you mount a local directory or volume to `/archive` a local
+      # copy of the backup will be stored there. You can override the
+      # location inside of the container by setting `BACKUP_ARCHIVE`.
+      # You can omit this if you do not want to keep local backups.
+      - "{{ docker_volume_backup_local_archive_dir }}:/archive"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: Add volume to backup
+  ansible.builtin.set_fact:
+    docker_volume_backup_volumes: "{{ docker_volume_backup_volumes + docker_volume_backup_volume }}"
+
+- name: Create Docker Volume Backup container labels
+  ansible.builtin.set_fact:
+    docker_volume_backup_container_labels: "{{ docker_volume_backup_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # What's up Docker? labels
+    - {
+      "key": "wud.tag.include",
+      "value": '^\d+\.\d+\.\d+$$'
+    }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/offen/docker-volume-backup/releases/tag/v$${major}.$${minor}.$${patch}",
+    }
+
+- name: Create local backup directory
+  ansible.builtin.file:
+    path: "{{ docker_volume_backup_local_archive_dir | default('/tmp/local_archive') }}"
+    mode: "644"
+    state: directory
+  register: local_archive_directory_creation
+
+- name: Copy env file to host
+  ansible.builtin.template:
+    src: templates/docker-volume-backup/docker-volume-backup.env.j2
+    dest: /root/docker-volume-backup.env
+    mode: "644"
+  register: env_file_creation
+
+- name: Check if Docker Volume Backup is running
+  community.docker.docker_container_info:
+    name: "{{ docker_volume_backup_service_name | default('docker-volume-backup') }}"
+  register: docker_volume_backup_state
+
+- name: Remove Docker Volume Backup container if changing version
+  when:
+    - docker_volume_backup_state.exists
+    - docker_volume_backup_image_tag != docker_volume_backup_state.container.Config.Image | split(':') | last
+  block:
+    - name: Stop and remove existing Docker Volume Backup container
+      community.docker.docker_container:
+        name: "{{ docker_volume_backup_service_name | default('docker-volume-backup') }}"
+        state: absent
+
+    - name: Set update Docker Volume Backup fact
+      ansible.builtin.set_fact:
+        docker_volume_backup_update: true
+
+- name: Deploy Docker Volume Backup if not running
+  when: not docker_volume_backup_state.exists or (docker_volume_backup_update | default(false))
+  block:
+    - name: Pull Docker Volume Backup image
+      community.docker.docker_image:
+        name: "{{ docker_volume_backup_image }}"
+        source: pull
+
+    - name: Deploy Docker Volume Backup
+      community.docker.docker_container:
+        name: "{{ docker_volume_backup_service_name }}"
+        image: "{{ docker_volume_backup_image }}"
+        env_file: /root/docker-volume-backup.env
+        labels: "{{ docker_volume_backup_container_labels }}"
+        networks: "{{ docker_volume_backup_networks }}"
+        restart: true
+        restart_policy: always
+        security_opts:
+          - no-new-privileges=true
+        state: started
+        volumes: "{{ docker_volume_backup_volumes }}"
+      register: docker_volume_backup_container_state
