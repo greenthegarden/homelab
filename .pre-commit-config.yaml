@@ -1,0 +1,54 @@
+# -*- mode: yaml -*-
+# vim:ts=2:sw=2:ai:si:syntax=yaml
+---
+minimum_pre_commit_version: 1.16.1
+exclude: '^.vscode/'
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks.git
+    rev: v5.0.0
+    hooks:
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: fix-byte-order-marker
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+      - id: trailing-whitespace
+        args: ["--markdown-linebreak-ext=md"]
+
+  - repo: https://github.com/ansible-community/ansible-lint.git
+    rev: v25.1.2
+    hooks:
+      - id: ansible-lint
+        files: \.(yaml|yml)$
+
+  # - repo: https://github.com/IamTheFij/ansible-pre-commit.git
+  #   rev: "v0.1.2"
+  #   hooks:
+  #     - id: encryption-check
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.44.0
+    hooks:
+      - id: markdownlint
+        types: [markdown]
+        exclude: ./roles
+
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: "v9.20.0"
+    hooks:
+      - id: commitlint
+        stages: [commit-msg]
+        additional_dependencies: ["@commitlint/config-conventional"]
+        verbose: false
+
+  - repo: https://github.com/pypeaday/ansible-vault-pre-commit
+    rev: v1.0
+    hooks:
+      - id: encryption-check
+        # override files to all files in ./tasks/ directory
+        files: ((^|/)playbooks)
