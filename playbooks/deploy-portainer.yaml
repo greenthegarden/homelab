@@ -43,13 +43,13 @@
         portainer_container_labels: "{{ portainer_container_labels | default({}) | combine({item.key: item.value}) }}"
       with_items:
         # Traefik labels
-        - { 
+        - {
             "key": "traefik.enable",
             "value": "true"
           }
-        - { 
-            "key": "traefik.docker.network", 
-            "value": "{{ web_network_name | default('web') }}" 
+        - {
+            "key": "traefik.docker.network",
+            "value": "{{ web_network_name | default('web') }}"
           }
         - {
             "key": "traefik.http.routers.{{ portainer_service_name }}.entrypoints",
@@ -72,7 +72,7 @@
             "value": "9000",
           }
         # What's up Docker? labels
-        - { 
+        - {
             "key": "wud.tag.include",
             "value": '^\d+\.\d+\.\d+-alpine+$$'
           }
@@ -102,7 +102,7 @@
         #   }
 
     - name: Create volume for Portainer
-      community.docker.docker_volume:
+      community.docker.docker_volume: # noqa: syntax-check[unknown-module]
         name: "{{ portainer_volume_name }}"
 
     - name: Check if Portainer is running

@@ -20,9 +20,7 @@ layout:
   - Applications:
       style: row
       columns: 2
-      # useEqualHeights: true
   - System:
       initiallyCollapsed: true
   - Monitoring:
       initiallyCollapsed: true
-  # - Auto-Discovered:

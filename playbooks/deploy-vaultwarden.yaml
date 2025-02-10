@@ -44,7 +44,7 @@
             "key": "traefik.enable",
             "value": "true"
           }
-        - { 
+        - {
             "key": "traefik.docker.network",
             "value": "{{ web_network_name }}"
           }
@@ -65,7 +65,7 @@
             "value": "true",
           }
         # What's up Docker? labels
-        - { 
+        - {
             "key": "wud.tag.include",
             "value": '^\d+\.\d+\.\d+-alpine+$$'
           }
@@ -93,7 +93,7 @@
         mode: "0644"
 
     - name: Check if Vaultwarden is running
-      community.docker.docker_container_info:
+      community.docker.docker_container_info: # noqa: syntax-check[unknown-module]
         name: "{{ vaultwarden_service_name }}"
       register: vaultwarden_state
 

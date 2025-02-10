@@ -4,7 +4,7 @@
 minimum_pre_commit_version: 1.16.1
 exclude: '^.vscode/'
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks.git
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
       - id: check-case-conflict
@@ -20,16 +20,13 @@ repos:
       - id: trailing-whitespace
         args: ["--markdown-linebreak-ext=md"]
 
-  - repo: https://github.com/ansible-community/ansible-lint.git
+  # https://ansible.readthedocs.io/projects/lint/
+  - repo: https://github.com/ansible-community/ansible-lint
     rev: v25.1.2
     hooks:
       - id: ansible-lint
         files: \.(yaml|yml)$
-
-  # - repo: https://github.com/IamTheFij/ansible-pre-commit.git
-  #   rev: "v0.1.2"
-  #   hooks:
-  #     - id: encryption-check
+        exclude: ^(playbooks/files/homepage/config/bookmarks\.yaml|playbooks/files/influxdb/influxdb\.yaml|playbooks/group_vars/homelab_lxc\.yaml)$
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.44.0
@@ -51,4 +48,4 @@ repos:
     hooks:
       - id: encryption-check
         # override files to all files in ./tasks/ directory
-        files: ((^|/)playbooks)
+        files: ^(playbooks/files/homepage/config/bookmarks\.yaml|playbooks/files/influxdb/influxdb\.yaml|playbooks/group_vars/homelab_lxc\.yaml)$

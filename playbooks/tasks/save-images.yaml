@@ -6,9 +6,10 @@
     tag: "{{ item.tag }}"
     archive_path: "/tmp/{{ item.name }}.tar"
     source: pull
+    mode: "0644"
     state: present
 
-- name: Copy image {{ item.name }} to ansible host
+- name: Copy, to ansible host, image {{ item.name }}
   ansible.builtin.fetch:
     src: /tmp/{{ item.name }}.tar
     dest: /tmp/images/

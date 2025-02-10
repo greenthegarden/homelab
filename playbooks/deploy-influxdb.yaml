@@ -52,7 +52,7 @@
             "key": "traefik.enable",
             "value": "true"
           }
-        - { 
+        - {
             "key": "traefik.docker.network",
             "value": "{{ web_network_name }}"
           }
@@ -92,7 +92,7 @@
             "value": "https://{{ influxdb_fqdn }}/"
           }
 
-    - name: Create InfluxDB volumes
+    - name: Create InfluxDB volumes # noqa: syntax-check[unknown-module]
       community.docker.docker_volume:
         name: "{{ item }}"
         state: present

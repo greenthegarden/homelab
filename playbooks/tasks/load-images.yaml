@@ -1,14 +1,16 @@
 ---
 
-- name: "Copy to host image {{ item.name }}"
+- name: Copy to host image {{ item.name }}
   ansible.builtin.copy:
     src: /tmp/images/{{ item.name }}.tar
     dest: /tmp/{{ item.name }}.tar
+    mode: "0644"
 
-- name: "Load image {{ item.name }}"
+- name: Load image {{ item.name }}
   community.docker.docker_image:
     name: "{{ item.image }}"
     tag: "{{ item.tag }}"
     load_path: "/tmp/{{ item.name }}.tar"
     source: load
+    mode: "0644"
     state: present
