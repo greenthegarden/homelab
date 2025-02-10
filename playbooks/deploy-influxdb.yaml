@@ -92,15 +92,13 @@
             "value": "https://{{ influxdb_fqdn }}/"
           }
 
-    - name: Create InfluxDB config volume
+    - name: Create InfluxDB volumes
       community.docker.docker_volume:
-        name: "{{ influxdb_config_volume_name }}"
+        name: "{{ item }}"
         state: present
-
-    - name: Create InfluxDB data volume
-      community.docker.docker_volume:
-        name: "{{ influxdb_data_volume_name }}"
-        state: present
+      loop:
+        - "{{ influxdb_config_volume_name }}"
+        - "{{ influxdb_data_volume_name }}"
 
     - name: Check if InfluxDB is running
       community.docker.docker_container_info:
