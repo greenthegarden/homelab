@@ -144,7 +144,7 @@
             env:
               PUID: "{{ grocy_user.uid | default(1000) | quote }}"
               PGID: "{{ grocy_user.gid | default(1000) | quote }}"
-              TZ: "{{ home.timezone | default(omit) }}"
+              TZ: "{{ homelab.timezone | default(omit) }}"
             labels: "{{ (grocy_container_labels | default({})) | default(omit) }}"
             networks_cli_compatible: true
             networks: "{{ grocy_networks }}"

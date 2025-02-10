@@ -1,0 +1,272 @@
+---
+- name: Deploy Grafana container
+
+  hosts: grafana
+
+  vars:
+
+    # Grafana Service facts
+    grafana_image_name: grafana/grafana
+    grafana_image_tag: 11.5.1
+    grafana_service_name: grafana
+    grafana_service_port: 3000
+    grafana_volume_name: grafana
+
+  tasks:
+
+    ####### PROMETHEUS SECTION
+
+    - name: Create Prometheus configuration directory
+      ansible.builtin.file:
+        path: /root/prometheus
+        mode: "0644"
+        state: directory
+      register: prometheus_configuration_creation
+
+    - name: Create federation Prometheus configuration file
+      ansible.builtin.template:
+        src: templates/prometheus/prometheus-federation.yml.j2
+        dest: /root/prometheus/prometheus.yml
+        mode: "0644"
+      register: prometheus_configuration_creation
+
+    - name: Deploy Prometheus  # noqa: syntax-check[unknown-module]
+      community.docker.docker_container:
+        name: "{{ prometheus_service_name | default('prometheus') }}"
+        image: "{{ prometheus_image }}"
+        command: "{{ prometheus_command }}"
+        detach: true
+        labels: "{{ prometheus_container_labels }}"
+        memory: 300M
+        memory_reservation: 100M
+        networks_cli_compatible: true
+        networks: "{{ prometheus_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ prometheus_volumes }}"
+      register: prometheus_container_state
+
+    ####### GRAFANA SECTION
+
+    # https://grafana.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-grafana-dashboard/
+
+    - name: Set Grafana aggregated facts
+      ansible.builtin.set_fact:
+        grafana_image: "{{ grafana_image_name }}:{{ grafana_image_tag }}"
+        grafana_fqdn: "{{ grafana_service_name }}.{{ ansibley_hostname }}.{{ lan_dns_domain }}"
+
+    - name: Set Grafana API facts
+      ansible.builtin.set_fact:
+        grafana_instance: "{{ grafana_service_name | default('grafana') }}"
+        grafana_networks:
+          - name: "{{ monitoring_network_name | default('monitoring') }}"
+          - name: "{{ web_network_name | default('web') }}"
+        grafana_ports:
+          - "{{ grafana_service_port | default(3000) }}:3000"
+        grafana_use_provisioning: false # will use API
+        grafana_volumes:
+          - "{{ grafana_volume_name }}:/var/lib/grafana"
+          - /etc/localtime:/etc/localtime:ro
+          - /etc/timezone:/etc/timezone:ro
+
+    - name: Create Grafana container labels
+      ansible.builtin.set_fact:
+        grafana_container_labels: "{{ grafana_container_labels | default({}) | combine({item.key: item.value}) }}"
+      with_items:
+        # Traefik labels
+        - {
+            "key": "traefik.enable",
+            "value": "true"
+          }
+        - {
+            "key": "traefik.docker.network",
+            "value": "{{ web_network_name }}"
+          }
+        - {
+            "key": "traefik.http.routers.{{ grafana_service_name }}.entrypoints",
+            "value": "websecure",
+          }
+        - {
+            "key": "traefik.http.routers.{{ grafana_service_name }}.rule",
+            "value": "Host(`{{ grafana_fqdn }}`)",
+          }
+        - {
+            "key": "traefik.http.routers.{{ grafana_service_name }}.service",
+            "value": "{{ grafana_service_name }}",
+          }
+        - {
+            "key": "traefik.http.routers.{{ grafana_service_name }}.tls",
+            "value": "true",
+          }
+        # What's up Docker? labels
+        - {
+            "key": "wud.tag.include",
+            "value": '^\d+\.\d+\.\d+$$'
+          }
+        - {
+            "key": "wud.link.template",
+            "value": "https://github.com/grafana/grafana/releases/tag/v$${major}.$${minor}.$${patch}",
+          }
+        # Homepage labels
+        - { "key": "homepage.group", "value": "Monitoring" }
+        - { "key": "homepage.name", "value": "Grafana" }
+        - { "key": "homepage.description", "value": "System dashboard" }
+        - { "key": "homepage.icon", "value": "grafana.png" }
+        - { "key": "homepage.href", "value": "https://{{ grafana_fqdn }}/" }
+        - {
+            "key": "homepage.siteMonitor",
+            "value": "https://{{ grafana_fqdn }}/",
+          }
+
+    - name: Check if Grafana is running
+      community.docker.docker_container_info:
+        name: "{{ grafana_service_name }}"
+      register: grafana_state
+
+    - name: Remove Grafana container if changing version
+      when:
+        - grafana_state.exists
+        - grafana_image_tag != grafana_state.container.Config.Image | split(':') | last
+      block:
+        - name: Stop and remove existing Grafana container
+          community.docker.docker_container:
+            name: "{{ grafana_service_name }}"
+            state: absent
+
+        - name: Set update Grafana
+          ansible.builtin.set_fact:
+            grafana_update: true
+
+    - name: Deploy Grafana if not running
+      when: not grafana_state.exists or (grafana_update | default(false))
+      block:
+        - name: Create Grafana volume
+          community.docker.docker_volume:
+            name: "{{ grafana_volume_name }}"
+            state: present
+
+        - name: Pull Grafana image
+          community.docker.docker_image:
+            name: "{{ grafana_image }}"
+            source: pull
+
+        # docker run -d -p 3000:3000 grafana/grafana
+        - name: Deploy Grafana
+          community.docker.docker_container:
+            name: "{{ grafana_service_name }}"
+            image: "{{ grafana_image }}"
+            detach: true
+            env:
+              GF_SECURITY_ADMIN_USER: "{{ grafana.admin_user | default('dummy') }}"
+              GF_SECURITY_ADMIN_PASSWORD: "{{ grafana.admin_password | default('dummy') }}"
+              GF_USERS_ALLOW_SIGN_UP: "false"
+              # For reverse proxy support
+              GF_SERVER_ROOT_URL: "https://{{ grafana_fqdn }} "
+              # For Authentik support
+              GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
+              GF_AUTH_GENERIC_OAUTH_NAME: "authentik"
+              GF_AUTH_GENERIC_OAUTH_CLIENT_ID: "{{ grafana.oauth_client_id | default('dummy') }}"
+              GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: "{{ grafana.oauth_client_secret | default('dummy')}}"
+              GF_AUTH_GENERIC_OAUTH_SCOPES: "openid profile email"
+              GF_AUTH_GENERIC_OAUTH_AUTH_URL: "https://authentik.authentik.homelab.greenthegarden.com/application/o/authorize/"
+              GF_AUTH_GENERIC_OAUTH_TOKEN_URL: "https://authentik.authentik.homelab.greenthegarden.com/application/o/token/"
+              GF_AUTH_GENERIC_OAUTH_API_URL: "https://authentik.authentik.homelab.greenthegarden.com/application/o/userinfo/"
+              GF_AUTH_SIGNOUT_REDIRECT_URL: "https://authentik.authentik.homelab.greenthegarden.com/application/o/grafana/end-session/"
+              # Optionally enable auto-login (bypasses Grafana login screen)
+              GF_AUTH_OAUTH_AUTO_LOGIN: "false"
+              # Optionally map user groups to Grafana roles
+              GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH: "contains(groups, 'Grafana Admins') && 'Admin' || contains(groups, 'Grafana Editors') && 'Editor' || 'Viewer'"
+            labels: "{{ (grafana_container_labels | default({})) | default(omit) }}"
+            networks_cli_compatible: true
+            networks: "{{ grafana_networks }}"
+            restart: true
+            restart_policy: unless-stopped
+            state: started
+            volumes: "{{ grafana_volumes }}"
+          register: grafana_container_state
+
+        # - name: Wait for Grafana to accept connections
+        #   ansible.builtin.wait_for:
+        #     host: "{{ grafana_fqdn }}"
+        #     port: 80
+        #     connect_timeout: 1
+        #     delay: 10
+        #     state: started
+        #     timeout: 30
+        #   register: grafana_running
+        #   until: grafana_running is success
+        #   retries: 10
+
+    # # TODO: Shift to deployment of relevant services
+    # - name: Create Grafana datasources
+    #   community.grafana.grafana_datasource:
+    #     name: "{{ item.name }}"
+    #     url: "https://{{ grafana_fqdn }}"
+    #     url_password: "{{ grafana_security.admin_password }}"
+    #     url_username: "{{ grafana_security.admin_user }}"
+    #     org_id: "1"
+    #     ds_type: "{{ item.type }}"
+    #     ds_url: "{{ item.url }}"
+    #     access: "{{ item.access }}"
+    #     state: present
+    #     tls_skip_verify: true
+    #   with_items: "{{ grafana_datasources }}"
+    #   vars:
+    #     grafana_datasources:
+    #       - name: Prometheus
+    #         type: prometheus
+    #         access: proxy
+    #         url: "https://{{ prometheus_fqdn }}"
+    #         basicAuth: false
+
+    # # TODO: need to fix
+    # # - name: Install Grafana plugins
+    # #   community.grafana.grafana_plugin:
+    # #     name: "{{ item.plugin_name }}"
+    # #     version: "{{ item.plugin_version }}"
+    # #     state: present
+    # # delegate_to: "{{ grafana_service_name }}"
+    # #   vars:
+    # #     grafana_plugins:
+    # #       - plugin_name: grafana-piechart-panel
+    # #         plugin_version: latest
+    # #       - plugin_name: grafana-singlestat-panel
+    # #         plugin_version: latest
+    # #   with_items: "{{ grafana_plugins }}"
+
+    # # TODO: Shift to deployment of relevant services
+    # - name: Install Grafana dashboards
+    #   community.grafana.grafana_dashboard:
+    #     dashboard_id: "{{ item.dashboard_id }}"
+    #     dashboard_revision: "{{ item.dashboard_revision }}"
+    #     folder: General
+    #     overwrite: true
+    #     grafana_url: "https://{{ grafana_fqdn }}"
+    #     # grafana_api_key: "{{ grafana_api_key }}"
+    #     grafana_password: "{{ grafana_security.admin_password }}"
+    #     grafana_user: "{{ grafana_security.admin_user }}"
+    #     # dashboard_url: "https://grafana.com/api/dashboards/{{ item.dashboard_id }}/revisions/{{ item.dashboard_revision }}/download"
+    #   vars:
+    #     grafana_dashboards:
+    #       # Node Exporter Full by rfmoz
+    #       # https://grafana.com/grafana/dashboards/1860-node-exporter-full/
+    #       - dashboard_id: 1860
+    #         dashboard_revision: 37
+    #         datasource: Prometheus
+    #       # Proxmox Cluster [Flux] by mephisto
+    #       # https://grafana.com/grafana/dashboards/15356-proxmox-cluster-flux/
+    #       - dashboard_id: 15356
+    #         dashboard_revision: 14
+    #         datasource: InfluxDB
+    #       # Traefik Official Standalone Dashboard by Traefik Labs
+    #       # https://grafana.com/grafana/dashboards/17346-traefik-official-standalone-dashboard/
+    #       - dashboard_id: 17346
+    #         dashboard_revision: 9
+    #         datasource: Prometheus
+    #       # EMQX monitoring by qzhuyan
+    #       # https://grafana.com/grafana/dashboards/15012-emqx-monitoring/
+    #       - dashboard_id: 15012
+    #         dashboard_revision: 3
+    #         datasource: Prometheus
+    #   with_items: "{{ grafana_dashboards }}"

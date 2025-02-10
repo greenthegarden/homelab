@@ -1,5 +1,4 @@
 ---
-
 ###### DUPLICATI SECTION
 
 - name: Set Duplicati aggregated facts
@@ -25,14 +24,8 @@
     duplicati_container_labels: "{{ duplicati_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # Traefik labels
-    - {
-      "key": "traefik.enable",
-      "value": "true"
-    }
-    - {
-      "key": "traefik.docker.network",
-      "value": "{{ web_network_name }}",
-    }
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ duplicati_service_name }}-http.rule",
       "value": "Host(`{{ duplicati_fqdn }}`)",
@@ -99,7 +92,7 @@
         env:
           PUID: "0" # Run as root
           PGID: "0" # Run as root
-          TZ: "{{ home.timezone }}"
+          TZ: "{{ homelab.timezone }}"
           SETTINGS_ENCRYPTION_KEY: "{{ duplicati.settings_encryption_key | default('dummy') }}"
           DUPLICATI__WEBSERVICE_PASSWORD: "{{ duplicati.webservice_password | default('dummy') }}"
         labels: "{{ (duplicati_container_labels | default({})) | default(omit) }}"
