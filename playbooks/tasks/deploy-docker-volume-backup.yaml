@@ -56,8 +56,8 @@
   register: local_archive_directory_creation
 
 - name: Copy env file to host
-  ansible.builtin.template:
-    src: templates/docker-volume-backup/docker-volume-backup.env.j2
+  ansible.builtin.copy:
+    src: files/docker-volume-backup/docker-volume-backup.env
     dest: /root/docker-volume-backup.env
     mode: "644"
   register: env_file_creation
