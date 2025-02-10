@@ -86,7 +86,7 @@
 
     - name: Copy Vaultwarden configuration
       ansible.builtin.template:
-        src: playbooks/templates/vaultwarden/vaultwarden.env
+        src: templates/vaultwarden/vaultwarden.env.j2
         dest: /root/vaultwarden.env
         owner: root
         group: root
