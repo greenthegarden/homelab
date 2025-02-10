@@ -17,18 +17,6 @@
     docker_socket_proxy_image_tag: edge
     docker_socket_proxy_service_name: "docker-socket-proxy"
     docker_socket_proxy_service_port: 2375
-    # docker-volume-backup facts
-    docker_volume_backup_image_name: offen/docker-volume-backup
-    docker_volume_backup_image_tag: v2.43.1
-    docker_volume_backup_service_name: "docker-volume-backup"
-    # Duplicati facts
-    duplicati_image_name: lscr.io/linuxserver/duplicati
-    duplicati_image_tag: v2.1.0.3_beta_2025-01-22-ls232
-    duplicati_service_name: duplicati
-    duplicati_service_port: 8200
-    duplicati_volume_config: config
-    duplicati_volume_backups: backups
-    duplicati_volume_source: source
     # Node Exporter facts
     node_exporter_image_name: prom/node-exporter
     node_exporter_image_tag: v1.8.2
