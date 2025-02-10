@@ -16,6 +16,11 @@
 
     ####### PROMETHEUS SECTION
 
+    - name: Set Prometheus aggregated facts
+      ansible.builtin.set_fact:
+        prometheus_image: "{{ prometheus_image_name }}:{{ prometheus_image_tag }}"
+        prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default(localdomain) }}"
+
     - name: Create Prometheus configuration directory
       ansible.builtin.file:
         path: /root/prometheus
@@ -54,7 +59,7 @@
     - name: Set Grafana aggregated facts
       ansible.builtin.set_fact:
         grafana_image: "{{ grafana_image_name }}:{{ grafana_image_tag }}"
-        grafana_fqdn: "{{ grafana_service_name }}.{{ ansibley_hostname }}.{{ homelab.lan_domain | default(localdomain) }}"
+        grafana_fqdn: "{{ grafana_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default(localdomain) }}"
 
     - name: Set Grafana API facts
       ansible.builtin.set_fact:
