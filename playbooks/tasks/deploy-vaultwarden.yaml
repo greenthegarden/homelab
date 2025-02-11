@@ -80,7 +80,7 @@
 
 - name: Create Vaultwarden configuration
   ansible.builtin.template:
-    src: templates/vaultwarden/vaultwarden.env.j2
+    src: templates/vaultwarden/vaultwarden.env
     dest: /root/vaultwarden.env
     owner: root
     group: root

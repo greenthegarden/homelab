@@ -76,7 +76,7 @@
 - name: Create configuration files
   ansible.builtin.template:
     src: "templates/fireflyiii/{{ item }}"
-    dest: "/root/fireflyiii/{{ item }}"
+    dest: "/root/{{ item }}"
     mode: "644"
   loop:
     - fireflyiii.env
