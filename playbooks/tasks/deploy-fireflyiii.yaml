@@ -8,7 +8,7 @@
   ansible.builtin.set_fact:
     fireflyiii_image_name: "{{ fireflyiii_image_name | default('fireflyiii/core') }}"
     fireflyiii_image_tag: "{{ fireflyiii_image_tag | default('latest') }}"
-    fireflyiii_service_name: "{{ fireflyiii_service_name | default('fireflyiii') }}"
+    fireflyiii_service_name: "{{ fireflyiii_service_name | default('firefly_iii_core') }}"
     fireflyiii_service_port: "{{ fireflyiii_service_port | default(8080) }}"
 
 - name: Set fireflyiii aggregated facts

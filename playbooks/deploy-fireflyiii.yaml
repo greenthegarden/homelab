@@ -1,0 +1,24 @@
+---
+
+- name: Deploy Fireflyiii
+
+  hosts: fireflyiii
+
+  vars:
+
+    # Fireflyiii facts
+    fireflyiii_image_name: fireflyiii/core
+    fireflyiii_image_tag: version-6.2.0
+    fireflyiii_service_name: firefly_iii_core
+    fireflyiii_service_port: 8080
+
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Firefly III
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-fireflyiii.yaml
