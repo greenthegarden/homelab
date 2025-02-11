@@ -71,9 +71,15 @@
 
 - name: Copy configuration
   ansible.builtin.copy:
-    src: files/hortusfox-web
+    src: files/hortusfox
     dest: /root/
-    mode: "644"
+    mode: "0644"
+
+- name: Create docker compose file
+  ansible.builtin.template:
+    src: templates/hortusfox/docker-compose.yml.j2
+    dest: /root/docker-compose.yml
+    mode: "0644"
 
 # - name: Tear down existing services
 #   community.docker.docker_compose_v2:
@@ -82,7 +88,7 @@
 
 - name: Create and start services
   community.docker.docker_compose_v2:
-    project_src: /root/hortusfox-web
+    project_src: /root/hortusfox
   register: output
 
 - name: Deploy Docker Volume Backup
