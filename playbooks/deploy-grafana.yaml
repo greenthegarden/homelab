@@ -21,6 +21,11 @@
         prometheus_image: "{{ prometheus_image_name }}:{{ prometheus_image_tag }}"
         prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
+    - name: Set Prometheus service facts
+      ansible.builtin.set_fact:
+        prometheus_command:
+          - --config.file=/etc/prometheus/prometheus.yml
+
     - name: Create Prometheus configuration directory
       ansible.builtin.file:
         path: /root/prometheus
