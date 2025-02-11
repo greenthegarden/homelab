@@ -15,7 +15,11 @@ services:
     hostname: db
     container_name: firefly_iii_db
     restart: always
-    env_file: fireflyiii_db.env
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: true
+      MYSQL_DATABASE: "{{ firefly.db_database | default('firefly') }}"
+      MYSQL_USER: "{{ firefly.db_user | default('firefly') }}"
+      MYSQL_PASSWORD: "{{ firefly.db_user | default('dummy') }}"
     labels:
       # Docker Volume Back labels
       - "docker-volume-backup.stop-during-backup=true"
@@ -32,29 +36,7 @@ services:
     volumes:
       - firefly_iii_upload:/var/www/html/storage/upload
     env_file: fireflyiii.env
-    labels:
-      # Traefik labels
-      - "traefik.enable=true"
-      - "traefik.docker.network=web"
-      # Traefik Routers
-      - "traefik.http.routers.fireflyiii.entrypoints=websecure"
-      - "traefik.http.routers.fireflyiii.rule=Host(`fireflyiii.fireflyiii.homelab.greenthegarden.com`)"
-      - "traefik.http.routers.fireflyiii.service=fireflyiii"
-      - "traefik.http.routers.fireflyiii.tls=true"
-      # Traefik Services
-      - "traefik.http.services.fireflyiii.loadbalancer.server.port=8080"
-      # Docker Volume Back labels
-      - "docker-volume-backup.stop-during-backup=true"
-      # Homepage labels
-      - "homepage.group=Applications"
-      - "homepage.name=Firefly III"
-      - "homepage.description=Personal finances manager"
-      - "homepage.icon=firefly-iii.png"
-      - "homepage.href=https://fireflyiii.fireflyiii.homelab.greenthegarden.com"
-      - "homepage.siteMonitor=https://fireflyiii.fireflyiii.homelab.greenthegarden.com/"
-      # What's up Docker? labels
-      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
-      - 'wud.link.template=https://github.com/firefly-iii/firefly-iii/releases/tag/v$${major}.$${minor}.$${patch}'
+    labels: "{{ (firefly_container_labels | default({})) | default(omit) }}"
     networks:
       - firefly_iii
       - web
