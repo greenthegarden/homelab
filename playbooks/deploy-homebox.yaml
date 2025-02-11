@@ -1,0 +1,22 @@
+---
+- name: Deploy Homebox
+
+  hosts: homebox
+
+  vars:
+
+    # Homebox facts
+    homebox_image_name: ghcr.io/sysadminsmedia/homebox
+    homebox_image_tag: 0.17.2
+    homebox_service_name: homebox
+    homebox_service_port: 7745
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Homebox
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-homebox.yaml

@@ -1,0 +1,105 @@
+---
+
+####### fireflyiii SECTION
+
+# https://fireflyiii.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-fireflyiii-dashboard/
+
+- name: Set fireflyiii facts
+  ansible.builtin.set_fact:
+    fireflyiii_image_name: "{{ fireflyiii_image_name | default('fireflyiii/core') }}"
+    fireflyiii_image_tag: "{{ fireflyiii_image_tag | default('latest') }}"
+    fireflyiii_service_name: "{{ fireflyiii_service_name | default('fireflyiii') }}"
+    fireflyiii_service_port: "{{ fireflyiii_service_port | default(8080) }}"
+
+- name: Set fireflyiii aggregated facts
+  ansible.builtin.set_fact:
+    fireflyiii_image: "{{ fireflyiii_image_name }}:{{ fireflyiii_image_tag }}"
+    fireflyiii_fqdn: "{{ fireflyiii_service_name }}.{{ hostvars['fireflyiii'].inventory_hostname }}.{{ lan_dns_domain }}"
+
+- name: Set fireflyiii service facts
+  ansible.builtin.set_fact:
+    fireflyiii_networks:
+      - name: "{{ web_network_name | default('web') }}"
+    fireflyiii_ports:
+      - "{{ fireflyiii_service_port | default(3000) }}:3000"
+    fireflyiii_volumes:
+      - "/root/fireflyiii/config:/app/config"
+      # - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: Create fireflyiii container labels
+  ansible.builtin.set_fact:
+    fireflyiii_container_labels: "{{ fireflyiii_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    - {
+      "key": "traefik.http.routers.{{ fireflyiii_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ fireflyiii_service_name }}.rule",
+      "value": "Host(`{{ fireflyiii_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ fireflyiii_service_name }}.service",
+      "value": "{{ fireflyiii_service_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ fireflyiii_service_name }}.tls",
+      "value": "true",
+    }
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/getfireflyiii/fireflyiii/releases/tag/v$${major}.$${minor}.$${patch}",
+    }
+    # Docker Volume Back labels
+    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Firefly III" }
+    - {
+      "key": "homepage.description",
+      "value": "Personal finances manager",
+    }
+    - { "key": "homepage.icon", "value": "firefly-iii.png" }
+    - { "key": "homepage.href", "value": "https://{{ fireflyiii_fqdn }}/" }
+    - {
+      "key": "homepage.siteMonitor",
+      "value": "https://{{ fireflyiii_fqdn }}/",
+    }
+
+- name: Copy configuration
+  ansible.builtin.copy:
+    src: files/fireflyiii
+    dest: /root/
+    mode: "644"
+
+# - name: Tear down existing services
+#   community.docker.docker_compose_v2:
+#     project_src: /root/fireflyiii
+#     state: absent
+
+- name: Create and start services
+  community.docker.docker_compose_v2:
+    project_src: /root/fireflyiii
+    env_files:
+      - fireflyiii.env
+      - fireflyiii_db.env
+      - fireflyiii_importer.env
+  register: output
+
+- name: Deploy Docker Volume Backup
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-docker-volume-backup.yaml
+  vars:
+    docker_volume_backup_volume:
+      - "{{ grocy_volume_name }}:/backup/grocy-backup:ro"
+
+- name: Deploy Duplicati
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-duplicati.yaml

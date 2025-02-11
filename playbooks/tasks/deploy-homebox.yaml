@@ -1,0 +1,130 @@
+---
+####### HOMEBOX SECTION
+
+- name: Set Homebox facts
+  ansible.builtin.set_fact:
+    homebox_image_name: "{{ homebox_image_name | default('ghcr.io/hay-kot/homebox') }}"
+    homebox_image_tag: "{{ homebox_image_tag | default('latest') }}"
+    homebox_service_name: "{{ homebox_service_name | default('homebox') }}"
+    homebox_service_port: "{{ homebox_service_port | default(7745) }}"
+    homebox_volume_name: "{{ homebox_volume_name | default('homebox') }}"
+
+- name: Set homebox aggregated facts
+  ansible.builtin.set_fact:
+    homebox_image: "{{ homebox_image_name }}:{{ homebox_image_tag }}"
+    homebox_fqdn: "{{ homebox_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: Set homebox API facts
+  ansible.builtin.set_fact:
+    homebox_networks:
+      - name: "{{ web_network_name | default('web') }}"
+    homebox_ports:
+      - "{{ homebox_service_port | default(7745) }}:7745"
+    homebox_volumes:
+      - "{{ homebox_volume_name }}:/data"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: Create homebox container labels
+  ansible.builtin.set_fact:
+    homebox_container_labels: "{{ homebox_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    - {
+      "key": "traefik.http.routers.{{ homebox_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ homebox_service_name }}.rule",
+      "value": "Host(`{{ homebox_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ homebox_service_name }}.service",
+      "value": "{{ homebox_service_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ homebox_service_name }}.tls",
+      "value": "true",
+    }
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/sysadminsmedia/homebox/releases/tag/v$${major}.$${minor}.$${patch}",
+    }
+    # homebox labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Homebox" }
+    - { "key": "homepage.description", "value": "What's in the house?" }
+    - { "key": "homepage.icon", "value": "homebox.png" }
+    - { "key": "homepage.href", "value": "https://{{ homebox_fqdn }}/" }
+    - {
+      "key": "homepage.siteMonitor",
+      "value": "https://{{ homebox_fqdn }}/",
+    }
+
+- name: Create homebox volume
+  community.docker.docker_volume:
+    name: "{{ homebox_volume_name }}"
+    state: present
+
+- name: Check if homebox is running
+  community.docker.docker_container_info:
+    name: "{{ homebox_service_name }}"
+  register: homebox_state
+
+- name: Remove homebox container if changing version
+  when:
+    - homebox_state.exists
+    - homebox_image_tag != homebox_state.container.Config.Image | split(':') | last
+  block:
+    - name: Stop and remove existing homebox container
+      community.docker.docker_container:
+        name: "{{ homebox_service_name }}"
+        state: absent
+
+    - name: Set update homebox
+      ansible.builtin.set_fact:
+        homebox_update: true
+
+- name: Deploy homebox if not running
+  when: not homebox_state.exists or (homebox_update | default(false))
+  block:
+    - name: Pull homebox image
+      community.docker.docker_image:
+        name: "{{ homebox_image }}"
+        source: pull
+
+    # docker run -d -p 3000:3000 homebox/homebox
+    - name: Deploy homebox
+      community.docker.docker_container:
+        name: "{{ homebox_service_name }}"
+        image: "{{ homebox_image }}"
+        detach: true
+        env:
+          HBOX_LOG_LEVEL: "info"
+          HBOX_LOG_FORMAT: "text"
+          HBOX_WEB_MAX_UPLOAD_SIZE: "10"
+          TZ: "{{ homelab.timezone | default(omit) }}"
+        labels: "{{ (homebox_container_labels | default({})) | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ homebox_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ homebox_volumes }}"
+      register: homebox_container_state
+
+    - name: Wait for homebox to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ homebox_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: homebox_running
+      until: homebox_running is success
+      retries: 10

@@ -1,0 +1,109 @@
+---
+
+networks:
+
+  firefly_iii:
+    driver: bridge
+  web:
+    name: web
+    external: true
+
+services:
+
+  db:
+    image: mariadb:lts
+    hostname: db
+    container_name: firefly_iii_db
+    restart: always
+    env_file: fireflyiii_db.env
+    labels:
+      # Docker Volume Back labels
+      - "docker-volume-backup.stop-during-backup=true"
+    networks:
+      - firefly_iii
+    volumes:
+      - firefly_iii_db:/var/lib/mysql
+
+  app:
+    image: fireflyiii/core:version-6.2.0
+    hostname: app
+    container_name: firefly_iii_core
+    restart: always
+    volumes:
+      - firefly_iii_upload:/var/www/html/storage/upload
+    env_file: fireflyiii.env
+    labels:
+      # Traefik labels
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      # Traefik Routers
+      - "traefik.http.routers.fireflyiii.entrypoints=websecure"
+      - "traefik.http.routers.fireflyiii.rule=Host(`fireflyiii.fireflyiii.homelab.greenthegarden.com`)"
+      - "traefik.http.routers.fireflyiii.service=fireflyiii"
+      - "traefik.http.routers.fireflyiii.tls=true"
+      # Traefik Services
+      - "traefik.http.services.fireflyiii.loadbalancer.server.port=8080"
+      # Docker Volume Back labels
+      - "docker-volume-backup.stop-during-backup=true"
+      # Homepage labels
+      - "homepage.group=Applications"
+      - "homepage.name=Firefly III"
+      - "homepage.description=Personal finances manager"
+      - "homepage.icon=firefly-iii.png"
+      - "homepage.href=https://fireflyiii.fireflyiii.homelab.greenthegarden.com"
+      - "homepage.siteMonitor=https://fireflyiii.fireflyiii.homelab.greenthegarden.com/"
+      # What's up Docker? labels
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.link.template=https://github.com/firefly-iii/firefly-iii/releases/tag/v$${major}.$${minor}.$${patch}'
+    networks:
+      - firefly_iii
+      - web
+    ports:
+      - 8090:8080
+    depends_on:
+      - db
+
+  #
+  # The Firefly III Data Importer will ask you for the Firefly III URL and a "Client ID".
+  # You can generate the Client ID at http://localhost/profile (after registering)
+  # The Firefly III URL is: http://app:8080
+  #
+  # Other URL's will give 500 | Server Error
+  #
+  importer:
+    image: fireflyiii/data-importer:version-1.6.0
+    hostname: importer
+    restart: always
+    container_name: firefly_iii_importer
+    networks:
+      - firefly_iii
+    ports:
+      - '8091:8080'
+    depends_on:
+      - app
+    env_file: fireflyiii_importer.env
+    labels:
+      # What's up Docker? labels
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.link.template=https://github.com/firefly-iii/data-importer/releases/tag/v$${major}.$${minor}.$${patch}'
+
+
+  cron:
+    #
+    # To make this work, set STATIC_CRON_TOKEN in your .env file or as an environment variable and replace REPLACEME below
+    # The STATIC_CRON_TOKEN must be *exactly* 32 characters long
+    #
+    image: alpine
+    restart: always
+    container_name: firefly_iii_cron
+    env_file: fireflyiii.env
+    command: sh -c "
+      apk add tzdata && ln -s /usr/share/zoneinfo/${TZ} /etc/localtime
+      | echo \"0 3 * * * wget -qO- http://app:8080/api/v1/cron/VmRbRzvdEmtWMmJECSjXkcffzejCPYgy;echo\"
+      | crontab - && crond -f -L /dev/stdout"
+    networks:
+      - firefly_iii
+
+volumes:
+  firefly_iii_upload:
+  firefly_iii_db:

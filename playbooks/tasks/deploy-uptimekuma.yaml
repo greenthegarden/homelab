@@ -1,0 +1,137 @@
+---
+
+####### UPTIMEKUMA SECTION
+
+# https://hub.docker.com/_/uptimekuma
+# https://codeopolis.com/posts/how-to-install-uptimekuma-using-docker/
+
+- name: Set uptimekuma facts
+  ansible.builtin.set_fact:
+    uptimekuma_image_name: "{{ uptimekuma_image_name | default('linuxserver/uptimekuma') }}"
+    uptimekuma_image_tag: "{{ uptimekuma_image_tag | default('latest') }}"
+    uptimekuma_service_name: "{{ uptimekuma_service_name | default('uptimekuma') }}"
+    uptimekuma_service_port: "{{ uptimekuma_service_port | default(3001) }}"
+    uptimekuma_volume_name: "{{ uptimekuma_volume_name | default('uptimekuma') }}"
+
+- name: Set uptimekuma aggregated facts
+  ansible.builtin.set_fact:
+    uptimekuma_image: "{{ uptimekuma_image_name }}:{{ uptimekuma_image_tag }}"
+    uptimekuma_fqdn: "{{ uptimekuma_service_name }}.{{ hostvars['uptimekuma'].inventory_hostname }}.{{ lan_dns_domain }}"
+
+- name: Set uptimekuma service facts
+  ansible.builtin.set_fact:
+    uptimekuma_networks:
+      - name: "{{ web_network_name | default('web') }}"
+    uptimekuma_ports:
+      - "{{ uptimekuma_service_port | default(3001) }}:3001"
+    uptimekuma_volumes:
+      - "{{ uptimekuma_volume_name }}:/app/data"
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: Create uptimekuma container labels
+  ansible.builtin.set_fact:
+    uptimekuma_container_labels: "{{ uptimekuma_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    - {
+      "key": "traefik.http.routers.{{ uptimekuma_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ uptimekuma_service_name }}.rule",
+      "value": "Host(`{{ uptimekuma_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ uptimekuma_service_name }}.service",
+      "value": "{{ uptimekuma_service_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ uptimekuma_service_name }}.tls",
+      "value": "true",
+    }
+    - {
+      "key": "traefik.http.services.{{ uptimekuma_service_name }}.loadBalancer.server.port",
+      "value": "{{ uptimekuma_service_port }}",
+    }
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-alpine+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/louislam/uptime-kuma/releases/tag/$${major}.$${minor}.$${patch}",
+    }
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Monitoring" }
+    - { "key": "homepage.name", "value": "Uptimekuma" }
+    - { "key": "homepage.description", "value": "Is everything running?" }
+    - { "key": "homepage.icon", "value": "uptime-kuma.png" }
+    - { "key": "homepage.href", "value": "https://{{ uptimekuma_fqdn }}/" }
+    - {
+      "key": "homepage.siteMonitor",
+      "value": "https://{{ uptimekuma_fqdn }}/",
+    }
+
+- name: Create uptimekuma volume
+  community.docker.docker_volume:
+    name: "{{ uptimekuma_volume_name }}"
+    state: present
+
+- name: Check if uptimekuma is running
+  community.docker.docker_container_info:
+    name: "{{ uptimekuma_service_name }}"
+  register: uptimekuma_state
+
+- name: Remove uptimekuma container if changing version
+  when:
+    - uptimekuma_state.exists
+    - uptimekuma_image_tag != uptimekuma_state.container.Config.Image | split(':') | last
+  block:
+    - name: Stop and remove existing uptimekuma container
+      community.docker.docker_container:
+        name: "{{ uptimekuma_service_name }}"
+        state: absent
+
+    - name: Set update uptimekuma
+      ansible.builtin.set_fact:
+        uptimekuma_update: true
+
+- name: Deploy uptimekuma if not running
+  when:
+    - not uptimekuma_state.exists or (uptimekuma_update | default(false))
+  block:
+    - name: Pull uptimekuma image
+      community.docker.docker_image:
+        name: "{{ uptimekuma_image }}"
+        source: pull
+
+    - name: Deploy uptimekuma
+      community.docker.docker_container:
+        name: "{{ uptimekuma_service_name }}"
+        image: "{{ uptimekuma_image }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default(omit) }}"
+        labels: "{{ (uptimekuma_container_labels | default({})) | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ uptimekuma_networks }}"
+        ports: "{{ uptimekuma_ports }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ uptimekuma_volumes }}"
+      register: uptimekuma_container_state
+
+    - name: Wait for uptimekuma to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ uptimekuma_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: uptimekuma_running
+      retries: 10
+      until: uptimekuma_running is success

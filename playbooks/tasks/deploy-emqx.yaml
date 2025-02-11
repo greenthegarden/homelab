@@ -1,0 +1,176 @@
+---
+
+####### EMQX SECTION
+
+# https://hub.docker.com/r/emqx/emqx
+# https://github.com/iotblue/emqx-docker
+# https://www.emqx.com/en/try?product=broker (EMQX Open Source)
+
+- name: Set EMQX facts
+  ansible.builtin.set_fact:
+    emqx_image_name: "{{ emqx_image_name | default('emqx/emqx') }}"
+    emqx_image_tag: "{{ emqx_image_tag | default('latest') }}"
+    emqx_service_name: "{{ emqx_service_name | default('emqx') }}"
+    emqx_service_port_api: "{{ emqx_service_port_api | default(18083) }}"
+    emqx_service_port_mqtt: "{{ emqx_service_port_mqtt | default(1883) }}"
+
+- name: Set EMQX aggregated facts
+  ansible.builtin.set_fact:
+    emqx_image: "{{ emqx_image_name }}:{{ emqx_image_tag }}"
+    emqx_fqdn: "{{ emqx_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+####### PROMETHEUS SECTION
+
+- name: Create Prometheus configuration directory
+  ansible.builtin.file:
+    path: /root/prometheus
+    mode: "644"
+    state: directory
+  register: prometheus_configuration_creation
+
+- name: Create emqx Prometheus configuration file
+  ansible.builtin.template:
+    src: templates/prometheus/prometheus-emqx.yml.j2
+    dest: /root/prometheus/prometheus.yml
+    mode: "644"
+  register: prometheus_configuration_creation
+
+- name: Deploy Prometheus
+  community.docker.docker_container:
+    name: "{{ prometheus_service_name | default('prometheus') }}"
+    image: "{{ prometheus_image }}"
+    command: "{{ prometheus_command }}"
+    detach: true
+    labels: "{{ prometheus_container_labels }}"
+    memory: 300M
+    memory_reservation: 100M
+    networks_cli_compatible: true
+    networks: "{{ prometheus_networks }}"
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    volumes: "{{ prometheus_volumes }}"
+  register: prometheus_container_state
+
+- name: Set EMQX service facts
+  ansible.builtin.set_fact:
+    emqx_admin: { admin_user: admin, admin_password: "mon!t0ring" }
+    emqx_networks:
+      - name: "{{ broker_network_name | default('broker') }}"
+      - name: "{{ web_network_name | default('web') }}"
+    emqx_ports:
+      # - "{{ emqx_service_port_api | default(18083) }}:18083"
+      - "{{ emqx_service_port_mqtt | default(1883) }}:1883"
+      - 8083:8083 # websocket
+      # - 4369:4369
+      # - 5369:5369
+      # - 6000-6100:6000-6100
+    emqx_volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: Create EMQX container labels
+  ansible.builtin.set_fact:
+    emqx_container_labels: "{{ emqx_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    - {
+      "key": "traefik.http.routers.{{ emqx_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ emqx_service_name }}.rule",
+      "value": "Host(`{{ emqx_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ emqx_service_name }}.service",
+      "value": "{{ emqx_service_name }}",
+    }
+    - {
+      "key": "traefik.http.services.{{ emqx_service_name }}.loadbalancer.server.port",
+      "value": "{{ emqx_service_port_api | quote }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ emqx_service_name }}.tls",
+      "value": "true",
+    }
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/emqx/emqx/releases/tag/v$${major}.$${minor}.$${patch}",
+    }
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Monitoring" }
+    - { "key": "homepage.name", "value": "Broker" }
+    - { "key": "homepage.description", "value": "MQTT Broker" }
+    - { "key": "homepage.icon", "value": "emqx.png" }
+    - { "key": "homepage.href", "value": "https://{{ emqx_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ emqx_fqdn }}/" }
+
+- name: Check if EMQX is running
+  community.docker.docker_container_info:
+    name: "{{ emqx_service_name }}"
+  register: emqx_state
+
+- name: Remove EMQX container if changing version
+  when:
+    - emqx_state.exists
+    - emqx_image_tag != emqx_state.container.Config.Image | split(':') | last
+  block:
+    - name: Stop and remove existing EMQX container
+      community.docker.docker_container:
+        name: "{{ emqx_service_name }}"
+        state: absent
+
+    - name: Set update EMQX
+      ansible.builtin.set_fact:
+        emqx_update: true
+
+- name: Deploy EMQX if not running
+  when:
+    - not emqx_state.exists or (emqx_update | default(false))
+  block:
+    - name: Pull EMQX image
+      community.docker.docker_image:
+        name: "{{ emqx_image }}"
+        source: pull
+
+    - name: Deploy EMQX
+      community.docker.docker_container:
+        name: "{{ emqx_service_name }}"
+        image: "{{ emqx_image }}"
+        detach: true
+        env:
+          EMQX_ALLOW_ANONYMOUS: "true"
+          EMQX_DASHBOARD__DEFAULT_PASSWORD: "{{ emqx_admin.admin_password }}"
+          EMQX_LISTENER__TCP__EXTERNAL: "{{ emqx_service_port_mqtt | default(1883) | quote }}"
+          EMQX_LOADED_PLUGINS: "emqx_recon,emqx_retainer,emqx_management,emqx_dashboard,emqx_prometheus"
+          EMQX_NAME: "{{ emqx_service_name | default('emqx') }}"
+          EMQX_HOST: "{{ emqx_fqdn }}"
+          EMQX_PROMETHEUS__PUSH__GATEWAY__SERVER: "pushgateway"
+          EMQX_PROMETHEUS__INTERVAL: "15000"
+          WAIT_FOR_ERLANG: "60"
+        labels: "{{ emqx_container_labels }}"
+        networks_cli_compatible: true
+        networks: "{{ emqx_networks }}"
+        published_ports: "{{ emqx_ports }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ emqx_volumes }}"
+      register: emqx_container_state
+
+    - name: Wait for EMQX to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ emqx_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: emqx_running
+      until: emqx_running is success
+      retries: 10

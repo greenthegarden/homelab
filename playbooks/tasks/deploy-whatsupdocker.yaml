@@ -1,0 +1,185 @@
+---
+
+####### WHAT'S UP DOCKER SECTION
+
+# https://getwud.github.io/wud/#/quickstart/
+# https://getwud.github.io/wud/#/configuration/
+
+- name: Set What's up Docker? facts
+  ansible.builtin.set_fact:
+    whatsupdocker_image_name: "{{ hostvars['whatsupdocker'].whatsupdocker_image_name | default('getwud/wud') }}"
+    whatsupdocker_image_tag: "{{ hostvars['whatsupdocker'].whatsupdocker_image_tag | default('latest') }}"
+    whatsupdocker_service_name: "{{ hostvars['whatsupdocker'].whatsupdocker_service_name | default('whats-up-docker') }}"
+    whatsupdocker_service_port: "{{ hostvars['whatsupdocker'].whatsupdocker_service_port | default(3000) }}"
+    whatsupdocker_volume_name: "{{ hostvars['whatsupdocker'].whatsupdocker_volume_name | default('whats-up-docker') }}"
+
+- name: Set What's up Docker? aggregated facts
+  ansible.builtin.set_fact:
+    whatsupdocker_image: "{{ whatsupdocker_image_name }}:{{ whatsupdocker_image_tag }}"
+    whatsupdocker_fqdn: "{{ whatsupdocker_service_name }}.{{ hostvars['whatsupdocker'].inventory_hostname }}.{{ lan_dns_domain }}"
+
+- name: Set What's up Docker? service facts
+  ansible.builtin.set_fact:
+    whatsupdocker_ports:
+      - "{{ whatsupdocker_service_port | default(3000) }}:3000"
+    whatsupdocker_networks:
+      - name: "{{ web_network_name | default('web') }}"
+    whatsupdocker_volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - "{{ whatsupdocker_volume_name }}:/store"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: Create What's up Docker? container labels
+  ansible.builtin.set_fact:
+    whatsupdocker_container_labels: "{{ whatsupdocker_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    - {
+      "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.rule",
+      "value": "Host(`{{ whatsupdocker_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.service",
+      "value": "{{ whatsupdocker_service_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.tls",
+      "value": "true",
+    }
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/getwud/wud/releases/tag/$${major}.$${minor}.$${patch}",
+    }
+    # Homepage labels
+    - { "key": "homepage.group", "value": "System" }
+    - { "key": "homepage.name", "value": "Whats Up Docker" }
+    - {
+      "key": "homepage.description",
+      "value": "Which container images are out-of-date?",
+    }
+    - { "key": "homepage.icon", "value": "whats-up-docker.png" }
+    - {
+      "key": "homepage.href",
+      "value": "https://{{ whatsupdocker_fqdn }}/",
+    }
+    - {
+      "key": "homepage.siteMonitor",
+      "value": "https://{{ whatsupdocker_fqdn }}/",
+    }
+    - { "key": "homepage.widget.type", "value": "whatsupdocker" }
+    - {
+      "key": "homepage.widget.url",
+      "value": "https://{{ whatsupdocker_fqdn }}",
+    }
+
+- name: Check if What's up Docker? is running
+  community.docker.docker_container_info:
+    name: "{{ whatsupdocker_service_name }}"
+  register: whatsupdocker_state
+
+- name: Remove What's up Docker? container if changing version
+  when:
+    - whatsupdocker_state.exists
+    - whatsupdocker_image_tag != whatsupdocker_state.container.Config.Image | split(':') | last
+  block:
+    - name: Stop and remove existing What's up Docker? container
+      community.docker.docker_container:
+        name: "{{ whatsupdocker_service_name }}"
+        state: absent
+
+    - name: Set update What's up Docker?
+      ansible.builtin.set_fact:
+        whatsupdocker_update: true
+
+- name: Deploy What's up Docker? if not running
+  when:
+    - not whatsupdocker_state.exists or (whatsupdocker_update | default(false))
+  block:
+    - name: Create volume for What's up Docker?
+      community.docker.docker_volume:
+        name: "{{ whatsupdocker_volume_name }}"
+        state: present
+
+    - name: Pull What's up Docker? image
+      community.docker.docker_image:
+        name: "{{ whatsupdocker_image }}"
+        source: pull
+
+    # docker run -d --name wud \
+    #   -v "/var/run/docker.sock:/var/run/docker.sock" \
+    #   -p 3000:3000 \
+    #   fmartinou/whats-up-docker
+    - name: Deploy What's up Docker?
+      community.docker.docker_container:
+        name: "{{ whatsupdocker_service_name }}"
+        image: "{{ whatsupdocker_image }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default(omit) }}"
+          # WUD_TRIGGER_DOCKER_UPDATE_DRYRUN: "true"
+          # WUD_TRIGGER_MQTT_MOSQUITTO_URL: "mqtt://broker.{{ lan_dns_domain }}:1883"
+          # WUD_TRIGGER_MQTT_MOSQUITTO_USER: "client"
+          # WUD_TRIGGER_MQTT_MOSQUITTO_PASSWORD: "qY#BS&c7"
+          # WUD_TRIGGER_MQTT_MOSQUITTO_HASS_ENABLED: "true"
+          WUD_WATCHER_LOCAL_SOCKET: "/var/run/docker.sock"
+          WUD_WATCHER_AUTHENTIK_HOST: "authentik.{{ lan_dns_domain }}"
+          WUD_WATCHER_BROKER_HOST: "broker.{{ lan_dns_domain }}"
+          WUD_WATCHER_FIREFLYIII_HOST: "fireflyiii.{{ lan_dns_domain }}"
+          WUD_WATCHER_FRIGATE_HOST: "frigate.{{ lan_dns_domain }}"
+          WUD_WATCHER_GRAFANA_HOST: "grafana.{{ lan_dns_domain }}"
+          WUD_WATCHER_GROCY_HOST: "grocy.{{ lan_dns_domain }}"
+          WUD_WATCHER_HOMEBOX_HOST: "homebox.{{ lan_dns_domain }}"
+          WUD_WATCHER_HOMEPAGE_HOST: "homepage.{{ lan_dns_domain }}"
+          WUD_WATCHER_HORTUSFOX_HOST: "hortusfox.{{ lan_dns_domain }}"
+          WUD_WATCHER_INFLUXDB_HOST: "influxdb.{{ lan_dns_domain }}"
+          WUD_WATCHER_PORTAINER_HOST: "portainer.{{ lan_dns_domain }}"
+          WUD_WATCHER_UPTIMEKUMA_HOST: "uptimekuma.{{ lan_dns_domain }}"
+          WUD_WATCHER_VAULTWARDEN_HOST: "vaultwarden.{{ lan_dns_domain }}"
+          # Authentik integration
+          WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ oauth_client_id | default('dummy') }}"
+          WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ oauth_client_secret | default('dummy') }}"
+          WUD_AUTH_OIDC_AUTHENTIK_DISCOVERY: "https://authentik.authentik.homelab.greenthegarden.com/application/o/wud/.well-known/openid-configuration"
+          WUD_AUTH_OIDC_AUTHENTIK_REDIRECT: "false" # Set to true to skip internal login page
+        healthcheck:
+          test:
+            [
+              "CMD",
+              "curl",
+              "--fail",
+              "http://localhost:{{ whatsupdocker_service_port | default(3000) }}/health",
+              "||",
+              "exit 1"
+            ]
+          interval: 30s
+          timeout: 30s
+          retries: 3
+          start_period: 30s
+        labels: "{{ whatsupdocker_container_labels }}"
+        networks_cli_compatible: true
+        networks: "{{ whatsupdocker_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ whatsupdocker_volumes }}"
+      register: whatsupdocker_container_state
+
+    - name: Wait for What's up Docker? to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ whatsupdocker_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: whatsupdocker_running
+      until: whatsupdocker_running is success
+      retries: 10

@@ -1,0 +1,28 @@
+---
+- name: Deploy Frigate
+
+  hosts: frigate
+
+  vars:
+
+    # Frigate facts
+    frigate_image_name: ghcr.io/blakeblackshear/frigate
+    frigate_image_tag: 0.15.0
+    frigate_service_name: frigate
+    frigate_service_port: 5000
+    frigate_service_port_rtsp: 8554
+    frigate_service_port_webrtc: 8555
+    frigate_volume_name: frigate
+    # Create storage in Proxmox
+    # frigate_mount_disk_size: 512
+    frigate_mount_point: /mnt/storage/frigate
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Frigate
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-frigate.yaml

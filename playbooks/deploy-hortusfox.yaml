@@ -1,0 +1,22 @@
+---
+- name: Deploy Hortusfox
+
+  hosts: hortusfox
+
+  vars:
+
+    # Semaohore facts
+    hortusfox_image_name: ghcr.io/danielbrendel/hortusfox-web
+    hortusfox_image_tag: v4.0
+    hortusfox_service_name: hortusfox
+    hortusfox_service_port: 8090
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Hortusfox
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-hortusfox.yaml

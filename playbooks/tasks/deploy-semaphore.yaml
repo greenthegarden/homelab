@@ -1,0 +1,174 @@
+---
+
+####### SEMAPHORE SECTION
+
+# https://hub.docker.com/_/semaphore
+# https://codeopolis.com/posts/how-to-install-semaphore-using-docker/
+# Initial login: User: admin, Passord: admin
+
+- name: Set Semaphore facts
+  ansible.builtin.set_fact:
+    semaphore_image_name: "{{ semaphore_image_name | default('semaphoreui/semaphore') }}"
+    semaphore_image_tag: "{{ semaphore_image_tag | default('latest') }}"
+    semaphore_service_name: "{{ semaphore_service_name | default('semaphore') }}"
+    semaphore_service_port: "{{ semaphore_service_port | default(3000) }}"
+    semaphore_volume_data_name: "{{ semaphore_volume_data_name | default('semaphore_data') }}"
+    semaphore_volume_config_name: "{{ semaphore_volume_config_name | default('semaphore_config') }}"
+    semaphore_volume_tmp_name: "{{ semaphore_volume_tmp_name | default('semaphore_tmp') }}"
+    semaphore_db_dialect: "{{ semaphore_db_dialect | default('bolt') }}"
+
+- name: Set Semaphore aggregated facts
+  ansible.builtin.set_fact:
+    semaphore_image: "{{ semaphore_image_name }}:{{ semaphore_image_tag }}"
+    semaphore_fqdn: "{{ semaphore_service_name }}.ansible.{{ lan_dns_domain }}"
+
+- name: Set Semaphore service facts
+  ansible.builtin.set_fact:
+    semaphore_networks:
+      - name: "{{ web_network_name | default('web') }}"
+    semaphore_ports:
+      - "{{ semaphore_service_port | default(3000) }}:3000"
+    semaphore_volumes:
+      - "{{ semaphore_volume_data_name }}:/var/lib/semaphore"
+      - "{{ semaphore_volume_config_name }}:/etc/semaphore"
+      - "{{ semaphore_volume_tmp_name }}:/tmp/semaphore"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: Create Semaphore container labels
+  ansible.builtin.set_fact:
+    semaphore_container_labels: "{{ semaphore_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    - {
+      "key": "traefik.http.routers.{{ semaphore_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ semaphore_service_name }}.rule",
+      "value": "Host(`{{ semaphore_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ semaphore_service_name }}.service",
+      "value": "{{ semaphore_service_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ semaphore_service_name }}.tls",
+      "value": "true",
+    }
+    - {
+      "key": "traefik.http.services.{{ semaphore_service_name }}.loadBalancer.server.port",
+      "value": "{{ semaphore_service_port }}",
+    }
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/semaphoreui/semaphore/releases/tag/v$${major}.$${minor}.$${patch}",
+    }
+    # Docker Volume Back labels
+    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # Homepage labels
+    - { "key": "homepage.group", "value": "System" }
+    - { "key": "homepage.name", "value": "Semaphore" }
+    - { "key": "homepage.description", "value": "Modern UI for Ansible" }
+    - { "key": "homepage.icon", "value": "semaphore.png" }
+    - { "key": "homepage.href", "value": "https://{{ semaphore_fqdn }}/" }
+    - {
+      "key": "homepage.siteMonitor",
+      "value": "https://{{ semaphore_fqdn }}/",
+    }
+
+- name: Create Semaphore volumes
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ semaphore_volume_data_name }}"
+    - "{{ semaphore_volume_config_name }}"
+    - "{{ semaphore_volume_tmp_name }}"
+
+- name: Check if Semaphore is running
+  community.docker.docker_container_info:
+    name: "{{ semaphore_service_name }}"
+  register: semaphore_state
+
+- name: Remove Semaphore container if changing version
+  when:
+    - semaphore_state.exists
+    - semaphore_image_tag != semaphore_state.container.Config.Image | split(':') | last
+  block:
+    - name: Stop and remove existing Semaphore container
+      community.docker.docker_container:
+        name: "{{ semaphore_service_name }}"
+        state: absent
+
+    - name: Set update Semaphore
+      ansible.builtin.set_fact:
+        semaphore_update: true
+
+- name: Deploy Semaphore if not running
+  when:
+    - not semaphore_state.exists or (semaphore_update | default(false))
+  block:
+    - name: Pull Semaphore image
+      community.docker.docker_image:
+        name: "{{ semaphore_image }}"
+        source: pull
+
+    # docker run --name semaphore \
+    # -p 3000:3000 \
+    # -e SEMAPHORE_DB_DIALECT=bolt \
+    # -e SEMAPHORE_ADMIN=admin \
+    # -e SEMAPHORE_ADMIN_PASSWORD=changeme \
+    # -e SEMAPHORE_ADMIN_NAME="Admin" \
+    # -e SEMAPHORE_ADMIN_EMAIL=admin@localhost \
+    # -v semaphore_data:/var/lib/semaphore \
+    # -v semaphore_config:/etc/semaphore \
+    # -v semaphore_tmp:/tmp/semaphore \
+    # -d semaphoreui/semaphore:v2.12.4
+
+    - name: Deploy Semaphore
+      community.docker.docker_container:
+        name: "{{ semaphore_service_name }}"
+        image: "{{ semaphore_image }}"
+        detach: true
+        env:
+          SEMAPHORE_DB_DIALECT: "{{ semaphore_db_dialect | default('bolt') }}"
+          SEMAPHORE_ADMIN: "{{ semaphore.admin_username | default('dummy') }}"
+          SEMAPHORE_ADMIN_PASSWORD: "{{ semaphore.admin_password | default('dummy') }}"
+          SEMAPHORE_ADMIN_NAME: "{{ semaphore.admin_name | default('dummy') }}"
+          SEMAPHORE_ADMIN_EMAIL: "{{ semaphore.admin_email | default('dummy') }}"
+        labels: "{{ (semaphore_container_labels | default({})) | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ semaphore_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ semaphore_volumes }}"
+      register: semaphore_container_state
+
+    - name: Wait for Semaphore to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ semaphore_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: semaphore_running
+      retries: 10
+      until: semaphore_running is success
+
+- name: Deploy Docker Volume Backup
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-docker-volume-backup.yaml
+  vars:
+    docker_volume_backup_volume:
+      - "{{ semaphore_volume_data_name }}:/backup/grocy-backup:ro"
+
+- name: Deploy Duplicati
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-duplicati.yaml

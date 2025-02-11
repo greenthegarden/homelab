@@ -1,0 +1,23 @@
+---
+- name: Deploy WhatsUpDocker
+
+  hosts: whatsupdocker
+
+  vars:
+
+    # WhatsUpDocker facts
+    whatsupdocker_image_name: getwud/wud
+    whatsupdocker_image_tag: 8.0.1
+    whatsupdocker_service_name: whats-up-docker
+    whatsupdocker_service_port: 3000
+    whatsupdocker_volume_name: whats-up-docker
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of WhatsUpDocker
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-whatsupdocker.yaml

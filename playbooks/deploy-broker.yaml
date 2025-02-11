@@ -1,0 +1,23 @@
+---
+- name: Deploy Broker
+
+  hosts: broker
+
+  vars:
+
+    # EMQ X Service facts
+    emqx_image_name: emqx/emqx
+    emqx_image_tag: 5.8.4
+    emqx_service_name: emqx
+    emqx_service_port_api: 18083
+    emqx_service_port_mqtt: 1883
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of EMQX
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-emqx.yaml

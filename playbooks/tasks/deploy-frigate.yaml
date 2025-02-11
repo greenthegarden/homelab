@@ -1,0 +1,169 @@
+---
+
+####### FRIGATE SECTION
+
+# https://docs.frigate.video/frigate/installation
+
+- name: Set Frigate facts
+  ansible.builtin.set_fact:
+    frigate_image_name: "{{ frigate_image_name | default('ghcr.io/blakeblackshear/frigate') }}"
+    frigate_image_tag: "{{ frigate_image_tag | default('stable') }}"
+    frigate_service_name: "{{ frigate_service_name | default('frigate') }}"
+    frigate_service_port: "{{ frigate_service_port | default(5000) }}"
+    frigate_service_port_rtmp: "{{ frigate_service_port_rtmp | default(1935) }}"
+    frigate_service_port_rtsp: "{{ frigate_service_port_rtsp | default(8554) }}"
+    frigate_service_port_webrtc: "{{ frigate_service_port_webrtc | default(8555) }}"
+    frigate_volume_name: "{{ frigate_volume_name | default('frigate') }}"
+    frigate_mount_point: /mnt/storage/frigate
+
+- name: Set Frigate aggregated facts
+  ansible.builtin.set_fact:
+    frigate_config_file: "config.yml"
+    frigate_config_dir: "/root/frigate/"
+    frigate_image: "{{ frigate_image_name }}:{{ frigate_image_tag }}"
+    frigate_fqdn: "{{ frigate_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: Set Frigate service facts
+  ansible.builtin.set_fact:
+    frigate_mounts:
+      - type: tmpfs # Optional: 1GB of memory, reduces SSD/SD Card wear
+        target: /tmp/cache
+        tmpfs_size: 1000000000
+    frigate_networks:
+      - name: "{{ web_network_name | default('web') }}"
+    frigate_ports:
+      - "{{ frigate_service_port }}:5000"
+      - "{{ frigate_service_port_rtsp }}:8554"
+      - "{{ frigate_service_port_webrtc }}:8555/tcp"
+      - "{{ frigate_service_port_webrtc }}:8555/udp"
+    frigate_volumes:
+      - "{{ frigate_config_dir }}:/config/"
+      - "{{ frigate_mount_point }}:/media/frigate"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: Create Frigate container labels
+  ansible.builtin.set_fact:
+    frigate_container_labels: "{{ frigate_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    - {
+      "key": "traefik.http.routers.{{ frigate_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ frigate_service_name }}.rule",
+      "value": "Host(`{{ frigate_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ frigate_service_name }}.service",
+      "value": "{{ frigate_service_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ frigate_service_name }}.tls",
+      "value": "true",
+    }
+    - {
+      "key": "traefik.http.services.{{ frigate_service_name }}.loadbalancer.server.port",
+      "value": "5000",
+    }
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/blakeblackshear/frigate/releases/tag/v$${major}.$${minor}.$${patch}",
+    }
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Monitoring" }
+    - { "key": "homepage.name", "value": "Frigate" }
+    - { "key": "homepage.description", "value": "What is outside?" }
+    - { "key": "homepage.icon", "value": "frigate.png" }
+    - { "key": "homepage.href", "value": "https://{{ frigate_fqdn }}/" }
+    - {
+      "key": "homepage.siteMonitor",
+      "value": "https://{{ frigate_fqdn }}/",
+    }
+    - { "key": "homepage.widget.type", "value": "frigate" }
+    - {
+      "key": "homepage.widget.url",
+      "value": "https://{{ frigate_fqdn }}",
+    }
+    - { "key": "homepage.widget.enableRecentEvents", "value": "true" }
+
+- name: Create Frigate configuration directory
+  ansible.builtin.file:
+    path: "{{ frigate_config_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Create Frigate configuration file
+  ansible.builtin.template:
+    src: templates/frigate/config.yaml.j2
+    dest: "{{ frigate_config_dir }}{{ frigate_config_file }}"
+    mode: "644"
+  register: frigate_configuration_creation
+
+- name: Check if Frigate is running
+  community.docker.docker_container_info:
+    name: "{{ frigate_service_name }}"
+  register: frigate_state
+
+- name: Remove Frigate container if changing version
+  when:
+    - frigate_state.exists
+    - frigate_image_tag != frigate_state.container.Config.Image | split(':') | last
+  block:
+    - name: Stop and remove existing Frigate container
+      community.docker.docker_container:
+        name: "{{ frigate_service_name }}"
+        state: absent
+
+    - name: Set update Frigate
+      ansible.builtin.set_fact:
+        frigate_update: true
+
+- name: Deploy Frigate if not running
+  when:
+    - not frigate_state.exists or (frigate_update | default(false)) or frigate_configuration_creation.changed
+  block:
+    - name: Create volume for Frigate
+      community.docker.docker_volume:
+        name: "{{ frigate_volume_name }}"
+
+    - name: Pull Frigate image
+      community.docker.docker_image:
+        name: "{{ frigate_image }}"
+        source: pull
+
+    - name: Deploy Frigate
+      community.docker.docker_container:
+        name: "{{ frigate_service_name }}"
+        image: "{{ frigate_image }}"
+        detach: true
+        env:
+          FRIGATE_RTSP_PASSWORD: "{{ frigate.rtsp_password | default('dummy') }}"
+        labels: "{{ frigate_container_labels }}"
+        mounts: "{{ frigate_mounts }}"
+        networks_cli_compatible: true
+        networks: "{{ frigate_networks }}"
+        ports: "{{ frigate_ports }}"
+        restart: true
+        restart_policy: unless-stopped
+        shm_size: 64M
+        state: started
+        volumes: "{{ frigate_volumes }}"
+      register: frigate_container_state
+
+    # - name: Wait for Frigate to accept connections
+    #   ansible.builtin.wait_for:
+    #     host: "{{ frigate_fqdn }}"
+    #     port: 80
+    #     connect_timeout: 1
+    #     delay: 10
+    #     state: started
+    #     timeout: 30
+    #   register: frigate_running
+    #   until: frigate_running is success
+    #   retries: 10

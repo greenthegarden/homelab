@@ -1,8 +1,12 @@
 ---
+# Based on https://www.emqx.com/en/blog/emqx-prometheus-grafana
+
 global:
-  scrape_interval: 10s # The default scrape interval is every 10 seconds.
+  scrape_interval:     10s # The default scrape interval is every 10 seconds.
   evaluation_interval: 10s # The default evaluation interval is every 10 seconds.
   # On this machine, every time series will be exported by default.
+  external_labels:
+    monitor: 'emqx-monitor'
 
 scrape_configs:
   #### MONITORING SERVICES
@@ -11,14 +15,14 @@ scrape_configs:
     scrape_interval: 5s
     metrics_path: /metrics
     static_configs:
-      - targets: ["{{ node_exporter_fqdn | default('node-exporter.localdomain') }}"]
+      - targets: ['{{ node_exporter_fqdn }}']
     tls_config:
       insecure_skip_verify: true
-  - job_name: "{{ prometheus_service_name | default(prometheus) }}"
+  - job_name: "{{ prometheus_service_name | default('prometheus') }}"
     scheme: https
     scrape_interval: 5s
     static_configs:
-      - targets: ["{{ prometheus_fqdn | default('prometheus.localdomain') }}"]
+      - targets: ['{{ prometheus_fqdn }}']
     tls_config:
       insecure_skip_verify: true
   - job_name: "{{ traefik_service_name | default('traefik') }}"
@@ -26,6 +30,17 @@ scrape_configs:
     scrape_interval: 5s
     metrics_path: /metrics
     static_configs:
-      - targets: ["{{ traefik_fqdn | default('traefik.localdomain') }}"]
+      - targets: ['{{ traefik_fqdn }}']
+    tls_config:
+      insecure_skip_verify: true
+  # EMQX monitoring
+  - job_name: 'emqx'
+    scheme: https
+    scrape_interval: 5s
+    metrics_path: /api/v5/prometheus/stats
+    honor_labels: true
+    static_configs:
+      # EMQX IP endpoint
+      - targets: ['{{ emqx_fqdn }}']
     tls_config:
       insecure_skip_verify: true

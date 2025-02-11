@@ -1,0 +1,97 @@
+---
+
+####### HORTUSFOX SECTION
+
+# https://hortusfox.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-hortusfox-dashboard/
+
+- name: Set Hortusfox facts
+  ansible.builtin.set_fact:
+    hortusfox_image_name: "{{ hortusfox_image_name | default('ghcr.io/danielbrendel/hortusfox-web') }}"
+    hortusfox_image_tag: "{{ hortusfox_image_tag | default('latest') }}"
+    hortusfox_service_name: "{{ hortusfox_service_name | default('hortusfox') }}"
+    hortusfox_service_port: "{{ hortusfox_service_port | default(8080) }}"
+
+- name: Set Hortusfox aggregated facts
+  ansible.builtin.set_fact:
+    hortusfox_image: "{{ hortusfox_image_name }}:{{ hortusfox_image_tag }}"
+    hortusfox_fqdn: "{{ hortusfox_service_name }}.{{ hostvars['hortusfox'].inventory_hostname }}.{{ lan_dns_domain }}"
+
+- name: Set Hortusfox service facts
+  ansible.builtin.set_fact:
+    hortusfox_networks:
+      - name: "{{ web_network_name | default('web') }}"
+    hortusfox_ports:
+      - "{{ hortusfox_service_port | default(8080) }}:8080"
+    hortusfox_volumes:
+      - "/root/hortusfox/config:/app/config"
+      - /etc/localtime:/etc/localtime:ro
+
+- name: Create Hortusfox container labels
+  ansible.builtin.set_fact:
+    hortusfox_container_labels: "{{ hortusfox_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    - {
+      "key": "traefik.http.routers.{{ hortusfox_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ hortusfox_service_name }}.rule",
+      "value": "Host(`{{ hortusfox_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ hortusfox_service_name }}.service",
+      "value": "{{ hortusfox_service_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ hortusfox_service_name }}.tls",
+      "value": "true",
+    }
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/danielbrendel/hortusfox-web/releases/tag/v$${major}.$${minor}.$${patch}",
+    }
+    # hortusfox labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "HortusFox" }
+    - {
+      "key": "homepage.description",
+      "value": "A self-hosted collaborative plant management system",
+    }
+    - { "key": "homepage.icon", "value": "firefly-iii.png" }
+    - { "key": "homepage.href", "value": "https://{{ hortusfox_fqdn }}/" }
+    - {
+      "key": "homepage.siteMonitor",
+      "value": "https://{{ hortusfox_fqdn }}/",
+    }
+
+- name: Copy configuration
+  ansible.builtin.copy:
+    src: files/hortusfox-web
+    dest: /root/
+    mode: "644"
+
+# - name: Tear down existing services
+#   community.docker.docker_compose_v2:
+#     project_src: /root/hortusfox
+#     state: absent
+
+- name: Create and start services
+  community.docker.docker_compose_v2:
+    project_src: /root/hortusfox-web
+  register: output
+
+- name: Deploy Docker Volume Backup
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-docker-volume-backup.yaml
+  vars:
+    docker_volume_backup_volume:
+      - "{{ hortusfox_db_volume }}:/backup/grocy-backup:ro"
+
+- name: Deploy Duplicati
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-duplicati.yaml

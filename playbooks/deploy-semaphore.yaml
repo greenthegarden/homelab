@@ -1,0 +1,26 @@
+---
+- name: Deploy Semaphore
+
+  hosts: ansible
+
+  vars:
+
+    # Semaohore facts
+    semaphore_image_name: semaphoreui/semaphore
+    semaphore_image_tag: v2.12.4
+    semaphore_service_name: semaphore
+    semaphore_service_port: 3000
+    semaphore_volume_data_name: semaphore_data
+    semaphore_volume_config_name: semaphore_config
+    semaphore_volume_tmp_name: semaphore_tmp
+    semaphore_db_dialect: bolt
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Semaphore
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-semaphore.yaml
