@@ -73,11 +73,14 @@
       "value": "https://{{ fireflyiii_fqdn }}/",
     }
 
-- name: Copy configuration
-  ansible.builtin.copy:
-    src: files/fireflyiii
-    dest: /root/
+- name: Create configuration files
+  ansible.builtin.template:
+    src: "templates/fireflyiii/{{ item }}"
+    dest: "/root/fireflyiii/{{ item }}"
     mode: "644"
+  loop:
+    - fireflyiii.env
+    - fireflyiii_importer.env
 
 # - name: Tear down existing services
 #   community.docker.docker_compose_v2:
@@ -89,7 +92,6 @@
     project_src: /root/fireflyiii
     env_files:
       - fireflyiii.env
-      - fireflyiii_db.env
       - fireflyiii_importer.env
   register: output
 
