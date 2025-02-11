@@ -14,6 +14,10 @@
 
   tasks:
 
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
     - name: Deploy Vaultwarden
       ansible.builtin.include_tasks:
         file: tasks/deploy-vaultwarden.yaml
