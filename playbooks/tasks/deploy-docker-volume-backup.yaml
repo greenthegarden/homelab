@@ -7,7 +7,7 @@
   ansible.builtin.set_fact:
     docker_volume_backup_local_archive_dir: "/root/local_archive"
     docker_volume_backup_image: "{{ docker_volume_backup_image_name }}:{{ docker_volume_backup_image_tag }}"
-    docker_volume_backup_fqdn: "{{ docker_volume_backup_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default(localdomain) }}"
+    docker_volume_backup_fqdn: "{{ docker_volume_backup_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Docker Volume Backup service facts
   ansible.builtin.set_fact:
@@ -38,10 +38,7 @@
     docker_volume_backup_container_labels: "{{ docker_volume_backup_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # What's up Docker? labels
-    - {
-      "key": "wud.tag.include",
-      "value": '^\d+\.\d+\.\d+$$'
-    }
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/offen/docker-volume-backup/releases/tag/v$${major}.$${minor}.$${patch}",

@@ -23,7 +23,7 @@
     - name: Set Portainer aggregated facts
       ansible.builtin.set_fact:
         portainer_image: "{{ portainer_image_name }}:{{ portainer_image_tag }}"
-        portainer_fqdn: "{{ portainer_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default(localdomain) }}"
+        portainer_fqdn: "{{ portainer_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
     - name: Set Portainer service facts
       ansible.builtin.set_fact:

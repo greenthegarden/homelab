@@ -24,7 +24,7 @@
     - name: Set Homepage aggregated facts
       ansible.builtin.set_fact:
         homepage_image: "{{ homepage_image_name }}:{{ homepage_image_tag }}"
-        homepage_fqdn: "{{ homepage_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default(localdomain) }}"
+        homepage_fqdn: "{{ homepage_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
     - name: Set Homepage service facts
       ansible.builtin.set_fact:

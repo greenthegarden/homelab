@@ -165,7 +165,7 @@
         - name: Set Docker Socket Proxy aggregated facts
           ansible.builtin.set_fact:
             docker_socket_proxy_image: "{{ docker_socket_proxy_image_name }}:{{ docker_socket_proxy_image_tag }}"
-            docker_socket_proxy_fqdn: "{{ docker_socket_proxy_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default(localdomain) }}"
+            docker_socket_proxy_fqdn: "{{ docker_socket_proxy_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
         - name: Set Docker Socket Proxy service facts
           ansible.builtin.set_fact:
@@ -395,7 +395,7 @@
         - name: Set Traefik aggregated facts
           ansible.builtin.set_fact:
             traefik_image: "{{ traefik_image_name }}:{{ traefik_image_tag }}"
-            traefik_fqdn: "{{ traefik_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default(localdomain) }}"
+            traefik_fqdn: "{{ traefik_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
         # https://github.com/karvounis/traefik-tutorial-docker-compose-files/blob/master/standalone/advanced/docker-compose.ping.yml
         # https://github.com/ChristianLempa/homelab/blob/main/traefik/traefik-demo-1/config/traefik.yaml
@@ -666,7 +666,7 @@
         - name: Set Node Exporter aggregated facts
           ansible.builtin.set_fact:
             node_exporter_image: "{{ node_exporter_image_name }}:{{ node_exporter_image_tag }}"
-            node_exporter_fqdn: "{{ node_exporter_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default(localdomain) }}"
+            node_exporter_fqdn: "{{ node_exporter_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
         - name: Set Node Exporter service facts
           ansible.builtin.set_fact:
@@ -786,7 +786,7 @@
         - name: Set Prometheus aggregated facts
           ansible.builtin.set_fact:
             prometheus_image: "{{ prometheus_image_name }}:{{ prometheus_image_tag }}"
-            prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default(localdomain) }}"
+            prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
         - name: Set Prometheus service facts
           ansible.builtin.set_fact:

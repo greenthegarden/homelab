@@ -19,7 +19,7 @@
     - name: Set Prometheus aggregated facts
       ansible.builtin.set_fact:
         prometheus_image: "{{ prometheus_image_name }}:{{ prometheus_image_tag }}"
-        prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default(localdomain) }}"
+        prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
     - name: Create Prometheus configuration directory
       ansible.builtin.file:
@@ -59,7 +59,7 @@
     - name: Set Grafana aggregated facts
       ansible.builtin.set_fact:
         grafana_image: "{{ grafana_image_name }}:{{ grafana_image_tag }}"
-        grafana_fqdn: "{{ grafana_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default(localdomain) }}"
+        grafana_fqdn: "{{ grafana_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
     - name: Set Grafana API facts
       ansible.builtin.set_fact:
@@ -81,38 +81,38 @@
       with_items:
         # Traefik labels
         - {
-            "key": "traefik.enable",
-            "value": "true"
-          }
+          "key": "traefik.enable",
+          "value": "true"
+        }
         - {
-            "key": "traefik.docker.network",
-            "value": "{{ web_network_name }}"
-          }
+          "key": "traefik.docker.network",
+          "value": "{{ web_network_name }}"
+        }
         - {
-            "key": "traefik.http.routers.{{ grafana_service_name }}.entrypoints",
-            "value": "websecure",
-          }
+          "key": "traefik.http.routers.{{ grafana_service_name }}.entrypoints",
+          "value": "websecure",
+        }
         - {
-            "key": "traefik.http.routers.{{ grafana_service_name }}.rule",
-            "value": "Host(`{{ grafana_fqdn }}`)",
-          }
+          "key": "traefik.http.routers.{{ grafana_service_name }}.rule",
+          "value": "Host(`{{ grafana_fqdn }}`)",
+        }
         - {
-            "key": "traefik.http.routers.{{ grafana_service_name }}.service",
-            "value": "{{ grafana_service_name }}",
-          }
+          "key": "traefik.http.routers.{{ grafana_service_name }}.service",
+          "value": "{{ grafana_service_name }}",
+        }
         - {
-            "key": "traefik.http.routers.{{ grafana_service_name }}.tls",
-            "value": "true",
-          }
+          "key": "traefik.http.routers.{{ grafana_service_name }}.tls",
+          "value": "true",
+        }
         # What's up Docker? labels
         - {
-            "key": "wud.tag.include",
-            "value": '^\d+\.\d+\.\d+$$'
-          }
+          "key": "wud.tag.include",
+          "value": '^\d+\.\d+\.\d+$$'
+        }
         - {
-            "key": "wud.link.template",
-            "value": "https://github.com/grafana/grafana/releases/tag/v$${major}.$${minor}.$${patch}",
-          }
+          "key": "wud.link.template",
+          "value": "https://github.com/grafana/grafana/releases/tag/v$${major}.$${minor}.$${patch}",
+        }
         # Homepage labels
         - { "key": "homepage.group", "value": "Monitoring" }
         - { "key": "homepage.name", "value": "Grafana" }
@@ -120,9 +120,9 @@
         - { "key": "homepage.icon", "value": "grafana.png" }
         - { "key": "homepage.href", "value": "https://{{ grafana_fqdn }}/" }
         - {
-            "key": "homepage.siteMonitor",
-            "value": "https://{{ grafana_fqdn }}/",
-          }
+          "key": "homepage.siteMonitor",
+          "value": "https://{{ grafana_fqdn }}/",
+        }
 
     - name: Check if Grafana is running
       community.docker.docker_container_info:
