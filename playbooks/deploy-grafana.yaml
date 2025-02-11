@@ -21,11 +21,6 @@
         prometheus_image: "{{ prometheus_image_name }}:{{ prometheus_image_tag }}"
         prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-    - name: Set Prometheus service facts
-      ansible.builtin.set_fact:
-        prometheus_command:
-          - --config.file=/etc/prometheus/prometheus.yml
-
     - name: Create Prometheus configuration directory
       ansible.builtin.file:
         path: /root/prometheus
@@ -40,21 +35,11 @@
         mode: "0644"
       register: prometheus_configuration_creation
 
-    - name: Deploy Prometheus  # noqa: syntax-check[unknown-module]
+    - name: Redeploy Prometheus with new configuration  # noqa: syntax-check[unknown-module]
       community.docker.docker_container:
         name: "{{ prometheus_service_name | default('prometheus') }}"
-        image: "{{ prometheus_image }}"
-        command: "{{ prometheus_command }}"
-        detach: true
-        labels: "{{ prometheus_container_labels }}"
-        memory: 300M
-        memory_reservation: 100M
-        networks_cli_compatible: true
-        networks: "{{ prometheus_networks }}"
-        restart: true
-        restart_policy: unless-stopped
+        recreate: true
         state: started
-        volumes: "{{ prometheus_volumes }}"
       register: prometheus_container_state
 
     ####### GRAFANA SECTION
