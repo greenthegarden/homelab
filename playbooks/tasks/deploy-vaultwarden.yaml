@@ -5,7 +5,7 @@
 # https://www.techaddressed.com/tutorials/vaultwarden-docker-compose/
 # https://noted.lol/vaultwarden/
 
-- name: Set Vaultwarden service facts
+- name: Set Vaultwarden facts
   ansible.builtin.set_fact:
     vaultwarden_image_name: "{{ vaultwarden_image_name | default('vaultwarden/server') }}"
     vaultwarden_image_tag: "{{ vaultwarden_image_tag | default('alpine') }}"

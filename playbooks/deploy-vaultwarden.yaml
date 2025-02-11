@@ -1,11 +1,11 @@
 ---
-- name: Deploy Vaultwarden container
+- name: Deploy Vaultwarden
 
   hosts: vaultwarden
 
   vars:
 
-    # Vaultwarden service facts
+    # Vaultwarden facts
     vaultwarden_image_name: vaultwarden/server
     vaultwarden_image_tag: 1.33.2-alpine
     vaultwarden_service_name: vaultwarden
@@ -18,6 +18,6 @@
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 
-    - name: Deploy Vaultwarden
+    - name: Deploy a containerised instance of Vaultwarden
       ansible.builtin.include_tasks:
         file: tasks/deploy-vaultwarden.yaml

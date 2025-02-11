@@ -1,0 +1,147 @@
+---
+
+####### HOMEPAGE SECTION
+
+# https://homepage.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-homepage-dashboard/
+
+- name: Set homepage facts
+  ansible.builtin.set_fact:
+    homepage_image_name: "{{ homepage_image_name | default('ghcr.io/benphelps/homepage') }}"
+    homepage_image_tag: "{{ homepage_image_tag | default('latest') }}"
+    homepage_service_name: "{{ homepage_service_name | default('homepage') }}"
+    homepage_service_port: "{{ homepage_service_port | default(3000) }}"
+
+- name: Set Homepage aggregated facts
+  ansible.builtin.set_fact:
+    homepage_image: "{{ homepage_image_name }}:{{ homepage_image_tag }}"
+    homepage_fqdn: "{{ homepage_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: Set Homepage service facts
+  ansible.builtin.set_fact:
+    homepage_networks:
+      - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+      - name: "{{ web_network_name | default('web') }}"
+    homepage_ports:
+      - "{{ homepage_service_port | default(3000) }}:3000"
+    homepage_volumes:
+      - "/root/homepage/config:/app/config"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: Create Homepage container labels
+  ansible.builtin.set_fact:
+    homepage_container_labels: "{{ homepage_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - {
+      "key": "traefik.enable",
+      "value": "true"
+    }
+    - {
+      "key": "traefik.docker.network",
+      "value": "{{ web_network_name }}"
+    }
+    - {
+      "key": "traefik.http.routers.{{ homepage_service_name }}.entrypoints",
+      "value": "websecure"
+    }
+    - {
+      "key": "traefik.http.routers.{{ homepage_service_name }}.rule",
+      "value": "Host(`{{ homepage_fqdn }}`)"
+    }
+    - {
+      "key": "traefik.http.routers.{{ homepage_service_name }}.service",
+      "value": "{{ homepage_service_name }}"
+    }
+    - {
+      "key": "traefik.http.routers.{{ homepage_service_name }}.tls",
+      "value": "true"
+    }
+    # What's up Docker? labels
+    - {
+      "key": "wud.tag.include",
+      "value": '^\d+\.\d+\.\d+$$'
+    }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/gethomepage/homepage/releases/tag/v$${major}.$${minor}.$${patch}",
+    }
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Monitoring" }
+    - { "key": "homepage.name", "value": "Homepage" }
+    - { "key": "homepage.description", "value": "This page" }
+    - { "key": "homepage.icon", "value": "homepage.png" }
+    - { "key": "homepage.href", "value": "https://{{ homepage_fqdn }}/" }
+    - {
+      "key": "homepage.siteMonitor",
+      "value": "https://{{ homepage_fqdn }}/"
+    }
+
+- name: Copy static configuration
+  ansible.builtin.copy:
+    src: files/homepage
+    dest: /root/
+    mode: "0644"
+
+- name: Copy templated configuration
+  ansible.builtin.template:
+    src: "templates/homepage/config/{{ item }}.yaml.j2"
+    dest: "/root/homepage/config/{{ item }}.yaml"
+    mode: "0644"
+  loop:
+    - services
+    - widgets
+
+- name: Check if Homepage is running  # noqa: syntax-check[unknown-module]
+  community.docker.docker_container_info:
+    name: "{{ homepage_service_name }}"
+  register: homepage_state
+
+- name: Remove Homepage container if changing version
+  when:
+    - homepage_state.exists
+    - homepage_image_tag != homepage_state.container.Config.Image | split(':') | last
+  block:
+    - name: Stop and remove existing homepage container
+      community.docker.docker_container:
+        name: "{{ homepage_service_name }}"
+        state: absent
+
+    - name: Set update Homepage
+      ansible.builtin.set_fact:
+        homepage_update: true
+
+- name: Deploy Homepage if not running
+  when: not homepage_state.exists or (homepage_update | default(false))
+  block:
+    - name: Pull Homepage image
+      community.docker.docker_image:
+        name: "{{ homepage_image }}"
+        source: pull
+
+    # docker run -d -p 3000:3000 homepage/homepage
+    - name: Deploy Homepage
+      community.docker.docker_container:
+        name: "{{ homepage_service_name }}"
+        image: "{{ homepage_image }}"
+        detach: true
+        labels: "{{ (homepage_container_labels | default({})) | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ homepage_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ homepage_volumes }}"
+      register: homepage_container_state
+
+    - name: Wait for Homepage to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ homepage_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: homepage_running
+      until: homepage_running is success
+      retries: 10

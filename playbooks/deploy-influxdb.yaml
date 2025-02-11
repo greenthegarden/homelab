@@ -1,12 +1,12 @@
 ---
 
-- name: Deploy InfluxDB container
+- name: Deploy InfluxDB
 
   hosts: influxdb
 
   vars:
 
-    # InfluxDB service facts
+    # InfluxDB facts
     influxdb_image_name: influxdb
     influxdb_image_tag: 2.7.11-alpine
     influxdb_service_name: influxdb
@@ -16,202 +16,10 @@
 
   tasks:
 
-    ####### INFLUXDB SECTION
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
 
-    # https://hub.docker.com/_/influxdb/
-
-    - name: Set InfluxDB aggregated facts
-      ansible.builtin.set_fact:
-        influxdb_image: "{{ influxdb_image_name }}:{{ influxdb_image_tag }}"
-        influxdb_fqdn: "{{ influxdb_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
-
-    - name: Set InfluxDB service facts
-      ansible.builtin.set_fact:
-        influxdb_networks:
-          - name: "{{ web_network_name | default('web') }}"
-        influxdb_ports:
-          - "{{ influxdb_service_port | default(8086) }}:8086"
-        influxdb_volumes:
-          - "{{ influxdb_config_volume_name }}:/etc/influxdb2"
-          - "{{ influxdb_data_volume_name }}:/var/lib/influxdb2"
-          - /etc/localtime:/etc/localtime:ro
-          - /etc/timezone:/etc/timezone:ro
-
-    - name: Set InfluxDB Database secrets
-      ansible.builtin.include_vars: files/influxdb/influxdb.yaml
-
-    # Should be creating a homeassistant bucket here as defined at
-    # https://docs.influxdata.com/influxdb/v2.1/organizations/buckets/create-bucket/
-
-    - name: Create InfluxDB container labels
-      ansible.builtin.set_fact:
-        influxdb_container_labels: "{{ influxdb_container_labels | default({}) | combine({item.key: item.value}) }}"
-      with_items:
-        # Traefik labels
-        - {
-            "key": "traefik.enable",
-            "value": "true"
-          }
-        - {
-            "key": "traefik.docker.network",
-            "value": "{{ web_network_name }}"
-          }
-        - {
-            "key": "traefik.http.routers.{{ influxdb_service_name }}.entrypoints",
-            "value": "websecure",
-          }
-        - {
-            "key": "traefik.http.routers.{{ influxdb_service_name }}.rule",
-            "value": "Host(`{{ influxdb_fqdn }}`)",
-          }
-        - {
-            "key": "traefik.http.routers.{{ influxdb_service_name }}.service",
-            "value": "{{ influxdb_service_name }}",
-          }
-        - {
-            "key": "traefik.http.routers.{{ influxdb_service_name }}.tls",
-            "value": "true",
-          }
-        # What's up Docker? labels
-        - {
-            "key": "wud.tag.include",
-            "value": '^\d+\.\d+\.\d+-alpine+$$'
-          }
-        - {
-            "key": "wud.link.template",
-            "value": "https://github.com/influxdata/influxdb/releases/tag/v$${major}.$${minor}.$${patch}",
-          }
-        # Homepage labels
-        - { "key": "homepage.group", "value": "Monitoring" }
-        - { "key": "homepage.name", "value": "InfluxDB" }
-        - { "key": "homepage.description", "value": "Time-series data" }
-        - { "key": "homepage.icon", "value": "influxdb.png" }
-        - { "key": "homepage.href", "value": "https://{{ influxdb_fqdn }}/" }
-        - {
-            "key": "homepage.siteMonitor",
-            "value": "https://{{ influxdb_fqdn }}/"
-          }
-
-    - name: Create InfluxDB volumes  # noqa: syntax-check[unknown-module]
-      community.docker.docker_volume:
-        name: "{{ item }}"
-        state: present
-      loop:
-        - "{{ influxdb_config_volume_name }}"
-        - "{{ influxdb_data_volume_name }}"
-
-    - name: Check if InfluxDB is running
-      community.docker.docker_container_info:
-        name: "{{ influxdb_service_name }}"
-      register: influxdb_state
-
-    - name: Remove InfluxDB container if changing version
-      when:
-        - influxdb_state.exists
-        - influxdb_image_tag != influxdb_state.container.Config.Image | split(':') | last
-      block:
-        - name: Stop and remove existing InfluxDB container
-          community.docker.docker_container:
-            name: "{{ influxdb_service_name }}"
-            state: absent
-
-        - name: Set update InfluxDB
-          ansible.builtin.set_fact:
-            influxdb_update: true
-
-    - name: Deploy InfluxDB if not running
-      when: not influxdb_state.exists or (influxdb_update | default(false))
-      block:
-        - name: Pull InfluxDB image
-          community.docker.docker_image:
-            name: "{{ influxdb_image }}"
-            source: pull
-
-        - name: Deploy InfluxDB
-          community.docker.docker_container:
-            name: "{{ influxdb_service_name }}"
-            image: "{{ influxdb_image }}"
-            detach: true
-            env:
-              #   # DOCKER_INFLUXDB_INIT_MODE: "{{ influxdb_init_mode }}"
-              #   DOCKER_INFLUXDB_INIT_USERNAME: "{{ influxdb_init_username }}"
-              #   DOCKER_INFLUXDB_INIT_PASSWORD: "{{ influxdb_init_password }}"
-              #   # DOCKER_INFLUXDB_INIT_ORG: "{{ influxdb_init_org }}"
-              #   # DOCKER_INFLUXDB_INIT_BUCKET: "{{ influxdb_init_bucket }}"
-              #   # DOCKER_INFLUXDB_INIT_RETENTION: "{{ influxdb_init_retention }}"
-              #   # DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: "{{ influxdb_init_admin_token }}"
-              TZ: "{{ ansible_date_time.tz }}"
-            labels: "{{ influxdb_container_labels }}"
-            networks_cli_compatible: true
-            networks: "{{ influxdb_networks }}"
-            published_ports: "{{ influxdb_ports }}"
-            restart: true
-            restart_policy: unless-stopped
-            volumes: "{{ influxdb_volumes }}"
-          register: influxdb_container_state
-
-        # - name: Wait for InfluxDB to accept connections
-        #   ansible.builtin.wait_for:
-        #     host: "{{ influxdb_fqdn }}"
-        #     port: 80
-        #     connect_timeout: 1
-        #     delay: 10
-        #     state: started
-        #     timeout: 30
-        #   register: influxdb_running
-        #   until: influxdb_running is success
-        #   retries: 10
-
-        # - name: Set Grafana facts
-        #   ansible.builtin.set_fact:
-        #     grafana_service_name: grafana
-        #     grafana_service_port: 3000
-        #   tags:
-        #     - influxdb
-        #     - grafana
-
-        # - name: Set Grafana API facts
-        #   ansible.builtin.set_fact:
-        #     grafana_instance: "{{ grafana_service_name | default('grafana') }}"
-        #     # Use domain name here as Grafana is running on a different Docker network
-        #     grafana_api_url: "http://{{ ansible_default_ipv4.address }}:{{ grafana_service_port }}"
-        #     grafana_security: {admin_user: admin, admin_password: "monitoring"}
-        #     grafana_use_provisioning: false  # will use API
-        #   tags:
-        #     - influxdb
-        #     - grafana
-
-        # - name: Check if Grafana is running
-        #   community.docker.docker_container_info:
-        #     name: "{{ grafana_service_name }}"
-        #   register: grafana_state
-        #   tags:
-        #     - influxdb
-        #     - grafana
-
-        # - name: Create Grafana datasources
-        #   community.grafana.grafana_datasource:
-        #     name: "{{ item.name }}"
-        #     grafana_url: "{{ grafana_api_url }}"
-        #     grafana_user: "{{ grafana_security.admin_user }}"
-        #     grafana_password: "{{ grafana_security.admin_password }}"
-        #     org_id: "1"
-        #     ds_type: "{{ item.type }}"
-        #     ds_url: "{{ item.url }}"
-        #     database: "{{ influxdb_db }}"
-        #     access: "{{ item.access }}"
-        #     tls_skip_verify: true
-        #     state: present
-        #   with_items: "{{ grafana_datasources }}"
-        #   vars:
-        #     grafana_datasources:
-        #       - name: InfluxDB
-        #         type: influxdb
-        #         access: proxy
-        #         url: "http://{{ ansible_default_ipv4.address }}:{{ influxdb_service_port | default(8086) }}"
-        #         user: "{{ influxdb_read_user }}"
-        #         basic_auth_user: "{{ influxdb_read_user }}"
-        #         basic_auth_password: "{{ influxdb_read_password }}"
-        #   tags:
-        #     - influxdb
-        #     - grafana
+    - name: Deploy a containerised instance of InfluxDB
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-influxdb.yaml

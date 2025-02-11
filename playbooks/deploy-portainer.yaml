@@ -1,11 +1,11 @@
 ---
-- name: Deploy Portainer container
+- name: Deploy Portainer
 
   hosts: portainer
 
   vars:
 
-    # Portainer service facts
+    # Portainer facts
     portainer_image_name: portainer/portainer-ce
     portainer_image_tag: 2.26.1-alpine
     portainer_service_name: portainer
@@ -14,149 +14,10 @@
 
   tasks:
 
-    ####### PORTAINER SECTION
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
 
-    # https://documentation.portainer.io/v2.0/deploy/ceinstalldocker/
-    # https://docs.portainer.io/start/install/server/docker/linux
-    # https://docs.portainer.io/advanced/reverse-proxy/traefik
-
-    - name: Set Portainer aggregated facts
-      ansible.builtin.set_fact:
-        portainer_image: "{{ portainer_image_name }}:{{ portainer_image_tag }}"
-        portainer_fqdn: "{{ portainer_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
-
-    - name: Set Portainer service facts
-      ansible.builtin.set_fact:
-        portainer_ports:
-          - "{{ portainer_service_port | default(9000) }}:9000"
-        portainer_networks:
-          - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-          - name: "{{ web_network_name | default('web') }}"
-        portainer_volumes:
-          - "{{ portainer_volume_name | default('portainer') }}:/data"
-          - /var/run/docker.sock:/var/run/docker.sock:ro
-          - /etc/localtime:/etc/localtime:ro
-          - /etc/timezone:/etc/timezone:ro
-
-    - name: Create Portainer container labels
-      ansible.builtin.set_fact:
-        portainer_container_labels: "{{ portainer_container_labels | default({}) | combine({item.key: item.value}) }}"
-      with_items:
-        # Traefik labels
-        - {
-            "key": "traefik.enable",
-            "value": "true"
-          }
-        - {
-            "key": "traefik.docker.network",
-            "value": "{{ web_network_name | default('web') }}"
-          }
-        - {
-            "key": "traefik.http.routers.{{ portainer_service_name }}.entrypoints",
-            "value": "websecure"
-          }
-        - {
-            "key": "traefik.http.routers.{{ portainer_service_name }}.rule",
-            "value": "Host(`{{ portainer_fqdn }}`)"
-          }
-        - {
-            "key": "traefik.http.routers.{{ portainer_service_name }}.service",
-            "value": "{{ portainer_service_name }}"
-          }
-        - {
-            "key": "traefik.http.routers.{{ portainer_service_name }}.tls",
-            "value": "true",
-          }
-        - {
-            "key": "traefik.http.services.{{ portainer_service_name }}.loadbalancer.server.port",
-            "value": "9000",
-          }
-        # What's up Docker? labels
-        - {
-            "key": "wud.tag.include",
-            "value": '^\d+\.\d+\.\d+-alpine+$$'
-          }
-        - {
-            "key": "wud.link.template",
-            "value": "https://github.com/portainer/portainer/releases/tag/$${major}.$${minor}.$${patch}",
-          }
-        # Homepage labels
-        - { "key": "homepage.group", "value": "System" }
-        - { "key": "homepage.name", "value": "Portainer" }
-        - { "key": "homepage.description", "value": "Container management" }
-        - { "key": "homepage.icon", "value": "portainer.png" }
-        - { "key": "homepage.href", "value": "https://{{ portainer_fqdn }}/" }
-        - {
-            "key": "homepage.siteMonitor",
-            "value": "https://{{ portainer_fqdn }}/"
-          }
-        # - { "key": "homepage.widget.type", "value": "portainer" }
-        # - {
-        #     "key": "homepage.widget.url",
-        #     "value": "https://{{ portainer_fqdn }}",
-        #   }
-        # - { "key": "homepage.widget.env", "value": "25" }
-        # - {
-        #     "key": "homepage.widget.key",
-        #     "value": "ptr_+Au92kp00xt8cbvCSmSH6MfUZbtGnwHlDbuhckEvaIU=",
-        #   }
-
-    - name: Create volume for Portainer  # noqa: syntax-check[unknown-module]
-      community.docker.docker_volume:
-        name: "{{ portainer_volume_name }}"
-
-    - name: Check if Portainer is running
-      community.docker.docker_container_info:
-        name: "{{ portainer_service_name }}"
-      register: portainer_state
-
-    - name: Remove Portainer container if changing version
-      when:
-        - portainer_state.exists
-        - portainer_image_tag != portainer_state.container.Config.Image | split(':') | last
-      block:
-        - name: Stop and remove existing Portainer container
-          community.docker.docker_container:
-            name: "{{ portainer_service_name }}"
-            state: absent
-
-        - name: Set update Portainer
-          ansible.builtin.set_fact:
-            portainer_update: true
-
-    - name: Deploy Portainer if not running
-      when:
-        - not portainer_state.exists or (portainer_update | default(false))
-      block:
-        - name: Pull Portainer image
-          community.docker.docker_image:
-            name: "{{ portainer_image }}"
-            source: pull
-
-        - name: Deploy Portainer
-          community.docker.docker_container:
-            name: "{{ portainer_service_name }}"
-            image: "{{ portainer_image }}"
-            detach: true
-            env:
-              DOCKER_HOST: tcp://docker-socket-proxy:2375
-            labels: "{{ portainer_container_labels }}"
-            networks_cli_compatible: true
-            networks: "{{ portainer_networks }}"
-            restart: true
-            restart_policy: unless-stopped
-            state: started
-            volumes: "{{ portainer_volumes }}"
-          register: portainer_container_state
-
-        - name: Wait for Portainer to accept connections
-          ansible.builtin.wait_for:
-            host: "{{ portainer_fqdn }}"
-            port: 80
-            connect_timeout: 1
-            delay: 10
-            state: started
-            timeout: 30
-          register: portainer_running
-          until: portainer_running is success
-          retries: 10
+    - name: Deploy a containerised instance of Portainer
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-portainer.yaml

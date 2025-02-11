@@ -10,11 +10,11 @@ monitoring_network_name: monitoring
 web_network_name: web
 
 # Containerised service facts
-# Docker Volume Backup service facts
+# Docker Volume Backup facts
 docker_volume_backup_image_name: offen/docker-volume-backup
 docker_volume_backup_image_tag: v2.43.1
 docker_volume_backup_service_name: "docker-volume-backup"
-# Duplicati service facts
+# Duplicati facts
 duplicati_image_name: lscr.io/linuxserver/duplicati
 duplicati_image_tag: v2.1.0.3_beta_2025-01-22-ls232
 duplicati_service_name: duplicati
@@ -22,19 +22,19 @@ duplicati_service_port: 8200
 duplicati_volume_config: config
 duplicati_volume_backups: backups
 duplicati_volume_source: source
-# Node Exporter service facts
+# Node Exporter facts
 node_exporter_image_name: prom/node-exporter
 node_exporter_image_tag: v1.8.2
 node_exporter_service_name: node-exporter
 node_exporter_service_port: 9100
 node_exporter_service_protocol: http
-# Prometheus service facts
+# Prometheus facts
 prometheus_image_name: prom/prometheus
 prometheus_image_tag: v3.1.0
 prometheus_service_name: prometheus
 prometheus_service_port: 9090
 prometheus_volume_name: prometheus
-# Traefik service facts
+# Traefik facts
 traefik_image_name: traefik
 traefik_image_tag: 3.3.3
 traefik_service_name: traefik

@@ -1,6 +1,6 @@
 ---
 
-- name: Deploy Authentik container
+- name: Deploy Authentik
 
   hosts: authentik
 
@@ -14,81 +14,10 @@
 
   tasks:
 
-    ####### AUTHENTIK SECTION
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
 
-    # https://authentik.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-authentik-dashboard/
-
-    - name: Set Authentik aggregated facts
-      ansible.builtin.set_fact:
-        authentik_image: "{{ authentik_image_name }}:{{ authentik_image_tag }}"
-        authentik_fqdn: "{{ authentik_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
-
-    - name: Set Authentik API facts
-      ansible.builtin.set_fact:
-        authentik_networks:
-          - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-          - name: "{{ web_network_name | default('web') }}"
-        authentik_ports:
-          - "{{ authentik_service_port | default(3000) }}:3000"
-        authentik_volumes:
-          - "/root/authentik/config:/app/config"
-          # - /var/run/docker.sock:/var/run/docker.sock
-          - /etc/localtime:/etc/localtime:ro
-
-    - name: Create Authentik container labels
-      ansible.builtin.set_fact:
-        authentik_container_labels: "{{ authentik_container_labels | default({}) | combine({item.key: item.value}) }}"
-      with_items:
-        # Traefik labels
-        - { "key": "traefik.enable", "value": "true" }
-        - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
-        - {
-            "key": "traefik.http.routers.{{ authentik_service_name }}.entrypoints",
-            "value": "websecure",
-          }
-        - {
-            "key": "traefik.http.routers.{{ authentik_service_name }}.rule",
-            "value": "Host(`{{ authentik_fqdn }}`)",
-          }
-        - {
-            "key": "traefik.http.routers.{{ authentik_service_name }}.service",
-            "value": "{{ authentik_service_name }}",
-          }
-        - {
-            "key": "traefik.http.routers.{{ authentik_service_name }}.tls",
-            "value": "true",
-          }
-        # What's up Docker? labels
-        - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-        - {
-            "key": "wud.link.template",
-            "value": "https://github.com/getauthentik/authentik/releases/tag/v$${major}.$${minor}.$${patch}",
-          }
-        # authentik labels
-        - { "key": "homepage.group", "value": "System" }
-        - { "key": "homepage.name", "value": "authentik" }
-        - { "key": "homepage.description", "value": "Centralised logins" }
-        - { "key": "homepage.icon", "value": "authentik.png" }
-        - { "key": "homepage.href", "value": "https://{{ authentik_fqdn }}/" }
-        - {
-            "key": "homepage.siteMonitor",
-            "value": "https://{{ authentik_fqdn }}/",
-          }
-
-    - name: Copy configuration
-      ansible.builtin.copy:
-        src: files/authentik
-        dest: /root/
-        mode: "644"
-
-    # - name: Tear down existing services
-    #   community.docker.docker_compose_v2:
-    #     project_src: /root/authentik
-    #     state: absent
-
-    - name: Create and start Authentik services  # noqa: syntax-check[unknown-module]
-      community.docker.docker_compose_v2:
-        project_src: /root/authentik
-        env_files:
-          - env
-      register: output
+    - name: Deploy a containerised instance of Authentik
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-authentik.yaml
