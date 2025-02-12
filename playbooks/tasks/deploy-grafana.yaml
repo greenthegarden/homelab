@@ -15,11 +15,10 @@
       - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
   fail_msg: A version of Docker >= 20 is required to be installed
 
-
 ####### PROMETHEUS SECTION
 
 - name: Check Docker container status
-  ansible.docker.docker_container:
+  ansible.docker.docker_container_info:
     name: "{{ prometheus_service_name | default('prometheus') }}"
     state: started
   register: prometheus_container_status
