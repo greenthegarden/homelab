@@ -11,8 +11,6 @@
       - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
     fail_msg: A version of Docker >= 20 is required to be installed
 
-####### HOMEBOX SECTION
-
 - name: Set Homebox facts
   ansible.builtin.set_fact:
     homebox_image_name: "{{ homebox_image_name | default('ghcr.io/hay-kot/homebox') }}"

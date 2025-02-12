@@ -1,0 +1,123 @@
+---
+
+- name: Check Docker is available
+  community.docker.docker_host_info:
+  register: host_docker_info
+  ignore_errors: true
+
+- name: Assert Docker is available
+  ansible.builtin.assert:
+    that:
+      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
+    fail_msg: A version of Docker >= 20 is required to be installed
+
+- name: Set Node Exporter aggregated facts
+  ansible.builtin.set_fact:
+    node_exporter_image: "{{ node_exporter_image_name }}:{{ node_exporter_image_tag }}"
+    node_exporter_fqdn: "{{ node_exporter_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: Set Node Exporter service facts
+  ansible.builtin.set_fact:
+    node_exporter_networks:
+      - name: "{{ monitoring_network_name | default('monitoring') }}"
+      - name: "{{ web_network_name | default('web') }}"
+    node_exporter_ports:
+      - "{{ node_exporter_service_port | default(9100) }}:9100"
+    node_exporter_volumes:
+      - /proc:/host/proc:ro
+      - /sys/:/host/sys:ro
+      - /:/rootfs:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: Create Node Exporter container labels
+  ansible.builtin.set_fact:
+    node_exporter_container_labels: "{{ node_exporter_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - {
+      "key": "traefik.enable",
+      "value": "true"
+    }
+    - {
+      "key": "traefik.docker.network",
+      "value": "{{ web_network_name }}"
+    }
+    - {
+      "key": "traefik.http.routers.{{ node_exporter_service_name }}-http.rule",
+      "value": "Host(`{{ node_exporter_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ node_exporter_service_name }}-http.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ node_exporter_service_name }}-http.service",
+      "value": "{{ node_exporter_service_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ node_exporter_service_name }}-http.tls",
+      "value": "true",
+    }
+    # What's up Docker? labels
+    - {
+      "key": "wud.tag.include",
+      "value": '^\d+\.\d+\.\d+$$'
+    }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/prometheus/node_exporter/releases/tag/v$${major}.$${minor}.$${patch}",
+    }
+
+- name: Check if Node Exporter is running  # noqa: syntax-check[unknown-module]
+  community.docker.docker_container_info:
+    name: "{{ node_exporter_service_name }}"
+  register: node_exporter_state
+
+- name: Remove Node Exporter container if changing version
+  when:
+    - node_exporter_state.exists
+    - node_exporter_image_tag != node_exporter_state.container.Config.Image | split(':') | last
+  block:
+    - name: Stop and remove existing Node Exporter container
+      community.docker.docker_container:
+        name: "{{ node_exporter_service_name }}"
+        state: absent
+
+    - name: Set update Node Exporter
+      ansible.builtin.set_fact:
+        node_exporter_update: true
+
+- name: Deploy Node Exporter if not running
+  when: not node_exporter_state.exists or (node_exporter_update | default(false))
+  block:
+    - name: Pull Node Exporter image
+      community.docker.docker_image:
+        name: "{{ node_exporter_image }}"
+        source: pull
+
+    - name: Deploy Node Exporter
+      community.docker.docker_container:
+        name: "{{ node_exporter_service_name }}"
+        image: "{{ node_exporter_image }}"
+        detach: true
+        labels: "{{ node_exporter_container_labels }}"
+        networks_cli_compatible: true
+        networks: "{{ node_exporter_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ node_exporter_volumes }}"
+      register: node_exporter_container_state
+
+    # - name: Wait for Node Exporter to accept connections
+    #   ansible.builtin.wait_for:
+    #     host: "{{ node_exporter_fqdn }}"
+    #     port: 80
+    #     connect_timeout: 1
+    #     delay: 10
+    #     state: started
+    #     timeout: 30
+    #   register: node_exporter_running
+    #   until: node_exporter_running is success
+    #   retries: 10

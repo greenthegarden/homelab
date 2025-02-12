@@ -1,0 +1,133 @@
+---
+
+- name: Check Docker is available
+  community.docker.docker_host_info:
+  register: host_docker_info
+  ignore_errors: true
+
+- name: Assert Docker is available
+  ansible.builtin.assert:
+    that:
+      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
+    fail_msg: A version of Docker >= 20 is required to be installed
+
+- name: Set Docker Socket Proxy aggregated facts
+  ansible.builtin.set_fact:
+    docker_socket_proxy_image: "{{ docker_socket_proxy_image_name }}:{{ docker_socket_proxy_image_tag }}"
+    docker_socket_proxy_fqdn: "{{ docker_socket_proxy_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: Set Docker Socket Proxy service facts
+  ansible.builtin.set_fact:
+    docker_socket_proxy_networks:
+      - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+      - name: "{{ web_network_name | default('web') }}"
+    docker_socket_proxy_ports:
+      - "{{ docker_socket_proxy_service_port | default(2375) }}:2375"
+    docker_socket_proxy_volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: Create Docker Socket Proxy container labels
+  ansible.builtin.set_fact:
+    docker_socket_proxy_container_labels: "{{ docker_socket_proxy_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # What's up Docker? labels
+    - {
+      "key": "wud.tag.include",
+      "value": '^\d+\.\d+\.\d+$$'
+    }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/Tecnativa/docker-socket-proxy/releases/tag/v$${major}.$${minor}.$${patch}",
+    }
+
+- name: Check if Docker Socket Proxy is running  # noqa: syntax-check[unknown-module]
+  community.docker.docker_container_info:
+    name: "{{ docker_socket_proxy_service_name | default('docker-socket-proxy') }}"
+  register: docker_socket_proxy_state
+
+- name: Remove Docker Socket Proxy container if changing version
+  when:
+    - docker_socket_proxy_state.exists
+    - docker_socket_proxy_image_tag != docker_socket_proxy_state.container.Config.Image | split(':') | last
+  block:
+    - name: Stop and remove existing Docker Socket Proxy container
+      community.docker.docker_container:
+        name: "{{ docker_socket_proxy_service_name | default('docker-socket-proxy') }}"
+        state: absent
+
+    - name: Set update Docker Socket Proxy
+      ansible.builtin.set_fact:
+        docker_socket_proxy_update: true
+
+- name: Deploy Docker Socket Proxy if not running
+  when: not docker_socket_proxy_state.exists or (docker_socket_proxy_update | default(false))
+  block:
+    - name: Pull Docker Socket Proxy image
+      community.docker.docker_image:
+        name: "{{ docker_socket_proxy_image }}"
+        source: pull
+
+    - name: Deploy Docker Socket Proxy
+      community.docker.docker_container:
+        name: "{{ docker_socket_proxy_service_name }}"
+        image: "{{ docker_socket_proxy_image }}"
+        env:
+          LOG_LEVEL: info # debug,info,notice,warning,err,crit,alert,emerg
+          ## Variables match the URL prefix (i.e. AUTH blocks access to /auth/* parts of the API, etc.).
+          # 0 to revoke access.
+          # 1 to grant access.
+          ## Granted by Default
+          EVENTS: "1"
+          PING: "1"
+          VERSION: "1"
+          ## Revoked by Default
+          # Security critical
+          AUTH: "0"
+          SECRETS: "0"
+          POST: "1" # Allow access for Docker Volume Backup to stop containers
+          ## Not always needed
+          BUILD: "0"
+          COMMIT: "0"
+          CONFIGS: "0"
+          CONTAINERS: "1" # Allow access to viewing containers (Traefik, Portainer, Docker Volume Backup.)
+          DISTRIBUTION: "0"
+          EXEC: "0"
+          IMAGES: "1" # Allow access to viewing images (Portainer)
+          INFO: "1" # Allow access to viewing info (Portainer, Docker Volume Backup)
+          NETWORKS: "1" # Allow access to viewing networks (Portainer)
+          NODES: "1" # Allow access for Docker Volume Backup to stop containers
+          PLUGINS: "0"
+          SERVICES: "1" # Allow access to viewing services (Portainer)
+          SESSION: "0"
+          SWARM: "0"
+          SYSTEM: "0"
+          TASKS: "1" # Allow access to viewing tasks (Portainer, Docker Volume Backup)
+          VOLUMES: "1" # Allow access to viewing volumes (Portainer)
+        labels: "{{ docker_socket_proxy_container_labels }}"
+        networks: "{{ docker_socket_proxy_networks }}"
+        published_ports: "{{ docker_socket_proxy_ports }}"
+        restart: true
+        restart_policy: unless-stopped
+        security_opts:
+          - no-new-privileges=true
+        state: started
+        volumes: "{{ docker_socket_proxy_volumes }}"
+      register: docker_socket_proxy_container_state
+
+    - name: Wait for Docker Socket Proxy to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ docker_socket_proxy_container_state['container']\
+          ['NetworkSettings']\
+          ['Networks']\
+          ['docker-socket-proxy']\
+          ['IPAddress'] }}"
+        port: "{{ docker_socket_proxy_service_port | default(2375) }}"
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: docker_socket_proxy_running
+      retries: 10
+      until: docker_socket_proxy_running is success
