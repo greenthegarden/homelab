@@ -19,18 +19,38 @@ useEqualHeights: true
 groupsInitiallyCollapsed: true
 
 layout:
-  - Family:
+  - Cloud:
+      tab: Main
       style: row
       columns: 3
       iconsOnly: true
       initiallyCollapsed: false
   - Applications:
-      initiallyCollapsed: true
+      tab: Secondary
+      initiallyCollapsed: false
       # style: row
       # columns: 2
   - System:
-      initiallyCollapsed: true
+      tab: Secondary
+      initiallyCollapsed: false
   - Monitoring:
-      initiallyCollapsed: true
-#   Nextcloud Apps:
-#     tab: First
+      tab: Secondary
+      initiallyCollapsed: false
+  - Nextcloud Apps:
+      tab: Main
+  - Social:
+      tab: Main
+  - Retail:
+      tab: Main
+  - Entertainment:
+      tab: Main
+  - Environment:
+      tab: Main
+  - News:
+      tab: Main
+  - Services:
+      tab: Secondary
+  - Development:
+      tab: Secondary
+  - Storage:
+      tab: Secondary
