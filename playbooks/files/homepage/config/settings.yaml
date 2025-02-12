@@ -17,14 +17,17 @@ title: CutlerVuFamily Homelab
 useEqualHeights: true
 
 layout:
-  - Home:
-      style: row
-      columns: 3
-  - Applications:
-      initiallyCollapsed: true
-      style: row
-      columns: 2
-  - System:
-      initiallyCollapsed: true
-  - Monitoring:
-      initiallyCollapsed: true
+  Home:
+    style: row
+    columns: 3
+    iconsOnly: true
+  Applications:
+    initiallyCollapsed: true
+    style: row
+    columns: 2
+  System:
+    initiallyCollapsed: true
+  Monitoring:
+    initiallyCollapsed: true
+  Nextcloud:
+    tab: First

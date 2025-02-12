@@ -2,10 +2,10 @@
 # For configuration options and examples, please see:
 # https://gethomepage.dev/latest/configs/service-widgets/
 
-- resources:
-      cpu: true
-      memory: true
-      disk: /
+# - resources:
+#       cpu: true
+#       memory: true
+#       disk: /
 
 - datetime:
       text_size: xl
@@ -14,9 +14,12 @@
           timeStyle: short
           hour12: true
 
-- search:
-      provider: duckduckgo
-      target: _blank
+- quicklaunch:
+      searchDescriptions: true
+      hideInternetSearch: true
+      showSearchSuggestions: true
+      hideVisitURL: true
+      provider: google
 
 - openmeteo:
       label: Adelaide # optional
