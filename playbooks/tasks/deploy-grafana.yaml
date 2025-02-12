@@ -18,7 +18,7 @@
 ####### PROMETHEUS SECTION
 
 - name: Check Docker container status
-  docker.docker_container_info:
+  community.docker.docker_container_info:
     name: "{{ prometheus_service_name | default('prometheus') }}"
     state: started
   register: prometheus_container_status
