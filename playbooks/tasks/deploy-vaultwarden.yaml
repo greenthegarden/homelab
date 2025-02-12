@@ -79,7 +79,7 @@
       "value": "https://github.com/dani-garcia/vaultwarden/releases/tag/$${major}.$${minor}.$${patch}",
     }
     # Homepage labels
-    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.group", "value": "Home" }
     - { "key": "homepage.name", "value": "Vaultwarden" }
     - { "key": "homepage.description", "value": "Get login details" }
     - { "key": "homepage.icon", "value": "vaultwarden.png" }

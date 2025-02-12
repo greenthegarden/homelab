@@ -1,15 +1,26 @@
-# Homelab deployment scripts
+# Homelab
 
-[Ansible](https://docs.ansible.com/ansible/latest/index.html) playbooks to deploy and configure services used within my Homelab. Repository is structured to work with [Semaphore UI](https://semaphoreui.com/) to manage the deployments.
+## Hardware
 
-## Setting up Semaphore UI
+## Software
 
+### Architecture
 
+### Deployment
 
-## Managing secrets
+The homleab
+[Ansible](https://docs.ansible.com/ansible/latest/index.html) playbooks to deploy
+and configure services used within my Homelab. Repository is structured to work with
+[Semaphore UI](https://semaphoreui.com/) to manage the deployments.
 
+### Maintenance
+
+## Guides
+
+### Setting up Semaphore UI
+
+### Managing secrets
 
 ```yaml
 ansible-vault create playbooks/files/config.yaml
 ```
-
