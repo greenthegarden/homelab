@@ -3,78 +3,81 @@
 # https://gethomepage.dev/latest/configs/services
 # https://gethomepage.dev/latest/widgets/
 
+
 - Family:
 
     - Nextcloud:
-        href: "{{ nextcloud.url }}/"
+        href: {{ nextcloud.url }}/
         description: Home cloud services
         icon: nextcloud.png
-        siteMonitor: "{{ nextcloud.url }}"
+        siteMonitor: {{ nextcloud.url }}
 
     - Home Assistant:
-        href: "{{ home_assistant.url }}"
+        href: {{ home_assistant.url }}
         description: Home automation
         icon: home-assistant.png
-        siteMonitor: "{{ home_assistant.url }}"
+        siteMonitor: {{ home_assistant.url }}
         widget:
           type: homeassistant
-          url: "{{ home_assistant.url }}:8123"
-          key: "{{ home_assistant.key }}"
+          url: {{ home_assistant.url }}:8123
+          key: {{ home_assistant.key }}
           custom:
             - state: sensor.indoor_temperature_2
             - state: sensor.indoor_humidity_2
             - state: sensor.indoor_co2_2
             - state: sensor.indoor_voc_parts_2
 
+
 - Applications:
+
 
 - System:
 
     - AdGuard:
-        href: "{{ adguard.url }}/"
+        href: {{ adguard.url }}/
         description: Domain management
         icon: adguard-home.png
-        siteMonitor: "{{ adguard.url }}"
+        siteMonitor: {{ adguard.url }}
         widget:
           type: adguard
-          url: "{{ adguard.url }}"
-          username: "{{ adguard.username }}"
-          password: "{{ adguard.password }}"
+          url: {{ adguard.url }}
+          username: {{ adguard.username }}
+          password: {{ adguard.password }}
 
     - Printer:
-        href: "{{ printer.url }}"
+        href: {{ printer.url }}
         description: Brother MFC-L2703DW
         icon: brother
-        siteMonitor: "{{ printer.url }}:80"
+        siteMonitor: {{ printer.url }}:80"
 
     - Proxmox:
-        href: "{{ proxmox.url }}/"
+        href: {{ proxmox.url }}/
         description: Homelab server
         icon: proxmox.png
-        siteMonitor: "{{ proxmox.url }}"
+        siteMonitor: {{ proxmox.url }}
         widget:
           type: proxmox
-          url: "{{ proxmox.url }}"
-          username: "{{ proxmox.username }}"
-          password: "{{ proxmox.password }}"
+          url: {{ proxmox.url }}
+          username: {{ proxmox.username }}
+          password: {{ proxmox.password }}
           fields: ["vms", "lxc", "resources.cpu", "resources.mem"]
 
     - TrueNAS:
-        href: "{{ truenas.url }}/"
+        href: {{ truenas.url }}/
         description: TrueNAS SCALE
         icon: truenas.png
-        siteMonitor: "{{ truenas.url }}"
+        siteMonitor: {{ truenas.url }}
 
     - Router:
-        href: "{{ unifi_console.url }}/"
+        href: {{ unifi_console.url }}/
         description: Unifi Console
         icon: unifi.png
-        siteMonitor: "{{ unifi_console.url }}"
+        siteMonitor: {{ unifi_console.url }}
         widget:
           type: unifi
-          url: "{{ unifi_console.url }}"
-          username: "{{ unifi_console.username }}"
-          password: "{{ unifi_console.password }}"
+          url: {{ unifi_console.url }}
+          username: {{ unifi_console.username }}
+          password: {{ unifi_console.password }}
 
 
 - Monitoring:
@@ -86,19 +89,19 @@
         siteMonitor: http://emonpi.localdomain
 
     - Wazuh:
-        href: "{{ wazuh.url }}/"
+        href: {{ wazuh.url }}/
         description: Wazuh
         icon: wazuh.png
-        siteMonitor: "{{ wazuh.url }}"
+        siteMonitor: {{ wazuh.url }}
 
     - Netdata:
-        href: "{{ netdata.url }}/"
+        href: {{ netdata.url }}/
         description: Netdata
         icon: netdata.png
-        siteMonitor: "{{ netdata.url }}"
+        siteMonitor: {{ netdata.url }}
         widget:
           type: netdata
-          url: "{{ netdata.url }}"
+          url: {{ netdata.url }}
 
 - Cameras:
 

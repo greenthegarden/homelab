@@ -86,10 +86,11 @@
 
 - name: Create configuration files
   ansible.builtin.template:
-    src: "templates/fireflyiii/{{ item }}"
+    src: "templates/fireflyiii/{{ item }}.j2"
     dest: "/root/fireflyiii/{{ item }}"
     mode: "644"
   loop:
+    - docker-compose.yml
     - fireflyiii.env
     - fireflyiii_importer.env
 

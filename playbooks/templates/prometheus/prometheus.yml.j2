@@ -6,26 +6,26 @@ global:
 
 scrape_configs:
   #### MONITORING SERVICES
-  - job_name: "{{ node_exporter_service_name | default('node-exporter') }}"
+  - job_name: {{ node_exporter_service_name | default('node-exporter') }}
     scheme: https
     scrape_interval: 5s
     metrics_path: /metrics
     static_configs:
-      - targets: ["{{ node_exporter_fqdn | default('node-exporter.localdomain') }}"]
+      - targets: [{{ node_exporter_fqdn | default('node-exporter.localdomain') }}]
     tls_config:
       insecure_skip_verify: true
-  - job_name: "{{ prometheus_service_name | default(prometheus) }}"
+  - job_name: {{ prometheus_service_name | default(prometheus) }}
     scheme: https
     scrape_interval: 5s
     static_configs:
-      - targets: ["{{ prometheus_fqdn | default('prometheus.localdomain') }}"]
+      - targets: [{{ prometheus_fqdn | default('prometheus.localdomain') }}]
     tls_config:
       insecure_skip_verify: true
-  - job_name: "{{ traefik_service_name | default('traefik') }}"
+  - job_name: {{ traefik_service_name | default('traefik') }}
     scheme: https
     scrape_interval: 5s
     metrics_path: /metrics
     static_configs:
-      - targets: ["{{ traefik_fqdn | default('traefik.localdomain') }}"]
+      - targets: [{{ traefik_fqdn | default('traefik.localdomain') }}]
     tls_config:
       insecure_skip_verify: true

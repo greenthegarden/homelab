@@ -17,9 +17,9 @@ services:
     restart: always
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: true
-      MYSQL_DATABASE: "{{ firefly.db_database | default('firefly') }}"
-      MYSQL_USER: "{{ firefly.db_user | default('firefly') }}"
-      MYSQL_PASSWORD: "{{ firefly.db_user | default('dummy') }}"
+      MYSQL_DATABASE: {{ firefly.db_database | default('firefly') }}
+      MYSQL_USER: {{ firefly.db_user | default('firefly') }}
+      MYSQL_PASSWORD: {{ firefly.db_user | default('dummy') }}
     labels:
       # Docker Volume Back labels
       - "docker-volume-backup.stop-during-backup=true"
@@ -36,7 +36,7 @@ services:
     volumes:
       - firefly_iii_upload:/var/www/html/storage/upload
     env_file: fireflyiii.env
-    labels: "{{ (firefly_container_labels | default({})) | default(omit) }}"
+    labels: {{ (firefly_container_labels | default({})) | default(omit) }}
     networks:
       - firefly_iii
       - web

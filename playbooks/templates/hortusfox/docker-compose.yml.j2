@@ -16,17 +16,17 @@ services:
     container_name: hortusfox_db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: "{{ hortusfox.db_root_password | default('dummy') }}"
-      MYSQL_DATABASE: "{{ hortusfox.db_database | default('hortusfox') }}"
-      MYSQL_USER: "{{ hortusfox.db_user | default('hortusfox') }}"
-      MYSQL_PASSWORD: "{{ hortusfox.db_password | default('dummy') }}"
+      MYSQL_ROOT_PASSWORD: {{ hortusfox.db_root_password | default('dummy') }}
+      MYSQL_DATABASE: {{ hortusfox.db_database | default('hortusfox') }}
+      MYSQL_USER: {{ hortusfox.db_user | default('hortusfox') }}
+      MYSQL_PASSWORD: {{ hortusfox.db_password | default('dummy') }}
     networks:
       - hortusfox
     volumes:
       - db_data:/var/lib/mysql
 
   app:
-    image: "{{ hortusfox_image }}"
+    image: {{ hortusfox_image }}
     hostname: app
     container_name: hortusfox_app
     ports:
@@ -40,16 +40,16 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     environment:
-      APP_ADMIN_EMAIL: "{{ hortusfox.admin_email | default('admin@localhost') }}"
-      APP_ADMIN_PASSWORD: "{{ hortusfox.admin_password | default('dummy') }}"
-      APP_TIMEZONE: "{{ homelab.timezone | default(omit) }}"
+      APP_ADMIN_EMAIL: {{ hortusfox.admin_email | default('admin@localhost') }}
+      APP_ADMIN_PASSWORD: {{ hortusfox.admin_password | default('dummy') }}
+      APP_TIMEZONE: {{ homelab.timezone | default(omit) }}
       DB_HOST: db
       DB_PORT: 3306
-      DB_DATABASE: "{{ hortusfox.db_database | default('hortusfox') }}"
-      DB_USERNAME: "{{ hortusfox.db_user | default('hortusfox') }}"
-      DB_PASSWORD: "{{ hortusfox.db_password | default('dummy') }}"
+      DB_DATABASE: {{ hortusfox.db_database | default('hortusfox') }}
+      DB_USERNAME: {{ hortusfox.db_user | default('hortusfox') }}
+      DB_PASSWORD: {{ hortusfox.db_password | default('dummy') }}
       DB_CHARSET: "utf8mb4"
-    labels: "{{ (hortusfox_container_labels | default({})) | default(omit) }}"
+    labels: {{ (hortusfox_container_labels | default({})) | default(omit) }}
     networks:
       - hortusfox
       - web
