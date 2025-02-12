@@ -16,7 +16,7 @@ title: CutlerVuFamily Homelab
 # color: slate
 useEqualHeights: true
 
-groupsInitiallyCollapsed: true
+groupsInitiallyCollapsed: false
 
 layout:
   - Cloud:
@@ -49,6 +49,8 @@ layout:
   - News:
       tab: Main
   - Services:
+      tab: Main
+  - References:
       tab: Secondary
   - Development:
       tab: Secondary
