@@ -11,6 +11,14 @@
       - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
     fail_msg: A version of Docker >= 20 is required to be installed
 
+- name: Set Node Exporter facts
+  ansible.builtin.set_fact:
+    node_exporter_image_name: "{{ node_exporter_image_name | default('prom/node-exporter') }}"
+    node_exporter_image_tag: "{{ node_exporter_image_tag | default('latest') }}"
+    node_exporter_service_name: "{{ node_exporter_service_name | default('node-exporter') }}"
+    node_exporter_service_port: "{{ node_exporter_service_port | default(9100) }}"
+    node_exporter_service_protocol: "{{ node_exporter_service_protocol | default('http') }}"
+
 - name: Set Node Exporter aggregated facts
   ansible.builtin.set_fact:
     node_exporter_image: "{{ node_exporter_image_name }}:{{ node_exporter_image_tag }}"

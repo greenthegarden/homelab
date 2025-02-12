@@ -30,43 +30,46 @@
 
   tasks:
 
-    - name: Install and configure Docker base
-      tags:
-        - always
+    - name: Check Docker is available  # noqa: syntax-check[unknown-module]
+      community.docker.docker_host_info:
+      register: host_docker_info
+      ignore_errors: true
 
-      block:
-        # - name: Install Docker
-        #   ansible.builtin.import_role:
-        #     name: geerlingguy.docker
-        #   vars:
-        #     docker_install_compose: false
-        #     docker_users:
-        #       - root
+    - name: Install Docker
+      ansible.builtin.import_role:
+        name: geerlingguy.docker
+      vars:
+        docker_install_compose: false
+        docker_users:
+          - root
+      when: not host_docker_info.exists
 
-        ####### DOCKER NETWORK SECTION
+    ####### DOCKER NETWORK SECTION
 
-        # - name: Set Docker Network facts
-        #   ansible.builtin.set_fact:
-        #     docker_socket_proxy_network_name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-        #     monitoring_network_name: "{{ monitoring_network_name | default('monitoring') }}"
-        #     web_network_name: "{{ web_network_name | default('web') }}"
+    - name: Set Docker Network facts
+      ansible.builtin.set_fact:
+        docker_socket_proxy_network:
+          name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+          driver: bridge
+          internal: true
+        monitoring_network:
+          name: "{{ monitoring_network_name | default('monitoring') }}"
+          driver: bridge
+          internal: true
+        web_network:
+          name: "{{ web_network_name | default('web') }}"
+          driver: bridge
+          internal: false
 
-        # Based on https://github.com/wollomatic/traefik2-hardened/blob/master/docker-compose.yaml
-        - name: Create a Docker Socket Proxy Docker network  # noqa: syntax-check[unknown-module]
-          community.docker.docker_network:
-            name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-            driver: bridge
-            internal: true
-
-        - name: Create a Monitoring Docker Network
-          community.docker.docker_network:
-            name: "{{ monitoring_network_name | default('monitoring') }}"
-            internal: true
-
-        - name: Create a Web Docker Network
-          community.docker.docker_network:
-            name: "{{ web_network_name | default('web') }}"
-            internal: false
+    - name: Create a Docker Socket Proxy Docker network  # noqa: syntax-check[unknown-module]
+      community.docker.docker_network:
+        name: "{{ item.name }}"
+        driver: "{{ item.driver }}"
+        internal: "{{ item.internal }}"
+      loop:
+        - docker_socket_proxy_network
+        - monitoring_network
+        - web_network
 
     - name: Deploy a containerised instance of Docker Socket Proxy
       ansible.builtin.include_tasks:
