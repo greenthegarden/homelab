@@ -16,15 +16,18 @@ title: CutlerVuFamily Homelab
 # color: slate
 useEqualHeights: true
 
+groupsInitiallyCollapsed: true
+
 layout:
-  Home:
+  Family:
     style: row
     columns: 3
     iconsOnly: true
+    initiallyCollapsed: false
   Applications:
     initiallyCollapsed: true
-    style: row
-    columns: 2
+    # style: row
+    # columns: 2
   System:
     initiallyCollapsed: true
   Monitoring:
