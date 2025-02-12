@@ -55,9 +55,13 @@ layout:
   - System:
       tab: Secondary
       initiallyCollapsed: false
+      style: row
+      columns: 2
   - Monitoring:
       tab: Secondary
       initiallyCollapsed: false
+      style: row
+      columns: 2
   - Development:
       tab: Secondary
   - Storage:
