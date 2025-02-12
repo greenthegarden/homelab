@@ -42,7 +42,7 @@
         docker_install_compose: false
         docker_users:
           - root
-      when: not host_docker_info.exists
+      when:  host_docker_info.rc != 0
 
     ####### DOCKER NETWORK SECTION
 
@@ -61,7 +61,7 @@
           driver: bridge
           internal: false
 
-    - name: Create a Docker Socket Proxy Docker network  # noqa: syntax-check[unknown-module]
+    - name: Create Docker networks  # noqa: syntax-check[unknown-module]
       community.docker.docker_network:
         name: "{{ item.name }}"
         driver: "{{ item.driver }}"
