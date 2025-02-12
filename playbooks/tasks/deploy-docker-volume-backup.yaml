@@ -11,8 +11,6 @@
       - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
     fail_msg: A version of Docker >= 20 is required to be installed
 
-####### DOCKER VOLUME BACKUP SECTION
-
 # https://offen.github.io/docker-volume-backup/
 
 - name: Set Docker Volume Backup aggregated facts

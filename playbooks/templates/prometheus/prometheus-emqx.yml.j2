@@ -34,7 +34,7 @@ scrape_configs:
     tls_config:
       insecure_skip_verify: true
   # EMQX monitoring
-  - job_name: 'emqx'
+  - job_name: "{{ emqx_service_name | default('eqmx') }}"
     scheme: https
     scrape_interval: 5s
     metrics_path: /api/v5/prometheus/stats

@@ -11,8 +11,6 @@
       - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
     fail_msg: A version of Docker >= 20 is required to be installed
 
-####### EMQX SECTION
-
 # https://hub.docker.com/r/emqx/emqx
 # https://github.com/iotblue/emqx-docker
 # https://www.emqx.com/en/try?product=broker (EMQX Open Source)
@@ -30,7 +28,16 @@
     emqx_image: "{{ emqx_image_name }}:{{ emqx_image_tag }}"
     emqx_fqdn: "{{ emqx_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-####### PROMETHEUS SECTION
+- name: Check Docker container status
+  community.docker.docker_container_info:
+    name: "{{ prometheus_service_name | default('prometheus') }}"
+  register: prometheus_container_status
+  ignore_errors: true
+
+- name: Assert Prometheus container is deployed
+  ansible.builtin.assert:
+    that: prometheus_container_status.exists
+    fail_msg: Prometheus is required to be deployed on host
 
 - name: Create Prometheus configuration directory
   ansible.builtin.file:
@@ -39,33 +46,22 @@
     state: directory
   register: prometheus_configuration_creation
 
-- name: Create emqx Prometheus configuration file
+- name: Create Prometheus configuration file for EMQX
   ansible.builtin.template:
     src: templates/prometheus/prometheus-emqx.yml.j2
     dest: /root/prometheus/prometheus.yml
     mode: "644"
   register: prometheus_configuration_creation
 
-- name: Deploy Prometheus
+- name: Redeploy Prometheus with new configuration  # noqa: syntax-check[unknown-module]
   community.docker.docker_container:
     name: "{{ prometheus_service_name | default('prometheus') }}"
-    image: "{{ prometheus_image }}"
-    command: "{{ prometheus_command }}"
-    detach: true
-    labels: "{{ prometheus_container_labels }}"
-    memory: 300M
-    memory_reservation: 100M
-    networks_cli_compatible: true
-    networks: "{{ prometheus_networks }}"
-    restart: true
-    restart_policy: unless-stopped
+    recreate: true
     state: started
-    volumes: "{{ prometheus_volumes }}"
   register: prometheus_container_state
 
 - name: Set EMQX service facts
   ansible.builtin.set_fact:
-    emqx_admin: { admin_user: admin, admin_password: "mon!t0ring" }
     emqx_networks:
       - name: "{{ broker_network_name | default('broker') }}"
       - name: "{{ web_network_name | default('web') }}"
@@ -156,13 +152,11 @@
         detach: true
         env:
           EMQX_ALLOW_ANONYMOUS: "true"
-          EMQX_DASHBOARD__DEFAULT_PASSWORD: "{{ emqx_admin.admin_password }}"
+          EMQX_DASHBOARD__DEFAULT_PASSWORD: "{{ emqx.admin_password | default('dummy') }}"
           EMQX_LISTENER__TCP__EXTERNAL: "{{ emqx_service_port_mqtt | default(1883) | quote }}"
           EMQX_LOADED_PLUGINS: "emqx_recon,emqx_retainer,emqx_management,emqx_dashboard,emqx_prometheus"
           EMQX_NAME: "{{ emqx_service_name | default('emqx') }}"
           EMQX_HOST: "{{ emqx_fqdn }}"
-          EMQX_PROMETHEUS__PUSH__GATEWAY__SERVER: "pushgateway"
-          EMQX_PROMETHEUS__INTERVAL: "15000"
           WAIT_FOR_ERLANG: "60"
         labels: "{{ emqx_container_labels }}"
         networks_cli_compatible: true

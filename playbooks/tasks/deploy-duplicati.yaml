@@ -11,8 +11,6 @@
       - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
     fail_msg: A version of Docker >= 20 is required to be installed
 
-###### DUPLICATI SECTION
-
 - name: Set Duplicati aggregated facts
   ansible.builtin.set_fact:
     duplicati_image: "{{ duplicati_image_name }}:{{ duplicati_image_tag }}"
