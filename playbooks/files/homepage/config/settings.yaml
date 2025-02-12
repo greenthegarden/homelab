@@ -19,18 +19,18 @@ useEqualHeights: true
 groupsInitiallyCollapsed: true
 
 layout:
-  Family:
-    style: row
-    columns: 3
-    iconsOnly: true
-    initiallyCollapsed: false
-  Applications:
-    initiallyCollapsed: true
-    # style: row
-    # columns: 2
-  System:
-    initiallyCollapsed: true
-  Monitoring:
-    initiallyCollapsed: true
+  - Family:
+      style: row
+      columns: 3
+      iconsOnly: true
+      initiallyCollapsed: false
+  - Applications:
+      initiallyCollapsed: true
+      # style: row
+      # columns: 2
+  - System:
+      initiallyCollapsed: true
+  - Monitoring:
+      initiallyCollapsed: true
 #   Nextcloud Apps:
 #     tab: First
