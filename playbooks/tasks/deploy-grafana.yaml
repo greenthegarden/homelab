@@ -5,10 +5,6 @@
   register: host_docker_info
   ignore_errors: true
 
-- name: Show host information
-  ansible.builtin.debug:
-    var: host_docker_info.host_info
-
 - name: Assert Docker is available
   ansible.builtin.assert:
     that:

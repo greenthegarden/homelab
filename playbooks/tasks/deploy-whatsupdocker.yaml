@@ -1,5 +1,16 @@
 ---
 
+- name: Check Docker is available
+  community.docker.docker_host_info:
+  register: host_docker_info
+  ignore_errors: true
+
+- name: Assert Docker is available
+  ansible.builtin.assert:
+    that:
+      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
+    fail_msg: A version of Docker >= 20 is required to be installed
+
 ####### WHAT'S UP DOCKER SECTION
 
 # https://getwud.github.io/wud/#/quickstart/
@@ -61,7 +72,7 @@
     }
     # Homepage labels
     - { "key": "homepage.group", "value": "System" }
-    - { "key": "homepage.name", "value": "Whats Up Docker" }
+    - { "key": "homepage.name", "value": "What's Up Docker" }
     - {
       "key": "homepage.description",
       "value": "Which container images are out-of-date?",
