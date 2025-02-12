@@ -2,12 +2,19 @@
 
 - name: Check Docker is available
   community.docker.docker_host_info:
-  register: result
+  register: host_docker_info
   ignore_errors: true
 
 - name: Show host information
   ansible.builtin.debug:
-    var: result.host_info
+    var: host_docker_info.host_info
+
+- name: Assert Docker is available
+  ansible.builtin.assert:
+    that:
+      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
+  fail_msg: A version of Docker >= 20 is required to be installed
+
 
 ####### PROMETHEUS SECTION
 
