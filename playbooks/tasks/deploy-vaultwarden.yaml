@@ -81,7 +81,7 @@
 - name: Create Vaultwarden configuration
   ansible.builtin.template:
     src: templates/vaultwarden/vaultwarden.env
-    dest: /root/vaultwarden.env
+    dest: /root/vaultwarden/vaultwarden.env
     owner: root
     group: root
     mode: "0644"
@@ -123,7 +123,7 @@
         name: "{{ vaultwarden_service_name | default('vaultwarden') }}"
         image: "{{ vaultwarden_image }}"
         detach: true
-        env_file: /root/vaultwarden.env
+        env_file: /root/vaultwarden/vaultwarden.env
         labels: "{{ vaultwarden_container_labels }}"
         networks_cli_compatible: true
         networks: "{{ vaultwarden_networks }}"

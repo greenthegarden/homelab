@@ -13,6 +13,7 @@ repos:
       - id: check-merge-conflict
       - id: check-symlinks
       - id: check-yaml
+      - id: detect-private-key
       - id: end-of-file-fixer
       - id: fix-byte-order-marker
       - id: mixed-line-ending
@@ -28,8 +29,8 @@ repos:
         files: ^playbooks/*.(yaml|yml)$
         exclude: ^playbooks/(files/homepage/config/bookmarks\.yaml|files/influxdb/influxdb\.yaml|files/authentik/authentik\.env|vars/homelab_env\.yaml)$
 
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.44.0
+  - repo: https://github.com/markdownlint/markdownlint
+    rev: v0.12.0
     hooks:
       - id: markdownlint
 
@@ -46,3 +47,13 @@ repos:
     hooks:
       - id: encryption-check
         files: ^playbooks/(files/homepage/config/bookmarks\.yaml|files/influxdb/influxdb\.yaml|files/authentik/authentik\.env|vars/homelab_env\.yaml)$
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+
+  # - repo: https://github.com/gitleaks/gitleaks
+  #   rev: v8.23.3
+  #   hooks:
+  #     - id: gitleaks
