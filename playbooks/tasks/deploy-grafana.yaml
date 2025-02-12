@@ -1,5 +1,14 @@
 ---
 
+- name: Check Docker is available
+  community.docker.docker_host_info:
+  register: result
+  ignore_errors: true
+
+- name: Show host information
+  ansible.builtin.debug:
+    var: result.host_info
+
 ####### PROMETHEUS SECTION
 
 - name: Set Prometheus aggregated facts

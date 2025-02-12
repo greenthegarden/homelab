@@ -1,9 +1,19 @@
 ---
+
+- name: Check Docker is available
+  community.docker.docker_host_info:
+  register: result
+  ignore_errors: true
+
+- name: Show host information
+  ansible.builtin.debug:
+    var: result.host_info
+
 ####### GROCY SECTION
 
 # https://hub.docker.com/_/grocy
 # https://codeopolis.com/posts/how-to-install-grocy-using-docker/
-# Initial login: User: admin, Passord: admin
+# Initial login: User: admin, Password: admin
 
 - name: Set Grocy facts
   ansible.builtin.set_fact:
