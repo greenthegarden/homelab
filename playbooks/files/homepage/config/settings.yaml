@@ -1,6 +1,6 @@
 ---
 # For configuration options and examples, please see:
-# https://gethomepage.dev/latest/configs/settings
+# https://gethomepage.dev/configs/settings/
 
 title: CutlerVuFamily Homelab
 
@@ -25,33 +25,39 @@ layout:
       columns: 3
       iconsOnly: true
       initiallyCollapsed: false
+  - Nextcloud Apps:
+      tab: Main
+      style: row
+      columns: 4
+  - Cameras:
+      tab: Main
+  - Sensors:
+      tab: Main
+  - Services:
+      tab: Websites
+  - Social:
+      tab: Websites
+  - Retail:
+      tab: Websites
+  - Entertainment:
+      tab: Websites
+  - Environment:
+      tab: Websites
+  - News:
+      tab: Websites
+  - Reference:
+      tab: Websites
   - Applications:
       tab: Secondary
       initiallyCollapsed: false
-      # style: row
-      # columns: 2
+      style: row
+      columns: 2
   - System:
       tab: Secondary
       initiallyCollapsed: false
   - Monitoring:
       tab: Secondary
       initiallyCollapsed: false
-  - Nextcloud Apps:
-      tab: Main
-  - Social:
-      tab: Main
-  - Retail:
-      tab: Main
-  - Entertainment:
-      tab: Main
-  - Environment:
-      tab: Main
-  - News:
-      tab: Main
-  - Services:
-      tab: Main
-  - References:
-      tab: Secondary
   - Development:
       tab: Secondary
   - Storage:

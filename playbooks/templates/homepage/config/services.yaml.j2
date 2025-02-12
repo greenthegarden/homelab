@@ -1,6 +1,6 @@
 ---
 # For configuration options and examples, please see:
-# https://gethomepage.dev/latest/configs/services
+# https://gethomepage.dev/configs/services/
 # https://gethomepage.dev/latest/widgets/
 
 
@@ -28,9 +28,6 @@
             - state: sensor.indoor_voc_parts_2
 
 
-- Applications:
-
-
 - System:
 
     - AdGuard:
@@ -48,7 +45,7 @@
         href: {{ printer.url }}
         description: Brother MFC-L2703DW
         icon: brother
-        siteMonitor: {{ printer.url }}:80"
+        siteMonitor: {{ printer.url }}:80
 
     - Proxmox:
         href: {{ proxmox.url }}/
