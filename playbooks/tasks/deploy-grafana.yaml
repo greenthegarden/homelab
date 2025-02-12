@@ -27,7 +27,7 @@
 - name: Assert Prometheus container is deployed
   ansible.builtin.assert:
     that: prometheus_container_status.state == 'running'
-  fail_msg: Prometheus is required to be deployed on host
+    fail_msg: Prometheus is required to be deployed on host
 
 - name: Set Prometheus aggregated facts
   ansible.builtin.set_fact:
