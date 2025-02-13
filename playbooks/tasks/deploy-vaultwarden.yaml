@@ -23,6 +23,7 @@
     vaultwarden_service_name: "{{ vaultwarden_service_name | default('vaultwarden') }}"
     vaultwarden_service_port: "{{ vaultwarden_service_port | default(8080) }}"
     vaultwarden_volume_name: "{{ vaultwarden_volume_name | default('vaultwarden') }}"
+    vaultwarden_config_dir: /root/vaultwarden
 
 - name: Set Vaultwarden aggregated facts
   ansible.builtin.set_fact:
@@ -93,14 +94,14 @@
 
 - name: Create Vaultwarden configuration directory
   ansible.builtin.file:
-    path: /root/vaultwarden
+    path: "{{ vaultwarden_config_dir }}"
     state: directory
     mode: "0644"
 
 - name: Create Vaultwarden configuration
   ansible.builtin.template:
     src: templates/vaultwarden/vaultwarden.env.j2
-    dest: /root/vaultwarden/vaultwarden.env
+    dest: "{{ vaultwarden_config_dir }}/vaultwarden.env"
     owner: root
     group: root
     mode: "0644"
@@ -142,7 +143,7 @@
         name: "{{ vaultwarden_service_name | default('vaultwarden') }}"
         image: "{{ vaultwarden_image }}"
         detach: true
-        env_file: /root/vaultwarden/vaultwarden.env
+        env_file: "{{ vaultwarden_config_dir }}/vaultwarden.env"
         labels: "{{ vaultwarden_container_labels }}"
         networks_cli_compatible: true
         networks: "{{ vaultwarden_networks }}"

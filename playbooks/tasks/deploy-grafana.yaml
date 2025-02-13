@@ -11,13 +11,13 @@
       - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
     fail_msg: A version of Docker >= 20 is required to be installed
 
-- name: Check Docker container status
+- name: Get status of Prometheus Docker container
   community.docker.docker_container_info:
     name: "{{ prometheus_service_name | default('prometheus') }}"
   register: prometheus_container_status
   ignore_errors: true
 
-- name: Assert Prometheus container is deployed
+- name: Ensure Prometheus container is deployed
   ansible.builtin.assert:
     that: prometheus_container_status.exists
     fail_msg: Prometheus is required to be deployed on host
