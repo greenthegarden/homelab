@@ -4,7 +4,6 @@
 # These don't have to be explicitly imported by vars_files: they are autopopulated.
 
 # Docker Network names
-# TODO: Define as an array
 docker_socket_proxy_network_name: docker-socket-proxy
 monitoring_network_name: monitoring
 web_network_name: web
@@ -14,6 +13,7 @@ web_network_name: web
 docker_volume_backup_image_name: offen/docker-volume-backup
 docker_volume_backup_image_tag: v2.43.1
 docker_volume_backup_service_name: "docker-volume-backup"
+docker_volume_backup_local_archive_dir: /root/backups
 # Duplicati facts
 duplicati_image_name: lscr.io/linuxserver/duplicati
 duplicati_image_tag: v2.1.0.3_beta_2025-01-22-ls232
@@ -43,3 +43,6 @@ traefik_service_port_http: 80
 traefik_service_port_secure: 443
 traefik_provider: docker
 traefik_volume_letsencrypt_name: letsencrypt
+
+# Global definition of backup directory on hosts
+local_backups_dir: /root/backups

@@ -12,7 +12,6 @@
     fireflyiii_service_name: firefly_iii_core
     fireflyiii_service_port: 8080
 
-
   tasks:
 
     - name: Load homelab vars
