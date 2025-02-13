@@ -28,7 +28,7 @@
 - name: Set Duplicati aggregated facts
   ansible.builtin.set_fact:
     duplicati_image: "{{ duplicati_image_name }}:{{ duplicati_image_tag }}"
-    duplicati_fqdn: "{{ duplicati_service_name }}.{{ host_fqdn }}"
+    duplicati_fqdn: "{{ duplicati_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Duplicati service facts
   ansible.builtin.set_fact:
