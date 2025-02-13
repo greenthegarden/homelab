@@ -14,6 +14,7 @@ title: CutlerVuFamily Homelab
 # theme: dark
 
 # color: slate
+
 useEqualHeights: true
 
 groupsInitiallyCollapsed: false
@@ -35,18 +36,32 @@ layout:
       tab: Main
   - Services:
       tab: Websites
+      style: row
+      columns: 3
   - Social:
       tab: Websites
+      style: row
+      columns: 3
   - Retail:
       tab: Websites
+      style: row
+      columns: 3
   - Entertainment:
       tab: Websites
+      style: row
+      columns: 3
   - Environment:
       tab: Websites
+      style: row
+      columns: 3
   - News:
       tab: Websites
+      style: row
+      columns: 3
   - Reference:
       tab: Websites
+      style: row
+      columns: 3
   - Applications:
       tab: Secondary
       initiallyCollapsed: false
@@ -56,12 +71,12 @@ layout:
       tab: Secondary
       initiallyCollapsed: false
       style: row
-      columns: 2
+      columns: 3
   - Monitoring:
       tab: Secondary
       initiallyCollapsed: false
       style: row
-      columns: 2
+      columns: 3
   - Development:
       tab: Secondary
   - Storage:
