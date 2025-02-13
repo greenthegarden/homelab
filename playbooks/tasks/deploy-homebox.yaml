@@ -19,12 +19,12 @@
     homebox_service_port: "{{ homebox_service_port | default(7745) }}"
     homebox_volume_name: "{{ homebox_volume_name | default('homebox') }}"
 
-- name: Set homebox aggregated facts
+- name: Set Homebox aggregated facts
   ansible.builtin.set_fact:
     homebox_image: "{{ homebox_image_name }}:{{ homebox_image_tag }}"
     homebox_fqdn: "{{ homebox_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set homebox API facts
+- name: Set Homebox service facts
   ansible.builtin.set_fact:
     homebox_networks:
       - name: "{{ web_network_name | default('web') }}"
@@ -35,7 +35,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create homebox container labels
+- name: Create Homebox container labels
   ansible.builtin.set_fact:
     homebox_container_labels: "{{ homebox_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -64,7 +64,9 @@
       "key": "wud.link.template",
       "value": "https://github.com/sysadminsmedia/homebox/releases/tag/v$${major}.$${minor}.$${patch}",
     }
-    # homebox labels
+    # Docker Volume Back labels
+    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # HOmepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Homebox" }
     - { "key": "homepage.description", "value": "What's in the house?" }
@@ -75,31 +77,31 @@
       "value": "https://{{ homebox_fqdn }}/",
     }
 
-- name: Create homebox volume
+- name: Create Homebox volume
   community.docker.docker_volume:
     name: "{{ homebox_volume_name }}"
     state: present
 
-- name: Check if homebox is running
+- name: Check if Homebox is running
   community.docker.docker_container_info:
     name: "{{ homebox_service_name }}"
   register: homebox_state
 
-- name: Remove homebox container if changing version
+- name: Remove Homebox container if changing version
   when:
     - homebox_state.exists
     - homebox_image_tag != homebox_state.container.Config.Image | split(':') | last
   block:
-    - name: Stop and remove existing homebox container
+    - name: Stop and remove existing Homebox container
       community.docker.docker_container:
         name: "{{ homebox_service_name }}"
         state: absent
 
-    - name: Set update homebox
+    - name: Set update Homebox
       ansible.builtin.set_fact:
         homebox_update: true
 
-- name: Deploy homebox if not running
+- name: Deploy Homebox if not running
   when: not homebox_state.exists or (homebox_update | default(false))
   block:
     - name: Pull homebox image
@@ -108,7 +110,7 @@
         source: pull
 
     # docker run -d -p 3000:3000 homebox/homebox
-    - name: Deploy homebox
+    - name: Deploy Homebox
       community.docker.docker_container:
         name: "{{ homebox_service_name }}"
         image: "{{ homebox_image }}"
@@ -127,7 +129,7 @@
         volumes: "{{ homebox_volumes }}"
       register: homebox_container_state
 
-    - name: Wait for homebox to accept connections
+    - name: Wait for Homebox to accept connections
       ansible.builtin.wait_for:
         host: "{{ homebox_fqdn }}"
         port: 80
@@ -138,3 +140,10 @@
       register: homebox_running
       until: homebox_running is success
       retries: 10
+
+- name: Deploy Docker Volume Backup
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-docker-volume-backup.yaml
+  vars:
+    docker_volume_backup_volume_to_backup:
+      - "{{ homebox_volume_name }}:/backup/homebox-backup:ro"
