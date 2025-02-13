@@ -6,7 +6,7 @@
 
   vars:
 
-    # Fireflyiii facts
+    # Firefly III facts
     fireflyiii_image_name: fireflyiii/core
     fireflyiii_image_tag: version-6.2.0
     fireflyiii_service_name: firefly_iii_core

@@ -16,7 +16,7 @@
 # https://hub.docker.com/_/uptimekuma
 # https://codeopolis.com/posts/how-to-install-uptimekuma-using-docker/
 
-- name: Set uptimekuma facts
+- name: Set Uptime Kuma facts
   ansible.builtin.set_fact:
     uptimekuma_image_name: "{{ uptimekuma_image_name | default('linuxserver/uptimekuma') }}"
     uptimekuma_image_tag: "{{ uptimekuma_image_tag | default('latest') }}"
@@ -24,12 +24,12 @@
     uptimekuma_service_port: "{{ uptimekuma_service_port | default(3001) }}"
     uptimekuma_volume_name: "{{ uptimekuma_volume_name | default('uptimekuma') }}"
 
-- name: Set uptimekuma aggregated facts
+- name: Set Uptime Kuma aggregated facts
   ansible.builtin.set_fact:
     uptimekuma_image: "{{ uptimekuma_image_name }}:{{ uptimekuma_image_tag }}"
     uptimekuma_fqdn: "{{ uptimekuma_service_name }}.{{ hostvars['uptimekuma'].inventory_hostname }}.{{ lan_dns_domain }}"
 
-- name: Set uptimekuma service facts
+- name: Set Uptime Kuma service facts
   ansible.builtin.set_fact:
     uptimekuma_networks:
       - name: "{{ web_network_name | default('web') }}"
@@ -41,7 +41,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create uptimekuma container labels
+- name: Create Uptime Kuma container labels
   ansible.builtin.set_fact:
     uptimekuma_container_labels: "{{ uptimekuma_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -87,12 +87,12 @@
       "value": "https://{{ uptimekuma_fqdn }}/",
     }
 
-- name: Create uptimekuma volume
+- name: Create Uptime Kuma volume
   community.docker.docker_volume:
     name: "{{ uptimekuma_volume_name }}"
     state: present
 
-- name: Check if uptimekuma is running
+- name: Check if Uptime Kuma is running
   community.docker.docker_container_info:
     name: "{{ uptimekuma_service_name }}"
   register: uptimekuma_state
@@ -102,7 +102,7 @@
     - uptimekuma_state.exists
     - uptimekuma_image_tag != uptimekuma_state.container.Config.Image | split(':') | last
   block:
-    - name: Stop and remove existing uptimekuma container
+    - name: Stop and remove existing Uptime Kuma container
       community.docker.docker_container:
         name: "{{ uptimekuma_service_name }}"
         state: absent
@@ -111,7 +111,7 @@
       ansible.builtin.set_fact:
         uptimekuma_update: true
 
-- name: Deploy uptimekuma if not running
+- name: Deploy Uptime Kuma if not running
   when:
     - not uptimekuma_state.exists or (uptimekuma_update | default(false))
   block:
@@ -120,7 +120,7 @@
         name: "{{ uptimekuma_image }}"
         source: pull
 
-    - name: Deploy uptimekuma
+    - name: Deploy Uptime Kuma
       community.docker.docker_container:
         name: "{{ uptimekuma_service_name }}"
         image: "{{ uptimekuma_image }}"
@@ -137,7 +137,7 @@
         volumes: "{{ uptimekuma_volumes }}"
       register: uptimekuma_container_state
 
-    - name: Wait for uptimekuma to accept connections
+    - name: Wait for Uptime Kuma to accept connections
       ansible.builtin.wait_for:
         host: "{{ uptimekuma_fqdn }}"
         port: 80

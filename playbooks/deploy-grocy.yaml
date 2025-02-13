@@ -5,7 +5,7 @@
 
   vars:
 
-    # Grocy service facts
+    # Grocy facts
     grocy_image_name: linuxserver/grocy
     grocy_image_tag: 4.4.1
     grocy_service_name: grocy

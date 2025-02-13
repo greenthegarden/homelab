@@ -5,7 +5,7 @@
 
   vars:
 
-    # Semaohore facts
+    # Hortusfox facts
     hortusfox_image_name: ghcr.io/danielbrendel/hortusfox-web
     hortusfox_image_tag: v4.0
     hortusfox_service_name: hortusfox

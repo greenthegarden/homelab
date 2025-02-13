@@ -1,11 +1,11 @@
 ---
-- name: Deploy Uptimekuma
+- name: Deploy Uptime Kuma
 
   hosts: uptimekuma
 
   vars:
 
-    # Uptimekuma facts
+    # Uptime Kuma facts
     uptimekuma_image_name: louislam/uptime-kuma
     uptimekuma_image_tag: 1.23.16-alpine
     uptimekuma_service_name: uptimekuma
@@ -18,7 +18,7 @@
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 
-    - name: Deploy a containerised instance of Uptimekuma
+    - name: Deploy a containerised instance of Uptime Kuma
       ansible.builtin.include_tasks:
         file: tasks/deploy-uptimekuma.yaml
 

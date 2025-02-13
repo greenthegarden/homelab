@@ -5,7 +5,7 @@
 
   vars:
 
-    # Grafana Service facts
+    # Grafana facts
     grafana_image_name: grafana/grafana
     grafana_image_tag: 11.5.1
     grafana_service_name: grafana

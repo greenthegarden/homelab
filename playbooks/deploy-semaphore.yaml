@@ -5,7 +5,7 @@
 
   vars:
 
-    # Semaohore facts
+    # Semaphore facts
     semaphore_image_name: semaphoreui/semaphore
     semaphore_image_tag: v2.12.4
     semaphore_service_name: semaphore
