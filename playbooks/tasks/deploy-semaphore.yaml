@@ -177,8 +177,4 @@
     file: tasks/deploy-docker-volume-backup.yaml
   vars:
     docker_volume_backup_volume:
-      - "{{ semaphore_volume_data_name }}:/backup/grocy-backup:ro"
-
-- name: Deploy Duplicati
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-duplicati.yaml
+      - "{{ semaphore_volume_data_name }}:/backup/semaphore-backup:ro"
