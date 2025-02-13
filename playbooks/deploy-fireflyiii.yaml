@@ -1,6 +1,6 @@
 ---
 
-- name: Deploy Fireflyiii
+- name: Deploy Firefly III
 
   hosts: fireflyiii
 

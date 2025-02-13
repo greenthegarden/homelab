@@ -89,6 +89,12 @@
       "value": "https://{{ vaultwarden_fqdn }}/",
     }
 
+- name: Create Vaultwarden configuration directory
+  ansible.builtin.file:
+    path: /root/vaultwarden
+    state: directory
+    mode: "0755"
+
 - name: Create Vaultwarden configuration
   ansible.builtin.template:
     src: templates/vaultwarden/vaultwarden.env.j2

@@ -88,13 +88,19 @@
       "value": "https://{{ homepage_fqdn }}/"
     }
 
-- name: Copy static configuration
+- name: Create Homepage configuration directory
+  ansible.builtin.file:
+    path: /root/homepage
+    state: directory
+    mode: "0755"
+
+- name: Copy Homepage static configuration
   ansible.builtin.copy:
     src: files/homepage
     dest: /root/
     mode: "0644"
 
-- name: Copy templated configuration
+- name: Create Homepage configuration
   ansible.builtin.template:
     src: "templates/homepage/config/{{ item }}.yaml.j2"
     dest: "/root/homepage/config/{{ item }}.yaml"
