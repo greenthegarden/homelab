@@ -11,6 +11,7 @@
     fireflyiii_image_tag: version-6.2.0
     fireflyiii_service_name: firefly_iii_core
     fireflyiii_service_port: 8080
+    fireflyiii_db_backup_volume_name: db_backup
 
   tasks:
 
@@ -21,3 +22,10 @@
     - name: Deploy a containerised instance of Firefly III
       ansible.builtin.include_tasks:
         file: tasks/deploy-fireflyiii.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_volume_to_backup:
+          - "{{ fireflyiii_db_backup_volume_name }}:/backup/fireflyiii_db-backup:ro"

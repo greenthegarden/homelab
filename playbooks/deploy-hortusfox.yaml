@@ -10,7 +10,7 @@
     hortusfox_image_tag: v4.0
     hortusfox_service_name: hortusfox
     hortusfox_service_port: 8090
-    hortusfox_db_backup_volume_name: hortusfox_db_backup
+    hortusfox_db_backup_volume_name: db_backup
 
   tasks:
 

@@ -26,7 +26,7 @@ services:
     restart: always
     volumes:
       - db_data:/var/lib/mysql
-      - {{ hortusfox_db_backup_volume_name | default('hortusfox_db_backup') }}:/tmp/dumps
+      - {{ hortusfox_db_backup_volume_name | default('db_backup') }}:/tmp/dumps
 
   app:
     container_name: hortusfox_app
@@ -62,7 +62,7 @@ services:
 volumes:
 
   db_data:
-  {{ hortusfox_db_backup_volume_name | default('hortusfox_db_backup') }}:
+  {{ hortusfox_db_backup_volume_name | default('db_backup') }}:
   app_images:
   app_logs:
   app_backup:

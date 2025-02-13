@@ -11,37 +11,37 @@ networks:
 services:
 
   db:
-    image: mariadb:lts
-    hostname: db
     container_name: firefly_iii_db
-    restart: always
+    image: mariadb:lts
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: true
       MYSQL_DATABASE: {{ firefly.db_database | default('firefly') }}
       MYSQL_USER: {{ firefly.db_user | default('firefly') }}
       MYSQL_PASSWORD: {{ firefly.db_user | default('dummy') }}
+    hostname: db
     labels:
-      # Docker Volume Back labels
-      - "docker-volume-backup.stop-during-backup=true"
+      - docker-volume-backup.archive-pre=/bin/sh -c 'mariadb-dump -psecret --all-databases > /tmp/dumps/dump.sql'
     networks:
       - firefly_iii
-    volumes:
-      - firefly_iii_db:/var/lib/mysql
-
-  app:
-    image: fireflyiii/core:version-6.2.0
-    hostname: app
-    container_name: firefly_iii_core
     restart: always
     volumes:
-      - firefly_iii_upload:/var/www/html/storage/upload
+      - firefly_iii_db:/var/lib/mysql
+      - {{ fireflyiii_db_backup_volume_name | default('db_backup') }}:/tmp/dumps
+
+  app:
+    container_name: firefly_iii_core
+    image: fireflyiii/core:version-6.2.0
     env_file: fireflyiii.env
+    hostname: app
     labels: {{ (firefly_container_labels | default({})) | default(omit) }}
     networks:
       - firefly_iii
       - web
     ports:
       - 8090:8080
+    restart: always
+    volumes:
+      - firefly_iii_upload:/var/www/html/storage/upload
     depends_on:
       - db
 
@@ -53,39 +53,39 @@ services:
   # Other URL's will give 500 | Server Error
   #
   importer:
-    image: fireflyiii/data-importer:version-1.6.0
-    hostname: importer
-    restart: always
     container_name: firefly_iii_importer
-    networks:
-      - firefly_iii
-    ports:
-      - '8091:8080'
-    depends_on:
-      - app
+    image: fireflyiii/data-importer:version-1.6.0
     env_file: fireflyiii_importer.env
+    hostname: importer
     labels:
       # What's up Docker? labels
       - 'wud.tag.include=^\d+\.\d+\.\d+$$'
       - 'wud.link.template=https://github.com/firefly-iii/data-importer/releases/tag/v$${major}.$${minor}.$${patch}'
-
+    networks:
+      - firefly_iii
+    ports:
+      - '8091:8080'
+    restart: always
+    depends_on:
+      - app
 
   cron:
     #
     # To make this work, set STATIC_CRON_TOKEN in your .env file or as an environment variable and replace REPLACEME below
     # The STATIC_CRON_TOKEN must be *exactly* 32 characters long
     #
-    image: alpine
-    restart: always
     container_name: firefly_iii_cron
-    env_file: fireflyiii.env
+    image: alpine
     command: sh -c "
       apk add tzdata && ln -s /usr/share/zoneinfo/${TZ} /etc/localtime
       | echo \"0 3 * * * wget -qO- http://app:8080/api/v1/cron/VmRbRzvdEmtWMmJECSjXkcffzejCPYgy;echo\"
       | crontab - && crond -f -L /dev/stdout"
+    env_file: fireflyiii.env
     networks:
       - firefly_iii
+    restart: always
 
 volumes:
-  firefly_iii_upload:
   firefly_iii_db:
+  {{ fireflyiii_db_backup_volume_name | default('db_backup') }}:
+  firefly_iii_upload:
