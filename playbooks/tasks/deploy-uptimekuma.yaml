@@ -74,6 +74,8 @@
       "key": "wud.link.template",
       "value": "https://github.com/louislam/uptime-kuma/releases/tag/$${major}.$${minor}.$${patch}",
     }
+    # Docker Volume Backup labels
+    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
     # Homepage labels
     - { "key": "homepage.group", "value": "Monitoring" }
     - { "key": "homepage.name", "value": "Uptimekuma" }

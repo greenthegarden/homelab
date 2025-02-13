@@ -64,7 +64,7 @@
       "key": "wud.link.template",
       "value": "https://github.com/sysadminsmedia/homebox/releases/tag/v$${major}.$${minor}.$${patch}",
     }
-    # Docker Volume Back labels
+    # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
     # HOmepage labels
     - { "key": "homepage.group", "value": "Applications" }
@@ -140,10 +140,3 @@
       register: homebox_running
       until: homebox_running is success
       retries: 10
-
-- name: Deploy Docker Volume Backup
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-docker-volume-backup.yaml
-  vars:
-    docker_volume_backup_volume_to_backup:
-      - "{{ homebox_volume_name }}:/backup/homebox-backup:ro"

@@ -107,13 +107,13 @@
   ansible.builtin.file:
     path: "{{ frigate_config_dir }}"
     state: directory
-    mode: "0755"
+    mode: "0644"
 
 - name: Create Frigate configuration file
   ansible.builtin.template:
     src: templates/frigate/config.yaml.j2
     dest: "{{ frigate_config_dir }}{{ frigate_config_file }}"
-    mode: "644"
+    mode: "0644"
   register: frigate_configuration_creation
 
 - name: Check if Frigate is running

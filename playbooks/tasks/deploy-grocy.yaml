@@ -80,7 +80,7 @@
       "key": "wud.link.template",
       "value": "https://github.com/grocy/grocy/releases/tag/v$${major}.$${minor}.$${patch}",
     }
-    # Docker Volume Back labels
+    # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
@@ -166,14 +166,3 @@
       register: grocy_running
       retries: 10
       until: grocy_running is success
-
-- name: Deploy Docker Volume Backup
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-docker-volume-backup.yaml
-  vars:
-    docker_volume_backup_volume_to_backup:
-      - "{{ grocy_volume_name }}:/backup/grocy-backup:ro"
-
-- name: Deploy Duplicati
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-duplicati.yaml

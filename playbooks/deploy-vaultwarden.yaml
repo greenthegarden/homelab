@@ -21,3 +21,10 @@
     - name: Deploy a containerised instance of Vaultwarden
       ansible.builtin.include_tasks:
         file: tasks/deploy-vaultwarden.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_volume_to_backup:
+          - "{{ vaultwarden_volume_name }}:/backup/vaultwarden-backup:ro"

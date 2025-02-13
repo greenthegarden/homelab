@@ -33,12 +33,12 @@
 - name: Set Portainer service facts
   ansible.builtin.set_fact:
     portainer_ports:
-      - "{{ portainer_service_port | default(9000) }}:9000"
+      - "{{ portainer_service_port }}:9000"
     portainer_networks:
       - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
       - name: "{{ web_network_name | default('web') }}"
     portainer_volumes:
-      - "{{ portainer_volume_name | default('portainer') }}:/data"
+      - "{{ portainer_volume_name }}:/data"
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -85,6 +85,8 @@
       "key": "wud.link.template",
       "value": "https://github.com/portainer/portainer/releases/tag/$${major}.$${minor}.$${patch}",
     }
+    # Docker Volume Backup labels
+    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
     # Homepage labels
     - { "key": "homepage.group", "value": "System" }
     - { "key": "homepage.name", "value": "Portainer" }

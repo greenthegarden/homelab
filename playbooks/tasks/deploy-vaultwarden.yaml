@@ -78,6 +78,8 @@
       "key": "wud.link.template",
       "value": "https://github.com/dani-garcia/vaultwarden/releases/tag/$${major}.$${minor}.$${patch}",
     }
+    # Docker Volume Backup labels
+    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
     # Homepage labels
     - { "key": "homepage.group", "value": "Cloud" }
     - { "key": "homepage.name", "value": "Vaultwarden" }
@@ -93,7 +95,7 @@
   ansible.builtin.file:
     path: /root/vaultwarden
     state: directory
-    mode: "0755"
+    mode: "0644"
 
 - name: Create Vaultwarden configuration
   ansible.builtin.template:

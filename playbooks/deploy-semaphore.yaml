@@ -24,3 +24,10 @@
     - name: Deploy a containerised instance of Semaphore
       ansible.builtin.include_tasks:
         file: tasks/deploy-semaphore.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_volume_to_backup:
+          - "{{ semaphore_volume_data_name }}:/backup/semaphore-backup:ro"

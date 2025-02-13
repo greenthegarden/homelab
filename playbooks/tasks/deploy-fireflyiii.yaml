@@ -20,7 +20,8 @@
     fireflyiii_image_name: "{{ fireflyiii_image_name | default('fireflyiii/core') }}"
     fireflyiii_image_tag: "{{ fireflyiii_image_tag | default('latest') }}"
     fireflyiii_service_name: "{{ fireflyiii_service_name | default('firefly_iii_core') }}"
-    fireflyiii_service_port: "{{ fireflyiii_service_port | default(8080) }}"
+    fireflyiii_service_port: "{{ fireflyiii_service_port | default(8090) }}"
+    fireflyiii_config_dir: /root/fireflyiii
 
 - name: Set Firefly III aggregated facts
   ansible.builtin.set_fact:
@@ -32,10 +33,9 @@
     fireflyiii_networks:
       - name: "{{ web_network_name | default('web') }}"
     fireflyiii_ports:
-      - "{{ fireflyiii_service_port | default(3000) }}:3000"
+      - "{{ fireflyiii_service_port }}:8080"
     fireflyiii_volumes:
       - "/root/fireflyiii/config:/app/config"
-      # - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
@@ -86,14 +86,14 @@
 
 - name: Create Firefly III configuration directory
   ansible.builtin.file:
-    path: /root/vaultwarden
+    path: "{{ fireflyiii_config_dir }}"
     state: directory
-    mode: "0755"
+    mode: "0644"
 
 - name: Create Firefly III configuration
   ansible.builtin.template:
     src: "templates/fireflyiii/{{ item }}.j2"
-    dest: "/root/fireflyiii/{{ item }}"
+    dest: "{{ fireflyiii_config_dir }}/{{ item }}"
     mode: "644"
   loop:
     - docker-compose.yml
@@ -105,21 +105,10 @@
 #     project_src: /root/fireflyiii
 #     state: absent
 
-- name: Create and start Firefly III services
+- name: Deploy Firefly III services  # noqa: syntax-check[unknown-module]
   community.docker.docker_compose_v2:
-    project_src: /root/fireflyiii
+    project_src: "{{ fireflyiii_config_dir }}"
     env_files:
       - fireflyiii.env
       - fireflyiii_importer.env
   register: output
-
-- name: Deploy Docker Volume Backup
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-docker-volume-backup.yaml
-  vars:
-    docker_volume_backup_volume:
-      - "{{ grocy_volume_name }}:/backup/grocy-backup:ro"
-
-- name: Deploy Duplicati
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-duplicati.yaml

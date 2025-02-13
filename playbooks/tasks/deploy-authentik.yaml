@@ -19,6 +19,7 @@
     authentik_image_tag: "{{ authentik_image_tag | default('latest') }}"
     authentik_service_name: "{{ authentik_service_name | default('authentik') }}"
     authentik_service_port: "{{ authentik_service_port | default(3000) }}"
+    authentik_config_dir: /root/authentik
 
 - name: Set Authentik aggregated facts
   ansible.builtin.set_fact:
@@ -34,8 +35,8 @@
       - "{{ authentik_service_port | default(3000) }}:3000"
     authentik_volumes:
       - "/root/authentik/config:/app/config"
-      # - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
 
 - name: Create Authentik container labels
   ansible.builtin.set_fact:
@@ -66,7 +67,7 @@
       "key": "wud.link.template",
       "value": "https://github.com/getauthentik/authentik/releases/tag/v$${major}.$${minor}.$${patch}",
     }
-    # authentik labels
+    # Homepage labels
     - { "key": "homepage.group", "value": "System" }
     - { "key": "homepage.name", "value": "authentik" }
     - { "key": "homepage.description", "value": "Centralised logins" }
@@ -77,20 +78,26 @@
       "value": "https://{{ authentik_fqdn }}/",
     }
 
-- name: Copy configuration
+- name: Create Authentik configuration directory
+  ansible.builtin.file:
+    path: "{{ authentik_config_dir }}"
+    state: directory
+    mode: "0644"
+
+- name: Copy Authentik configuration
   ansible.builtin.copy:
     src: files/authentik
-    dest: /root/
-    mode: "644"
+    dest: "{{ authentik_config_dir }}/"
+    mode: "0644"
 
 # - name: Tear down existing services
 #   community.docker.docker_compose_v2:
 #     project_src: /root/authentik
 #     state: absent
 
-- name: Create and start Authentik services  # noqa: syntax-check[unknown-module]
+- name: Deploy Authentik services  # noqa: syntax-check[unknown-module]
   community.docker.docker_compose_v2:
-    project_src: /root/authentik
+    project_src: "{{ authentik_config_dir }}"
     env_files:
-      - env
+      - authentik.env
   register: output

@@ -70,7 +70,7 @@
     - name: Create Docker Volume Backup local archive directory
       ansible.builtin.file:
         path: "{{ local_backups_dir }}"
-        mode: "0755"
+        mode: "0644"
         state: directory
       register: local_archive_directory_creation
 

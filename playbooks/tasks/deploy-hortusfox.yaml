@@ -21,6 +21,7 @@
     hortusfox_image_tag: "{{ hortusfox_image_tag | default('latest') }}"
     hortusfox_service_name: "{{ hortusfox_service_name | default('hortusfox') }}"
     hortusfox_service_port: "{{ hortusfox_service_port | default(8080) }}"
+    hortusfox_config_dir: /root/hortusfox
 
 - name: Set Hortusfox aggregated facts
   ansible.builtin.set_fact:
@@ -80,16 +81,22 @@
       "value": "https://{{ hortusfox_fqdn }}/",
     }
 
-- name: Copy configuration
-  ansible.builtin.copy:
-    src: files/hortusfox
-    dest: /root/
+- name: Create Hortusfox configuration directory
+  ansible.builtin.file:
+    path: "{{ hortusfox_config_dir }}"
+    state: directory
     mode: "0644"
 
-- name: Create docker compose file
+- name: Copy Hortusfox configuration
+  ansible.builtin.copy:
+    src: files/hortusfox
+    dest: "{{ hortusfox_config_dir }}/"
+    mode: "0644"
+
+- name: Create Hortusfox docker-compose file
   ansible.builtin.template:
     src: templates/hortusfox/docker-compose.yml.j2
-    dest: /root/docker-compose.yml
+    dest: "{{ hortusfox_config_dir }}/docker-compose.yml"
     mode: "0644"
 
 # - name: Tear down existing services
@@ -97,18 +104,7 @@
 #     project_src: /root/hortusfox
 #     state: absent
 
-- name: Create and start services
+- name: Deploy Hortusfox services  # noqa: syntax-check[unknown-module]
   community.docker.docker_compose_v2:
-    project_src: /root/hortusfox
+    project_src: "{{ hortusfox_config_dir }}"
   register: output
-
-- name: Deploy Docker Volume Backup
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-docker-volume-backup.yaml
-  vars:
-    docker_volume_backup_volume:
-      - "{{ hortusfox_db_volume }}:/backup/grocy-backup:ro"
-
-- name: Deploy Duplicati
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-duplicati.yaml

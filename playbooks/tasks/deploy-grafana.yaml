@@ -115,6 +115,8 @@
       "key": "wud.link.template",
       "value": "https://github.com/grafana/grafana/releases/tag/v$${major}.$${minor}.$${patch}",
     }
+    # Docker Volume Backup labels
+    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
     # Homepage labels
     - { "key": "homepage.group", "value": "Monitoring" }
     - { "key": "homepage.name", "value": "Grafana" }
@@ -125,6 +127,11 @@
       "key": "homepage.siteMonitor",
       "value": "https://{{ grafana_fqdn }}/",
     }
+
+- name: Create Grafana volume
+  community.docker.docker_volume:
+    name: "{{ grafana_volume_name }}"
+    state: present
 
 - name: Check if Grafana is running
   community.docker.docker_container_info:
@@ -148,11 +155,6 @@
 - name: Deploy Grafana if not running
   when: not grafana_state.exists or (grafana_update | default(false))
   block:
-    - name: Create Grafana volume
-      community.docker.docker_volume:
-        name: "{{ grafana_volume_name }}"
-        state: present
-
     - name: Pull Grafana image
       community.docker.docker_image:
         name: "{{ grafana_image }}"
