@@ -1,11 +1,11 @@
 ---
 
-- name: Check Docker is available
+- name: Get host Docker status
   community.docker.docker_host_info:
   register: host_docker_info
   ignore_errors: true
 
-- name: Assert Docker is available
+- name: Ensure Docker is available on host
   ansible.builtin.assert:
     that:
       - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
