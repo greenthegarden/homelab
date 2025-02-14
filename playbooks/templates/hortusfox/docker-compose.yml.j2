@@ -63,6 +63,7 @@ volumes:
 
   db_data:
   {{ hortusfox_db_backup_volume_name | default('db_backup') }}:
+    external: true
   app_images:
   app_logs:
   app_backup:

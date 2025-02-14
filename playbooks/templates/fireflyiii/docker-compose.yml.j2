@@ -64,7 +64,7 @@ services:
     networks:
       - firefly_iii
     ports:
-      - '8091:8080'
+      - 8091:8080
     restart: always
     depends_on:
       - app
@@ -88,4 +88,5 @@ services:
 volumes:
   firefly_iii_db:
   {{ fireflyiii_db_backup_volume_name | default('db_backup') }}:
+    external: true
   firefly_iii_upload:
