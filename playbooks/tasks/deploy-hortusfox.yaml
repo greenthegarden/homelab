@@ -82,19 +82,13 @@
       "value": "https://{{ hortusfox_fqdn }}/",
     }
 
-- name: Copy Hortusfox configuration
-  ansible.builtin.copy:
-    src: files/hortusfox
-    dest: /root
-    mode: "0644"
-
 - name: Create Hortusfox configuration directory
   ansible.builtin.file:
     path: "{{ hortusfox_config_dir }}"
     state: directory
     mode: "0644"
 
-- name: Create Hortusfox docker-compose file
+- name: Create Hortusfox configurations
   ansible.builtin.template:
     src: templates/hortusfox/docker-compose.yml.j2
     dest: "{{ hortusfox_config_dir }}/docker-compose.yml"
