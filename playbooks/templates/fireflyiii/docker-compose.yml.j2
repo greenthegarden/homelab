@@ -29,8 +29,8 @@ services:
       - {{ fireflyiii_db_backup_volume_name | default('db_backup') }}:/tmp/dumps
 
   app:
-    container_name: {{ fireflyiii_service_name }}
-    image: {{ fireflyiii_image }}
+    container_name: firefly_iii_core
+    image: fireflyiii/core:version-6.2.0
     env_file: fireflyiii.env
     hostname: app
     labels: {{ (fireflyiii_container_labels | default({})) | default(omit) }}
