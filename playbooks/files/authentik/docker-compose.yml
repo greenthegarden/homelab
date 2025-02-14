@@ -13,7 +13,7 @@ services:
 # https://www.smarthomebeginner.com/authentik-docker-compose-guide-2025/
 
   postgresql:
-    image: docker.io/library/postgres:16.7-alpine
+    image: docker.io/library/postgres:17.3-alpine
     # container_name: postgresql
     restart: unless-stopped
     # profiles: ["core", "all"]
