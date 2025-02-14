@@ -74,9 +74,9 @@
         state: directory
       register: local_archive_directory_creation
 
-    - name: Copy Docker Volume Backup configuration
-      ansible.builtin.copy:
-        src: files/docker-volume-backup/docker-volume-backup.env
+    - name: Create Docker Volume Backup configuration
+      ansible.builtin.template:
+        src: templates/docker-volume-backup/docker-volume-backup.env.j2
         dest: /root/docker-volume-backup.env
         mode: "0644"
       register: env_file_creation
