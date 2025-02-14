@@ -35,8 +35,9 @@
     hortusfox_ports:
       - "{{ hortusfox_service_port | default(8080) }}:8080"
     hortusfox_volumes:
-      - "/root/hortusfox/config:/app/config"
+      - "{{ hortusfox_config_dir }}/config:/app/config"
       - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
 
 - name: Create Hortusfox container labels
   ansible.builtin.set_fact:
@@ -81,16 +82,16 @@
       "value": "https://{{ hortusfox_fqdn }}/",
     }
 
+- name: Copy Hortusfox configuration
+  ansible.builtin.copy:
+    src: files/hortusfox
+    dest: /root
+    mode: "0644"
+
 - name: Create Hortusfox configuration directory
   ansible.builtin.file:
     path: "{{ hortusfox_config_dir }}"
     state: directory
-    mode: "0644"
-
-- name: Copy Hortusfox configuration
-  ansible.builtin.copy:
-    src: files/hortusfox
-    dest: "{{ hortusfox_config_dir }}/"
     mode: "0644"
 
 - name: Create Hortusfox docker-compose file
