@@ -29,7 +29,7 @@ services:
       - {{ hortusfox_db_backup_volume_name | default('db_backup') }}:/tmp/dumps
 
   app:
-    container_name: hortusfox_app
+    container_name: {{ hortusfox_service_name }}
     image: {{ hortusfox_image }}
     environment:
       APP_ADMIN_EMAIL: {{ hortusfox.admin_email | default('admin@localhost') }}

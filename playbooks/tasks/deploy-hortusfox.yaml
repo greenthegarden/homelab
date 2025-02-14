@@ -94,6 +94,11 @@
     dest: "{{ hortusfox_config_dir }}/docker-compose.yml"
     mode: "0644"
 
+- name: Create Hortusfox backup volume  # noqa: syntax-check[unknown-module]
+  community.docker.docker_volume:
+    name: "{{ hortusfox_db_backup_volume_name }}"
+    state: present
+
 # - name: Tear down existing services
 #   community.docker.docker_compose_v2:
 #     project_src: /root/hortusfox
