@@ -94,7 +94,7 @@
   ansible.builtin.template:
     src: "templates/fireflyiii/{{ item }}.j2"
     dest: "{{ fireflyiii_config_dir }}/{{ item }}"
-    mode: "644"
+    mode: "0644"
   loop:
     - docker-compose.yml
     - fireflyiii.env

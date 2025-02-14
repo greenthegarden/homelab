@@ -26,6 +26,7 @@
         docker_volume_backup_image_name: "{{ docker_volume_backup_image_name | default('offen/docker-volume-backup') }}"
         docker_volume_backup_image_tag: "{{ docker_volume_backup_image_tag | default('latest') }}"
         docker_volume_backup_service_name: "{{ docker_volume_backup_service_name | default('docker-volume-backup') }}"
+        docker_volume_backup_config_dir: /root/docker-volume-backup
 
     - name: Set Docker Volume Backup aggregated facts
       ansible.builtin.set_fact:
@@ -77,9 +78,9 @@
     - name: Create Docker Volume Backup configuration
       ansible.builtin.template:
         src: templates/docker-volume-backup/docker-volume-backup.env.j2
-        dest: /root/docker-volume-backup.env
+        dest: "{{ docker_volume_backup_config_dir }}/docker-volume-backup.env"
         mode: "0644"
-      register: env_file_creation
+      register: docker_volume_backup_configuration_creation
 
     - name: Check if Docker Volume Backup is running
       community.docker.docker_container_info:
@@ -112,7 +113,7 @@
           community.docker.docker_container:
             name: "{{ docker_volume_backup_service_name }}"
             image: "{{ docker_volume_backup_image }}"
-            env_file: /root/docker-volume-backup.env
+            env_file: "{{ docker_volume_backup_config_dir }}/docker-volume-backup.env"
             labels: "{{ docker_volume_backup_container_labels }}"
             networks: "{{ docker_volume_backup_networks }}"
             restart: true

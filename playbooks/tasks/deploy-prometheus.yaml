@@ -21,6 +21,7 @@
     prometheus_service_name: "{{ prometheus_service_name | default('prometheus') }}"
     prometheus_service_port: "{{ prometheus_service_port | default(9090) }}"
     prometheus_volume_name: "{{ prometheus_volume_name | default('prometheus') }}"
+    prometheus_config_dir: /root/prometheus
 
 - name: Set Prometheus aggregated facts
   ansible.builtin.set_fact:
@@ -45,7 +46,7 @@
     prometheus_ports:
       - "{{ prometheus_service_port | default(9090) }}:9090"
     prometheus_volumes:
-      - /root/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - "{{ prometheus_config_dir }}/prometheus.yml:/etc/prometheus/prometheus.yml"
       - "{{ prometheus_volume_name }}:/prometheus"
       - /etc/localtime:/etc/localtime:ro
 
@@ -90,16 +91,16 @@
 
 - name: Create Prometheus configuration directory
   ansible.builtin.file:
-    path: /root/prometheus
-    mode: "644"
+    path: "{{ prometheus_config_dir }}"
+    mode: "0644"
     state: directory
   register: prometheus_configuration_creation
 
 - name: Create Prometheus configuration file
   ansible.builtin.template:
     src: templates/prometheus/prometheus.yml.j2
-    dest: /root/prometheus/prometheus.yml
-    mode: "644"
+    dest: "{{ prometheus_config_dir }}/prometheus.yml"
+    mode: "0644"
   register: prometheus_configuration_creation
 
 - name: Check if Prometheus is running  # noqa: syntax-check[unknown-module]
