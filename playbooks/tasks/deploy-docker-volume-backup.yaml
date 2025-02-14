@@ -75,6 +75,13 @@
         state: directory
       register: local_archive_directory_creation
 
+    - name: Create Docker Volume Backup configuration directory
+      ansible.builtin.file:
+        path: "{{ docker_volume_backup_config_dir }}"
+        mode: "0644"
+        state: directory
+      register: docker_volume_backup_configuration_creation
+
     - name: Create Docker Volume Backup configuration
       ansible.builtin.template:
         src: templates/docker-volume-backup/docker-volume-backup.env.j2
