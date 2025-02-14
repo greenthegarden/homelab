@@ -106,7 +106,7 @@
     group: root
     mode: "0644"
 
-- name: Create Vaultwarden volume
+- name: Create Vaultwarden volume  # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ vaultwarden_volume_name }}"
     state: present

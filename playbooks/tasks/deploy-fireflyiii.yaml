@@ -100,6 +100,11 @@
     - fireflyiii.env
     - fireflyiii_importer.env
 
+- name: Create Firefly III backup volume  # noqa: syntax-check[unknown-module]
+  community.docker.docker_volume:
+    name: "{{ fireflyiii_db_backup_volume_name }}"
+    state: present
+
 # - name: Tear down existing services
 #   community.docker.docker_compose_v2:
 #     project_src: /root/fireflyiii
