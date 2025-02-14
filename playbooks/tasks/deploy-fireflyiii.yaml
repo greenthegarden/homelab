@@ -63,7 +63,7 @@
       "value": "true",
     }
     - {
-      "key": "traefik.http.services.{{ hortusfox_service_name }}.loadbalancer.server.port",
+      "key": "traefik.http.services.{{ fireflyiii_service_name }}.loadbalancer.server.port",
       "value": "8080",
     }
     # What's up Docker? labels
