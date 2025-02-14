@@ -33,7 +33,7 @@ services:
     image: fireflyiii/core:version-6.2.0
     env_file: fireflyiii.env
     hostname: app
-    labels: {{ (firefly_container_labels | default({})) | default(omit) }}
+    labels: {{ (fireflyiii_container_labels | default({})) | default(omit) }}
     networks:
       - firefly_iii
       - web
