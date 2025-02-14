@@ -96,12 +96,12 @@
       "value": "{{ emqx_service_name }}",
     }
     - {
-      "key": "traefik.http.services.{{ emqx_service_name }}.loadbalancer.server.port",
-      "value": "{{ emqx_service_port_api | quote }}",
-    }
-    - {
       "key": "traefik.http.routers.{{ emqx_service_name }}.tls",
       "value": "true",
+    }
+    - {
+      "key": "traefik.http.services.{{ emqx_service_name }}.loadbalancer.server.port",
+      "value": "{{ emqx_service_port_api | quote }}",
     }
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }

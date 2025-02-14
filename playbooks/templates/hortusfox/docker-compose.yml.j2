@@ -29,8 +29,8 @@ services:
       - {{ hortusfox_db_backup_volume_name | default('db_backup') }}:/tmp/dumps
 
   app:
-    container_name: {{ hortusfox_service_name }}
-    image: {{ hortusfox_image }}
+    container_name: hortusfox_app
+    image: ghcr.io/danielbrendel/hortusfox-web:v4.0
     environment:
       APP_ADMIN_EMAIL: {{ hortusfox.admin_email | default('admin@localhost') }}
       APP_ADMIN_PASSWORD: {{ hortusfox.admin_password | default('dummy') }}

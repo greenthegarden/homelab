@@ -62,6 +62,10 @@
       "key": "traefik.http.routers.{{ hortusfox_service_name }}.tls",
       "value": "true",
     }
+    - {
+      "key": "traefik.http.services.{{ hortusfox_service_name }}.loadbalancer.server.port",
+      "value": "80",
+    }
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
