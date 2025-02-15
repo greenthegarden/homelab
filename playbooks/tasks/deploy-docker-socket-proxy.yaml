@@ -75,7 +75,7 @@
       # Security critical
       AUTH: "0"
       SECRETS: "0"
-      POST: "1" # Allow access for Docker Volume Backup to stop containers
+      POST: "{{ 1 if configure_for_docker_volume_backup else 0 | quote }}" # Allow access for Docker Volume Backup to stop containers
       ## Not always needed
       BUILD: "0"
       COMMIT: "0"

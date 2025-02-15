@@ -26,7 +26,7 @@ repos:
     rev: v25.1.2
     hooks:
       - id: ansible-lint
-        files: ^playbooks/*.(yaml|yml)$
+        files: ^playbooks/.*?\.(yaml|yml)$
         exclude: ^playbooks/(files/homepage/config/bookmarks\.yaml|files/influxdb/influxdb\.yaml|files/authentik/authentik\.env|vars/homelab_env\.yaml)$
 
   - repo: https://github.com/markdownlint/markdownlint
