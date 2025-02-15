@@ -27,7 +27,6 @@
 - name: Set Uptime Kuma aggregated facts
   ansible.builtin.set_fact:
     uptimekuma_image: "{{ uptimekuma_image_name }}:{{ uptimekuma_image_tag }}"
-    # uptimekuma_fqdn: "{{ uptimekuma_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
     uptimekuma_fqdn: "{{ uptimekuma_service_name }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Uptime Kuma service facts

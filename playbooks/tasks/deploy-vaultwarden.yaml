@@ -28,7 +28,7 @@
 - name: Set Vaultwarden aggregated facts
   ansible.builtin.set_fact:
     vaultwarden_image: "{{ vaultwarden_image_name }}:{{ vaultwarden_image_tag }}"
-    vaultwarden_fqdn: "{{ vaultwarden_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    vaultwarden_fqdn: "{{ vaultwarden_service_name }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Vaultwarden service facts
   ansible.builtin.set_fact:

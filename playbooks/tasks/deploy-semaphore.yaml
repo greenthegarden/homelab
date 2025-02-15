@@ -30,7 +30,7 @@
 - name: Set Semaphore aggregated facts
   ansible.builtin.set_fact:
     semaphore_image: "{{ semaphore_image_name }}:{{ semaphore_image_tag }}"
-    semaphore_fqdn: "{{ semaphore_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    semaphore_fqdn: "{{ semaphore_service_name }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Semaphore service facts
   ansible.builtin.set_fact:

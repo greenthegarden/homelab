@@ -28,7 +28,7 @@
 - name: Set Grocy aggregated facts
   ansible.builtin.set_fact:
     grocy_image: "{{ grocy_image_name }}:{{ grocy_image_tag }}"
-    grocy_fqdn: "{{ grocy_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    grocy_fqdn: "{{ grocy_service_name }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Grocy service facts
   ansible.builtin.set_fact:
