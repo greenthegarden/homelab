@@ -28,7 +28,4 @@
       vars:
         docker_volume_backup_volume_to_backup:
           - "{{ grocy_volume_name }}:/backup/grocy-backup:ro"
-
-    - name: Deploy Duplicati
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-duplicati.yaml
+        docker_volume_backup_backup_label: "{{ grocy_service_name }}"

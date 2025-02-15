@@ -28,3 +28,4 @@
       vars:
         docker_volume_backup_volume_to_backup:
           - "{{ portainer_volume_name }}:/backup/portainer-backup:ro"
+        docker_volume_backup_backup_label: "{{ portainer_service_name }}"

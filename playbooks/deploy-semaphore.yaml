@@ -31,3 +31,4 @@
       vars:
         docker_volume_backup_volume_to_backup:
           - "{{ semaphore_volume_data_name }}:/backup/semaphore-backup:ro"
+        docker_volume_backup_backup_label: "{{ semaphore_service_name }}"

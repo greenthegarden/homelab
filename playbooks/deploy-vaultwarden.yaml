@@ -28,3 +28,4 @@
       vars:
         docker_volume_backup_volume_to_backup:
           - "{{ vaultwarden_volume_name }}:/backup/vaultwarden-backup:ro"
+        docker_volume_backup_backup_label: "{{ vaultwarden_service_name }}"
