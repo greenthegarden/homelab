@@ -91,44 +91,23 @@
         mode: "0644"
       register: docker_volume_backup_configuration_creation
 
-    - name: Check if Docker Volume Backup is running
-      community.docker.docker_container_info:
+    - name: Pull Docker Volume Backup image
+      community.docker.docker_image:
+        name: "{{ docker_volume_backup_image }}"
+        source: pull
+
+    - name: Deploy Docker Volume Backup
+      community.docker.docker_container:
         name: "{{ docker_volume_backup_service_name }}"
-      register: docker_volume_backup_state
-
-    - name: Remove Docker Volume Backup container if changing version
-      when:
-        - docker_volume_backup_state.exists
-        - docker_volume_backup_image_tag != docker_volume_backup_state.container.Config.Image | split(':') | last
-      block:
-        - name: Stop and remove existing Docker Volume Backup container
-          community.docker.docker_container:
-            name: "{{ docker_volume_backup_service_name }}"
-            state: absent
-
-        - name: Set update Docker Volume Backup fact
-          ansible.builtin.set_fact:
-            docker_volume_backup_update: true
-
-    - name: Deploy Docker Volume Backup if not running
-      when: not docker_volume_backup_state.exists or (docker_volume_backup_update | default(false))
-      block:
-        - name: Pull Docker Volume Backup image
-          community.docker.docker_image:
-            name: "{{ docker_volume_backup_image }}"
-            source: pull
-
-        - name: Deploy Docker Volume Backup
-          community.docker.docker_container:
-            name: "{{ docker_volume_backup_service_name }}"
-            image: "{{ docker_volume_backup_image }}"
-            env_file: "{{ docker_volume_backup_config_dir }}/docker-volume-backup.env"
-            labels: "{{ docker_volume_backup_container_labels }}"
-            networks: "{{ docker_volume_backup_networks }}"
-            restart: true
-            restart_policy: always
-            security_opts:
-              - no-new-privileges=true
-            state: started
-            volumes: "{{ docker_volume_backup_volumes }}"
-          register: docker_volume_backup_container_state
+        image: "{{ docker_volume_backup_image }}"
+        env_file: "{{ docker_volume_backup_config_dir }}/docker-volume-backup.env"
+        labels: "{{ docker_volume_backup_container_labels }}"
+        networks: "{{ docker_volume_backup_networks }}"
+        recreate: true # recreate to ensure env changes are used
+        restart: true
+        restart_policy: always
+        security_opts:
+          - no-new-privileges=true
+        state: started
+        volumes: "{{ docker_volume_backup_volumes }}"
+      register: docker_volume_backup_container_state
