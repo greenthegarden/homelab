@@ -15,6 +15,12 @@
           - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
         fail_msg: A version of Docker >= 20 is required to be installed
 
+    - name: Ensure Docker Socket Proxy is deployed and configured
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-socket-proxy.yaml
+      vars:
+        configure_for_docker_volume_backup: true
+
     # https://offen.github.io/docker-volume-backup/
 
     - name: Set Global facts
@@ -103,7 +109,7 @@
         env_file: "{{ docker_volume_backup_config_dir }}/docker-volume-backup.env"
         labels: "{{ docker_volume_backup_container_labels }}"
         networks: "{{ docker_volume_backup_networks }}"
-        recreate: true # recreate to ensure env changes are used
+        recreate: true # Recreate to ensure env changes are used
         restart: true
         restart_policy: always
         security_opts:
