@@ -155,11 +155,11 @@
           WUD_WATCHER_PORTAINER_HOST: "portainer.{{ lan_dns_domain }}"
           WUD_WATCHER_UPTIMEKUMA_HOST: "uptimekuma.{{ lan_dns_domain }}"
           WUD_WATCHER_VAULTWARDEN_HOST: "vaultwarden.{{ lan_dns_domain }}"
-          # Authentik integration
-          WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ oauth_client_id | default('dummy') }}"
-          WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ oauth_client_secret | default('dummy') }}"
-          WUD_AUTH_OIDC_AUTHENTIK_DISCOVERY: "https://authentik.authentik.homelab.greenthegarden.com/application/o/wud/.well-known/openid-configuration"
-          WUD_AUTH_OIDC_AUTHENTIK_REDIRECT: "false" # Set to true to skip internal login page
+          # # Authentik integration
+          # WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ oauth_client_id | default('dummy') }}"
+          # WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ oauth_client_secret | default('dummy') }}"
+          # WUD_AUTH_OIDC_AUTHENTIK_DISCOVERY: "https://authentik.authentik.homelab.greenthegarden.com/application/o/wud/.well-known/openid-configuration"
+          # WUD_AUTH_OIDC_AUTHENTIK_REDIRECT: "false" # Set to true to skip internal login page
         # healthcheck:
         #   test:
         #     [
