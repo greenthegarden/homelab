@@ -22,7 +22,7 @@
 - name: Set Homebox aggregated facts
   ansible.builtin.set_fact:
     homebox_image: "{{ homebox_image_name }}:{{ homebox_image_tag }}"
-    homebox_fqdn: "{{ homebox_service_name }}.{{ homelab.lan_domain | default('localdomain') }}"
+    homebox_fqdn: "{{ homebox_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Homebox service facts
   ansible.builtin.set_fact:

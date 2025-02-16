@@ -26,7 +26,7 @@
 - name: Set Hortusfox aggregated facts
   ansible.builtin.set_fact:
     hortusfox_image: "{{ hortusfox_image_name }}:{{ hortusfox_image_tag }}"
-    hortusfox_fqdn: "{{ hortusfox_service_name }}.{{ homelab.lan_domain | default('localdomain') }}"
+    hortusfox_fqdn: "{{ hortusfox_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Hortusfox service facts
   ansible.builtin.set_fact:
