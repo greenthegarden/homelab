@@ -171,7 +171,7 @@
           GF_SECURITY_ADMIN_PASSWORD: "{{ grafana.admin_password | default('dummy') }}"
           GF_USERS_ALLOW_SIGN_UP: "false"
           # For reverse proxy support
-          GF_SERVER_ROOT_URL: "https://{{ grafana_fqdn }} "
+          GF_SERVER_ROOT_URL: "https://{{ grafana_fqdn }}"
           # For Authentik support
           GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
           GF_AUTH_GENERIC_OAUTH_NAME: "authentik"
