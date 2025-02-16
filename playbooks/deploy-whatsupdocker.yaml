@@ -17,7 +17,6 @@
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
-      no_log: false
 
     - name: Deploy a containerised instance of What's up Docker?
       ansible.builtin.include_tasks:

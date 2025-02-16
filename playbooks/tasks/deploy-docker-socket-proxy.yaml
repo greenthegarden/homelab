@@ -82,7 +82,7 @@
       CONFIGS: "0"
       CONTAINERS: "1" # Allow access to viewing containers (Traefik, Portainer, Docker Volume Backup.)
       DISTRIBUTION: "0"
-      EXEC: "0"
+      EXEC: "{{ 1 if configure_for_docker_volume_backup else 0 | quote }}" # Allow access for Docker Volume Backup to execute commands
       IMAGES: "1" # Allow access to viewing images (Portainer)
       INFO: "1" # Allow access to viewing info (Portainer, Docker Volume Backup)
       NETWORKS: "1" # Allow access to viewing networks (Portainer)

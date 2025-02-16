@@ -144,7 +144,7 @@
       "value": "traefik-https-redirect",
     }
     # - "traefik.http.routers.traefik-secure.entrypoints=https"
-    # - "traefik.http.routers.traefik-secure.rule=Host(`traefik.homelab.greenthegarden.com`)"
+    # - "traefik.http.routers.traefik-secure.rule=Host(`traefik.hostname.homelab.greenthegarden.com`)"
     # - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
     - {
       "key": "traefik.http.routers.{{ traefik_service_name }}-https.entrypoints",
@@ -228,66 +228,45 @@
     mode: "644"
   register: env_file_creation
 
-- name: Check if Traefik is running
-  community.docker.docker_container_info:
+- name: Pull image
+  community.docker.docker_image:
+    name: "{{ traefik_image_name }}"
+    source: pull
+
+- name: Deploy Traefik with Docker as provider
+  community.docker.docker_container:
     name: "{{ traefik_service_name }}"
-  register: traefik_state
+    image: "{{ traefik_image }}"
+    command: "{{ traefik_command }}"
+    detach: true
+    env_file: ./traefik.env
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    labels: "{{ traefik_container_labels }}"
+    networks: "{{ traefik_networks }}"
+    published_ports: "{{ traefik_ports }}"
+    recreate: true  # Recreate to ensure any configuration changes are used
+    restart: true
+    restart_policy: unless-stopped
+    security_opts:
+      - "no-new-privileges:true"
+    state: started
+    volumes: "{{ traefik_volumes }}"
+  register: traefik_container_state
+  when: traefik_provider == "docker"
 
-- name: Remove Traefik container if changing version
-  when:
-    - traefik_state.exists
-    - traefik_image_tag != traefik_state.container.Config.Image | split(':') | last
-  block:
-    - name: Stop and remove existing Traefik container
-      community.docker.docker_container:
-        name: "{{ traefik_service_name }}"
-        state: absent
-
-    - name: Set update Traefik
-      ansible.builtin.set_fact:
-        traefik_update: true
-
-- name: Deploy Traefik if not running
-  when: not traefik_state.exists or (traefik_update | default(false))
-  block:
-    - name: Pull image
-      community.docker.docker_image:
-        name: "{{ traefik_image_name }}"
-        source: pull
-
-    - name: Deploy Traefik with Docker as provider
-      community.docker.docker_container:
-        name: "{{ traefik_service_name }}"
-        image: "{{ traefik_image }}"
-        command: "{{ traefik_command }}"
-        detach: true
-        env_file: ./traefik.env
-        healthcheck:
-          test: ["CMD", "traefik", "healthcheck", "--ping"]
-          interval: 10s
-          timeout: 5s
-          retries: 3
-          start_period: 5s
-        labels: "{{ traefik_container_labels }}"
-        networks: "{{ traefik_networks }}"
-        published_ports: "{{ traefik_ports }}"
-        restart: true
-        restart_policy: unless-stopped
-        security_opts:
-          - "no-new-privileges:true"
-        state: started
-        volumes: "{{ traefik_volumes }}"
-      register: traefik_container_state
-      when: traefik_provider == "docker"
-
-    # - name: Wait for Traefik to accept connections
-    #   ansible.builtin.wait_for:
-    #     host: "{{ traefik_fqdn }}"
-    #     port: "{{ traefik_service_port | default(80) }}"
-    #     connect_timeout: 1
-    #     delay: 10
-    #     state: started
-    #     timeout: 30
-    #   register: traefik_running
-    #   until: traefik_running is success
-    #   retries: 10
+# - name: Wait for Traefik to accept connections
+#   ansible.builtin.wait_for:
+#     host: "{{ traefik_fqdn }}"
+#     port: "{{ traefik_service_port | default(80) }}"
+#     connect_timeout: 1
+#     delay: 10
+#     state: started
+#     timeout: 30
+#   register: traefik_running
+#   until: traefik_running is success
+#   retries: 10
