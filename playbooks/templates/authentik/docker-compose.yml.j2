@@ -23,6 +23,7 @@ services:
       interval: 30s
       retries: 5
       timeout: 5s
+    labels: {{ (authentik_db_container_labels | default({})) | default(omit) }}
     networks:
       - default
     security_opt:

@@ -78,17 +78,30 @@
       "value": "https://{{ authentik_fqdn }}/",
     }
 
+- name: Create Authentik  DB container labels
+  ansible.builtin.set_fact:
+    authentik_db_container_labels: "{{ authentik_db_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Docker Volume Backup labels
+    - {
+      "key": "docker-volume-backup.archive-pre",
+      "value": "/bin/sh -c 'PGPASSWORD={{ authentik.db_password }} pg_dump -U {{ authentik.db_user }} {{ authentik.db_name }} > /tmp/dumps/dump.sql'"
+    }
+
 - name: Create Authentik configuration directory
   ansible.builtin.file:
     path: "{{ authentik_config_dir }}"
     state: directory
     mode: "0644"
 
-- name: Copy Authentik configuration
-  ansible.builtin.copy:
-    src: files/authentik
+- name: Create Authentik configuration
+  ansible.builtin.template:
+    src: "templates/authentik/{{ item }}.j2"
     dest: "{{ authentik_config_dir }}/"
     mode: "0644"
+  loop:
+    - docker-compose.yml
+    - authentik.env
 
 # - name: Tear down existing services
 #   community.docker.docker_compose_v2:
