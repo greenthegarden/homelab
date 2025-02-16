@@ -72,7 +72,7 @@
       "key": "wud.link.template",
       "value": "https://github.com/danielbrendel/hortusfox-web/releases/tag/v$${major}.$${minor}.$${patch}",
     }
-    # hortusfox labels
+    # Hortusfox labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "HortusFox" }
     - {
@@ -84,6 +84,16 @@
     - {
       "key": "homepage.siteMonitor",
       "value": "https://{{ hortusfox_fqdn }}/",
+    }
+
+- name: Create Hortusfox DB container labels
+  ansible.builtin.set_fact:
+    hortusfox_db_container_labels: "{{ hortusfox_db_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Docker Volume Backup labels
+    - {
+      "key": "docker-volume-backup.archive-pre",
+      "value": "/bin/sh -c 'mariadb-dump --user={{ hortusfox.db_user }} -p{{ hortusfox.db_password }} --lock-tables --all-databases > /tmp/dumps/dump.sql'"
     }
 
 - name: Create Hortusfox configuration directory
