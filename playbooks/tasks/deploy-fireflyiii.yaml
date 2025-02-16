@@ -88,6 +88,16 @@
       "value": "https://{{ fireflyiii_fqdn }}/",
     }
 
+- name: Create Firefly III DB container labels
+  ansible.builtin.set_fact:
+    fireflyiii_db_container_labels: "{{ fireflyiii_db_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Docker Volume Backup labels
+    - {
+      "key": "docker-volume-backup.archive-pre",
+      "value": "/bin/sh -c 'mariadb-dump --user={{ fireflyiii.db_user }} -p{{ fireflyiii.db_password }} --lock-tables --all-databases > /tmp/dumps/dump.sql'"
+    }
+
 - name: Create Firefly III configuration directory
   ansible.builtin.file:
     path: "{{ fireflyiii_config_dir }}"
