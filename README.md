@@ -30,3 +30,7 @@ and configure services used within my Homelab. Repository is structured to work 
 ```yaml
 ansible-vault create playbooks/files/config.yaml
 ```
+
+### Backup Strategy
+
+All configuration is maintained in this version controlled repository so

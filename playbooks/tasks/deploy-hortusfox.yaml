@@ -79,7 +79,7 @@
       "key": "homepage.description",
       "value": "A self-hosted collaborative plant management system",
     }
-    - { "key": "homepage.icon", "value": "firefly-iii.png" }
+    - { "key": "homepage.icon", "value": "hortusfox.png" }
     - { "key": "homepage.href", "value": "https://{{ hortusfox_fqdn }}/" }
     - {
       "key": "homepage.siteMonitor",
