@@ -19,7 +19,7 @@ services:
       MYSQL_USER: {{ hortusfox.db_user | default('hortusfox') }}
       MYSQL_PASSWORD: {{ hortusfox.db_password | default('dummy') }}
     hostname: db
-    labels: {{ hortusfox_db_container_labels | default({})) | default(omit) }}
+    labels: {{ (hortusfox_db_container_labels | default({})) | default(omit) }}
     networks:
       - hortusfox
     restart: always
