@@ -13,6 +13,8 @@
     influxdb_service_port: 8086
     influxdb_config_volume_name: influxconfig
     influxdb_data_volume_name: influxdata
+    # influxdb_init_mode:
+    # influxdb_init_retention:
 
   tasks:
 

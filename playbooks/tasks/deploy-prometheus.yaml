@@ -49,6 +49,7 @@
       - "{{ prometheus_config_dir }}/prometheus.yml:/etc/prometheus/prometheus.yml"
       - "{{ prometheus_volume_name }}:/prometheus"
       - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
 
 - name: Create Prometheus container labels
   ansible.builtin.set_fact:
@@ -103,82 +104,37 @@
     mode: "0644"
   register: prometheus_configuration_creation
 
-- name: Check if Prometheus is running  # noqa: syntax-check[unknown-module]
-  community.docker.docker_container_info:
-    name: "{{ prometheus_service_name }}"
-  register: prometheus_state
+- name: Pull Prometheus image
+  community.docker.docker_image:
+    name: "{{ prometheus_image_name }}:{{ prometheus_image_tag | default('latest') }}"
+    source: pull
 
-- name: Remove Prometheus container if changing version
-  when:
-    - prometheus_state.exists
-    - prometheus_image_tag != prometheus_state.container.Config.Image | split(':') | last
-  block:
-    - name: Stop and remove existing Prometheus container
-      community.docker.docker_container:
-        name: "{{ prometheus_service_name }}"
-        state: absent
+- name: Deploy Prometheus
+  community.docker.docker_container:
+    name: "{{ prometheus_service_name | default('prometheus') }}"
+    image: "{{ prometheus_image }}"
+    command: "{{ prometheus_command }}"
+    detach: true
+    labels: "{{ prometheus_container_labels }}"
+    memory: 300M
+    memory_reservation: 100M
+    networks_cli_compatible: true
+    networks: "{{ prometheus_networks }}"
+    recreate: true
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    volumes: "{{ prometheus_volumes }}"
+  register: prometheus_container_state
 
-    - name: Set update Prometheus
-      ansible.builtin.set_fact:
-        prometheus_update: true
-
-- name: Deploy Prometheus if not running
-  when: not prometheus_state.exists or (prometheus_update | default(false))
-  block:
-    - name: Pull Prometheus image
-      community.docker.docker_image:
-        name: "{{ prometheus_image_name }}:{{ prometheus_image_tag | default('latest') }}"
-        source: pull
-
-    - name: Deploy Prometheus
-      community.docker.docker_container:
-        name: "{{ prometheus_service_name | default('prometheus') }}"
-        image: "{{ prometheus_image }}"
-        command: "{{ prometheus_command }}"
-        detach: true
-        labels: "{{ prometheus_container_labels }}"
-        memory: 300M
-        memory_reservation: 100M
-        networks_cli_compatible: true
-        networks: "{{ prometheus_networks }}"
-        restart: true
-        restart_policy: unless-stopped
-        state: started
-        volumes: "{{ prometheus_volumes }}"
-      register: prometheus_container_state
-
-    # - name: Wait for Prometheus to accept connections
-    #   ansible.builtin.wait_for:
-    #     host: "{{ prometheus_fqdn }}"
-    #     port: 80
-    #     connect_timeout: 1
-    #     delay: 10
-    #     state: started
-    #     timeout: 30
-    #   register: prometheus_running
-    #   until: prometheus_running is success
-    #   retries: 10
-# - name: Create Prometheus configuration file
-#   ansible.builtin.template:
-#     src: templates/prometheus/prometheus-min.yml.j2
-#     dest: /tmp/prometheus.yml
-#     mode: "644"
-#   register: prometheus_configuration_creation
-#   tags:
-#     - prometheus
-
-# - name: Load Prometheus configuration if changed
-#   tags:
-#     - prometheus
-#   when: prometheus_configuration_creation.changed or (prometheus_running is defined and prometheus_running is success)
-#   block:
-#     - name: Copy configuration file into Prometheus container
-#       ansible.builtin.command: docker cp /tmp/prometheus.yml {{ prometheus_service_name }}:/etc/prometheus/prometheus.yml
-#       when: prometheus_configuration_creation.changed or (prometheus_running is defined and prometheus_running is success)
-
-#     #   # curl -X POST :9090/-/reload
-#     # - name: Restart Prometheus via curl
-#     #   ansible.builtin.uri:
-#     #     url: "https://{{ prometheus_fqdn }}/-/reload"
-#     #     method: POST
-#     #     validate_certs: false
+# - name: Wait for Prometheus to accept connections
+#   ansible.builtin.wait_for:
+#     host: "{{ prometheus_fqdn }}"
+#     port: 80
+#     connect_timeout: 1
+#     delay: 10
+#     state: started
+#     timeout: 30
+#   register: prometheus_running
+#   until: prometheus_running is success
+#   retries: 10

@@ -77,55 +77,34 @@
       "value": "https://github.com/prometheus/node_exporter/releases/tag/v$${major}.$${minor}.$${patch}",
     }
 
-- name: Check if Node Exporter is running  # noqa: syntax-check[unknown-module]
-  community.docker.docker_container_info:
+- name: Pull Node Exporter image
+  community.docker.docker_image:
+    name: "{{ node_exporter_image }}"
+    source: pull
+
+- name: Deploy Node Exporter
+  community.docker.docker_container:
     name: "{{ node_exporter_service_name }}"
-  register: node_exporter_state
+    image: "{{ node_exporter_image }}"
+    detach: true
+    labels: "{{ node_exporter_container_labels }}"
+    networks_cli_compatible: true
+    networks: "{{ node_exporter_networks }}"
+    recreate: true
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    volumes: "{{ node_exporter_volumes }}"
+  register: node_exporter_container_state
 
-- name: Remove Node Exporter container if changing version
-  when:
-    - node_exporter_state.exists
-    - node_exporter_image_tag != node_exporter_state.container.Config.Image | split(':') | last
-  block:
-    - name: Stop and remove existing Node Exporter container
-      community.docker.docker_container:
-        name: "{{ node_exporter_service_name }}"
-        state: absent
-
-    - name: Set update Node Exporter
-      ansible.builtin.set_fact:
-        node_exporter_update: true
-
-- name: Deploy Node Exporter if not running
-  when: not node_exporter_state.exists or (node_exporter_update | default(false))
-  block:
-    - name: Pull Node Exporter image
-      community.docker.docker_image:
-        name: "{{ node_exporter_image }}"
-        source: pull
-
-    - name: Deploy Node Exporter
-      community.docker.docker_container:
-        name: "{{ node_exporter_service_name }}"
-        image: "{{ node_exporter_image }}"
-        detach: true
-        labels: "{{ node_exporter_container_labels }}"
-        networks_cli_compatible: true
-        networks: "{{ node_exporter_networks }}"
-        restart: true
-        restart_policy: unless-stopped
-        state: started
-        volumes: "{{ node_exporter_volumes }}"
-      register: node_exporter_container_state
-
-    # - name: Wait for Node Exporter to accept connections
-    #   ansible.builtin.wait_for:
-    #     host: "{{ node_exporter_fqdn }}"
-    #     port: 80
-    #     connect_timeout: 1
-    #     delay: 10
-    #     state: started
-    #     timeout: 30
-    #   register: node_exporter_running
-    #   until: node_exporter_running is success
-    #   retries: 10
+# - name: Wait for Node Exporter to accept connections
+#   ansible.builtin.wait_for:
+#     host: "{{ node_exporter_fqdn }}"
+#     port: 80
+#     connect_timeout: 1
+#     delay: 10
+#     state: started
+#     timeout: 30
+#   register: node_exporter_running
+#   until: node_exporter_running is success
+#   retries: 10

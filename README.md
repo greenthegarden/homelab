@@ -10,14 +10,19 @@
 
 #### TrueNAS
 
-Initial configuration based on [6 Crucial Settings to Enable on TrueNAS SCALE](https://www.youtube.com/watch?v=dP0wagQVctc)
+Initial configuration based on [TrueNAS Scale Settings][].
+
+[TrueNAS Scale Settings]: https://www.youtube.com/watch?v=dP0wagQVctc
+(6 Crucial Settings to Enable on TrueNAS SCALE)
 
 #### Services
 
-The homleab
-[Ansible](https://docs.ansible.com/ansible/latest/index.html) playbooks to deploy
-and configure services used within my Homelab. Repository is structured to work with
-[Semaphore UI](https://semaphoreui.com/) to manage the deployments.
+The homleab [Ansible] playbooks to deploy and configure
+services used within my Homelab. Repository is structured to
+work with [Semaphore UI] to manage the deployments.
+
+[Ansible]: https://docs.ansible.com/ansible/latest/index.html
+[Semaphore UI]: https://semaphoreui.com/
 
 ### Maintenance
 
@@ -27,10 +32,17 @@ and configure services used within my Homelab. Repository is structured to work 
 
 ### Managing secrets
 
-```yaml
+```sh
 ansible-vault create playbooks/files/config.yaml
 ```
 
 ### Backup Strategy
 
-All configuration is maintained in this version controlled repository so
+#### Configuration
+
+All configuration is maintained in this version controlled
+repository so it not separately backed up
+
+#### Container Data
+
+All containers

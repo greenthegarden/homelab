@@ -44,62 +44,41 @@
       "value": "https://github.com/portainer/agent/releases/tag/$${major}.$${minor}.$${patch}",
     }
 
-- name: Check if Portainer Agent is running  # noqa: syntax-check[unknown-module]
-  community.docker.docker_container_info:
+- name: Pull Portainer Agent image
+  community.docker.docker_image:
+    name: "{{ portainer_agent_image }}"
+    source: pull
+
+# docker run -d \
+#   -p 9001:9001 \
+#   --name portainer_agent \
+#   --restart=always \
+#   -v /var/run/docker.sock:/var/run/docker.sock \
+#   -v /var/lib/docker/volumes:/var/lib/docker/volumes \
+#   portainer/agent:2.18.3
+
+- name: Deploy Portainer Agent
+  community.docker.docker_container:
     name: "{{ portainer_agent_service_name }}"
-  register: portainer_agent_state
+    image: "{{ portainer_agent_image }}"
+    detach: true
+    labels: "{{ portainer_agent_container_labels }}"
+    published_ports: "{{ portainer_agent_ports }}"
+    recreate: true
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    volumes: "{{ portainer_agent_volumes }}"
+  register: portainer_agent_container_state
 
-- name: Remove Portainer Agent container if changing version
-  when:
-    - portainer_agent_state.exists
-    - portainer_agent_image_tag != portainer_agent_state.container.Config.Image | split(':') | last
-  block:
-    - name: Stop and remove existing Portainer Agent container
-      community.docker.docker_container:
-        name: "{{ portainer_agent_service_name }}"
-        state: absent
-
-    - name: Set update Portainer Agent
-      ansible.builtin.set_fact:
-        portainer_agent_update: true
-
-- name: Deploy Portainer Agent if not running
-  when: not portainer_agent_state.exists or (portainer_agent_update | default(false))
-  block:
-    - name: Pull Portainer Agent image
-      community.docker.docker_image:
-        name: "{{ portainer_agent_image }}"
-        source: pull
-
-    # docker run -d \
-    #   -p 9001:9001 \
-    #   --name portainer_agent \
-    #   --restart=always \
-    #   -v /var/run/docker.sock:/var/run/docker.sock \
-    #   -v /var/lib/docker/volumes:/var/lib/docker/volumes \
-    #   portainer/agent:2.18.3
-
-    - name: Deploy Portainer Agent
-      community.docker.docker_container:
-        name: "{{ portainer_agent_service_name }}"
-        image: "{{ portainer_agent_image }}"
-        detach: true
-        labels: "{{ portainer_agent_container_labels }}"
-        published_ports: "{{ portainer_agent_ports }}"
-        restart: true
-        restart_policy: unless-stopped
-        state: started
-        volumes: "{{ portainer_agent_volumes }}"
-      register: portainer_agent_container_state
-
-    # - name: Wait for Portainer Agent to accept connections
-    #   ansible.builtin.wait_for:
-    #     host: "{{ portainer_agent_fqdn }}"
-    #     port: "{{ portainer_agent_service_port }}"
-    #     connect_timeout: 1
-    #     delay: 10
-    #     state: started
-    #     timeout: 30
-    #   register: portainer_agent_running
-    #   retries: 10
-    #   until: portainer_agent_running is success
+# - name: Wait for Portainer Agent to accept connections
+#   ansible.builtin.wait_for:
+#     host: "{{ portainer_agent_fqdn }}"
+#     port: "{{ portainer_agent_service_port }}"
+#     connect_timeout: 1
+#     delay: 10
+#     state: started
+#     timeout: 30
+#   register: portainer_agent_running
+#   retries: 10
+#   until: portainer_agent_running is success

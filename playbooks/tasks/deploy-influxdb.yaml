@@ -23,6 +23,8 @@
     influxdb_service_port: "{{ influxdb_service_port | default(8086) }}"
     influxdb_config_volume_name: "{{ influxdb_config_volume_name | default('influxconfig') }}"
     influxdb_data_volume_name: "{{ influxdb_data_volume_name | default('influxdata') }}"
+    influxdb_init_mode: "{{ influxdb_init_mode | default(omit) }}"
+    influxdb_init_retention: "{{ influxdb_init_retention | default(omit) }}"
 
 - name: Set InfluxDB aggregated facts
   ansible.builtin.set_fact:
@@ -40,9 +42,6 @@
       - "{{ influxdb_data_volume_name }}:/var/lib/influxdb2"
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-
-- name: Set InfluxDB Database secrets
-  ansible.builtin.include_vars: files/influxdb/influxdb.yaml
 
 # Should be creating a homeassistant bucket here as defined at
 # https://docs.influxdata.com/influxdb/v2.1/organizations/buckets/create-bucket/
@@ -138,12 +137,12 @@
         detach: true
         env:
           #   # DOCKER_INFLUXDB_INIT_MODE: "{{ influxdb_init_mode }}"
-          #   DOCKER_INFLUXDB_INIT_USERNAME: "{{ influxdb_init_username }}"
-          #   DOCKER_INFLUXDB_INIT_PASSWORD: "{{ influxdb_init_password }}"
-          #   # DOCKER_INFLUXDB_INIT_ORG: "{{ influxdb_init_org }}"
-          #   # DOCKER_INFLUXDB_INIT_BUCKET: "{{ influxdb_init_bucket }}"
+          #   DOCKER_INFLUXDB_INIT_USERNAME: "{{ influxdb.init_username | default('homelab') }}"
+          #   DOCKER_INFLUXDB_INIT_PASSWORD: "{{ influxdb.init_password | default('dummy') }}"
+          #   # DOCKER_INFLUXDB_INIT_ORG: "{{ influxdb.init_org | default('homelab') }}"
+          #   # DOCKER_INFLUXDB_INIT_BUCKET: "{{ influxdb.init_bucket | default('homelab') }}"
           #   # DOCKER_INFLUXDB_INIT_RETENTION: "{{ influxdb_init_retention }}"
-          #   # DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: "{{ influxdb_init_admin_token }}"
+          #   # DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: "{{ influxdb.init_admin_token | default('dummy') }}"
           TZ: "{{ ansible_date_time.tz }}"
         labels: "{{ influxdb_container_labels }}"
         networks_cli_compatible: true
