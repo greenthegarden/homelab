@@ -10,6 +10,7 @@
     homebox_image_tag: 0.17.2
     homebox_service_name: homebox
     homebox_service_port: 7745
+    homebox_volume_name: homebox
 
   tasks:
 
