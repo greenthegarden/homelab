@@ -66,7 +66,7 @@
     }
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
-    # HOmepage labels
+    # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Homebox" }
     - { "key": "homepage.description", "value": "What's in the house?" }
