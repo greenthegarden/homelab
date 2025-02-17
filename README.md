@@ -130,12 +130,14 @@ example of this, taken from
       register: homebox_container_state
 ```
 
-For services which store data in a separate database container,
- the database contents are dumped to a file, which is then
- backed up.
+For services which store data in a separate database
+container, the database contents are dumped to a file, which
+is then backed up.
 
 For MariaDB databases, the backup is achieved using
-`mariadb-dump`, an example of which, taken from [hortusfox/docker-compose.yml](/playbooks/templates/hortusfox/docker-compose.yml.j2), is shown below.
+`mariadb-dump`, an example of which, taken from
+[deploy-hortusfox task](/playbooks/tasks/deploy-hortusfox.yaml),
+is shown below.
 
 ```yaml
 - name: Create Hortusfox DB container labels
@@ -148,6 +150,22 @@ For MariaDB databases, the backup is achieved using
       "value": "/bin/sh -c 'mariadb-dump --user={{ hortusfox.db_user }} -p{{ hortusfox.db_password }} --all-databases > /tmp/dumps/dump.sql'"
     }
 ```
+
+In addition, a dedicated volume is created to store the backup file, an example of which, taken from
+[deploy-hortusfox task](/playbooks/tasks/deploy-hortusfox.yaml),
+is shown below.
+
+```yaml
+- name: Create Hortusfox backup volume  # noqa: syntax-check[unknown-module]
+  community.docker.docker_volume:
+    name: "{{ hortusfox_db_backup_volume_name }}"
+    state: present
+```
+
+Within the associated deployment of the database service, the
+ volume is mounted into the container, an example of which,
+ taken from [hortusfox/docker-compose.yml](/playbooks/templates/hortusfox/docker-compose.yml.j2),
+ is shown below.
 
 ```yaml
   db:
@@ -168,6 +186,27 @@ For MariaDB databases, the backup is achieved using
       - {{ hortusfox_db_backup_volume_name | default('db_backup') }}:/tmp/dumps
 ```
 
+In the case where docker-compose is used to deploy the containers, the volume needs to assigned as `external`, an example of which,
+ taken from [hortusfox/docker-compose.yml](/playbooks/templates/hortusfox/docker-compose.yml.j2),
+ is shown below.
+
+```yaml
+volumes:
+
+  db_data:
+  {{ hortusfox_db_backup_volume_name | default('db_backup') }}:
+    external: true
+  app_images:
+  app_logs:
+  app_backup:
+  app_themes:
+  app_migrate:
+```
+
+As volume must also be mounted to the docker-volume-backup
+container, an example of which, taken from
+[deploy-hortusfox.yaml playbook](/playbooks/deploy-hortusfox.yaml), is shown below.
+
 ```yaml
 - name: Deploy a containerised instance of Docker Volume Backup
   ansible.builtin.include_tasks:
@@ -177,3 +216,8 @@ For MariaDB databases, the backup is achieved using
       - "{{ hortusfox_db_backup_volume_name }}:/backup/hortusfox_db-backup:ro"
     docker_volume_backup_backup_label: "{{ hortusfox_service_name }}-db"
 ```
+
+For off-site backup, a `Cloud Sync Task` is configured
+within the TrueNAS server to push the backup files created by
+ docker-volume-backup to a cloud storage provider. The task
+ is scheduled to be run daily at 1am.
