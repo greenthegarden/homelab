@@ -93,7 +93,8 @@
     # Docker Volume Backup labels
     - {
       "key": "docker-volume-backup.archive-pre",
-      "value": "/bin/sh -c 'mariadb-dump --user={{ hortusfox.db_user }} -p{{ hortusfox.db_password }} --all-databases > /tmp/dumps/dump.sql'"
+      "value": "/bin/sh -c 'mariadb-dump --single-transaction --user={{ hortusfox.db_user }}
+      -p{{ hortusfox.db_password }} --all-databases > /tmp/dumps/dump.sql'"
     }
 
 - name: Create Hortusfox configuration directory

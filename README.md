@@ -38,7 +38,7 @@ ansible-vault create playbooks/files/config.yaml
 
 ### Backup Strategy
 
-#### Configuration
+#### Container Configuration
 
 All configuration is maintained in this version controlled
 repository so is not separately backed up.
@@ -221,3 +221,49 @@ For off-site backup, a `Cloud Sync Task` is configured
 within the TrueNAS server to push the backup files created by
  docker-volume-backup to a cloud storage provider. The task
  is scheduled to be run daily at 1am.
+
+#### Nextcloud AOI
+
+Nextcloud AOI (All in One) uses BorgBackup to manage backups. An issue with the way
+the back up location is configured is that it cannot easily be changed once it is
+initially set.
+
+A way to manage this is described in the [Github project page][nxtcldaio] using
+the following to be able to have the `Reset backup location` button show in the
+AIO Interface.
+
+[nxtcldaio]: https://github.com/nextcloud/all-in-one/discussions/596
+
+```bash
+sudo docker exec nextcloud-aio-mastercontainer rm /mnt/docker-aio-config/data/borg.config
+```
+
+Refer to the [TrueNAS documentation][tndnfs] for creating NFS Shares. Ensure `Maproot User`
+and `Maproot Group` are both set to `root` within the Advanced Options.
+
+[tndnfs]: https://www.truenas.com/docs/scale/24.10/scaletutorials/shares/addingnfsshares
+
+To use an external location for the backups, a mount point to the host operating system
+needs to be created.
+
+```bash
+root@nextcloud:~# mkdir -p /mnt/truenas/backup/borg/
+```
+
+To test the mount point use `mount -t nfs {IPaddressOfTrueNASsystem}:{path/to/nfsShare} {localMountPoint}`.
+
+```bash
+root@nextcloud:~# mount -t nfs truenas:/mnt/homelab-backup/nextcloud-aio-backup /mnt/truenas/backup/borg/
+```
+
+Set the mount within `/etc/fstab` to ensure it is persistent, by adding the following
+
+```bash
+truenas:/mnt/homelab-backup/nextcloud-aio-backup /mnt/truenas/backup/borg nfs defaults 0 0
+```
+
+Then apply it using
+
+```bash
+root@nextcloud:~# mount /mnt/truenas/backup/borg
+```
