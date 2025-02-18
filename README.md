@@ -51,15 +51,14 @@ provides a good amount of parallel processing in a compact unit.
 
 Server Specifications
 
-CPU: Intel Core i5-1235U 2P-8E-12H 3.3-4.4GHz / 15-55 W TDP / 10 nm (Intel 7)
-GPU: Intel Xe / 80 EU / 1200 MHz
-System: Windows 11 Pro 64bit.
-RAM: 16/32GB DDR4 3200MHz max Crucial / 2x SODIMM.
-Storage: 500GB/1TB 1x M.2 2280 NVMe / 1x SATA 3 2.5″.
-Network: Wifi 6 + BT 5.2 (Intel AX201) / 1x Gigabit Ethernet (Realtek)
-Ports: 1x USB 3.1 Type-C (data) / 2x USB 3.0 / 2x USB 2.0 / 2x HDMI 2.1 / Audio Jack / BIOS Reset.
-Contents: Adapter DC 19V 6.32A (120 W) / 2x HDMI cable / VESA bracket / Manual.
-Materials and dimensions: Aluminum / Front Led / 170 x 120 x 45 mm / 550 gr.
+|   |   |
+|---|---|
+| CPU | Intel Core i5-1235U 2P-8E-12H 3.3-4.4GHz / 15-55 W TDP / 10 nm (Intel 7) |
+| GPU | Intel Xe / 80 EU / 1200 MHz |
+| RAM | 16/32GB DDR4 3200MHz max Crucial / 2x SODIMM |
+| Storage | 500GB/1TB 1x M.2 2280 NVMe / 1x SATA 3 2.5″ |
+| Network | 1x Gigabit Ethernet (Realtek) |
+| Ports | 1x USB 3.1 Type-C (data) / 2x USB 3.0 / 2x USB 2.0 / 2x HDMI 2.1 / Audio Jack / BIOS Reset |
 
 ### Storage Server Hardware
 
@@ -71,18 +70,19 @@ are used.
 
 Server Specifications
 
-CPU:
-Intel® Celeron with 2.4 GHz Turbo Speed
-Intel® AES New Instructions
-Intel® Virtualization Technology (VT-x)
-Intel® Virtualization Technology for Directed I/O (VT-d)
-Memory: 16 GB DDR3L RAM
-Storage: Integrated 32 GB eMMC
-Network: 1 x 10/100/1000 Mbps Gigabit Ethernet
-PCIe: 1 x PCIe 2.0, four lanes
-SATA: 2 x SATA 3.0
-Power: 45 W USB Type-C power adapter
-Thermal: 6 W TDP with passive cooling
+|   |   |
+|---|---|
+| CPU | Intel® Celeron with 2.4 GHz Turbo Speed |
+| | Intel® AES New Instructions |
+| | Intel® Virtualization Technology (VT-x) |
+| | Intel® Virtualization Technology for Directed I/O (VT-d) |
+| Memory | 16 GB DDR3L RAM |
+| Storage | Integrated 32 GB eMMC |
+| Network | 1 x 10/100/1000 Mbps Gigabit Ethernet |
+| PCIe | 1 x PCIe 2.0, four lanes |
+| SATA | 2 x SATA 3.0 |
+| Power | 45 W USB Type-C power adapter |
+| Thermal | 6 W TDP with passive cooling |
 
 ## Software
 
