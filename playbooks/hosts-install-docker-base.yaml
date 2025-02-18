@@ -44,28 +44,28 @@
     #     docker_users:
     #       - root
 
-    - name: Set Docker network facts
-      ansible.builtin.set_fact:
-        docker_socket_proxy_network:
-          name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-          driver: bridge
-          internal: true
-        monitoring_network:
-          name: "{{ monitoring_network_name | default('monitoring') }}"
-          driver: bridge
-          internal: true
-        web_network:
-          name: "{{ web_network_name | default('web') }}"
-          driver: bridge
-          internal: false
+    # - name: Set Docker network facts
+    #   ansible.builtin.set_fact:
+    #     docker_socket_proxy_network:
+    #       name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+    #       driver: bridge
+    #       internal: true
+    #     monitoring_network:
+    #       name: "{{ monitoring_network_name | default('monitoring') }}"
+    #       driver: bridge
+    #       internal: true
+    #     web_network:
+    #       name: "{{ web_network_name | default('web') }}"
+    #       driver: bridge
+    #       internal: false
 
-    - name: debug
-      ansible.builtin.debug:
-        var: docker_socket_proxy_network
+    # - name: debug
+    #   ansible.builtin.debug:
+    #     var: docker_socket_proxy_network
 
-    - name: debug
-      ansible.builtin.debug:
-        var: docker_socket_proxy_network.name
+    # - name: debug
+    #   ansible.builtin.debug:
+    #     var: docker_socket_proxy_network.name
 
     - name: Create Docker networks  # noqa: syntax-check[unknown-module]
       community.docker.docker_network:
@@ -73,9 +73,15 @@
         driver: "{{ item.driver }}"
         internal: "{{ item.internal }}"
       loop:
-        - docker_socket_proxy_network
-        - monitoring_network
-        - web_network
+        - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+          driver: bridge
+          internal: true
+        - name: "{{ monitoring_network_name | default('monitoring') }}"
+          driver: bridge
+          internal: true
+        - name: "{{ web_network_name | default('web') }}"
+          driver: bridge
+          internal: false
 
     - name: Deploy a containerised instance of Docker Socket Proxy
       ansible.builtin.include_tasks:
