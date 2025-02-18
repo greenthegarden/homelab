@@ -67,6 +67,10 @@
     #   ansible.builtin.debug:
     #     var: docker_socket_proxy_network.name
 
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
     - name: Create Docker networks  # noqa: syntax-check[unknown-module]
       community.docker.docker_network:
         name: "{{ item.name }}"
