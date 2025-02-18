@@ -11,7 +11,7 @@
     fireflyiii_image_tag: version-6.2.0
     fireflyiii_service_name: fireflyiii
     fireflyiii_service_port: 8080
-    fireflyiii_db_backup_volume_name: db_backup
+    fireflyiii_db_backup_volume_name: fireflyiii_db_backup
 
   tasks:
 

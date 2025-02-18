@@ -21,6 +21,7 @@
     fireflyiii_image_tag: "{{ fireflyiii_image_tag | default('latest') }}"
     fireflyiii_service_name: "{{ fireflyiii_service_name | default('fireflyiii') }}"
     fireflyiii_service_port: "{{ fireflyiii_service_port | default(8090) }}"
+    fireflyiii_db_backup_volume_name: "{{ fireflyiii_db_backup_volume_name | default('fireflyiii_db_backup') }}"
     fireflyiii_config_dir: /root/fireflyiii
 
 - name: Set Firefly III aggregated facts
@@ -95,7 +96,9 @@
     # Docker Volume Backup labels
     - {
       "key": "docker-volume-backup.archive-pre",
-      "value": "/bin/sh -c 'mariadb-dump --user={{ fireflyiii.db_user }} -p{{ fireflyiii.db_password }} --lock-tables --all-databases > /tmp/dumps/dump.sql'"
+      "value": "/bin/sh -c 'mariadb-dump --single-transaction
+      --user={{ fireflyiii.db_user }}
+      -p{{ fireflyiii.db_password }} --all-databases > /tmp/dumps/dump.sql'"
     }
 
 - name: Create Firefly III configuration directory

@@ -25,7 +25,7 @@ services:
     restart: always
     volumes:
       - firefly_iii_db:/var/lib/mysql
-      - {{ fireflyiii_db_backup_volume_name | default('db_backup') }}:/tmp/dumps
+      - {{ fireflyiii_db_backup_volume_name | default('fireflyiii_db_backup') }}:/tmp/dumps
 
   app:
     container_name: firefly_iii_core
@@ -86,6 +86,6 @@ services:
 
 volumes:
   firefly_iii_db:
-  {{ fireflyiii_db_backup_volume_name | default('db_backup') }}:
+  {{ fireflyiii_db_backup_volume_name | default('fireflyiii_db_backup') }}:
     external: true
   firefly_iii_upload:
