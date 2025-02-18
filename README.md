@@ -1,6 +1,13 @@
 # Homelab
 
+Welcome to my Homelab definition-in-code! The repository consists largely of Ansible code which is used
+to provision and maintain the services which make up the functionality provided by my homelab.
+
+Please feel free to reuse any of the code or provide feedback and suggestions.
+
 ## Hardware
+
+Add picture!!
 
 ### Network Hardware
 
@@ -11,9 +18,8 @@ A [Ubiquity CLoud Gateway Ultra][network] is used to manage the network aspects 
 ### Compute Server Hardware
 
 I selected the [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC][compserv]
-as a Homelab compute server. The main reason for selecting this as a host
-was the number of cores available on the i5-1235U processor.
-The processor has 10 cores.
+as a Homelab compute server. The system uses an i5-1235U processor, which with 10 cores,
+provides a good amount of parallel processing in a compact unit.
 
 [compserv]: https://www.bee-link.com/beelink-minipc-intel-i5-12-gen-sei1235u
 
@@ -31,7 +37,9 @@ Materials and dimensions: Aluminum / Front Led / 170 x 120 x 45 mm / 550 gr.
 
 ### Storage Server Hardware
 
-For a Storage server I am using a [ZimaBlade 7700 NAS kit][storserv], which uses a quad-core version of the Zomablade single-board x86 computer.
+For a Storage server I am using a [ZimaBlade 7700 NAS kit][storserv], which uses a quad-core version
+of the Zimablade single-board x86 computer. For storage, two Seagate Barracuda Green 2TB SATA hard drives
+are used.
 
 [storserv]: https://www.crowdsupply.com/icewhale-technology/zimablade
 
@@ -54,27 +62,19 @@ Thermal: 6 W TDP with passive cooling
 
 ### Compute Server Software
 
-The compute server is running [Proxmox Virtual Environment 8 as a hypervisor][compsoft]
-as the OS. This allows both virtual machines and Linus Containers to be used to host the
+The compute server is running [Proxmox Virtual Environment 8 hypervisor][compsoft]
+as the OS. This allows both virtual machines and Linux Containers (LXC) to be used to host the
 services and applications within the Homelab.
 
 [compsoft]: https://www.proxmox.com/en/products/proxmox-virtual-environment/overview
 
-### Storage Server Software
-
-The storage service is running [TrueNAS Scale Community Edition][] as the storage solution.
-
-[storsoft]: https://www.truenas.com/truenas-community-edition/
-
-### Architecture
-
-### Deployment
-
-#### Proxmox Deployment
-
 Proxmox 8 was installed on top of Debian 12 as I was unable to boot directly into the Proxmox installer.
 
-#### TrueNAS Deployment
+### Storage Server Software
+
+The storage service is running [TrueNAS Scale Community Edition][storsoft] as the storage solution.
+
+[storsoft]: https://www.truenas.com/truenas-community-edition/
 
 TrueNAS Scale ElectricEel-24.10.2 was installed directly on to the Zomaboard.
 
@@ -83,9 +83,65 @@ Initial configuration was based on [6 Crucial Settings to Enable on TrueNAS SCAL
 [ref]: https://www.youtube.com/watch?v=dP0wagQVctc
   "6 Crucial Settings to Enable on TrueNAS SCALE"
 
-#### Services
+### Homelab Services
 
-The homleab [Ansible] playbooks to deploy and configure
+As mentioned the current iteration of the Homelab hosts the following applications:
+
+* [Nextcloud][nextcloud] - Open source content collaboration platform.
+* [Home Assistant][homeassistant] - Open source home automation that puts local control and privacy first.
+* [Authentik][authentik] - Identity manager.
+* [EMQX][emqx] - MQTT platform.
+* [Firefly III][fireflyiii] - A free and open source personal finance manager.
+* [Frigate][frigate] - An open source NVR.
+* [Grafana][grafana] - An open source tool to create dashboards.
+* [Grocy][grocy] - An open source web-based self-hosted groceries & household management solution.
+* [Homebox][homebox] - An open source inventory and organization system.
+* [Homepage][homepage] - A modern, fully static, fast, secure fully proxied, highly customizable application dashboard.
+* [Hortusfox][hortusfox] - A free and open-sourced self-hosted plant manager system.
+* [InfluxDB][influxdb] - A time-series database.
+* [Portainer][portainer] - A universal container management platform.
+* [Semaphore][semaphore] - User friendly web interface for executing Ansible playbooks, Terraform, OpenTofu code and Bash scripts.
+* [Uptime Kuma][uptimekuma] - An easy-to-use self-hosted monitoring tool.
+* [Vaultwarden][vaultwarden] - An alternative server implementation of the Bitwarden Client API
+* [WUD (What's up Docker)] - A tool to keep Docker containers up-to-date
+
+[nextcloud]: https://nextcloud.com/
+[homeassistant]: https://www.home-assistant.io/
+[authentik]: https://goauthentik.io/
+[emqx]: https://www.emqx.com/en
+[fireflyiii]: https://www.firefly-iii.org/
+[frigate]: https://frigate.video/
+[grafana]: https://grafana.com/
+[grocy]: https://grocy.info/
+[homebox]: https://github.com/sysadminsmedia/homebox
+[homepage]: https://gethomepage.dev/
+[hortusfox]: https://www.hortusfox.com/
+[influxdb]: https://www.influxdata.com/
+[portainer]: https://www.portainer.io/
+[semaphore]: https://semaphoreui.com/
+[uptimekuma]: https://github.com/louislam/uptime-kuma
+[vaultwarden]: https://github.com/dani-garcia/vaultwarden
+[wud]: https://getwud.github.io/wud/#/
+
+Underpinning the applications are a number of other services
+
+* [Docker Socket Proxy][dockersocketproxy] - A security-enhanced proxy for the Docker Socket.
+* [Portainer Agent][portaineragent] -  Provide a Portainer Server instance with access to node resources.
+* [Node Exporter][nodeexporter]- Prometheus exporter for hardware and OS metrics.
+* [Prometheus][prometheus] - An open-source systems monitoring and alerting toolkit.
+* [Traefik][traefik] - An open source application proxy.
+* [Docker Volume Backup][dockervolumebackup] - Companion container to backup Docker volumes.
+
+[dockersocketproxy]: https://github.com/Tecnativa/docker-socket-proxy
+[portaineragent]: https://docs.portainer.io/admin/environments/add/docker/agent
+[nodeexporter]: https://github.com/prometheus/node_exporter
+[prometheus]: https://prometheus.io/
+[traefik]: https://doc.traefik.io/traefik/
+[dockervolumebackup]: https://github.com/offen/docker-volume-backup
+
+#### LXC Service Deployment
+
+The Homelab [Ansible] playbooks to deploy and configure
 services used within my Homelab. Repository is structured to
 work with [Semaphore UI] to manage the deployments.
 
