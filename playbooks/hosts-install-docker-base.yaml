@@ -61,7 +61,7 @@
 
     - name: debug
       ansible.builtin.debug:
-        docker_socket_proxy_network
+        var: docker_socket_proxy_network
 
     - name: Create Docker networks  # noqa: syntax-check[unknown-module]
       community.docker.docker_network:
