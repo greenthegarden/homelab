@@ -172,5 +172,5 @@ cython_debug/
 
 # Ansible
 .ansible/*
-hosts.yaml
+hosts-*.yaml
 vault.pass

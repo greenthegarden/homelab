@@ -235,7 +235,7 @@ AIO Interface.
 [nxtcldaio]: https://github.com/nextcloud/all-in-one/discussions/596
 
 ```bash
-sudo docker exec nextcloud-aio-mastercontainer rm /mnt/docker-aio-config/data/borg.config
+root@nextcloud:~# docker exec nextcloud-aio-mastercontainer rm /mnt/docker-aio-config/data/borg.config
 ```
 
 Refer to the [TrueNAS documentation][tndnfs] for creating NFS Shares. Ensure `Maproot User`
@@ -247,23 +247,30 @@ To use an external location for the backups, a mount point to the host operating
 needs to be created.
 
 ```bash
-root@nextcloud:~# mkdir -p /mnt/truenas/backup/borg/
+root@nextcloud:~# mkdir -p /mnt/truenas/backup
 ```
 
 To test the mount point use `mount -t nfs {IPaddressOfTrueNASsystem}:{path/to/nfsShare} {localMountPoint}`.
 
 ```bash
-root@nextcloud:~# mount -t nfs truenas:/mnt/homelab-backup/nextcloud-aio-backup /mnt/truenas/backup/borg/
+root@nextcloud:~# mount -t nfs truenas:/mnt/homelab-backup/nextcloud-aio-backup /mnt/truenas/backup
 ```
 
 Set the mount within `/etc/fstab` to ensure it is persistent, by adding the following
 
 ```bash
-truenas:/mnt/homelab-backup/nextcloud-aio-backup /mnt/truenas/backup/borg nfs defaults 0 0
+truenas:/mnt/homelab-backup/nextcloud-aio-backup /mnt/truenas/backup nfs defaults 0 0
 ```
 
 Then apply it using
 
 ```bash
-root@nextcloud:~# mount /mnt/truenas/backup/borg
+root@nextcloud:~# mount /mnt/truenas/backup
+```
+
+Use a Remote borg repo - could not get this to work
+
+```bash
+ssh://user@host:port/path/to/repo
+ssh://nextcloud@truenas:2222/mnt/homelab-backup/nextcloud-aio-backup
 ```

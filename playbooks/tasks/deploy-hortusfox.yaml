@@ -21,6 +21,7 @@
     hortusfox_image_tag: "{{ hortusfox_image_tag | default('latest') }}"
     hortusfox_service_name: "{{ hortusfox_service_name | default('hortusfox') }}"
     hortusfox_service_port: "{{ hortusfox_service_port | default(8080) }}"
+    hortusfox_db_backup_volume_name: "{{ hortusfox_db_backup_volume_name | default('hortusfox_db_backup') }}"
     hortusfox_config_dir: /root/hortusfox
 
 - name: Set Hortusfox aggregated facts
