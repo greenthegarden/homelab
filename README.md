@@ -2,15 +2,83 @@
 
 ## Hardware
 
+### Network Hardware
+
+A [Ubiquity CLoud Gateway Ultra][network] is used to manage the network aspects of the Homelab.
+
+[network]: https://techspecs.ui.com/unifi/unifi-cloud-gateways/ucg-ultra
+
+### Compute Server Hardware
+
+I selected the [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC][compserv]
+as a Homelab compute server. The main reason for selecting this as a host
+was the number of cores available on the i5-1235U processor.
+The processor has 10 cores.
+
+[compserv]: https://www.bee-link.com/beelink-minipc-intel-i5-12-gen-sei1235u
+
+Server Specifications
+
+CPU: Intel Core i5-1235U 2P-8E-12H 3.3-4.4GHz / 15-55 W TDP / 10 nm (Intel 7)
+GPU: Intel Xe / 80 EU / 1200 MHz
+System: Windows 11 Pro 64bit.
+RAM: 16/32GB DDR4 3200MHz max Crucial / 2x SODIMM.
+Storage: 500GB/1TB 1x M.2 2280 NVMe / 1x SATA 3 2.5″.
+Network: Wifi 6 + BT 5.2 (Intel AX201) / 1x Gigabit Ethernet (Realtek)
+Ports: 1x USB 3.1 Type-C (data) / 2x USB 3.0 / 2x USB 2.0 / 2x HDMI 2.1 / Audio Jack / BIOS Reset.
+Contents: Adapter DC 19V 6.32A (120 W) / 2x HDMI cable / VESA bracket / Manual.
+Materials and dimensions: Aluminum / Front Led / 170 x 120 x 45 mm / 550 gr.
+
+### Storage Server Hardware
+
+For a Storage server I am using a [ZimaBlade 7700 NAS kit][storserv], which uses a quad-core version of the Zomablade single-board x86 computer.
+
+[storserv]: https://www.crowdsupply.com/icewhale-technology/zimablade
+
+Server Specifications
+
+CPU:
+Intel® Celeron with 2.4 GHz Turbo Speed
+Intel® AES New Instructions
+Intel® Virtualization Technology (VT-x)
+Intel® Virtualization Technology for Directed I/O (VT-d)
+Memory: 16 GB DDR3L RAM
+Storage: Integrated 32 GB eMMC
+Network: 1 x 10/100/1000 Mbps Gigabit Ethernet
+PCIe: 1 x PCIe 2.0, four lanes
+SATA: 2 x SATA 3.0
+Power: 45 W USB Type-C power adapter
+Thermal: 6 W TDP with passive cooling
+
 ## Software
+
+### Compute Server Software
+
+The compute server is running [Proxmox Virtual Environment 8 as a hypervisor][compsoft]
+as the OS. This allows both virtual machines and Linus Containers to be used to host the
+services and applications within the Homelab.
+
+[compsoft]: https://www.proxmox.com/en/products/proxmox-virtual-environment/overview
+
+### Storage Server Software
+
+The storage service is running [TrueNAS Scale Community Edition][] as the storage solution.
+
+[storsoft]: https://www.truenas.com/truenas-community-edition/
 
 ### Architecture
 
 ### Deployment
 
-#### TrueNAS
+#### Proxmox Deployment
 
-Initial configuration based on [6 Crucial Settings to Enable on TrueNAS SCALE] [ref].
+Proxmox 8 was installed on top of Debian 12 as I was unable to boot directly into the Proxmox installer.
+
+#### TrueNAS Deployment
+
+TrueNAS Scale ElectricEel-24.10.2 was installed directly on to the Zomaboard.
+
+Initial configuration was based on [6 Crucial Settings to Enable on TrueNAS SCALE] [ref].
 
 [ref]: https://www.youtube.com/watch?v=dP0wagQVctc
   "6 Crucial Settings to Enable on TrueNAS SCALE"
@@ -147,7 +215,7 @@ is shown below.
     # Docker Volume Backup labels
     - {
       "key": "docker-volume-backup.archive-pre",
-      "value": "/bin/sh -c 'mariadb-dump --user={{ hortusfox.db_user }} -p{{ hortusfox.db_password }} --all-databases > /tmp/dumps/dump.sql'"
+      "value": "/bin/sh -c 'mariadb-dump --single-transaction --user={{ hortusfox.db_user }} -p{{ hortusfox.db_password }} --all-databases > /tmp/dumps/dump.sql'"
     }
 ```
 
@@ -183,7 +251,7 @@ Within the associated deployment of the database service, the
     restart: always
     volumes:
       - db_data:/var/lib/mysql
-      - {{ hortusfox_db_backup_volume_name | default('db_backup') }}:/tmp/dumps
+      - {{ hortusfox_db_backup_volume_name | default('hortusfox_db_backup') }}:/tmp/dumps
 ```
 
 In the case where docker-compose is used to deploy the containers, the volume needs to assigned as `external`, an example of which,
@@ -194,7 +262,7 @@ In the case where docker-compose is used to deploy the containers, the volume ne
 volumes:
 
   db_data:
-  {{ hortusfox_db_backup_volume_name | default('db_backup') }}:
+  {{ hortusfox_db_backup_volume_name | default('hortusfox_db_backup') }}:
     external: true
   app_images:
   app_logs:
@@ -216,6 +284,12 @@ container, an example of which, taken from
       - "{{ hortusfox_db_backup_volume_name }}:/backup/hortusfox_db-backup:ro"
     docker_volume_backup_backup_label: "{{ hortusfox_service_name }}-db"
 ```
+
+NOTE: I could not get the database backups to work using
+docker-socket-proxy and had to bind to the docker socket
+directly.
+
+#### Off-Site Backup
 
 For off-site backup, a `Cloud Sync Task` is configured
 within the TrueNAS server to push the backup files created by
