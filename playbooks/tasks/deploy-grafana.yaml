@@ -44,7 +44,7 @@
 - name: Redeploy Prometheus with new configuration  # noqa: syntax-check[unknown-module]
   community.docker.docker_container:
     name: "{{ prometheus_service_name | default('prometheus') }}"
-    recreate: true
+    restart: true
     state: started
   register: prometheus_container_state
 
