@@ -1,3 +1,29 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Homelab](#homelab)
+  - [Hardware](#hardware)
+    - [Network Hardware](#network-hardware)
+    - [Compute Server Hardware](#compute-server-hardware)
+    - [Storage Server Hardware](#storage-server-hardware)
+  - [Software](#software)
+    - [Compute Server Software](#compute-server-software)
+    - [Storage Server Software](#storage-server-software)
+    - [Homelab Services](#homelab-services)
+      - [LXC Service Deployment](#lxc-service-deployment)
+    - [Maintenance](#maintenance)
+  - [Guides](#guides)
+    - [Setting up Semaphore UI](#setting-up-semaphore-ui)
+    - [Managing secrets](#managing-secrets)
+    - [Backup Strategy](#backup-strategy)
+      - [Container Configuration](#container-configuration)
+      - [Container Data](#container-data)
+      - [Off-Site Backup](#off-site-backup)
+      - [Nextcloud AOI](#nextcloud-aoi)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Homelab
 
 Welcome to my Homelab definition-in-code! The repository consists largely of Ansible code which is used
@@ -87,23 +113,23 @@ Initial configuration was based on [6 Crucial Settings to Enable on TrueNAS SCAL
 
 As mentioned the current iteration of the Homelab hosts the following applications:
 
-* [Nextcloud][nextcloud] - Open source content collaboration platform.
-* [Home Assistant][homeassistant] - Open source home automation that puts local control and privacy first.
-* [Authentik][authentik] - Identity manager.
-* [EMQX][emqx] - MQTT platform.
-* [Firefly III][fireflyiii] - A free and open source personal finance manager.
-* [Frigate][frigate] - An open source NVR.
-* [Grafana][grafana] - An open source tool to create dashboards.
-* [Grocy][grocy] - An open source web-based self-hosted groceries & household management solution.
-* [Homebox][homebox] - An open source inventory and organization system.
-* [Homepage][homepage] - A modern, fully static, fast, secure fully proxied, highly customizable application dashboard.
-* [Hortusfox][hortusfox] - A free and open-sourced self-hosted plant manager system.
-* [InfluxDB][influxdb] - A time-series database.
-* [Portainer][portainer] - A universal container management platform.
-* [Semaphore][semaphore] - User friendly web interface for executing Ansible playbooks, Terraform, OpenTofu code and Bash scripts.
-* [Uptime Kuma][uptimekuma] - An easy-to-use self-hosted monitoring tool.
-* [Vaultwarden][vaultwarden] - An alternative server implementation of the Bitwarden Client API
-* [WUD (What's up Docker)] - A tool to keep Docker containers up-to-date
+- [Nextcloud][nextcloud] - Open source content collaboration platform.
+- [Home Assistant][homeassistant] - Open source home automation that puts local control and privacy first.
+- [Authentik][authentik] - Identity manager.
+- [EMQX][emqx] - MQTT platform.
+- [Firefly III][fireflyiii] - A free and open source personal finance manager.
+- [Frigate][frigate] - An open source NVR.
+- [Grafana][grafana] - An open source tool to create dashboards.
+- [Grocy][grocy] - An open source web-based self-hosted groceries & household management solution.
+- [Homebox][homebox] - An open source inventory and organization system.
+- [Homepage][homepage] - A modern, fully static, fast, secure fully proxied, highly customizable application dashboard.
+- [Hortusfox][hortusfox] - A free and open-sourced self-hosted plant manager system.
+- [InfluxDB][influxdb] - A time-series database.
+- [Portainer][portainer] - A universal container management platform.
+- [Semaphore][semaphore] - User friendly web interface for executing Ansible playbooks, Terraform, OpenTofu code and Bash scripts.
+- [Uptime Kuma][uptimekuma] - An easy-to-use self-hosted monitoring tool.
+- [Vaultwarden][vaultwarden] - An alternative server implementation of the Bitwarden Client API
+- [WUD (What's up Docker)][wud] - A tool to keep Docker containers up-to-date
 
 [nextcloud]: https://nextcloud.com/
 [homeassistant]: https://www.home-assistant.io/
@@ -125,12 +151,12 @@ As mentioned the current iteration of the Homelab hosts the following applicatio
 
 Underpinning the applications are a number of other services
 
-* [Docker Socket Proxy][dockersocketproxy] - A security-enhanced proxy for the Docker Socket.
-* [Portainer Agent][portaineragent] -  Provide a Portainer Server instance with access to node resources.
-* [Node Exporter][nodeexporter]- Prometheus exporter for hardware and OS metrics.
-* [Prometheus][prometheus] - An open-source systems monitoring and alerting toolkit.
-* [Traefik][traefik] - An open source application proxy.
-* [Docker Volume Backup][dockervolumebackup] - Companion container to backup Docker volumes.
+- [Docker Socket Proxy][dockersocketproxy] - A security-enhanced proxy for the Docker Socket.
+- [Portainer Agent][portaineragent] -  Provide a Portainer Server instance with access to node resources.
+- [Node Exporter][nodeexporter]- Prometheus exporter for hardware and OS metrics.
+- [Prometheus][prometheus] - An open-source systems monitoring and alerting toolkit.
+- [Traefik][traefik] - An open source application proxy.
+- [Docker Volume Backup][dockervolumebackup] - Companion container to backup Docker volumes.
 
 [dockersocketproxy]: https://github.com/Tecnativa/docker-socket-proxy
 [portaineragent]: https://docs.portainer.io/admin/environments/add/docker/agent
