@@ -25,3 +25,11 @@
     - name: Deploy a containerised instance of InfluxDB
       ansible.builtin.include_tasks:
         file: tasks/deploy-influxdb.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_volume_to_backup:
+          - "{{ influxdb_data_volume_name }}:/backup/influxdb-backup:ro"
+        docker_volume_backup_backup_label: "{{ influxdb_service_name }}"
