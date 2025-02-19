@@ -3,11 +3,24 @@
 # https://gethomepage.dev/configs/services/
 # https://gethomepage.dev/latest/widgets/
 
+- Cameras:
+
+    - Porch:
+        href: http://camera-doorbell.localdomain
+        description: Reolink Video Doorbell PoE
+        icon: mdi-doorbell-video
+        siteMonitor: http://camera-doorbell.localdomain
+
+    - Front Hall:
+        href: http://camera-fronthall.localdomain
+        description: Reolink RLC-520A
+        icon: mdi-cctv
+        siteMonitor: http://camera-fronthall.localdomain
 
 - Cloud:
 
     - Nextcloud:
-        href: {{ nextcloud.url }}/
+        href: {{ nextcloud.url }}
         description: Home cloud services
         icon: nextcloud.png
         siteMonitor: {{ nextcloud.url }}
@@ -27,11 +40,46 @@
             - state: sensor.indoor_co2_2
             - state: sensor.indoor_voc_parts_2
 
+- Monitoring:
+
+    - Emoncms:
+        href: http://emonpi
+        description: Open-source energy visualisation
+        icon: mdi-power-socket-au
+        siteMonitor: http://emonpi.localdomain
+
+    - Wazuh:
+        href: {{ wazuh.url }}
+        description: Wazuh
+        icon: wazuh.png
+        siteMonitor: {{ wazuh.url }}
+
+    - Netdata:
+        href: {{ netdata.url }}
+        description: Netdata
+        icon: netdata.png
+        siteMonitor: {{ netdata.url }}
+        widget:
+          type: netdata
+          url: {{ netdata.url }}
+
+- Sensors:
+
+    - Airthings:
+        href: https://dashboard.airthings.com
+        description: Airthings Cloud
+        icon: mdi-home-thermometer-outline
+
+    - RoomSense IQ:
+        href: http://192.168.20.112
+        description: RoomSense IQ
+        icon: mdi-account-check
+        siteMonitor: http://192.168.20.112
 
 - System:
 
     - AdGuard:
-        href: {{ adguard.url }}/
+        href: {{ adguard.url }}
         description: Domain management
         icon: adguard-home.png
         siteMonitor: {{ adguard.url }}
@@ -41,14 +89,25 @@
           username: {{ adguard.username }}
           password: {{ adguard.password }}
 
+    - Network Gateway:
+        href: {{ unifi_console.url }}
+        description: Unifi Console
+        icon: ubiquiti-unifi.png
+        siteMonitor: {{ unifi_console.url }}
+        widget:
+          type: unifi
+          url: {{ unifi_console.url }}
+          username: {{ unifi_console.username }}
+          password: {{ unifi_console.password }}
+
     - Printer:
         href: {{ printer.url }}
         description: Brother MFC-L2703DW
-        icon: brother
+        icon: brother.png
         siteMonitor: {{ printer.url }}:80
 
     - Proxmox:
-        href: {{ proxmox.url }}/
+        href: {{ proxmox.url }}
         description: Homelab server
         icon: proxmox.png
         siteMonitor: {{ proxmox.url }}
@@ -60,69 +119,7 @@
           fields: ["vms", "lxc", "resources.cpu", "resources.mem"]
 
     - TrueNAS:
-        href: {{ truenas.url }}/
+        href: {{ truenas.url }}
         description: TrueNAS SCALE
         icon: truenas.png
         siteMonitor: {{ truenas.url }}
-
-    - Router:
-        href: {{ unifi_console.url }}/
-        description: Unifi Console
-        icon: unifi.png
-        siteMonitor: {{ unifi_console.url }}
-        widget:
-          type: unifi
-          url: {{ unifi_console.url }}
-          username: {{ unifi_console.username }}
-          password: {{ unifi_console.password }}
-
-
-- Monitoring:
-
-    - Emoncms:
-        href: http://emonpi/
-        description: Open-source energy visualisation
-        icon: mdi-power-socket-au
-        siteMonitor: http://emonpi.localdomain
-
-    - Wazuh:
-        href: {{ wazuh.url }}/
-        description: Wazuh
-        icon: wazuh.png
-        siteMonitor: {{ wazuh.url }}
-
-    - Netdata:
-        href: {{ netdata.url }}/
-        description: Netdata
-        icon: netdata.png
-        siteMonitor: {{ netdata.url }}
-        widget:
-          type: netdata
-          url: {{ netdata.url }}
-
-- Cameras:
-
-    - Porch:
-        href: http://camera-doorbell.localdomain/
-        description: Reolink Video Doorbell PoE
-        icon: mdi-doorbell-video
-        siteMonitor: http://camera-doorbell.localdomain
-
-    - Front Hall:
-        href: http://camera-fronthall.localdomain/
-        description: Reolink RLC-520A
-        icon: mdi-cctv
-        siteMonitor: http://camera-fronthall.localdomain
-
-- Sensors:
-
-    - Airthings:
-        href: https://dashboard.airthings.com/
-        description: Airthings Cloud
-        icon: mdi-home-thermometer-outline
-
-    - RoomSense IQ:
-        href: http://192.168.20.112/
-        description: RoomSense IQ
-        icon: mdi-account-check
-        siteMonitor: http://192.168.20.112/
