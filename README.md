@@ -33,11 +33,13 @@ Please feel free to reuse any of the code or provide feedback and suggestions.
 
 ## Hardware
 
-Add picture!!
+The major hardware which makes up the Homelab is shown in the following diagram.
+
+![Homelab hardware](docs/homelab-network-wired-hardware.png "Homelab hardware")
 
 ### Network Hardware
 
-A [Ubiquity CLoud Gateway Ultra][network] is used to manage the network aspects of the Homelab.
+A [Ubiquity Cloud Gateway Ultra][network] is used to manage the network aspects of the Homelab.
 
 [network]: https://techspecs.ui.com/unifi/unifi-cloud-gateways/ucg-ultra
 
@@ -51,8 +53,6 @@ provides a good amount of parallel processing in a compact unit.
 
 Server Specifications
 
-|   |   |
-|---|---|
 | CPU | Intel Core i5-1235U 2P-8E-12H 3.3-4.4GHz / 15-55 W TDP / 10 nm (Intel 7) |
 | GPU | Intel Xe / 80 EU / 1200 MHz |
 | RAM | 16/32GB DDR4 3200MHz max Crucial / 2x SODIMM |
@@ -63,15 +63,12 @@ Server Specifications
 ### Storage Server Hardware
 
 For a Storage server I am using a [ZimaBlade 7700 NAS kit][storserv], which uses a quad-core version
-of the Zimablade single-board x86 computer. For storage, two Seagate Barracuda Green 2TB SATA hard drives
-are used.
+of the Zimablade single-board x86 computer. For storage, two Seagate Barracuda Green 2TB SATA hard drives are used.
 
 [storserv]: https://www.crowdsupply.com/icewhale-technology/zimablade
 
 Server Specifications
 
-|   |   |
-|---|---|
 | CPU | Intel® Celeron with 2.4 GHz Turbo Speed |
 | | Intel® AES New Instructions |
 | | Intel® Virtualization Technology (VT-x) |
