@@ -11,7 +11,7 @@
     - [Compute Server Software](#compute-server-software)
     - [Storage Server Software](#storage-server-software)
     - [Homelab Services](#homelab-services)
-      - [LXC Service Deployment](#lxc-service-deployment)
+      - [Application Deployment](#application-deployment)
     - [Maintenance](#maintenance)
   - [Guides](#guides)
     - [Setting up Semaphore UI](#setting-up-semaphore-ui)
@@ -53,6 +53,8 @@ provides a good amount of parallel processing in a compact unit.
 
 Server Specifications
 
+| Component | Details |
+| --- | --- |
 | CPU | Intel Core i5-1235U 2P-8E-12H 3.3-4.4GHz / 15-55 W TDP / 10 nm (Intel 7) |
 | GPU | Intel Xe / 80 EU / 1200 MHz |
 | RAM | 16/32GB DDR4 3200MHz max Crucial / 2x SODIMM |
@@ -69,6 +71,8 @@ of the Zimablade single-board x86 computer. For storage, two Seagate Barracuda G
 
 Server Specifications
 
+| Component | Details |
+| --- | --- |
 | CPU | Intel® Celeron with 2.4 GHz Turbo Speed |
 | | Intel® AES New Instructions |
 | | Intel® Virtualization Technology (VT-x) |
@@ -99,16 +103,16 @@ The storage service is running [TrueNAS Scale Community Edition][storsoft] as th
 
 [storsoft]: https://www.truenas.com/truenas-community-edition/
 
-TrueNAS Scale ElectricEel-24.10.2 was installed directly on to the Zomaboard.
+TrueNAS Scale ElectricEel-24.10.2 was installed directly on to the Zimaboard.
 
-Initial configuration was based on [6 Crucial Settings to Enable on TrueNAS SCALE] [ref].
+The initial configuration of TrueNAS was based on details described in [6 Crucial Settings to Enable on TrueNAS SCALE][truenassettings].
 
-[ref]: https://www.youtube.com/watch?v=dP0wagQVctc
+[truenassettings]: https://www.youtube.com/watch?v=dP0wagQVctc
   "6 Crucial Settings to Enable on TrueNAS SCALE"
 
 ### Homelab Services
 
-As mentioned the current iteration of the Homelab hosts the following applications:
+ The current iteration of the Homelab hosts the following applications, all deployed as Docker containers:
 
 - [Nextcloud][nextcloud] - Open source content collaboration platform.
 - [Home Assistant][homeassistant] - Open source home automation that puts local control and privacy first.
@@ -146,7 +150,7 @@ As mentioned the current iteration of the Homelab hosts the following applicatio
 [vaultwarden]: https://github.com/dani-garcia/vaultwarden
 [wud]: https://getwud.github.io/wud/#/
 
-Underpinning the applications are a number of other services
+Underpinning the applications are a number of other services:
 
 - [Docker Socket Proxy][dockersocketproxy] - A security-enhanced proxy for the Docker Socket.
 - [Portainer Agent][portaineragent] -  Provide a Portainer Server instance with access to node resources.
@@ -162,14 +166,27 @@ Underpinning the applications are a number of other services
 [traefik]: https://doc.traefik.io/traefik/
 [dockervolumebackup]: https://github.com/offen/docker-volume-backup
 
-#### LXC Service Deployment
+#### Application Deployment
 
-The Homelab [Ansible] playbooks to deploy and configure
-services used within my Homelab. Repository is structured to
-work with [Semaphore UI] to manage the deployments.
+The majority of applications and services running within the Homelab are
+deployed as [Docker containers][docker], running within
+[LXC Linux containers][linuxcontainers]. The exceptions are Nextcloud
+and Home Assistant, which are running in virtual machines.
 
-[Ansible]: https://docs.ansible.com/ansible/latest/index.html
-[Semaphore UI]: https://semaphoreui.com/
+Each application is hosted in a single Linux container,
+using an architecture as shown in the following diagram.
+
+Install diagram!!
+
+[Ansible][ansible] is used to automate the configuration of the Linux containers,
+including the installation of Docker, and deploy the containerised applications. The
+Ansible files make up the majority of this repository, which is structured to work
+with with [Semaphore UI][semaphoreui].
+
+[docker]: https://www.docker.com/
+[ansible]: https://docs.ansible.com/ansible/latest/index.html
+[semaphoreui]: https://semaphoreui.com/
+[linuxcontainers]: https://linuxcontainers.org/
 
 ### Maintenance
 
