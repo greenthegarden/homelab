@@ -178,7 +178,7 @@ run [Debian 12 Bookworm][debian] as the host OS.
 Each application is hosted in a single Linux container,
 using an architecture as shown in the following diagram.
 
-![Homelab application deployment architecture](docs/homelab-linux-container-architecture.drawio.png "Homelab application deployment architecture")
+![Homelab application deployment architecture](docs/homelab-application-deployment-architecture.drawio.png "Homelab application deployment architecture")
 
 [Ansible][ansible] is used to automate the configuration of the Linux containers,
 including the installation of Docker, and deploy the containerised applications. The
