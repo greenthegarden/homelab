@@ -27,7 +27,7 @@
 # Homelab
 
 Welcome to my Homelab definition-in-code! The repository consists largely of Ansible code which is used
-to provision and maintain the services which make up the functionality provided by my homelab.
+to provision and maintain the services which make up the functionality provided by my Homelab.
 
 Please feel free to reuse any of the code or provide feedback and suggestions.
 
@@ -35,11 +35,12 @@ Please feel free to reuse any of the code or provide feedback and suggestions.
 
 The major hardware which makes up the Homelab is shown in the following diagram.
 
-![Homelab hardware](docs/homelab-network-wired-hardware.png "Homelab hardware")
+![Homelab hardware](docs/homelab-network-wired-hardware.drawio.png "Homelab hardware")
 
 ### Network Hardware
 
 A [Ubiquity Cloud Gateway Ultra][network] is used to manage the network aspects of the Homelab.
+The UCG runs the Unifi Network application.
 
 [network]: https://techspecs.ui.com/unifi/unifi-cloud-gateways/ucg-ultra
 
@@ -57,8 +58,8 @@ Server Specifications
 | --- | --- |
 | CPU | Intel Core i5-1235U 2P-8E-12H 3.3-4.4GHz / 15-55 W TDP / 10 nm (Intel 7) |
 | GPU | Intel Xe / 80 EU / 1200 MHz |
-| RAM | 16/32GB DDR4 3200MHz max Crucial / 2x SODIMM |
-| Storage | 500GB/1TB 1x M.2 2280 NVMe / 1x SATA 3 2.5″ |
+| RAM | 64GB DDR4 3200MHz max Crucial / 2x SODIMM |
+| Storage | 500GB M.2 2280 NVMe / 2TB SATA 3 2.5″ |
 | Network | 1x Gigabit Ethernet (Realtek) |
 | Ports | 1x USB 3.1 Type-C (data) / 2x USB 3.0 / 2x USB 2.0 / 2x HDMI 2.1 / Audio Jack / BIOS Reset |
 
@@ -90,7 +91,7 @@ Server Specifications
 ### Compute Server Software
 
 The compute server is running [Proxmox Virtual Environment 8 hypervisor][compsoft]
-as the OS. This allows both virtual machines and Linux Containers (LXC) to be used to host the
+as the OS. This allows both virtual machines and LXC Linux Containers to be used to host the
 services and applications within the Homelab.
 
 [compsoft]: https://www.proxmox.com/en/products/proxmox-virtual-environment/overview
@@ -112,7 +113,7 @@ The initial configuration of TrueNAS was based on details described in [6 Crucia
 
 ### Homelab Services
 
- The current iteration of the Homelab hosts the following applications, all deployed as Docker containers:
+ The current iteration of the Homelab hosts the following applications:
 
 - [Nextcloud][nextcloud] - Open source content collaboration platform.
 - [Home Assistant][homeassistant] - Open source home automation that puts local control and privacy first.
@@ -171,18 +172,20 @@ Underpinning the applications are a number of other services:
 The majority of applications and services running within the Homelab are
 deployed as [Docker containers][docker], running within
 [LXC Linux containers][linuxcontainers]. The exceptions are Nextcloud
-and Home Assistant, which are running in virtual machines.
+and Home Assistant, which are running in virtual machines. The Linux containers
+run [Debian 12 Bookworm][debian] as the host OS.
 
 Each application is hosted in a single Linux container,
 using an architecture as shown in the following diagram.
 
-Install diagram!!
+![Homelab application deployment architecture](docs/homelab-linux-container-architecture.drawio.png.png "Homelab application deployment architecture")
 
 [Ansible][ansible] is used to automate the configuration of the Linux containers,
 including the installation of Docker, and deploy the containerised applications. The
 Ansible files make up the majority of this repository, which is structured to work
 with with [Semaphore UI][semaphoreui].
 
+[debian]: https://www.debian.org/
 [docker]: https://www.docker.com/
 [ansible]: https://docs.ansible.com/ansible/latest/index.html
 [semaphoreui]: https://semaphoreui.com/
