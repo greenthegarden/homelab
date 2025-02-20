@@ -228,7 +228,7 @@
 
 - name: Pull image
   community.docker.docker_image:
-    name: "{{ traefik_image_name }}"
+    name: "{{ traefik_image }}"
     source: pull
 
 - name: Deploy Traefik with Docker as provider
