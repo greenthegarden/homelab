@@ -122,7 +122,7 @@ repos:
     rev: v2.4.1
     hooks:
       - id: codespell
-        name: "Run codespell to check for common misspellings in files"
+        name: "📝 spelling · Run codespell to check for common misspellings in files"
         stages: [pre-commit]
 
   # ---------------------------- 📁 Filesystem Tools --------------------------- #
