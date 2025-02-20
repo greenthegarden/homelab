@@ -30,7 +30,8 @@ done
 pipx upgrade-all
 
 # install git hook scripts
-pre-commit install
+pre-commit install --hook-type pre-commit --hook-type pre-push
+pre-commit autoupdate
 
 # Get Proxmox dynamic inventory plugin
 # needs the ansible module to run
