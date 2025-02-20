@@ -17,8 +17,7 @@
 
 - name: Set Hortusfox facts
   ansible.builtin.set_fact:
-    hortusfox_image_name: "{{ hortusfox_image_name | default('ghcr.io/danielbrendel/hortusfox-web') }}"
-    hortusfox_image_tag: "{{ hortusfox_image_tag | default('latest') }}"
+    hortusfox_image: "{{ hortusfox_image | default('ghcr.io/danielbrendel/hortusfox-web:latest') }}"
     hortusfox_service_name: "{{ hortusfox_service_name | default('hortusfox') }}"
     hortusfox_service_port: "{{ hortusfox_service_port | default(8080) }}"
     hortusfox_db_backup_volume_name: "{{ hortusfox_db_backup_volume_name | default('hortusfox_db_backup') }}"
@@ -26,7 +25,6 @@
 
 - name: Set Hortusfox aggregated facts
   ansible.builtin.set_fact:
-    hortusfox_image: "{{ hortusfox_image_name }}:{{ hortusfox_image_tag }}"
     hortusfox_fqdn: "{{ hortusfox_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Hortusfox service facts

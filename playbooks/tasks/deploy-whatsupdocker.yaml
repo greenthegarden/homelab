@@ -18,15 +18,13 @@
 
 - name: Set What's up Docker? facts
   ansible.builtin.set_fact:
-    whatsupdocker_image_name: "{{ whatsupdocker_image_name | default('getwud/wud') }}"
-    whatsupdocker_image_tag: "{{ whatsupdocker_image_tag | default('latest') }}"
+    whatsupdocker_image: "{{ whatsupdocker_image | default('getwud/wud:latest') }}"
     whatsupdocker_service_name: "{{ whatsupdocker_service_name | default('whats-up-docker') }}"
     whatsupdocker_service_port: "{{ whatsupdocker_service_port | default(3000) }}"
     whatsupdocker_volume_name: "{{ whatsupdocker_volume_name | default('whats-up-docker') }}"
 
 - name: Set What's up Docker? aggregated facts
   ansible.builtin.set_fact:
-    whatsupdocker_image: "{{ whatsupdocker_image_name }}:{{ whatsupdocker_image_tag }}"
     whatsupdocker_fqdn: "{{ whatsupdocker_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set What's up Docker? service facts

@@ -17,7 +17,7 @@
 
 - name: Set Duplicati facts
   ansible.builtin.set_fact:
-    duplicati_image: "{{ duplicati_image_name | default('lscr.io/linuxserver/duplicati:latest') }}"
+    duplicati_image: "{{ duplicati_image | default('lscr.io/linuxserver/duplicati:latest') }}"
     duplicati_service_name: "{{ duplicati_service_name | default('duplicati') }}"
     duplicati_service_port: "{{ duplicati_service_port | default(8200) }}"
     duplicati_volume_config: "{{ duplicati_volume_config | default('config') }}"

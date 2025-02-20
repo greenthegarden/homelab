@@ -14,10 +14,11 @@
 # https://hub.docker.com/r/emqx/emqx
 # https://github.com/iotblue/emqx-docker
 # https://www.emqx.com/en/try?product=broker (EMQX Open Source)
+# https://dev.to/emqtech/running-emqx-mqtt-broker-on-docker-bonus-clustering-and-persistence-4mo3
 
 - name: Set EMQX facts
   ansible.builtin.set_fact:
-    emqx_image_name: "{{ emqx_image_name | default('emqx/emqx') }}"
+    emqx_image: "{{ emqx_image | default('emqx/emqx:latest') }}"
     emqx_image_tag: "{{ emqx_image_tag | default('latest') }}"
     emqx_service_name: "{{ emqx_service_name | default('emqx') }}"
     emqx_service_port_api: "{{ emqx_service_port_api | default(18083) }}"
@@ -25,7 +26,6 @@
 
 - name: Set EMQX aggregated facts
   ansible.builtin.set_fact:
-    emqx_image: "{{ emqx_image_name }}:{{ emqx_image_tag }}"
     emqx_fqdn: "{{ emqx_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Check Docker container status

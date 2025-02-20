@@ -6,8 +6,7 @@
   vars:
 
     # Vaultwarden facts
-    vaultwarden_image_name: vaultwarden/server
-    vaultwarden_image_tag: 1.33.2-alpine
+    vaultwarden_image: vaultwarden/server:1.33.2-alpine
     vaultwarden_service_name: vaultwarden
     vaultwarden_service_port: 8080
     vaultwarden_volume_name: vaultwarden

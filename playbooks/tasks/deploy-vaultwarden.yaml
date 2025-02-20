@@ -18,8 +18,7 @@
 
 - name: Set Vaultwarden facts
   ansible.builtin.set_fact:
-    vaultwarden_image_name: "{{ vaultwarden_image_name | default('vaultwarden/server') }}"
-    vaultwarden_image_tag: "{{ vaultwarden_image_tag | default('alpine') }}"
+    vaultwarden_image: "{{ vaultwarden_image | default('vaultwarden/server:latest') }}"
     vaultwarden_service_name: "{{ vaultwarden_service_name | default('vaultwarden') }}"
     vaultwarden_service_port: "{{ vaultwarden_service_port | default(8080) }}"
     vaultwarden_volume_name: "{{ vaultwarden_volume_name | default('vaultwarden') }}"
@@ -27,7 +26,6 @@
 
 - name: Set Vaultwarden aggregated facts
   ansible.builtin.set_fact:
-    vaultwarden_image: "{{ vaultwarden_image_name }}:{{ vaultwarden_image_tag }}"
     vaultwarden_fqdn: "{{ vaultwarden_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Vaultwarden service facts

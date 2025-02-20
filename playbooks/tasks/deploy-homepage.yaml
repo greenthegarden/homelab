@@ -17,8 +17,7 @@
 
 - name: Set homepage facts
   ansible.builtin.set_fact:
-    homepage_image_name: "{{ homepage_image_name | default('ghcr.io/benphelps/homepage') }}"
-    homepage_image_tag: "{{ homepage_image_tag | default('latest') }}"
+    homepage_image: "{{ homepage_image | default('ghcr.io/benphelps/homepag:latest') }}"
     homepage_service_name: "{{ homepage_service_name | default('homepage') }}"
     homepage_service_port: "{{ homepage_service_port | default(3000) }}"
 

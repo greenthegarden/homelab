@@ -17,8 +17,7 @@
 
 - name: Set InfluxDB facts
   ansible.builtin.set_fact:
-    influxdb_image_name: "{{ influxdb_image_name | default('influxdb') }}"
-    influxdb_image_tag: "{{ influxdb_image_tag | default('latest') }}"
+    influxdb_image: "{{ influxdb_image | default('influxdb:latest') }}"
     influxdb_service_name: "{{ influxdb_service_name | default('influxdb') }}"
     influxdb_service_port: "{{ influxdb_service_port | default(8086) }}"
     influxdb_config_volume_name: "{{ influxdb_config_volume_name | default('influxconfig') }}"
@@ -28,7 +27,6 @@
 
 - name: Set InfluxDB aggregated facts
   ansible.builtin.set_fact:
-    influxdb_image: "{{ influxdb_image_name }}:{{ influxdb_image_tag }}"
     influxdb_fqdn: "{{ influxdb_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set InfluxDB service facts

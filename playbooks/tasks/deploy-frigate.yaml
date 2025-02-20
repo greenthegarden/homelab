@@ -17,8 +17,7 @@
 
 - name: Set Frigate facts
   ansible.builtin.set_fact:
-    frigate_image_name: "{{ frigate_image_name | default('ghcr.io/blakeblackshear/frigate') }}"
-    frigate_image_tag: "{{ frigate_image_tag | default('stable') }}"
+    frigate_image: "{{ frigate_image | default('ghcr.io/blakeblackshear/frigate:stable') }}"
     frigate_service_name: "{{ frigate_service_name | default('frigate') }}"
     frigate_service_port: "{{ frigate_service_port | default(5000) }}"
     frigate_service_port_rtmp: "{{ frigate_service_port_rtmp | default(1935) }}"
@@ -26,12 +25,11 @@
     frigate_service_port_webrtc: "{{ frigate_service_port_webrtc | default(8555) }}"
     frigate_volume_name: "{{ frigate_volume_name | default('frigate') }}"
     frigate_mount_point: /mnt/storage/frigate
+    frigate_config_file: "config.yml"
+    frigate_config_dir: "/root/frigate/"
 
 - name: Set Frigate aggregated facts
   ansible.builtin.set_fact:
-    frigate_config_file: "config.yml"
-    frigate_config_dir: "/root/frigate/"
-    frigate_image: "{{ frigate_image_name }}:{{ frigate_image_tag }}"
     frigate_fqdn: "{{ frigate_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Frigate service facts

@@ -13,15 +13,13 @@
 
 - name: Set Homebox facts
   ansible.builtin.set_fact:
-    homebox_image_name: "{{ homebox_image_name | default('ghcr.io/hay-kot/homebox') }}"
-    homebox_image_tag: "{{ homebox_image_tag | default('latest') }}"
+    homebox_image: "{{ homebox_image | default('ghcr.io/hay-kot/homebox:latest') }}"
     homebox_service_name: "{{ homebox_service_name | default('homebox') }}"
     homebox_service_port: "{{ homebox_service_port | default(7745) }}"
     homebox_volume_name: "{{ homebox_volume_name | default('homebox') }}"
 
 - name: Set Homebox aggregated facts
   ansible.builtin.set_fact:
-    homebox_image: "{{ homebox_image_name }}:{{ homebox_image_tag }}"
     homebox_fqdn: "{{ homebox_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Homebox service facts

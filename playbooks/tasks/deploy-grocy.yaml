@@ -19,15 +19,13 @@
 
 - name: Set Grocy facts
   ansible.builtin.set_fact:
-    grocy_image_name: "{{ grocy_image_name | default('linuxserver/grocy') }}"
-    grocy_image_tag: "{{ grocy_image_tag | default('latest') }}"
+    grocy_image: "{{ grocy_image | default('linuxserver/grocy:latest') }}"
     grocy_service_name: "{{ grocy_service_name | default('grocy') }}"
     grocy_service_port: "{{ grocy_service_port | default(9283) }}"
     grocy_volume_name: "{{ grocy_volume_name | default('grocy') }}"
 
 - name: Set Grocy aggregated facts
   ansible.builtin.set_fact:
-    grocy_image: "{{ grocy_image_name }}:{{ grocy_image_tag }}"
     grocy_fqdn: "{{ grocy_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Grocy service facts

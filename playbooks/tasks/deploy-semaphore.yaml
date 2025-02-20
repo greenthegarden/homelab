@@ -18,8 +18,7 @@
 
 - name: Set Semaphore facts
   ansible.builtin.set_fact:
-    semaphore_image_name: "{{ semaphore_image_name | default('semaphoreui/semaphore') }}"
-    semaphore_image_tag: "{{ semaphore_image_tag | default('latest') }}"
+    semaphore_image: "{{ semaphore_image | default('semaphoreui/semaphore:latest') }}"
     semaphore_service_name: "{{ semaphore_service_name | default('semaphore') }}"
     semaphore_service_port: "{{ semaphore_service_port | default(3000) }}"
     semaphore_volume_data_name: "{{ semaphore_volume_data_name | default('semaphore_data') }}"
@@ -29,7 +28,6 @@
 
 - name: Set Semaphore aggregated facts
   ansible.builtin.set_fact:
-    semaphore_image: "{{ semaphore_image_name }}:{{ semaphore_image_tag }}"
     semaphore_fqdn: "{{ semaphore_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Semaphore service facts

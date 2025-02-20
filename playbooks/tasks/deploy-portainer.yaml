@@ -19,15 +19,13 @@
 
 - name: Set Portainer facts
   ansible.builtin.set_fact:
-    portainer_image_name: "{{ portainer_image_name | default('portainer/portainer-ce') }}"
-    portainer_image_tag: "{{ portainer_image_tag | default('latest') }}"
+    portainer_image: "{{ portainer_image | default('portainer/portainer-ce:latest') }}"
     portainer_service_name: "{{ portainer_service_name | default('portainer') }}"
     portainer_service_port: "{{ portainer_service_port | default(9443) }}"
     portainer_volume_name: "{{ portainer_volume_name | default('portainer') }}"
 
 - name: Set Portainer aggregated facts
   ansible.builtin.set_fact:
-    portainer_image: "{{ portainer_image_name }}:{{ portainer_image_tag }}"
     portainer_fqdn: "{{ portainer_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Portainer service facts

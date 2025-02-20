@@ -6,8 +6,7 @@
   vars:
 
     # Grafana facts
-    grafana_image_name: grafana/grafana
-    grafana_image_tag: 11.5.2
+    grafana_image: grafana/grafana:11.5.2
     grafana_service_name: grafana
     grafana_service_port: 3000
     grafana_volume_name: grafana

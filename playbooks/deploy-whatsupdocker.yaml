@@ -6,8 +6,7 @@
   vars:
 
     # What's up Docker? facts
-    whatsupdocker_image_name: getwud/wud
-    whatsupdocker_image_tag: 8.0.1
+    whatsupdocker_image_name: getwud/wud:8.0.1
     whatsupdocker_service_name: whats-up-docker
     whatsupdocker_service_port: 3000
     whatsupdocker_volume_name: whats-up-docker

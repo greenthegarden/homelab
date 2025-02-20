@@ -52,15 +52,13 @@
 
 - name: Set Grafana facts
   ansible.builtin.set_fact:
-    grafana_image_name: "{{ grafana_image_name | default('grafana/grafana') }}"
-    grafana_image_tag: "{{ grafana_image_tag | default('latest') }}"
+    grafana_image: "{{ grafana_image | default('grafana/grafana:latest') }}"
     grafana_service_name: "{{ grafana_service_name | default('grafana') }}"
     grafana_service_port: "{{ grafana_service_port | default(3000) }}"
     grafana_volume_name: "{{ grafana_volume_name | default('grafana') }}"
 
 - name: Set Grafana aggregated facts
   ansible.builtin.set_fact:
-    grafana_image: "{{ grafana_image_name }}:{{ grafana_image_tag }}"
     grafana_fqdn: "{{ grafana_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Grafana service facts

@@ -7,8 +7,7 @@
   vars:
 
     # InfluxDB facts
-    influxdb_image_name: influxdb
-    influxdb_image_tag: 2.7.11-alpine
+    influxdb_image: influxdb:2.7.11-alpine
     influxdb_service_name: influxdb
     influxdb_service_port: 8086
     influxdb_config_volume_name: influxconfig
