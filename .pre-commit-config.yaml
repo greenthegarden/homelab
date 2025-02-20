@@ -1,19 +1,149 @@
 minimum_pre_commit_version: 1.16.1
-exclude: ^.vscode/|.ansible/
+exclude: |
+  (?x)^(
+      .*\{\{.*\}\}.*|     # Exclude any files with cookiecutter variables
+      docs/site/.*|       # Exclude mkdocs compiled files
+      \.history/.*|       # Exclude history files
+      .*cache.*/.*|       # Exclude cache directories
+      .*venv.*/.*|        # Exclude virtual environment directories
+      .vscode/.*|        # Exclude vscode settings
+      .ansible/.*|        # Exclude ansible settings
+  )$
+
+fail_fast: true
+
+default_language_version:
+  python: python3.11
 
 default_install_hook_types:
   - pre-commit
-  - pre-push
+  - commit-msg
 
 repos:
+
+  #
+  # Documentation Here:
+  # https://gatlenculp.github.io/gatlens-opinionated-template/precommit/
+  #
+  # ---------------------------------------------------------------------------- #
+  #                              🔄 Pre-Commit Hooks                             #
+  # ---------------------------------------------------------------------------- #
+
+  # ----------------------------- 🔒 Security Tools ---------------------------- #
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.0
+    hooks:
+      - id: gitleaks
+        name: "🔒 security · Detect hardcoded secrets"
+        # language_version: 1.23.6
+
+  - repo: https://github.com/pypeaday/ansible-vault-pre-commit
+    rev: v1.0
+    hooks:
+      - id: encryption-check
+        name: "🔒 security · Check for unencrypted Ansible vault files"
+        files: ^playbooks/(files/homepage/config/bookmarks\.yaml|vars/homelab_env\.yaml)$
+
+
+  # --------------------------- 🔍 Code Quality Tools -------------------------- #
+
+  ### Markdown ###
+
+  - repo: https://github.com/hukkin/mdformat
+    rev: 0.7.22
+    hooks:
+      - id: mdformat
+        name: "📝 markdown · Format markdown"
+        additional_dependencies:
+          - mdformat-gfm          # GitHub-Flavored Markdown support
+          - mdformat-ruff         # Python code formatting
+          - mdformat-frontmatter  # YAML frontmatter support
+          - ruff                  # Required for mdformat-ruff
+
+  # STRICT
+  - repo: https://github.com/markdownlint/markdownlint
+    rev: v0.12.0
+    hooks:
+      - id: markdownlint
+        name: "📝 markdown · Lint markdown"
+
+  - repo: https://github.com/thlorenz/doctoc
+    rev: v2.2.0
+    hooks:
+      - id: doctoc
+        name: "📝 markdown · Generate table of contents"
+
+  ### Shell ###
+
+  # STRICT
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        name: "🐚 shell · Lint shell scripts"
+
+  # STRICT
+  - repo: https://github.com/openstack/bashate
+    rev: 2.1.1
+    hooks:
+      - id: bashate
+        name: "🐚 shell · Check shell script code style"
+
+  ### PNG Images ###
+
+  - repo: https://github.com/shssoichiro/oxipng
+    rev: v9.1.4
+    hooks:
+      - id: oxipng
+        name: "🖼️ images · Optimize PNG files"
+        args: ["-o", "4", "--strip", "safe", "--alpha"]
+
+  ### Ansible ###
+
+  - repo: https://github.com/ansible-community/ansible-lint
+    rev: v25.1.3
+    hooks:
+      - id: ansible-lint
+        name: "⚙️ ansible · Lint Ansible playbooks"
+        files: ^playbooks/.*?\.(yaml|yml)$
+        exclude: ^playbooks/(files/homepage/config/bookmarks\.yaml|vars/homelab_env\.yaml)$
+
+  ### Spell Checking ###
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        name: "Run codespell to check for common misspellings in files"
+
+  # ---------------------------- 📁 Filesystem Tools --------------------------- #
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-      - id: check-case-conflict
       - id: check-executables-have-shebangs
-      - id: check-json
-      - id: check-merge-conflict
+        name: "📁 filesystem/⚙️ exec · Verify shebang presence"
+      - id: check-shebang-scripts-are-executable
+        name: "📁 filesystem/⚙️ exec · Verify script permissions"
+      - id: check-case-conflict
+        name: "📁 filesystem/📝 names · Check case sensitivity"
+      - id: check-illegal-windows-names
+        name: "📁 filesystem/📝 names · Validate Windows filenames"
       - id: check-symlinks
+        name: "📁 filesystem/🔗 symlink · Check symlink validity"
+      - id: destroyed-symlinks
+        name: "📁 filesystem/🔗 symlink · Detect broken symlinks"
+      - id: check-merge-conflict
+        name: "🌳 git · Detect conflict markers"
+      - id: forbid-new-submodules
+        name: "🌳 git · Prevent submodule creation"
+      # - id: no-commit-to-branch
+      #   name: "🌳 git · Protect main branches"
+      #   args: ["--branch", "main", "--branch", "master"]
+      - id: check-added-large-files
+        name: "🌳 git · Block large file commits"
+        args: ['--maxkb=5000']
+      - id: check-json
       - id: check-yaml
       - id: detect-private-key
       - id: end-of-file-fixer
@@ -25,54 +155,18 @@ repos:
         args:
           - --markdown-linebreak-ext=md
 
-  - repo: https://github.com/ansible-community/ansible-lint
-    rev: v25.1.2
-    hooks:
-      - id: ansible-lint
-        files: ^playbooks/.*?\.(yaml|yml)$
-        exclude: ^playbooks/(files/homepage/config/bookmarks\.yaml|vars/homelab_env\.yaml)$
+  # ---------------------------------------------------------------------------- #
+  #                            📝 Commit Message Hooks                           #
+  # ---------------------------------------------------------------------------- #
+  #
+  # --------------------------- ✍️ Git Commit Quality -------------------------- #
 
-  - repo: https://github.com/markdownlint/markdownlint
-    rev: v0.12.0
-    hooks:
-      - id: markdownlint
-
-  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
-    rev: v9.21.0
-    hooks:
-      - id: commitlint
-        stages:
-          - commit-msg
-        additional_dependencies:
-          - '@commitlint/config-conventional'
-        verbose: false
-
-  - repo: https://github.com/pypeaday/ansible-vault-pre-commit
-    rev: v1.0
-    hooks:
-      - id: encryption-check
-        files: ^playbooks/(files/homepage/config/bookmarks\.yaml|vars/homelab_env\.yaml)$
-
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.1
-    hooks:
-      - id: codespell
-        name: Run codespell to check for common misspellings in files
-
-  - repo: https://github.com/thlorenz/doctoc
-    rev: v2.2.0
-    hooks:
-      - id: doctoc
+  ### Commit Message Standards ###
 
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.2.1
+    rev: v4.2.2
     hooks:
       - id: commitizen
-      - id: commitizen-branch
-        stages: [pre-push]
-
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.23.3
-    hooks:
-      - id: gitleaks
-        language_version: 1.23.6
+        name: "🌳 git · Validate commit message"
+        stages: [commit-msg]
+        additional_dependencies: [cz-conventional-gitmoji] # NEW
