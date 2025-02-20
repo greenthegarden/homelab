@@ -16,8 +16,7 @@
 
 - name: Set Prometheus facts
   ansible.builtin.set_fact:
-    prometheus_image_name: "{{ prometheus_image_name | default('prom/prometheus') }}"
-    prometheus_image_tag: "{{ prometheus_image_tag | default('latest') }}"
+    prometheus_image: "{{ prometheus_image | default('prom/prometheus:latest') }}"
     prometheus_service_name: "{{ prometheus_service_name | default('prometheus') }}"
     prometheus_service_port: "{{ prometheus_service_port | default(9090) }}"
     prometheus_volume_name: "{{ prometheus_volume_name | default('prometheus') }}"
@@ -25,7 +24,6 @@
 
 - name: Set Prometheus aggregated facts
   ansible.builtin.set_fact:
-    prometheus_image: "{{ prometheus_image_name }}:{{ prometheus_image_tag }}"
     prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Prometheus service facts

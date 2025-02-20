@@ -14,10 +14,7 @@
     # Node Exporter service facts
     # Defined in playbooks/group_vars/homelab_lxc
     # Portainer Agent service facts
-    portainer_agent_image_name: portainer/agent
-    portainer_agent_image_tag: 2.26.1-alpine
-    portainer_agent_service_name: portainer_agent
-    portainer_agent_service_port: 9001
+    # Defined in playbooks/group_vars/homelab_lxc
     # Prometheus service facts
     # Defined in playbooks/group_vars/homelab_lxc
     # Traefik service facts

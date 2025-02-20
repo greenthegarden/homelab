@@ -13,14 +13,12 @@
 
 - name: Set Docker Socket Proxy facts
   ansible.builtin.set_fact:
-    docker_socket_proxy_image_name: "{{ docker_socket_proxy_image_name | default('ghcr.io/tecnativa/docker-socket-proxy') }}"
-    docker_socket_proxy_image_tag: "{{ docker_socket_proxy_image_tag | default('edge') }}"
+    docker_socket_proxy_image: "{{ docker_socket_proxy_image | default('ghcr.io/tecnativa/docker-socket-proxy:edge') }}"
     docker_socket_proxy_service_name: "{{ docker_socket_proxy_service_name | default('docker-socket-proxy') }}"
     docker_socket_proxy_service_port: "{{ docker_socket_proxy_service_port | default(2375) }}"
 
 - name: Set Docker Socket Proxy aggregated facts
   ansible.builtin.set_fact:
-    docker_socket_proxy_image: "{{ docker_socket_proxy_image_name }}:{{ docker_socket_proxy_image_tag }}"
     docker_socket_proxy_fqdn: "{{ docker_socket_proxy_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Docker Socket Proxy service facts

@@ -29,15 +29,13 @@
 
     - name: Set Docker Volume Backup facts
       ansible.builtin.set_fact:
-        docker_volume_backup_image_name: "{{ docker_volume_backup_image_name | default('offen/docker-volume-backup') }}"
-        docker_volume_backup_image_tag: "{{ docker_volume_backup_image_tag | default('latest') }}"
+        docker_volume_backup_image: "{{ docker_volume_backup_image | default('offen/docker-volume-backup:latest') }}"
         docker_volume_backup_service_name: "{{ docker_volume_backup_service_name | default('docker-volume-backup') }}"
         docker_volume_backup_config_dir: /root/docker-volume-backup
         docker_volume_backup_backup_label: "{{ docker_volume_backup_backup_label | default('') }}"
 
     - name: Set Docker Volume Backup aggregated facts
       ansible.builtin.set_fact:
-        docker_volume_backup_image: "{{ docker_volume_backup_image_name }}:{{ docker_volume_backup_image_tag }}"
         docker_volume_backup_fqdn: "{{ docker_volume_backup_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
     - name: Set Docker Volume Backup service facts

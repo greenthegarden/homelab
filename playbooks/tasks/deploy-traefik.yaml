@@ -18,8 +18,7 @@
 
 - name: Set Traefik facts
   ansible.builtin.set_fact:
-    traefik_image_name: "{{ traefik_image_name | default('traefik') }}"
-    traefik_image_tag: "{{ traefik_image_tag | default('latest') }}"
+    traefik_image_name: "{{ traefik_image_name | default('traefik:latest') }}"
     traefik_service_name: "{{ traefik_service_name | default('traefik') }}"
     traefik_service_port_http: "{{ traefik_service_port_http | default(80) }}"
     traefik_service_port_secure: "{{ traefik_service_port_secure | default(443) }}"
@@ -28,7 +27,6 @@
 
 - name: Set Traefik aggregated facts
   ansible.builtin.set_fact:
-    traefik_image: "{{ traefik_image_name }}:{{ traefik_image_tag }}"
     traefik_fqdn: "{{ traefik_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 # https://github.com/karvounis/traefik-tutorial-docker-compose-files/blob/master/standalone/advanced/docker-compose.ping.yml
