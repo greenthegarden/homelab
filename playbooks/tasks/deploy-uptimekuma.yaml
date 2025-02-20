@@ -18,7 +18,7 @@
 
 - name: Set Uptime Kuma facts
   ansible.builtin.set_fact:
-    uptimekuma_image_name: "{{ uptimekuma_image_name | default('linuxserver/uptimekuma') }}"
+    uptimekuma_image: "{{ uptimekuma_image | default('louislam/uptime-kuma:latest') }}"
     uptimekuma_image_tag: "{{ uptimekuma_image_tag | default('latest') }}"
     uptimekuma_service_name: "{{ uptimekuma_service_name | default('uptimekuma') }}"
     uptimekuma_service_port: "{{ uptimekuma_service_port | default(3001) }}"
@@ -26,7 +26,6 @@
 
 - name: Set Uptime Kuma aggregated facts
   ansible.builtin.set_fact:
-    uptimekuma_image: "{{ uptimekuma_image_name }}:{{ uptimekuma_image_tag }}"
     uptimekuma_fqdn: "{{ uptimekuma_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Uptime Kuma service facts
