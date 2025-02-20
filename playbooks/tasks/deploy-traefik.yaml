@@ -18,7 +18,7 @@
 
 - name: Set Traefik facts
   ansible.builtin.set_fact:
-    traefik_image_name: "{{ traefik_image_name | default('traefik:latest') }}"
+    traefik_image: "{{ traefik_image | default('traefik:latest') }}"
     traefik_service_name: "{{ traefik_service_name | default('traefik') }}"
     traefik_service_port_http: "{{ traefik_service_port_http | default(80) }}"
     traefik_service_port_secure: "{{ traefik_service_port_secure | default(443) }}"
