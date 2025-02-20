@@ -64,12 +64,12 @@ repos:
     hooks:
       - id: doctoc
 
-  - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.2.1
-    hooks:
-      - id: commitizen
-      - id: commitizen-branch
-        stages: [push]
+  # - repo: https://github.com/commitizen-tools/commitizen
+  #   rev: v4.2.1
+  #   hooks:
+  #     - id: commitizen
+  #     - id: commitizen-branch
+  #       # stages: [pre-push]
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.23.3

@@ -23,6 +23,8 @@
     emqx_service_name: "{{ emqx_service_name | default('emqx') }}"
     emqx_service_port_api: "{{ emqx_service_port_api | default(18083) }}"
     emqx_service_port_mqtt: "{{ emqx_service_port_mqtt | default(1883) }}"
+    emqx_data_volume_name: "{{ emqx_data_volume_name | default('data') }}"
+    emqx_log_volume_name: "{{ emqx_log_volume_name | default('log') }}"
 
 - name: Set EMQX aggregated facts
   ansible.builtin.set_fact:
@@ -73,6 +75,8 @@
       # - 5369:5369
       # - 6000-6100:6000-6100
     emqx_volumes:
+      - "{{ emqx_data_volume_name }}:/opt/emqx/data"
+      - "{{ emqx_log_volume_name }}:/opt/emqx/log"
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 

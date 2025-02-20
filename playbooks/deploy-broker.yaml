@@ -10,6 +10,8 @@
     emqx_service_name: emqx
     emqx_service_port_api: 18083
     emqx_service_port_mqtt: 1883
+    emqx_data_volume_name: data
+    emqx_log_volume_name: log
 
   tasks:
 
@@ -20,3 +22,11 @@
     - name: Deploy a containerised instance of EMQX
       ansible.builtin.include_tasks:
         file: tasks/deploy-emqx.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_volume_to_backup:
+          - "{{ emqx_data_volume_name }}:/backup/emqx-backup:ro"
+        docker_volume_backup_backup_label: "{{ emqx_service_name }}"
