@@ -132,44 +132,60 @@ repos:
     hooks:
       - id: detect-private-key
         name: "🔒 security · Detect private key files"
+        stages: [pre-commit]
       - id: check-executables-have-shebangs
         name: "📁 filesystem/⚙️ exec · Verify shebang presence"
+        stages: [pre-commit]
       - id: check-shebang-scripts-are-executable
         name: "📁 filesystem/⚙️ exec · Verify script permissions"
+        stages: [pre-commit]
       - id: check-case-conflict
         name: "📁 filesystem/📝 names · Check case sensitivity"
+        stages: [pre-commit]
       - id: check-illegal-windows-names
         name: "📁 filesystem/📝 names · Validate Windows filenames"
+        stages: [pre-commit]
       - id: check-symlinks
         name: "📁 filesystem/🔗 symlink · Check symlink validity"
+        stages: [pre-commit]
       - id: destroyed-symlinks
         name: "📁 filesystem/🔗 symlink · Detect broken symlinks"
+        stages: [pre-commit]
       - id: end-of-file-fixer
         name: "📁 filesystem/📝 eol · Ensure single newline at EOF"
+        stages: [pre-commit]
       - id: fix-byte-order-marker
         name: "📁 filesystem/📝 eol · Remove BOM"
+        stages: [pre-commit]
       - id: mixed-line-ending
         name: "📁 filesystem/📝 eol · Ensure consistent line ending"
+        stages: [pre-commit]
         args:
           - --fix=lf
       - id: trailing-whitespace
         name: "📁 filesystem/📝 eol · Strip trailing whitespace"
+        stages: [pre-commit]
         args:
           - --markdown-linebreak-ext=md
       - id: check-merge-conflict
         name: "🌳 git · Detect conflict markers"
+        stages: [pre-commit]
       - id: forbid-new-submodules
         name: "🌳 git · Prevent submodule creation"
+        stages: [pre-commit]
       # - id: no-commit-to-branch
       #   name: "🌳 git · Protect main branches"
       #   args: ["--branch", "main", "--branch", "master"]
       - id: check-added-large-files
         name: "🌳 git · Block large file commits"
+        stages: [pre-commit]
         args: ['--maxkb=5000']
       - id: check-json
         name: "📝 json · Validate JSON files"
+        stages: [pre-commit]
       - id: check-yaml
         name: "📝 yaml · Validate YAML files"
+        stages: [pre-commit]
 
   # ---------------------------------------------------------------------------- #
   #                            📝 Commit Message Hooks                           #
