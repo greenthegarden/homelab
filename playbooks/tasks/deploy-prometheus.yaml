@@ -104,7 +104,7 @@
 
 - name: Pull Prometheus image
   community.docker.docker_image:
-    name: "{{ prometheus_image_name }}:{{ prometheus_image_tag | default('latest') }}"
+    name: "{{ prometheus_image }}"
     source: pull
 
 - name: Deploy Prometheus
