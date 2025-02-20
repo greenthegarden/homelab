@@ -10,8 +10,8 @@ web_network_name: web
 
 # Containerised service facts
 # Docker Volume Backup facts
-docker_volume_backup_image_name: offen/docker-volume-backup:v2.43.1
-docker_volume_backup_service_name: "docker-volume-backup"
+docker_volume_backup_image: offen/docker-volume-backup:v2.43.1
+docker_volume_backup_service_name: docker-volume-backup
 docker_volume_backup_local_archive_dir: /root/backups
 # Node Exporter facts
 node_exporter_image: prom/node-exporter:v1.8.2
@@ -19,16 +19,16 @@ node_exporter_service_name: node-exporter
 node_exporter_service_port: 9100
 node_exporter_service_protocol: http
 # Portainer Agent facts
-portainer_agent_image_name: portainer/agent:2.27.0-alpine
+portainer_agent_image: portainer/agent:2.27.0-alpine
 portainer_agent_service_name: portainer_agent
 portainer_agent_service_port: 9001
 # Prometheus facts
-prometheus_image_name: prom/prometheus:v3.2.0
+prometheus_image: prom/prometheus:v3.2.0
 prometheus_service_name: prometheus
 prometheus_service_port: 9090
 prometheus_volume_name: prometheus
 # Traefik facts
-traefik_image_name: traefik:3.3.3
+traefik_image: traefik:3.3.3
 traefik_service_name: traefik
 traefik_service_port: 80
 traefik_service_port_http: 80
