@@ -24,7 +24,6 @@
 
 - name: Set Prometheus aggregated facts
   ansible.builtin.set_fact:
-    prometheus_image: "{{ prometheus_image_name }}:{{ prometheus_image_tag }}"
     prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Create Prometheus configuration directory
