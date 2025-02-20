@@ -36,7 +36,7 @@ repos:
     hooks:
       - id: gitleaks
         name: "🔒 security · Detect hardcoded secrets"
-        # language_version: 1.23.6
+        stages: [pre-commit]
 
   - repo: https://github.com/pypeaday/ansible-vault-pre-commit
     rev: v1.0
@@ -44,6 +44,7 @@ repos:
       - id: encryption-check
         name: "🔒 security · Check for unencrypted Ansible vault files"
         files: ^playbooks/(files/homepage/config/bookmarks\.yaml|vars/homelab_env\.yaml)$
+        stages: [pre-commit]
 
 
   # --------------------------- 🔍 Code Quality Tools -------------------------- #
@@ -60,6 +61,7 @@ repos:
           - mdformat-ruff         # Python code formatting
           - mdformat-frontmatter  # YAML frontmatter support
           - ruff                  # Required for mdformat-ruff
+        stages: [pre-commit]
 
   # STRICT
   - repo: https://github.com/markdownlint/markdownlint
@@ -67,12 +69,14 @@ repos:
     hooks:
       - id: markdownlint
         name: "📝 markdown · Lint markdown"
+        stages: [pre-commit]
 
   - repo: https://github.com/thlorenz/doctoc
     rev: v2.2.0
     hooks:
       - id: doctoc
         name: "📝 markdown · Generate table of contents"
+        stages: [pre-commit]
 
   ### Shell ###
 
@@ -82,6 +86,7 @@ repos:
     hooks:
       - id: shellcheck
         name: "🐚 shell · Lint shell scripts"
+        stages: [pre-commit]
 
   # STRICT
   - repo: https://github.com/openstack/bashate
@@ -89,6 +94,7 @@ repos:
     hooks:
       - id: bashate
         name: "🐚 shell · Check shell script code style"
+        stages: [pre-commit]
 
   ### PNG Images ###
 
@@ -98,6 +104,7 @@ repos:
       - id: oxipng
         name: "🖼️ images · Optimize PNG files"
         args: ["-o", "4", "--strip", "safe", "--alpha"]
+        stages: [pre-commit]
 
   ### Ansible ###
 
@@ -108,6 +115,7 @@ repos:
         name: "⚙️ ansible · Lint Ansible playbooks"
         files: ^playbooks/.*?\.(yaml|yml)$
         exclude: ^playbooks/(files/homepage/config/bookmarks\.yaml|vars/homelab_env\.yaml)$
+        stages: [pre-commit]
 
   ### Spell Checking ###
   - repo: https://github.com/codespell-project/codespell
@@ -115,12 +123,15 @@ repos:
     hooks:
       - id: codespell
         name: "Run codespell to check for common misspellings in files"
+        stages: [pre-commit]
 
   # ---------------------------- 📁 Filesystem Tools --------------------------- #
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
+      - id: detect-private-key
+        name: "🔒 security · Detect private key files"
       - id: check-executables-have-shebangs
         name: "📁 filesystem/⚙️ exec · Verify shebang presence"
       - id: check-shebang-scripts-are-executable
@@ -133,6 +144,18 @@ repos:
         name: "📁 filesystem/🔗 symlink · Check symlink validity"
       - id: destroyed-symlinks
         name: "📁 filesystem/🔗 symlink · Detect broken symlinks"
+      - id: end-of-file-fixer
+        name: "📁 filesystem/📝 eol · Ensure single newline at EOF"
+      - id: fix-byte-order-marker
+        name: "📁 filesystem/📝 eol · Remove BOM"
+      - id: mixed-line-ending
+        name: "📁 filesystem/📝 eol · Ensure consistent line ending"
+        args:
+          - --fix=lf
+      - id: trailing-whitespace
+        name: "📁 filesystem/📝 eol · Strip trailing whitespace"
+        args:
+          - --markdown-linebreak-ext=md
       - id: check-merge-conflict
         name: "🌳 git · Detect conflict markers"
       - id: forbid-new-submodules
@@ -144,16 +167,9 @@ repos:
         name: "🌳 git · Block large file commits"
         args: ['--maxkb=5000']
       - id: check-json
+        name: "📝 json · Validate JSON files"
       - id: check-yaml
-      - id: detect-private-key
-      - id: end-of-file-fixer
-      - id: fix-byte-order-marker
-      - id: mixed-line-ending
-        args:
-          - --fix=lf
-      - id: trailing-whitespace
-        args:
-          - --markdown-linebreak-ext=md
+        name: "📝 yaml · Validate YAML files"
 
   # ---------------------------------------------------------------------------- #
   #                            📝 Commit Message Hooks                           #
