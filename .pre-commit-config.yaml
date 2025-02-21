@@ -6,7 +6,7 @@ exclude: |
       \.history/.*|       # Exclude history files
       .*cache.*/.*|       # Exclude cache directories
       .*venv.*/.*|        # Exclude virtual environment directories
-      .vscode/.*|        # Exclude vscode settings
+      .vscode/.*|         # Exclude vscode settings
       .ansible/.*|        # Exclude ansible settings
   )$
 
