@@ -18,6 +18,8 @@ Please feel free to reuse any of the code or provide feedback and suggestions.
   - [Storage Server Software](#storage-server-software)
   - [Homelab Services](#homelab-services)
     - [Application Deployment](#application-deployment)
+  - [Ansible Details](#ansible-details)
+    - [Naming Conventions](#naming-conventions)
   - [Maintenance](#maintenance)
 - [Guides](#guides)
   - [Setting up Semaphore UI](#setting-up-semaphore-ui)
@@ -147,6 +149,22 @@ using an architecture as shown in the following diagram.
 including the installation of Docker, and deploy the containerised applications. The
 Ansible files make up the majority of this repository, which is structured to work
 with with [Semaphore UI][semaphoreui].
+
+### Ansible Details
+
+#### Naming Conventions
+
+When naming Ansible playbooks and roles, it is recommended to follow consistent conventions. [Here are some examples of naming conventions][ansiblenaming]:
+
+- Playbooks: Use names like site.yml, webapp.yml, database.yml.
+
+- Roles: Use lowercase letters and hyphens to separate words, e.g. web-server or database-backup.
+
+- Task file names: Use lowercase letters and underscores, and end with .yml instead of .yaml.
+
+- Task names: Start with a verb to indicate the action, e.g. "start_webserver".
+
+- Variable names: Use lowercase letters and underscores to separate words.
 
 ### Maintenance
 
@@ -396,6 +414,7 @@ ssh://nextcloud@truenas:2222/mnt/homelab-backup/nextcloud-aio-backup
 ```
 
 [ansible]: https://docs.ansible.com/ansible/latest/index.html
+[ansiblenaming]: https://www.techchorus.net/posts/ansible-naming-conventions/
 [authentik]: https://goauthentik.io/
 [compserv]: https://www.bee-link.com/beelink-minipc-intel-i5-12-gen-sei1235u
 [compsoft]: https://www.proxmox.com/en/products/proxmox-virtual-environment/overview
