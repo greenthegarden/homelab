@@ -88,16 +88,16 @@
       "value": "https://{{ plant_it_fqdn }}",
     }
 
-- name: Create Plant it DB container labels
-  ansible.builtin.set_fact:
-    plant_it_db_container_labels: "{{ plant_it_db_container_labels | default({}) | combine({item.key: item.value}) }}"
-  with_items:
-    # Docker Volume Backup labels
-    - {
-      "key": "docker-volume-backup.archive-pre",
-      "value": "/bin/sh -c 'mariadb-dump --single-transaction --user={{ plant_it.db_user }}
-      -p{{ plant_it.db_password }} --all-databases > /tmp/dumps/dump.sql'"
-    }
+# - name: Create Plant it DB container labels
+#   ansible.builtin.set_fact:
+#     plant_it_db_container_labels: "{{ plant_it_db_container_labels | default({}) | combine({item.key: item.value}) }}"
+#   with_items:
+#     # Docker Volume Backup labels
+#     - {
+#       "key": "docker-volume-backup.archive-pre",
+#       "value": "/bin/sh -c 'mariadb-dump --single-transaction --user={{ plant_it.db_user }}
+#       -p{{ plant_it.db_password }} --all-databases > /tmp/dumps/dump.sql'"
+#     }
 
 - name: Create Plant it configuration directory
   ansible.builtin.file:
