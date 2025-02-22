@@ -108,7 +108,7 @@
 - name: Create Plant it configuration
   ansible.builtin.template:
     src: "templates/plant-it/{{ item }}.j2"
-    dest: "{{ plant_it_config_dir }}/{{ item }}.yml"
+    dest: "{{ plant_it_config_dir }}/{{ item }}"
     mode: "0644"
   loop:
     - docker-compose.yml
@@ -127,4 +127,6 @@
 - name: Deploy Plant it services  # noqa: syntax-check[unknown-module]
   community.docker.docker_compose_v2:
     project_src: "{{ plant_it_config_dir }}"
+    env_files:
+      - plant_it.env
   register: output
