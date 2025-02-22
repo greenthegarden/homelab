@@ -21,7 +21,7 @@
 
     - name: Deploy a containerised instance of Plant-it
       ansible.builtin.include_tasks:
-        file: tasks/deploy-hortusfox.yaml
+        file: tasks/deploy-plant_it.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
       ansible.builtin.include_tasks:
