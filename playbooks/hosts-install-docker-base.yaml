@@ -30,14 +30,21 @@
       register: host_docker_info
       ignore_errors: true
 
-    # - name: Install Docker
-    #   when:  host_docker_info.rc != 0
-    #   ansible.builtin.import_role:
-    #     name: geerlingguy.docker
-    #   vars:
-    #     docker_install_compose: false
-    #     docker_users:
-    #       - root
+    - name: Install Docker python module
+      ansible.builtin.import_role:
+        name: geerlingguy.pip
+      vars:
+        pip_install_packages:
+          - name: docker
+
+    - name: Install Docker
+      when:  host_docker_info.can_talk_to_docker is defined
+      ansible.builtin.import_role:
+        name: geerlingguy.docker
+      vars:
+        docker_install_compose: false
+        docker_users:
+          - root
 
     # - name: Set Docker network facts
     #   ansible.builtin.set_fact:
