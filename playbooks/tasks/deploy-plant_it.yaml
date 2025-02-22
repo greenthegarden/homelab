@@ -1,0 +1,131 @@
+---
+
+- name: Get host Docker status
+  community.docker.docker_host_info:
+  register: host_docker_info
+  ignore_errors: true
+
+- name: Ensure Docker is available on host
+  ansible.builtin.assert:
+    that:
+      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
+    fail_msg: A version of Docker >= 20 is required to be installed
+
+####### Plant it SECTION
+
+# https://docs.plant-it.org/0.9.0/server-installation/#quickstart
+
+- name: Set Plant it facts
+  ansible.builtin.set_fact:
+    plant_it_image: "{{ plant_it_image | default('msdeluise/plant-it-server:latest') }}"
+    plant_it_service_name: "{{ plant_it_service_name | default('Plant it') }}"
+    plant_it_service_port_ui: "{{ plant_it_service_port_ui | default(3000) }}"
+    plant_it_service_port_api: "{{ plant_it_service_port_api | default(8080) }}"
+    plant_it_upload_volume_name: "{{ plant_it_upload_volume_name | default('plant_it_upload') }}"
+    plant_it_db_backup_volume_name: "{{ plant_it_db_backup_volume_name | default('plant_it_db_backup') }}"
+
+    plant_it_config_dir: /root/plant-it
+
+- name: Set Plant it aggregated facts
+  ansible.builtin.set_fact:
+    plant_it_fqdn: "{{ plant_it_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: Set Plant it service facts
+  ansible.builtin.set_fact:
+    plant_it_networks:
+      - name: "{{ web_network_name | default('web') }}"
+    plant_it_ports:
+      - "{{ plant_it_service_port_ui }}:3000"
+      - "{{ plant_it_service_port_api }}:8080"
+    plant_it_volumes:
+      - "{{ plant_it_upload_dir }}/upload-dir"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: Create Plant it container labels
+  ansible.builtin.set_fact:
+    plant_it_container_labels: "{{ plant_it_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    - {
+      "key": "traefik.http.routers.{{ plant_it_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ plant_it_service_name }}.rule",
+      "value": "Host(`{{ plant_it_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ plant_it_service_name }}.service",
+      "value": "{{ plant_it_service_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ plant_it_service_name }}.tls",
+      "value": "true",
+    }
+    - {
+      "key": "traefik.http.services.{{ plant_it_service_name }}.loadbalancer.server.port",
+      "value": "{{ plant_it_service_port_ui | quote }}",
+    }
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/MDeLuise/plant-it/releases/tag/v$${major}.$${minor}.$${patch}",
+    }
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Plant it" }
+    - {
+      "key": "homepage.description",
+      "value": "Beautiful, Simple, Self-Hostable Gardening Companion App",
+    }
+    - { "key": "homepage.icon", "value": "plant-it.png" }
+    - { "key": "homepage.href", "value": "https://{{ plant_it_fqdn }}" }
+    - {
+      "key": "homepage.siteMonitor",
+      "value": "https://{{ plant_it_fqdn }}",
+    }
+
+- name: Create Plant it DB container labels
+  ansible.builtin.set_fact:
+    plant_it_db_container_labels: "{{ plant_it_db_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Docker Volume Backup labels
+    - {
+      "key": "docker-volume-backup.archive-pre",
+      "value": "/bin/sh -c 'mariadb-dump --single-transaction --user={{ plant_it.db_user }}
+      -p{{ plant_it.db_password }} --all-databases > /tmp/dumps/dump.sql'"
+    }
+
+- name: Create Plant it configuration directory
+  ansible.builtin.file:
+    path: "{{ plant_it_config_dir }}"
+    state: directory
+    mode: "0644"
+
+- name: Create Plant it configuration
+  ansible.builtin.template:
+    src: "templates/plant-it/{{ item }}.j2"
+    dest: "{{ plant_it_config_dir }}/{{ item }}.yml"
+    mode: "0644"
+  loop:
+    - docker-compose.yml
+    - plant_it.env
+
+- name: Create Plant it backup volume  # noqa: syntax-check[unknown-module]
+  community.docker.docker_volume:
+    name: "{{ plant_it_db_backup_volume_name }}"
+    state: present
+
+# - name: Tear down existing services
+#   community.docker.docker_compose_v2:
+#     project_src: /root/Plant it
+#     state: absent
+
+- name: Deploy Plant it services  # noqa: syntax-check[unknown-module]
+  community.docker.docker_compose_v2:
+    project_src: "{{ plant_it_config_dir }}"
+  register: output

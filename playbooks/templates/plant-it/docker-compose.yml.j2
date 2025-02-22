@@ -1,10 +1,10 @@
 ---
 
-name: plant-it
+name: Plant it
 
 networks:
 
-  plantit:
+  plant_it:
     driver: bridge
   web:
     name: web
@@ -13,36 +13,47 @@ networks:
 services:
 
   cache:
+    container_name: plant_it_cache
     image: redis:7.2.1
+    networks:
+      - plant_it
     restart: always
 
   db:
+    container_name: plant_it_db
     image: mysql:8.0
+    env_file: plant_it.env
+    labels: {{ (plant_it_db_container_labels | default({})) | default(omit) }}
+    networks:
+      - plant_it
     restart: always
-    env_file: server.env
     volumes:
-      - "./db:/var/lib/mysql"
+      - plant_it_db:/var/lib/mysql
+      - {{ plant_it_db_backup_volume_name | default('plant_it_db_backup') }}:/tmp/dumps
 
   server:
+    container_name: plant_it_server
     image: msdeluise/plant-it-server:latest
-    env_file: server.env
+    env_file: plant_it.env
+    labels: {{ (plant_it_container_labels | default({})) | default(omit) }}
+    networks:
+      - plant_it
+      - web
+    ports:
+      - 8080:8080
+      - 3000:3000
+    restart: unless-stopped
+    volumes:
+      - plant_it_upload:/upload-dir
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     depends_on:
       - db
       - cache
-    restart: unless-stopped
-    volumes:
-      - "./upload-dir:/upload-dir"
-    ports:
-      - "8080:8080"
-      - "3000:3000"
 
 volumes:
 
-  db_data:
-  {{ hortusfox_db_backup_volume_name | default('hortusfox_db_backup') }}:
+  plant_it_db:
+  {{ plant_it_db_backup_volume_name | default('plant_it_db_backup') }}:
     external: true
-  app_images:
-  app_logs:
-  app_backup:
-  app_themes:
-  app_migrate:
+  plant_it_upload:

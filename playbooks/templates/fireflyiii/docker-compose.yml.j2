@@ -1,5 +1,7 @@
 ---
 
+name: Firefly III
+
 networks:
 
   firefly_iii:
@@ -38,7 +40,7 @@ services:
       - web
     ports:
       - 8090:8080
-    restart: always
+    restart: unless-stopped
     volumes:
       - firefly_iii_upload:/var/www/html/storage/upload
     depends_on:
