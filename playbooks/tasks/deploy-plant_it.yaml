@@ -23,7 +23,6 @@
     plant_it_service_port_api: "{{ plant_it_service_port_api | default(8080) }}"
     plant_it_upload_volume_name: "{{ plant_it_upload_volume_name | default('plant_it_upload') }}"
     plant_it_db_backup_volume_name: "{{ plant_it_db_backup_volume_name | default('plant_it_db_backup') }}"
-
     plant_it_config_dir: /root/plant-it
 
 - name: Set Plant it aggregated facts
@@ -38,7 +37,7 @@
       - "{{ plant_it_service_port_ui }}:3000"
       - "{{ plant_it_service_port_api }}:8080"
     plant_it_volumes:
-      - "{{ plant_it_upload_dir }}/upload-dir"
+      - "{{ plant_it_upload_volume_name }}/upload-dir"
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
