@@ -74,6 +74,15 @@
       "key": "homepage.siteMonitor",
       "value": "https://{{ homebox_fqdn }}/",
     }
+    - { "key": "homepage.widget.type", "value": "homebox" }
+    - {
+      "key": "homepage.widget.url",
+      "value": "https://{{ homebox_fqdn }}",
+    }
+    - { "key": "homepage.widget.username", "value": "{{ homebox.username }}" }
+    - { "key": "homepage.widget.password", "value": "{{ homebox.password }}" }
+    - { "key": "homepage.widget.fields", "value": "['items', 'locations', 'totalValue']" }
+
 
 - name: Create Homebox volume
   community.docker.docker_volume:

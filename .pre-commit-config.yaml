@@ -51,17 +51,17 @@ repos:
 
   ### Markdown ###
 
-  - repo: https://github.com/hukkin/mdformat
-    rev: 0.7.22
-    hooks:
-      - id: mdformat
-        name: "📝 markdown · Format markdown"
-        additional_dependencies:
-          - mdformat-gfm          # GitHub-Flavored Markdown support
-          - mdformat-ruff         # Python code formatting
-          - mdformat-frontmatter  # YAML frontmatter support
-          - ruff                  # Required for mdformat-ruff
-        stages: [pre-commit]
+  # - repo: https://github.com/hukkin/mdformat
+  #   rev: 0.7.22
+  #   hooks:
+  #     - id: mdformat
+  #       name: "📝 markdown · Format markdown"
+  #       additional_dependencies:
+  #         - mdformat-gfm          # GitHub-Flavored Markdown support
+  #         - mdformat-ruff         # Python code formatting
+  #         - mdformat-frontmatter  # YAML frontmatter support
+  #         - ruff                  # Required for mdformat-ruff
+  #       stages: [pre-commit]
 
   # STRICT
   - repo: https://github.com/markdownlint/markdownlint

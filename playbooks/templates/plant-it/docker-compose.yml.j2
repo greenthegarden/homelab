@@ -1,0 +1,48 @@
+---
+
+name: plant-it
+
+networks:
+
+  plantit:
+    driver: bridge
+  web:
+    name: web
+    external: true
+
+services:
+
+  cache:
+    image: redis:7.2.1
+    restart: always
+
+  db:
+    image: mysql:8.0
+    restart: always
+    env_file: server.env
+    volumes:
+      - "./db:/var/lib/mysql"
+
+  server:
+    image: msdeluise/plant-it-server:latest
+    env_file: server.env
+    depends_on:
+      - db
+      - cache
+    restart: unless-stopped
+    volumes:
+      - "./upload-dir:/upload-dir"
+    ports:
+      - "8080:8080"
+      - "3000:3000"
+
+volumes:
+
+  db_data:
+  {{ hortusfox_db_backup_volume_name | default('hortusfox_db_backup') }}:
+    external: true
+  app_images:
+  app_logs:
+  app_backup:
+  app_themes:
+  app_migrate:

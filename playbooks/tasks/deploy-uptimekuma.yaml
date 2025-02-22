@@ -85,6 +85,12 @@
       "key": "homepage.siteMonitor",
       "value": "https://{{ uptimekuma_fqdn }}/",
     }
+    - { "key": "homepage.widget.type", "value": "uptimekuma" }
+    - {
+      "key": "homepage.widget.url",
+      "value": "https://{{ uptimekuma_fqdn }}",
+    }
+    - { "key": "homepage.widget.slug", "value": "homelab" }
 
 - name: Create Uptime Kuma volume
   community.docker.docker_volume:
