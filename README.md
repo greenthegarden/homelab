@@ -101,8 +101,8 @@ The initial configuration of TrueNAS was based on details described in [6 Crucia
 
 The current iteration of the Homelab hosts the following applications:
 
-- [Nextcloud] - Open source content collaboration platform.
-- [Home Assistant][homeassistant] - Open source home automation that puts local control and privacy first.
+- ![Nextcloud](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/nextcloud.svg "Nexcloud"){:height=25px" width="25px"} [Nextcloud] - Open source content collaboration platform.
+- ![Home Assistant](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/home-assistant.svg "Home Assistant"){:height=25px" width="25px"} [Home Assistant][homeassistant] - Open source home automation that puts local control and privacy first.
 - [Authentik] - Identity manager.
 - [EMQX] - MQTT platform.
 - [Firefly III][fireflyiii] - A free and open source personal finance manager.
@@ -410,7 +410,7 @@ ssh://nextcloud@truenas:2222/mnt/homelab-backup/nextcloud-aio-backup
 [grafana]: https://grafana.com/
 [grocy]: https://grocy.info/
 [homeassistant]: https://www.home-assistant.io/
-[homebox]: https://github.com/sysadminsmedia/homebox
+[homebox]: https://homebox.software/en/
 [homepage]: https://gethomepage.dev/
 [hortusfox]: https://www.hortusfox.com/
 [influxdb]: https://www.influxdata.com/
