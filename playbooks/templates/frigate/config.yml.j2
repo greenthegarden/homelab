@@ -9,7 +9,6 @@ mqtt:
   client_id: frigate
   stats_interval: 60
 
-
 # Optional: logger verbosity settings
 logger:
   # Optional: Default log verbosity (default: shown below)
@@ -17,7 +16,6 @@ logger:
   # Optional: Component specific logger overrides
   logs:
     frigate.event: debug
-
 
 # Optional: Restream configuration
 # https://docs.frigate.video/configuration/camera_specific/
@@ -42,7 +40,6 @@ go2rtc:
     fronthall_sub:
       - ffmpeg:{{ cameras.fronthall.url }}/flv?port=1935&app=bcs&stream=channel0_ext.bcs&user={{ frigate.cameras.fronthall.username }}&password={{ frigate.cameras.fronthall.password }}
 
-
 ffmpeg:
 
   # hwaccel_args: preset-intel-qsv-h264
@@ -50,12 +47,10 @@ ffmpeg:
   output_args:
     record: preset-record-generic-audio-copy
 
-
 detectors:
 
   cpu1:
     type: cpu
-
 
 # Required
 cameras:
@@ -86,7 +81,6 @@ cameras:
           roles:
             - detect
 
-
 birdseye:
 
   enabled: false
@@ -96,16 +90,17 @@ birdseye:
   height: 1080
   quality: 4
 
-
 record:
 
   enabled: true
   retain:
     days: 3
     mode: all
-  events:
+  alerts:
     retain:
-      default: 10
-      mode: motion
+      days: 10
+  detections:
+    retain:
+      days: 10
 
-version: 0.14
+version: 0.15-1
