@@ -20,10 +20,10 @@
     homepage_image: "{{ homepage_image | default('ghcr.io/benphelps/homepag:latest') }}"
     homepage_service_name: "{{ homepage_service_name | default('homepage') }}"
     homepage_service_port: "{{ homepage_service_port | default(3000) }}"
+    homepage_config_dir: /root/homepage
 
 - name: Set Homepage aggregated facts
   ansible.builtin.set_fact:
-    homepage_image: "{{ homepage_image_name }}:{{ homepage_image_tag }}"
     homepage_fqdn: "{{ homepage_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Homepage service facts
@@ -34,7 +34,7 @@
     homepage_ports:
       - "{{ homepage_service_port | default(3000) }}:3000"
     homepage_volumes:
-      - "/root/homepage/config:/app/config"
+      - "{{ homepage_config_dir }}/config:/app/config"
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
@@ -89,9 +89,9 @@
 
 - name: Create Homepage configuration directory
   ansible.builtin.file:
-    path: /root/homepage
+    path: "{{ homepage_config_dir }}"
     state: directory
-    mode: "0755"
+    mode: "0644"
 
 - name: Copy Homepage static configuration
   ansible.builtin.copy:
@@ -102,7 +102,7 @@
 - name: Create Homepage configuration
   ansible.builtin.template:
     src: "templates/homepage/config/{{ item }}.yaml.j2"
-    dest: "/root/homepage/config/{{ item }}.yaml"
+    dest: "{{ homepage_config_dir }}/config/{{ item }}.yaml"
     mode: "0644"
   loop:
     - services
