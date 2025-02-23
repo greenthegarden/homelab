@@ -18,7 +18,7 @@
 - name: Set Plant it facts
   ansible.builtin.set_fact:
     plant_it_image: "{{ plant_it_image | default('msdeluise/plant-it-server:latest') }}"
-    plant_it_service_name: "{{ plant_it_service_name | default('Plant it') }}"
+    plant_it_service_name: "{{ plant_it_service_name | default('plant-it') }}"
     plant_it_service_port_ui: "{{ plant_it_service_port_ui | default(3000) }}"
     plant_it_service_port_api: "{{ plant_it_service_port_api | default(8080) }}"
     plant_it_upload_volume_name: "{{ plant_it_upload_volume_name | default('plant_it_upload') }}"
