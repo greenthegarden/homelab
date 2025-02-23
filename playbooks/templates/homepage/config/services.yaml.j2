@@ -24,11 +24,12 @@
         description: Home cloud services
         icon: nextcloud.png
         siteMonitor: {{ nextcloud.url }}
-        # widget:
-        #   type: nextcloud
-        #   url: {{ nextcloud.url }}
-        #   key: {{ nextcloud.username }}
-        #   fields: ["freespace", "activeusers"]
+        widget:
+          type: nextcloud
+          url: {{ nextcloud.url }}
+          username: {{ homepage.nextcloud_username }}
+          password: {{ homepage.nextcloud_password }}
+          fields: ["cpuload", "memoryusage", "freespace", "activeusers"]
 
     - Home Assistant:
         href: {{ home_assistant.url }}
@@ -58,15 +59,6 @@
         description: Wazuh
         icon: wazuh.png
         siteMonitor: {{ wazuh.url }}
-
-    - Netdata:
-        href: {{ netdata.url }}
-        description: Netdata
-        icon: netdata.png
-        siteMonitor: {{ netdata.url }}
-        widget:
-          type: netdata
-          url: {{ netdata.url }}
 
 - Sensors:
 
@@ -128,11 +120,9 @@
         description: TrueNAS SCALE
         icon: truenas.png
         siteMonitor: {{ truenas.url }}
-        # widget:
-        #     type: truenas
-        #     url: {{ truenas.url }}
-        #     username: user # not required if using api key
-        #     password: pass # not required if using api key
-        #     key: yourtruenasapikey # not required if using username / password
-        #     enablePools: true # optional, defaults to false
-        #     nasType: scale # defaults to scale, must be set to 'core' if using enablePools with TrueNAS Core
+        widget:
+            type: truenas
+            url: {{ truenas.url }}
+            key: {{ homepage.truenas_api_key }}
+            enablePools: true # optional, defaults to false
+            nasType: scale # defaults to scale, must be set to 'core' if using enablePools with TrueNAS Core

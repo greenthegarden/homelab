@@ -9,6 +9,7 @@ Please feel free to reuse any of the code or provide feedback and suggestions.
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+- [A Homelab](#a-homelab)
 - [Hardware](#hardware)
   - [Network Hardware](#network-hardware)
   - [Compute Server Hardware](#compute-server-hardware)
@@ -32,6 +33,20 @@ Please feel free to reuse any of the code or provide feedback and suggestions.
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## A Homelab
+
+Some good sources of information about what is a Homelab include:
+
+- [How to start your HomeLab journey?][youtube_homelabjourney]
+
+[youtube_homelabjourney]: https://www.youtube.com/watch?v=3-Nm15utD3g
+
+In addition, information about setting up a Homelab include:
+
+- [Top 5 Mistakes HomeLabs Make (watch before you start)][youtube_mistakeshomelab]
+
+[youtube_mistakeshomelab]: https://www.youtube.com/watch?v=8B1Kp_ylUSY
+
 ## Hardware
 
 The major hardware which makes up the Homelab is shown in the following diagram.
@@ -42,6 +57,11 @@ The major hardware which makes up the Homelab is shown in the following diagram.
 
 A [Ubiquity Cloud Gateway Ultra][network] is used to manage the network aspects of the Homelab.
 The UCG runs the Unifi Network application.
+
+Some good sources of information for setting up a Unifi network are:
+
+- [Full Unifi Config - Setup from Start to Finish][youtube_unififullconfig]
+- [COMPLETE UniFi Network Setup Guide (Detailed for Beginners)][youtube_unifisetup]
 
 ### Compute Server Hardware
 
@@ -90,6 +110,10 @@ as the OS. This allows both virtual machines and LXC Linux Containers to be used
 services and applications within the Homelab.
 
 Proxmox 8 was installed on top of Debian 12 as I was unable to boot directly into the Proxmox installer.
+
+Some good sources of information for setting up a Unifi network are:
+
+ADD DETAILS!!
 
 ### Storage Server Software
 
@@ -451,6 +475,8 @@ ssh://nextcloud@truenas:2222/mnt/homelab-backup/nextcloud-aio-backup
 [traefik]: https://doc.traefik.io/traefik/
 [truenassettings]: https://www.youtube.com/watch?v=dP0wagQVctc "6 Crucial Settings to Enable on TrueNAS SCALE"
 [uptimekuma]: https://github.com/louislam/uptime-kuma
+[youtube_unififullconfig]: https://www.youtube.com/watch?v=pbgM6Cyh_BY
+[youtube_unifisetup]: https://www.youtube.com/watch?v=3ZxnCtQ31ew
 [vaultwarden]: https://github.com/dani-garcia/vaultwarden
 [wazuh]: https://wazuh.com/
 [wazuhagent]: https://github.com/wazuh/wazuh-agent
