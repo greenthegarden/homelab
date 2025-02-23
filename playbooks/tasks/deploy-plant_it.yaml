@@ -28,6 +28,7 @@
 - name: Set Plant it aggregated facts
   ansible.builtin.set_fact:
     plant_it_fqdn: "{{ plant_it_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    plant_it_api_fqdn: "{{ plant_it_service_name }}-api.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: Set Plant it service facts
   ansible.builtin.set_fact:
@@ -45,7 +46,7 @@
   ansible.builtin.set_fact:
     plant_it_container_labels: "{{ plant_it_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
-    # Traefik labels
+    # Traefik labels - app
     - { "key": "traefik.enable", "value": "true" }
     - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
@@ -67,6 +68,27 @@
     - {
       "key": "traefik.http.services.{{ plant_it_service_name }}.loadbalancer.server.port",
       "value": "{{ plant_it_service_port_ui | quote }}",
+    }
+    # Traefik labels - api
+    - {
+      "key": "traefik.http.routers.{{ plant_it_service_name }}-api.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ plant_it_service_name }}-api.rule",
+      "value": "Host(`{{ plant_it_api_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ plant_it_service_name }}-api.service",
+      "value": "{{ plant_it_service_name }}-api",
+    }
+    - {
+      "key": "traefik.http.routers.{{ plant_it_service_name }}-api.tls",
+      "value": "true",
+    }
+    - {
+      "key": "traefik.http.services.{{ plant_it_service_name }}-api.loadbalancer.server.port",
+      "value": "{{ plant_it_service_port_api | quote }}",
     }
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
