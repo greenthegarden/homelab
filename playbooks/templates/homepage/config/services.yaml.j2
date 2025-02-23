@@ -3,6 +3,14 @@
 # https://gethomepage.dev/configs/services/
 # https://gethomepage.dev/latest/widgets/
 
+- Applications:
+
+    - Emoncms:
+        href: http://emonpi
+        description: Open-source energy visualisation
+        icon: mdi-power-socket-au
+        siteMonitor: http://emonpi.localdomain
+
 - Cameras:
 
     - Porch:
@@ -47,12 +55,6 @@
             - state: sensor.indoor_voc_parts_2
 
 - Monitoring:
-
-    - Emoncms:
-        href: http://emonpi
-        description: Open-source energy visualisation
-        icon: mdi-power-socket-au
-        siteMonitor: http://emonpi.localdomain
 
     - Wazuh:
         href: {{ wazuh.url }}
