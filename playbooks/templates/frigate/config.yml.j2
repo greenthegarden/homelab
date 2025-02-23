@@ -1,0 +1,111 @@
+---
+mqtt:
+  enabled: true
+  host: emqx.broker.localdomain
+  port: 1883
+  user: {{ frigate.mqtt_username }}
+  password: {{ frigate.mqtt_password }}
+  topic_prefix: frigate
+  client_id: frigate
+  stats_interval: 60
+
+
+# Optional: logger verbosity settings
+logger:
+  # Optional: Default log verbosity (default: shown below)
+  default: info
+  # Optional: Component specific logger overrides
+  logs:
+    frigate.event: debug
+
+
+# Optional: Restream configuration
+# https://docs.frigate.video/configuration/camera_specific/
+# Uses https://github.com/AlexxIT/go2rtc (v1.2.0)
+# Based on https://github.com/blakeblackshear/frigate/issues/3235
+go2rtc:
+
+  streams:
+
+    # username: "admin"
+
+    # Reolink Video Doorbell PoE
+    doorbell:
+      - ffmpeg:{{ cameras.doorbell.url }}/flv?port=1935&app=bcs&stream=channel0_main.bcs&user={{ frigate.cameras.doorbell.username }}&password={{ frigate.cameras.doorbell.password }}#video=copy#audio=copy#audio=opus
+      - rtsp://camera-doorbell.localdomain/Preview_01_sub
+    doorbell_sub:
+      - ffmpeg:{{ cameras.doorbell.url }}/flv?port=1935&app=bcs&stream=channel0_ext.bcs&user={{ frigate.cameras.doorbell.username }}&password={{ frigate.cameras.doorbell.password }}
+
+    # Reolink RLC-520A camera
+    fronthall:
+      - ffmpeg:{{ cameras.fronthall.url }}/flv?port=1935&app=bcs&stream=channel0_main.bcs&user={{ frigate.cameras.fronthall.username }}&password={{ frigate.cameras.fronthall.password }}#video=copy#audio=copy#audio=opus
+    fronthall_sub:
+      - ffmpeg:{{ cameras.fronthall.url }}/flv?port=1935&app=bcs&stream=channel0_ext.bcs&user={{ frigate.cameras.fronthall.username }}&password={{ frigate.cameras.fronthall.password }}
+
+
+ffmpeg:
+
+  # hwaccel_args: preset-intel-qsv-h264
+  input_args: preset-http-reolink
+  output_args:
+    record: preset-record-generic-audio-copy
+
+
+detectors:
+
+  cpu1:
+    type: cpu
+
+
+# Required
+cameras:
+
+  doorbell:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/doorbell
+          input_args: preset-rtsp-restream
+          roles:
+            - record
+        - path: rtsp://127.0.0.1:8554/doorbell_sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+
+  fronthall:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/fronthall
+          input_args: preset-rtsp-restream
+          roles:
+            - record
+        - path: rtsp://127.0.0.1:8554/fronthall_sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+
+
+birdseye:
+
+  enabled: false
+  mode: continuous
+  restream: false
+  width: 1920
+  height: 1080
+  quality: 4
+
+
+record:
+
+  enabled: true
+  retain:
+    days: 3
+    mode: all
+  events:
+    retain:
+      default: 10
+      mode: motion
+
+version: 0.14

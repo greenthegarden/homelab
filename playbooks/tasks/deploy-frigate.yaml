@@ -25,8 +25,7 @@
     frigate_service_port_webrtc: "{{ frigate_service_port_webrtc | default(8555) }}"
     frigate_volume_name: "{{ frigate_volume_name | default('frigate') }}"
     frigate_mount_point: /mnt/storage/frigate
-    frigate_config_file: "config.yml"
-    frigate_config_dir: "/root/frigate/"
+    frigate_config_dir: "/root/frigate"
 
 - name: Set Frigate aggregated facts
   ansible.builtin.set_fact:
@@ -46,7 +45,7 @@
       - "{{ frigate_service_port_webrtc }}:8555/tcp"
       - "{{ frigate_service_port_webrtc }}:8555/udp"
     frigate_volumes:
-      - "{{ frigate_config_dir }}:/config/"
+      - "{{ frigate_config_dir }}:/config"
       - "{{ frigate_mount_point }}:/media/frigate"
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -109,8 +108,8 @@
 
 - name: Create Frigate configuration file
   ansible.builtin.template:
-    src: templates/frigate/config.yaml.j2
-    dest: "{{ frigate_config_dir }}{{ frigate_config_file }}"
+    src: templates/frigate/config.yml.j2
+    dest: "{{ frigate_config_dir }}/config.yml"
     mode: "0644"
   register: frigate_configuration_creation
 
