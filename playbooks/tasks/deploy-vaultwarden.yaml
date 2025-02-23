@@ -80,7 +80,7 @@
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
     # Homepage labels
-    - { "key": "homepage.group", "value": "Cloud" }
+    - { "key": "homepage.group", "value": "Family" }
     - { "key": "homepage.name", "value": "Vaultwarden" }
     - { "key": "homepage.description", "value": "Get login details" }
     - { "key": "homepage.icon", "value": "vaultwarden.png" }
@@ -109,56 +109,34 @@
     name: "{{ vaultwarden_volume_name }}"
     state: present
 
-- name: Check if Vaultwarden is running  # noqa: syntax-check[unknown-module]
-  community.docker.docker_container_info:
-    name: "{{ vaultwarden_service_name }}"
-  register: vaultwarden_state
+- name: Pull Vaultwarden image
+  community.docker.docker_image:
+    name: "{{ vaultwarden_image }}"
+    source: pull
 
-- name: Remove Vaultwarden container if changing version
-  when:
-    - vaultwarden_state.exists
-    - vaultwarden_image_tag != vaultwarden_state.container.Config.Image | split(':') | last
-  block:
-    - name: Stop and remove existing Vaultwarden container
-      community.docker.docker_container:
-        name: "{{ vaultwarden_service_name }}"
-        state: absent
+- name: Deploy Vaultwarden
+  community.docker.docker_container:
+    name: "{{ vaultwarden_service_name | default('vaultwarden') }}"
+    image: "{{ vaultwarden_image }}"
+    detach: true
+    env_file: "{{ vaultwarden_config_dir }}/vaultwarden.env"
+    labels: "{{ vaultwarden_container_labels }}"
+    networks_cli_compatible: true
+    networks: "{{ vaultwarden_networks }}"
+    published_ports: "{{ vaultwarden_ports }}"
+    restart: true
+    restart_policy: unless-stopped
+    volumes: "{{ vaultwarden_volumes }}"
+  register: vaultwarden_container_state
 
-    - name: Set update Vaultwarden
-      ansible.builtin.set_fact:
-        vaultwarden_update: true
-
-- name: Deploy Vaultwarden if not running
-  when: not vaultwarden_state.exists or (vaultwarden_update | default(false))
-  block:
-    - name: Pull Vaultwarden image
-      community.docker.docker_image:
-        name: "{{ vaultwarden_image }}"
-        source: pull
-
-    - name: Deploy Vaultwarden
-      community.docker.docker_container:
-        name: "{{ vaultwarden_service_name | default('vaultwarden') }}"
-        image: "{{ vaultwarden_image }}"
-        detach: true
-        env_file: "{{ vaultwarden_config_dir }}/vaultwarden.env"
-        labels: "{{ vaultwarden_container_labels }}"
-        networks_cli_compatible: true
-        networks: "{{ vaultwarden_networks }}"
-        published_ports: "{{ vaultwarden_ports }}"
-        restart: true
-        restart_policy: unless-stopped
-        volumes: "{{ vaultwarden_volumes }}"
-      register: vaultwarden_container_state
-
-    - name: Wait for Vaultwarden to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ vaultwarden_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: vaultwarden_running
-      until: vaultwarden_running is success
-      retries: 10
+- name: Wait for Vaultwarden to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ vaultwarden_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: vaultwarden_running
+  until: vaultwarden_running is success
+  retries: 10

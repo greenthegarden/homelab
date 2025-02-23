@@ -20,20 +20,16 @@ useEqualHeights: true
 groupsInitiallyCollapsed: false
 
 layout:
-  - Cloud:
+  - Family:
       tab: Main
       style: row
-      columns: 3
+      columns: 2
       iconsOnly: true
       initiallyCollapsed: false
   - Nextcloud Apps:
       tab: Main
       style: row
-      columns: 4
-  - Cameras:
-      tab: Main
-  - Sensors:
-      tab: Main
+      columns: 2
   - Services:
       tab: Websites
       style: row
@@ -77,6 +73,12 @@ layout:
       initiallyCollapsed: false
       style: row
       columns: 3
+  - Cameras:
+      tab: Secondary
+      style: row
+  - Sensors:
+      tab: Secondary
+      style: row
   - Development:
       tab: Secondary
   - Storage:

@@ -85,7 +85,7 @@
       "value": "https://github.com/blakeblackshear/frigate/releases/tag/v$${major}.$${minor}.$${patch}",
     }
     # Homepage labels
-    - { "key": "homepage.group", "value": "Monitoring" }
+    - { "key": "homepage.group", "value": "Family" }
     - { "key": "homepage.name", "value": "Frigate" }
     - { "key": "homepage.description", "value": "What is outside?" }
     - { "key": "homepage.icon", "value": "frigate.png" }
@@ -114,65 +114,42 @@
     mode: "0644"
   register: frigate_configuration_creation
 
-- name: Check if Frigate is running
-  community.docker.docker_container_info:
+- name: Create volume for Frigate
+  community.docker.docker_volume:
+    name: "{{ frigate_volume_name }}"
+
+- name: Pull Frigate image
+  community.docker.docker_image:
+    name: "{{ frigate_image }}"
+    source: pull
+
+- name: Deploy Frigate
+  community.docker.docker_container:
     name: "{{ frigate_service_name }}"
-  register: frigate_state
+    image: "{{ frigate_image }}"
+    detach: true
+    env:
+      FRIGATE_RTSP_PASSWORD: "{{ frigate.rtsp_password | default('dummy') }}"
+    labels: "{{ frigate_container_labels }}"
+    mounts: "{{ frigate_mounts }}"
+    networks_cli_compatible: true
+    networks: "{{ frigate_networks }}"
+    ports: "{{ frigate_ports }}"
+    restart: true
+    restart_policy: unless-stopped
+    shm_size: 64M
+    state: started
+    volumes: "{{ frigate_volumes }}"
+  register: frigate_container_state
 
-- name: Remove Frigate container if changing version
-  when:
-    - frigate_state.exists
-    - frigate_image_tag != frigate_state.container.Config.Image | split(':') | last
-  block:
-    - name: Stop and remove existing Frigate container
-      community.docker.docker_container:
-        name: "{{ frigate_service_name }}"
-        state: absent
-
-    - name: Set update Frigate
-      ansible.builtin.set_fact:
-        frigate_update: true
-
-- name: Deploy Frigate if not running
-  when:
-    - not frigate_state.exists or (frigate_update | default(false)) or frigate_configuration_creation.changed
-  block:
-    - name: Create volume for Frigate
-      community.docker.docker_volume:
-        name: "{{ frigate_volume_name }}"
-
-    - name: Pull Frigate image
-      community.docker.docker_image:
-        name: "{{ frigate_image }}"
-        source: pull
-
-    - name: Deploy Frigate
-      community.docker.docker_container:
-        name: "{{ frigate_service_name }}"
-        image: "{{ frigate_image }}"
-        detach: true
-        env:
-          FRIGATE_RTSP_PASSWORD: "{{ frigate.rtsp_password | default('dummy') }}"
-        labels: "{{ frigate_container_labels }}"
-        mounts: "{{ frigate_mounts }}"
-        networks_cli_compatible: true
-        networks: "{{ frigate_networks }}"
-        ports: "{{ frigate_ports }}"
-        restart: true
-        restart_policy: unless-stopped
-        shm_size: 64M
-        state: started
-        volumes: "{{ frigate_volumes }}"
-      register: frigate_container_state
-
-    # - name: Wait for Frigate to accept connections
-    #   ansible.builtin.wait_for:
-    #     host: "{{ frigate_fqdn }}"
-    #     port: 80
-    #     connect_timeout: 1
-    #     delay: 10
-    #     state: started
-    #     timeout: 30
-    #   register: frigate_running
-    #   until: frigate_running is success
-    #   retries: 10
+# - name: Wait for Frigate to accept connections
+#   ansible.builtin.wait_for:
+#     host: "{{ frigate_fqdn }}"
+#     port: 80
+#     connect_timeout: 1
+#     delay: 10
+#     state: started
+#     timeout: 30
+#   register: frigate_running
+#   until: frigate_running is success
+#   retries: 10

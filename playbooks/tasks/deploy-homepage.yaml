@@ -108,11 +108,6 @@
     - services
     - widgets
 
-- name: Check if Homepage is running  # noqa: syntax-check[unknown-module]
-  community.docker.docker_container_info:
-    name: "{{ homepage_service_name }}"
-  register: homepage_state
-
 - name: Pull Homepage image
   community.docker.docker_image:
     name: "{{ homepage_image }}"
