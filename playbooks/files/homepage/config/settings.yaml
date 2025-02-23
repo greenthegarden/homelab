@@ -75,10 +75,8 @@ layout:
       columns: 3
   - Cameras:
       tab: Secondary
-      style: row
   - Sensors:
       tab: Secondary
-      style: row
   - Development:
       tab: Secondary
   - Storage:
