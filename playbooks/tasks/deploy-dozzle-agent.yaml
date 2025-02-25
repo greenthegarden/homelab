@@ -25,6 +25,7 @@
   ansible.builtin.set_fact:
     dozzle_agent_networks:
       - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+      - name: "{{ monitoring_network_name | default('monitoring') }}"
     dozzle_agent_ports:
       - "{{ dozzle_agent_service_port }}:7007"
     dozzle_agent_volumes:
