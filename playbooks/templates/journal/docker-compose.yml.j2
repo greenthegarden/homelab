@@ -33,7 +33,7 @@ services:
     environment:
       - RAILS_ENV=production
       - SITE_DOMAIN={{ homelab.lan_domain }}
-      - DATABASE_URL=postgres://{{ journal.postgres_user }}:{{ journal.postgres_password }}@journal-db/placeholder
+      - DATABASE_URL=postgres://{{ journal.postgres_user }}:{{ journal.postgres_password }}@journal-db/{{ journal.postgres_db }}
       - CIPHER_KEY={{ journal.cipher_key }} # openssl rand -base64 32
       - SHARING_TOKEN_CIPHER_IV={{journal.sharing_token_cipher_iv }} # openssl rand -base64 16
       - SECRET_KEY_BASE={{ journal.secret_key_base }} # random alphanumerical
