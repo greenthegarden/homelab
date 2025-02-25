@@ -23,10 +23,10 @@
 
 - name: Set Dozzle Agent service facts
   ansible.builtin.set_fact:
-    dozzle_agent_networks:
-      - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-      - name: "{{ montitoring_network_name | default('monitoring') }}"
-      - name: "{{ web_network_name | default('web') }}"
+    # dozzle_agent_networks:
+    #   - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+    #   - name: "{{ montitoring_network_name | default('monitoring') }}"
+    #   - name: "{{ web_network_name | default('web') }}"
     dozzle_agent_ports:
       - "{{ dozzle_agent_service_port }}:7007"
     dozzle_agent_volumes:
@@ -67,8 +67,8 @@
       start_period: 5s
       start_interval: 5s
     labels: "{{ (dozzle_agent_container_labels | default({})) | default(omit) }}"
-    networks_cli_compatible: true
-    networks: "{{ dozzle_agent_networks }}"
+    # networks_cli_compatible: true
+    # networks: "{{ dozzle_agent_networks }}"
     published_ports: "{{ dozzle_agent_ports }}"
     restart: true
     restart_policy: unless-stopped
