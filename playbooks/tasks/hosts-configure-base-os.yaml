@@ -1,0 +1,15 @@
+---
+
+- name: Set timezone to Australia/Adelaide   # noqa: syntax-check[unknown-module]
+  community.general.timezone:
+    name: Australia/Adelaide
+
+- name: Update and upgrade hosts using apt
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-apt-update.yaml
+
+- name: Install rsync (required to synchronise files)
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ base_os_packages }}"
