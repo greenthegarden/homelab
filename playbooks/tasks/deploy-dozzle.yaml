@@ -103,9 +103,7 @@
     detach: true
     env:
       DOZZLE_REMOTE_AGENT:
-        dozzle-agent:7007,
-        192.168.1.219:7007,
-        192.168.1.204:7007
+        dozzle-agent:7007,ansible.localdomain:7007,broker.localdomain:7007,fireflyiii.localdomain:7007,frigate.localdomain:7007,homebox.localdomain:7007,homepage.localdomain:7007,influxdb.localdomain:7007,portainer.localdomain:7007,uptimekuma.localdomain:7007,vaultwarden.localdomain:7007,whatsupdocker.localdomain:7007
     healthcheck:
       test: ["CMD", "/dozzle", "healthcheck"]
       interval: 3s

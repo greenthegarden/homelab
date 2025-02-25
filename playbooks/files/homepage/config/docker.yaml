@@ -18,6 +18,10 @@ docker-broker:
   host: broker.localdomain
   port: 2375
 
+docker-dozzle:
+  host: lxc-dozzle-node-1.localdomain
+  port: 2375
+
 docker-fireflyiii:
   host: fireflyiii.localdomain
   port: 2375
