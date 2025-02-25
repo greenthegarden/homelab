@@ -73,15 +73,3 @@
     state: started
     volumes: "{{ dozzle_agent_volumes }}"
   register: dozzle_agent_container_state
-
-- name: Wait for Dozzle Agent to accept connections
-  ansible.builtin.wait_for:
-    host: "{{ dozzle_agent_fqdn }}"
-    port: 80
-    connect_timeout: 1
-    delay: 10
-    state: started
-    timeout: 30
-  register: dozzle_agent_running
-  until: dozzle_agent_running is success
-  retries: 10

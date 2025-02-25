@@ -13,6 +13,10 @@ web_network_name: web
 docker_volume_backup_image: offen/docker-volume-backup:v2.43.1
 docker_volume_backup_service_name: docker-volume-backup
 docker_volume_backup_local_archive_dir: /root/backups
+# Dozzle Agent facts
+dozzle_agent_image: amir20/dozzle:v8.11.7
+dozzle_agent_service_name: dozzle-agent
+dozzle_agent_service_port: 7007
 # Node Exporter facts
 node_exporter_image: prom/node-exporter:v1.8.2
 node_exporter_service_name: node-exporter

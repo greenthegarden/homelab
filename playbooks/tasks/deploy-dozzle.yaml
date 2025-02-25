@@ -29,13 +29,10 @@
 - name: Set Dozzle service facts
   ansible.builtin.set_fact:
     dozzle_networks:
-      - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
       - name: "{{ web_network_name | default('web') }}"
     dozzle_ports:
       - "{{ dozzle_service_port }}:8080"
     dozzle_volumes:
-      - "{{ dozzle_config_dir }}/config:/app/config"
-      - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
@@ -103,6 +100,14 @@
     name: "{{ dozzle_service_name }}"
     image: "{{ dozzle_image }}"
     detach: true
+    env:
+      DOZZLE_REMOTE_AGENT: dozzle-agent:7007
+    healthcheck:
+      test: ["CMD", "/dozzle", "healthcheck"]
+      interval: 3s
+      retries: 5
+      start_period: 30s
+      timeout: 30s
     labels: "{{ (dozzle_container_labels | default({})) | default(omit) }}"
     networks_cli_compatible: true
     networks: "{{ dozzle_networks }}"
