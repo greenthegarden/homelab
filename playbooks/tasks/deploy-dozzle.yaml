@@ -104,8 +104,8 @@
     env:
       DOZZLE_REMOTE_AGENT:
         dozzle-agent:7007,
-        homepage.homelab.greenthegarden.com:7007,
-        portainer.localdomain:7007
+        192.168.1.219:7007,
+        192.168.1.204:7007
     healthcheck:
       test: ["CMD", "/dozzle", "healthcheck"]
       interval: 3s
