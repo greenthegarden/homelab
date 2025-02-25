@@ -3,10 +3,17 @@
 # The variables file used by the playbooks in the homelab_lxc group.
 # These don't have to be explicitly imported by vars_files: they are autopopulated.
 
-# Docker Network names
+# Docker Networks
+# Docker Socket Proxy is used to connect services to the Docker API via the
+# docker-socket-proxy service
 docker_socket_proxy_network_name: docker-socket-proxy
+docker_socket_proxy_network_interal: true
+# Monitoring is an internal network that is not exposed outside the host
 monitoring_network_name: monitoring
+monitoring_network_internal: true
+# Web is an external network that is exposed outside the host
 web_network_name: web
+web_network_internal: false
 
 # Containerised service facts
 # Docker Volume Backup facts

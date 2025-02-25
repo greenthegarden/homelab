@@ -30,13 +30,13 @@
   loop:
     - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
       driver: bridge
-      internal: true
+      internal: "{{ docker_socket_proxy_network_interal | default(true) }}"
     - name: "{{ monitoring_network_name | default('monitoring') }}"
       driver: bridge
-      internal: true
+      internal: "{{ monitoring_network_internal | default(true) }}"
     - name: "{{ web_network_name | default('web') }}"
       driver: bridge
-      internal: false
+      internal: "{{ web_network_internal | default(false) }}"
 
 - name: Deploy a containerised instance of Docker Socket Proxy
   ansible.builtin.include_tasks:
