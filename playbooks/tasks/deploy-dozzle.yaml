@@ -80,13 +80,13 @@
       "value": "https://github.com/amir20/dozzle/releases/tag/v$${major}.$${minor}.$${patch}",
     }
     # Homepage labels
-    - { "key": "dozzle.group", "value": "Monitoring" }
-    - { "key": "dozzle.name", "value": "Dozzle" }
-    - { "key": "dozzle.description", "value": "Realtime log viewer for docker containers" }
-    - { "key": "dozzle.icon", "value": "dozzle.png" }
-    - { "key": "dozzle.href", "value": "https://{{ dozzle_fqdn }}/" }
+    - { "key": "homepage.group", "value": "Monitoring" }
+    - { "key": "homepage.name", "value": "Dozzle" }
+    - { "key": "homepage.description", "value": "Realtime log viewer for docker containers" }
+    - { "key": "homepage.icon", "value": "dozzle.png" }
+    - { "key": "homepage.href", "value": "https://{{ dozzle_fqdn }}/" }
     - {
-      "key": "dozzle.siteMonitor",
+      "key": "homepage.siteMonitor",
       "value": "https://{{ dozzle_fqdn }}/"
     }
 
