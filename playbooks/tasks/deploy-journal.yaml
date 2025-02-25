@@ -17,7 +17,7 @@
 
 - name: Set Journal facts
   ansible.builtin.set_fact:
-    journal_image: "{{ journal_image | default('msdeluise/plant-it-server:latest') }}"
+    journal_image: "{{ journal_image | default('journal:latest') }}"
     journal_service_name: "{{ journal_service_name | default('journal') }}"
     journal_service_port: "{{ journal_service_port_ui | default(3000) }}"
     journal_db_backup_volume_name: "{{ journal_db_backup_volume_name | default('journal_db_backup') }}"
@@ -121,6 +121,5 @@
 
 - name: Deploy Journal services  # noqa: syntax-check[unknown-module]
   community.docker.docker_compose_v2:
-    build: always
     project_src: "{{ journal_config_dir }}"
   register: output

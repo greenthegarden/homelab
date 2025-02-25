@@ -102,6 +102,7 @@
     image: "{{ dozzle_image }}"
     detach: true
     env:
+      DOZZLE_ENABLE_ACTIONS: "true"
       DOZZLE_REMOTE_AGENT:
         dozzle-agent:7007,ansible.localdomain:7007,broker.localdomain:7007,fireflyiii.localdomain:7007,frigate.localdomain:7007,homebox.localdomain:7007,homepage.localdomain:7007,influxdb.localdomain:7007,portainer.localdomain:7007,uptimekuma.localdomain:7007,vaultwarden.localdomain:7007,whatsupdocker.localdomain:7007
     healthcheck:

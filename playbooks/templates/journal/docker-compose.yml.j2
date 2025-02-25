@@ -29,8 +29,7 @@ services:
 
   journal:
     container_name: journal
-    build: https://github.com/inoda/journal.git#main
-    # image: gh-inoda-journal
+    image: journal
     environment:
       - RAILS_ENV=production
       - SITE_DOMAIN={{ homelab.lan_domain }}
