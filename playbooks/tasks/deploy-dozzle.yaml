@@ -68,6 +68,10 @@
       "key": "traefik.http.routers.{{ dozzle_service_name }}.tls",
       "value": "true"
     }
+    - {
+      "key": "traefik.http.services.{{ dozzle_service_name }}.loadbalancer.server.port",
+      "value": "{{ dozzle_service_port | quote }}",
+    }
     # What's up Docker? labels
     - {
       "key": "wud.tag.include",

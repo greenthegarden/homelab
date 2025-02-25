@@ -58,6 +58,6 @@
 #   ansible.builtin.include_tasks:
 #     file: tasks/deploy-prometheus.yaml
 
-- name: Deploy a containerised instance of Dozzle (agent)
+- name: Deploy a containerised instance of Dozzle Agent
   ansible.builtin.include_tasks:
-    file: tasks/deploy-dozzle.yaml
+    file: tasks/deploy-dozzle-agent.yaml

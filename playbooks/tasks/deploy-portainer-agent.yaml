@@ -59,7 +59,6 @@
     detach: true
     labels: "{{ portainer_agent_container_labels }}"
     published_ports: "{{ portainer_agent_ports }}"
-    recreate: true
     restart: true
     restart_policy: unless-stopped
     state: started
