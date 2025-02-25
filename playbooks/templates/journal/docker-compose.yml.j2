@@ -30,7 +30,7 @@ services:
   journal:
     container_name: journal
     build: https://github.com/inoda/journal.git#main
-    image: gh-inoda-journal
+    # image: gh-inoda-journal
     environment:
       - RAILS_ENV=production
       - SITE_DOMAIN={{ homelab.lan_domain }}
@@ -47,6 +47,9 @@ services:
     restart: unless-stopped
     volumes:
       - journal:/app:rw
+    depends_on:
+      - journal-db
+
 
 volumes:
   journal_db:
