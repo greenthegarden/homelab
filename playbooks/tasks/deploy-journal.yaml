@@ -21,7 +21,7 @@
     journal_service_name: "{{ journal_service_name | default('journal') }}"
     journal_service_port: "{{ journal_service_port_ui | default(3000) }}"
     journal_db_backup_volume_name: "{{ journal_db_backup_volume_name | default('journal_db_backup') }}"
-    journal_config_dir: /root/Journal
+    journal_config_dir: /root/journal
 
 - name: Set Journal aggregated facts
   ansible.builtin.set_fact:
@@ -94,6 +94,20 @@
 #       "value": "/bin/sh -c 'mariadb-dump --single-transaction --user={{ plant_it.db_user }}
 #       -p{{ plant_it.db_password }} --all-databases > /tmp/dumps/dump.sql'"
 #     }
+
+- name: Create Journal configuration directory
+  ansible.builtin.file:
+    path: "{{ journal_config_dir }}"
+    state: directory
+    mode: "0644"
+
+- name: Create Journal configuration
+  ansible.builtin.template:
+    src: "templates/journal/{{ item }}.j2"
+    dest: "{{ journal_config_dir }}/{{ item }}"
+    mode: "0644"
+  loop:
+    - docker-compose.yml
 
 - name: Create Journal backup volume  # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
