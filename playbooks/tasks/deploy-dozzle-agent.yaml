@@ -68,7 +68,7 @@
     labels: "{{ (dozzle_agent_container_labels | default({})) | default(omit) }}"
     networks_cli_compatible: true
     networks: "{{ dozzle_agent_networks }}"
-    published_ports: "{{ traefik_ports }}"
+    published_ports: "{{ dozzle_agent_ports }}"
     restart: true
     restart_policy: unless-stopped
     state: started
