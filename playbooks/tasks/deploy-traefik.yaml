@@ -219,13 +219,6 @@
     mode: "600"
   register: acme_configuration_creation
 
-- name: Copy env file to host
-  ansible.builtin.copy:
-    src: files/traefik/traefik.env
-    dest: /root/
-    mode: "644"
-  register: env_file_creation
-
 - name: Pull image
   community.docker.docker_image:
     name: "{{ traefik_image }}"
@@ -237,7 +230,8 @@
     image: "{{ traefik_image }}"
     command: "{{ traefik_command }}"
     detach: true
-    env_file: ./traefik.env
+    env:
+      CF_DNS_API_TOKEN: "{{ acme.cloudflare.dns_api_token }}"
     healthcheck:
       test: ["CMD", "traefik", "healthcheck", "--ping"]
       interval: 10s
