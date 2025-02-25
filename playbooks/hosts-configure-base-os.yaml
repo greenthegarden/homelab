@@ -3,23 +3,13 @@
 
   hosts: all
 
+  vars:
+
+    base_os_packages:
+      - rsync
+
   tasks:
 
-    - name: Set timezone to Australia/Adelaide   # noqa: syntax-check[unknown-module]
-      community.general.timezone:
-        name: Australia/Adelaide
-
-    - name: Update packages with apt
-      when: ansible_pkg_mgr == 'apt'
-      ansible.builtin.apt:
-        update_cache: true
-
-    - name: Upgrade packages with apt
-      when: ansible_pkg_mgr == 'apt'
-      ansible.builtin.apt:
-        upgrade: safe
-
-    - name: Install rsync (required to synchronise files)
-      ansible.builtin.package:
-        name: rsync
-        state: present
+    - name: Update and upgrade hosts using apt
+      ansible.builtin.include_tasks:
+        file: tasks/hosts-configure-base-os.yaml

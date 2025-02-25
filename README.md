@@ -111,7 +111,7 @@ services and applications within the Homelab.
 
 Proxmox 8 was installed on top of Debian 12 as I was unable to boot directly into the Proxmox installer.
 
-Some good sources of information for setting up a Unifi network are:
+Some good sources of information for setting up Proxmox are:
 
 ADD DETAILS!!
 
@@ -164,7 +164,31 @@ deployed as [Docker containers][docker], running within
 and Home Assistant, which are running in virtual machines. The Linux containers
 run [Debian 12 Bookworm][debian] as the host OS.
 
-Each application is hosted in a single Linux container,
+The following resource details are used for LXC Linux Containers:
+
+Low resource services:
+
+| Resource  | Value                                                  |
+| --------- | -------------------------------------------------------- |
+| Memory    | 1.00 GiB (1024 MiB)                  |
+| Swap      | 1.00 GiB (1024 MiB)                              |
+| Cores     | 1                  |
+| Disk size | 16GB |
+
+Medium resource services:
+
+| Resource  | Value                                                  |
+| --------- | -------------------------------------------------------- |
+| Memory    | 2.00 GiB (1024 MiB)                  |
+| Swap      | 2.00 GiB (1024 MiB)                              |
+| Cores     | 2                  |
+| Disk size | 24GB |
+
+To be able to install Docker on a Proxmox LXC Linux Container, ensure `keyctl=1` is set via the Container Options settings.
+
+![Proxmox container options for Docker](docs/screenshot_container-options_proxmox.jpeg "Proxmox container options for Docker")
+
+Each application is hosted in a single LXC Linux Container,
 using an architecture as shown in the following diagram.
 
 ![Homelab application deployment architecture](docs/homelab-application-deployment-architecture.drawio.png "Homelab application deployment architecture")

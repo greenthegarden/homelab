@@ -5,6 +5,9 @@
 
   vars:
 
+    base_os_packages:
+      - rsync
+
     # Base containerised service details
     # Docker Socket Proxy service facts
     docker_socket_proxy_image: ghcr.io/tecnativa/docker-socket-proxy:edge
@@ -25,79 +28,6 @@
 
   tasks:
 
-    - name: Check Docker is available  # noqa: syntax-check[unknown-module]
-      community.docker.docker_host_info:
-      register: host_docker_info
-      ignore_errors: true
-
-    - name: Install Docker
-      when:  host_docker_info.can_talk_to_docker is defined
-      ansible.builtin.import_role:
-        name: geerlingguy.docker
-      vars:
-        docker_install_compose: false
-        docker_users:
-          - root
-
-    # - name: Set Docker network facts
-    #   ansible.builtin.set_fact:
-    #     docker_socket_proxy_network:
-    #       name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-    #       driver: bridge
-    #       internal: true
-    #     monitoring_network:
-    #       name: "{{ monitoring_network_name | default('monitoring') }}"
-    #       driver: bridge
-    #       internal: true
-    #     web_network:
-    #       name: "{{ web_network_name | default('web') }}"
-    #       driver: bridge
-    #       internal: false
-
-    # - name: debug
-    #   ansible.builtin.debug:
-    #     var: docker_socket_proxy_network
-
-    # - name: debug
-    #   ansible.builtin.debug:
-    #     var: docker_socket_proxy_network.name
-
-    - name: Load homelab vars
-      ansible.builtin.include_vars:
-        file: vars/homelab_env.yaml
-
-    - name: Create Docker networks  # noqa: syntax-check[unknown-module]
-      community.docker.docker_network:
-        name: "{{ item.name }}"
-        driver: "{{ item.driver }}"
-        internal: "{{ item.internal }}"
-      loop:
-        - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-          driver: bridge
-          internal: true
-        - name: "{{ monitoring_network_name | default('monitoring') }}"
-          driver: bridge
-          internal: true
-        - name: "{{ web_network_name | default('web') }}"
-          driver: bridge
-          internal: false
-
-    - name: Deploy a containerised instance of Docker Socket Proxy
+    - name: Configure base OS
       ansible.builtin.include_tasks:
-        file: tasks/deploy-docker-socket-proxy.yaml
-
-    - name: Deploy a containerised instance of Portainer Agent
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-portainer-agent.yaml
-
-    - name: Deploy a containerised instance of Traefik
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-traefik.yaml
-
-    - name: Deploy a containerised instance of Node Exporter
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-node-exporter.yaml
-
-    - name: Deploy a containerised instance of Prometheus
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-prometheus.yaml
+        file: tasks/hosts-install-docker-base.yaml

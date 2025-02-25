@@ -1,0 +1,21 @@
+---
+- name: Deploy Dozzle
+
+  hosts: dozzle
+
+  vars:
+
+    # Dozzle facts
+    homepage_image: amir20/dozzle:v8.11.7
+    homepage_service_name: dozzle
+    homepage_service_port: 8080
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Dozzle
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-dozzle.yaml

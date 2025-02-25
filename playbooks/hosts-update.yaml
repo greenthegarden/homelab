@@ -1,15 +1,10 @@
 ---
-- name: Update and upgrade hosts
+- name: Update and upgrade hosts using apt
 
   hosts: all
 
   tasks:
-    - name: Update packages with apt
-      when: ansible_pkg_mgr == 'apt'
-      ansible.builtin.apt:
-        update_cache: true
 
-    - name: Upgrade packages with apt
-      when: ansible_pkg_mgr == 'apt'
-      ansible.builtin.apt:
-        upgrade: dist
+    - name: Update and upgrade hosts using apt
+      ansible.builtin.include_tasks:
+        file: tasks/hosts-apt-update.yaml

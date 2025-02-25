@@ -1,0 +1,121 @@
+---
+
+- name: Get host Docker status
+  community.docker.docker_host_info:
+  register: host_docker_info
+  ignore_errors: true
+
+- name: Ensure Docker is available on host
+  ansible.builtin.assert:
+    that:
+      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
+    fail_msg: A version of Docker >= 20 is required to be installed
+
+####### DOZZLE SECTION
+
+# https://dozzle.dev/guide/getting-started
+
+- name: Set Dozzle facts
+  ansible.builtin.set_fact:
+    dozzle_image: "{{ dozzle_image | default('amir20/dozzle:latest') }}"
+    dozzle_service_name: "{{ dozzle_service_name | default('dozzle') }}"
+    dozzle_service_port: "{{ dozzle_service_port | default(8080) }}"
+    dozzle_config_dir: /root/dozzle
+
+- name: Set Dozzle aggregated facts
+  ansible.builtin.set_fact:
+    dozzle_fqdn: "{{ dozzle_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: Set Dozzle service facts
+  ansible.builtin.set_fact:
+    dozzle_networks:
+      - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+      - name: "{{ web_network_name | default('web') }}"
+    dozzle_ports:
+      - "{{ dozzle_service_port }}:8080"
+    dozzle_volumes:
+      - "{{ dozzle_config_dir }}/config:/app/config"
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: Create Dozzle container labels
+  ansible.builtin.set_fact:
+    dozzle_container_labels: "{{ dozzle_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - {
+      "key": "traefik.enable",
+      "value": "true"
+    }
+    - {
+      "key": "traefik.docker.network",
+      "value": "{{ web_network_name }}"
+    }
+    - {
+      "key": "traefik.http.routers.{{ dozzle_service_name }}.entrypoints",
+      "value": "websecure"
+    }
+    - {
+      "key": "traefik.http.routers.{{ dozzle_service_name }}.rule",
+      "value": "Host(`{{ dozzle_fqdn }}`)"
+    }
+    - {
+      "key": "traefik.http.routers.{{ dozzle_service_name }}.service",
+      "value": "{{ dozzle_service_name }}"
+    }
+    - {
+      "key": "traefik.http.routers.{{ dozzle_service_name }}.tls",
+      "value": "true"
+    }
+    # What's up Docker? labels
+    - {
+      "key": "wud.tag.include",
+      "value": '^\d+\.\d+\.\d+$$'
+    }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/amir20/dozzle/releases/tag/v$${major}.$${minor}.$${patch}",
+    }
+    # Homepage labels
+    - { "key": "dozzle.group", "value": "Monitoring" }
+    - { "key": "dozzle.name", "value": "Dozzle" }
+    - { "key": "dozzle.description", "value": "This page" }
+    - { "key": "dozzle.icon", "value": "dozzle.png" }
+    - { "key": "dozzle.href", "value": "https://{{ dozzle_fqdn }}/" }
+    - {
+      "key": "dozzle.siteMonitor",
+      "value": "https://{{ dozzle_fqdn }}/"
+    }
+
+- name: Pull Dozzle image
+  community.docker.docker_image:
+    name: "{{ dozzle_image }}"
+    source: pull
+
+# docker run -d -v /var/run/docker.sock:/var/run/docker.sock -p 8080:8080 amir20/dozzle:latest
+- name: Deploy Dozzle
+  community.docker.docker_container:
+    name: "{{ dozzle_service_name }}"
+    image: "{{ dozzle_image }}"
+    detach: true
+    labels: "{{ (dozzle_container_labels | default({})) | default(omit) }}"
+    networks_cli_compatible: true
+    networks: "{{ dozzle_networks }}"
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    volumes: "{{ dozzle_volumes }}"
+  register: dozzle_container_state
+
+- name: Wait for Dozzle to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ dozzle_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: dozzle_running
+  until: dozzle_running is success
+  retries: 10

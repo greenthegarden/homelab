@@ -15,7 +15,7 @@
 
 # https://homepage.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-homepage-dashboard/
 
-- name: Set homepage facts
+- name: Set Homepage facts
   ansible.builtin.set_fact:
     homepage_image: "{{ homepage_image | default('ghcr.io/benphelps/homepag:latest') }}"
     homepage_service_name: "{{ homepage_service_name | default('homepage') }}"
