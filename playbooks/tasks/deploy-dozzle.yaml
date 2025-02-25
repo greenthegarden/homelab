@@ -102,7 +102,11 @@
     image: "{{ dozzle_image }}"
     detach: true
     env:
-      DOZZLE_REMOTE_AGENT: dozzle-agent:7007
+      DOZZLE_REMOTE_AGENT:
+        dozzle-agent:7007,
+        broker.localdomain:7007,
+        fireflyiii.localdomain:7007,
+        frigate.localdomain:7007
     healthcheck:
       test: ["CMD", "/dozzle", "healthcheck"]
       interval: 3s

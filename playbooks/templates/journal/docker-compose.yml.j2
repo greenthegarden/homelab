@@ -1,0 +1,55 @@
+---
+
+name: Journal
+
+networks:
+  journal:
+    internal: true
+  web:
+    name: web
+    external: true
+
+services:
+
+  journal-db:
+    container_name: journal_db
+    image: postgres:alpine
+    environment:
+      - POSTGRES_DB={{ journal.postgres_db }}
+      - POSTGRES_USER={{ journal.postgres_user }}
+      - POSTGRES_PASSWORD={{ journal.postgres_password }}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "{{ journal.postgres_user }}"]
+    labels: {{ (journal_db_container_labels | default({})) | default(omit) }}
+    networks:
+      - journal
+    restart: unless-stopped
+    volumes:
+      - "journal_db:/var/lib/postgresql/data:rw"
+
+  journal:
+    container_name: journal
+    build: https://github.com/inoda/journal.git#main
+    image: gh-inoda-journal
+    environment:
+      - RAILS_ENV=production
+      - SITE_DOMAIN={{ homelab.lan_domain }}
+      - DATABASE_URL=postgres://{{ journal.postgres_user }}:{{ journal.postgres_password }}@journal-db/placeholder
+      - CIPHER_KEY={{ journal.cipher_key }} # openssl rand -base64 32
+      - SHARING_TOKEN_CIPHER_IV={{journal. sharing_token_cipher_iv }} # openssl rand -base64 16
+      - SECRET_KEY_BASE={{ journal.secret_key_base }} # random alphanumerical
+    labels: {{ (journal_container_labels | default({})) | default(omit) }}
+    # ports:
+    #   - 8080:3000
+    networks:
+      - proxy
+      - web
+    restart: unless-stopped
+    volumes:
+      - journal:/app:rw
+
+volumes:
+  journal_db:
+  {{ journal_db_backup_volume_name | default('journal_db_backup') }}:
+    external: true
+  journal:
