@@ -27,7 +27,7 @@
       - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
       - name: "{{ web_network_name | default('web') }}"
     docker_socket_proxy_ports:
-      - "{{ docker_socket_proxy_service_port | default(2375) }}:2375"
+      - "{{ docker_socket_proxy_service_port }}:2375"
     docker_socket_proxy_volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro

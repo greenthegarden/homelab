@@ -20,7 +20,7 @@
 - name: Set Portainer Agent service facts
   ansible.builtin.set_fact:
     portainer_agent_ports:
-      - "{{ portainer_agent_service_port | default(9001) }}:9001"
+      - "{{ portainer_agent_service_port }}:9001"
     portainer_agent_volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/volumes:/var/lib/docker/volumes

@@ -46,6 +46,10 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-portainer-agent.yaml
 
+- name: Deploy a containerised instance of Dozzle Agent
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-dozzle-agent.yaml
+
 - name: Deploy a containerised instance of Traefik
   ansible.builtin.include_tasks:
     file: tasks/deploy-traefik.yaml
@@ -57,7 +61,3 @@
 # - name: Deploy a containerised instance of Prometheus
 #   ansible.builtin.include_tasks:
 #     file: tasks/deploy-prometheus.yaml
-
-- name: Deploy a containerised instance of Dozzle Agent
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-dozzle-agent.yaml
