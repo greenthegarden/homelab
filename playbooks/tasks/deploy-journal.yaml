@@ -121,5 +121,6 @@
 
 - name: Deploy Journal services  # noqa: syntax-check[unknown-module]
   community.docker.docker_compose_v2:
+    build: always
     project_src: "{{ journal_config_dir }}"
   register: output
