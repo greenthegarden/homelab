@@ -1,5 +1,7 @@
 # Homelab
 
+## Introduction
+
 Welcome to my Homelab definition-in-code! The repository consists largely of Ansible code which is used
 to provision and maintain the services which make up the functionality provided by my Homelab.
 
@@ -127,7 +129,7 @@ The initial configuration of TrueNAS was based on details described in [6 Crucia
 
 The current iteration of the Homelab hosts the following applications:
 
-- ![Nextcloud](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/nextcloud.svg "Nexcloud"){:height=25px" width="25px"} [Nextcloud] - Open source content collaboration platform.
+- ![Nextcloud]<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/nextcloud.svg" width="25" height="auto" alt="Nextcloud"> [Nextcloud] - Open source content collaboration platform. {{< mdl-disable "<!-- markdownlint-disable MD033 -->" >}} {{< mdl-disable "<!-- markdownlint-disable MD013 -->" >}}
 - ![Home Assistant](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/home-assistant.svg "Home Assistant"){:height=25px" width="25px"} [Home Assistant][homeassistant] - Open source home automation that puts local control and privacy first.
 - ![Authentik](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/authentik.svg "Authentik"){:height=25px" width="25px"} [Authentik] - Identity manager.
 - ![EMQX](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/emqx.svg "EMQX"){:height=25px" width="25px"} [EMQX] - MQTT platform.

@@ -1,20 +1,13 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
-
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
+- name: deploy-prometheus | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
 # https://hub.docker.com/r/prom/prometheus
 # https://medium.com/platform-engineering/monitoring-traefik-with-grafana-1d037af5b952
 
-- name: Set Prometheus facts
+- name: deploy-prometheus | Set Prometheus facts
   ansible.builtin.set_fact:
     prometheus_image: "{{ prometheus_image | default('prom/prometheus:latest') }}"
     prometheus_service_name: "{{ prometheus_service_name | default('prometheus') }}"
@@ -22,11 +15,11 @@
     prometheus_volume_name: "{{ prometheus_volume_name | default('prometheus') }}"
     prometheus_config_dir: /root/prometheus
 
-- name: Set Prometheus aggregated facts
+- name: deploy-prometheus | Set Prometheus aggregated facts
   ansible.builtin.set_fact:
     prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Prometheus service facts
+- name: deploy-prometheus | Set Prometheus service facts
   ansible.builtin.set_fact:
     prometheus_command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -49,7 +42,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Prometheus container labels
+- name: deploy-prometheus | Create Prometheus container labels
   ansible.builtin.set_fact:
     prometheus_container_labels: "{{ prometheus_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -88,26 +81,26 @@
       "value": "https://github.com/prometheus/prometheus/releases/tag/v$${major}.$${minor}.$${patch}",
     }
 
-- name: Create Prometheus configuration directory
+- name: deploy-prometheus | Create Prometheus configuration directory
   ansible.builtin.file:
     path: "{{ prometheus_config_dir }}"
     mode: "0644"
     state: directory
   register: prometheus_configuration_creation
 
-- name: Create Prometheus configuration file
+- name: deploy-prometheus | Create Prometheus configuration file
   ansible.builtin.template:
     src: templates/prometheus/prometheus.yml.j2
     dest: "{{ prometheus_config_dir }}/prometheus.yml"
     mode: "0644"
   register: prometheus_configuration_creation
 
-- name: Pull Prometheus image
+- name: deploy-prometheus | Pull Prometheus image
   community.docker.docker_image:
     name: "{{ prometheus_image }}"
     source: pull
 
-- name: Deploy Prometheus
+- name: deploy-prometheus | Deploy Prometheus
   community.docker.docker_container:
     name: "{{ prometheus_service_name | default('prometheus') }}"
     image: "{{ prometheus_image }}"
@@ -125,7 +118,7 @@
     volumes: "{{ prometheus_volumes }}"
   register: prometheus_container_state
 
-# - name: Wait for Prometheus to accept connections
+# - name: deploy-prometheus | Wait for Prometheus to accept connections
 #   ansible.builtin.wait_for:
 #     host: "{{ prometheus_fqdn }}"
 #     port: 80

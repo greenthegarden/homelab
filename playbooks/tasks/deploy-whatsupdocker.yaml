@@ -1,33 +1,26 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
-
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
+- name: deploy-whatsupdocker | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
 ####### WHAT'S UP DOCKER SECTION
 
 # https://getwud.github.io/wud/#/quickstart/
 # https://getwud.github.io/wud/#/configuration/
 
-- name: Set What's up Docker? facts
+- name: deploy-whatsupdocker | Set What's up Docker? facts
   ansible.builtin.set_fact:
     whatsupdocker_image: "{{ whatsupdocker_image | default('getwud/wud:latest') }}"
     whatsupdocker_service_name: "{{ whatsupdocker_service_name | default('whats-up-docker') }}"
     whatsupdocker_service_port: "{{ whatsupdocker_service_port | default(3000) }}"
     whatsupdocker_volume_name: "{{ whatsupdocker_volume_name | default('whats-up-docker') }}"
 
-- name: Set What's up Docker? aggregated facts
+- name: deploy-whatsupdocker | Set What's up Docker? aggregated facts
   ansible.builtin.set_fact:
     whatsupdocker_fqdn: "{{ whatsupdocker_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set What's up Docker? service facts
+- name: deploy-whatsupdocker | Set What's up Docker? service facts
   ansible.builtin.set_fact:
     whatsupdocker_ports:
       - "{{ whatsupdocker_service_port | default(3000) }}:3000"
@@ -39,7 +32,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create What's up Docker? container labels
+- name: deploy-whatsupdocker | Create What's up Docker? container labels
   ansible.builtin.set_fact:
     whatsupdocker_container_labels: "{{ whatsupdocker_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -90,35 +83,35 @@
       "value": "https://{{ whatsupdocker_fqdn }}",
     }
 
-- name: Check if What's up Docker? is running
+- name: deploy-whatsupdocker | Check if What's up Docker? is running
   community.docker.docker_container_info:
     name: "{{ whatsupdocker_service_name }}"
   register: whatsupdocker_state
 
-- name: Remove What's up Docker? container if changing version
+- name: deploy-whatsupdocker | Remove What's up Docker? container if changing version
   when:
     - whatsupdocker_state.exists
     - whatsupdocker_image_tag != whatsupdocker_state.container.Config.Image | split(':') | last
   block:
-    - name: Stop and remove existing What's up Docker? container
+    - name: deploy-whatsupdocker | Stop and remove existing What's up Docker? container
       community.docker.docker_container:
         name: "{{ whatsupdocker_service_name }}"
         state: absent
 
-    - name: Set update What's up Docker?
+    - name: deploy-whatsupdocker | Set update What's up Docker?
       ansible.builtin.set_fact:
         whatsupdocker_update: true
 
-- name: Deploy What's up Docker? if not running
+- name: deploy-whatsupdocker | Deploy What's up Docker? if not running
   when:
     - not whatsupdocker_state.exists or (whatsupdocker_update | default(false))
   block:
-    - name: Create volume for What's up Docker?
+    - name: deploy-whatsupdocker | Create volume for What's up Docker?
       community.docker.docker_volume:
         name: "{{ whatsupdocker_volume_name }}"
         state: present
 
-    - name: Pull What's up Docker? image
+    - name: deploy-whatsupdocker | Pull What's up Docker? image
       community.docker.docker_image:
         name: "{{ whatsupdocker_image }}"
         source: pull
@@ -127,7 +120,7 @@
     #   -v "/var/run/docker.sock:/var/run/docker.sock" \
     #   -p 3000:3000 \
     #   fmartinou/whats-up-docker
-    - name: Deploy What's up Docker?
+    - name: deploy-whatsupdocker | Deploy What's up Docker?
       community.docker.docker_container:
         name: "{{ whatsupdocker_service_name }}"
         image: "{{ whatsupdocker_image }}"
@@ -181,7 +174,7 @@
         volumes: "{{ whatsupdocker_volumes }}"
       register: whatsupdocker_container_state
 
-    - name: Wait for What's up Docker? to accept connections
+    - name: deploy-whatsupdocker | Wait for What's up Docker? to accept connections
       ansible.builtin.wait_for:
         host: "{{ whatsupdocker_fqdn }}"
         port: 80

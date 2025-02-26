@@ -1,14 +1,15 @@
 ---
 
-- name: Set timezone to Australia/Adelaide   # noqa: syntax-check[unknown-module]
+- name: hosts-configure-base-os | Set timezone to Australia/Adelaide   # noqa: syntax-check[unknown-module]
   community.general.timezone:
     name: Australia/Adelaide
 
-- name: Update and upgrade hosts using apt
+- name: hosts-configure-base-os | Update and upgrade hosts using apt
   ansible.builtin.include_tasks:
     file: tasks/hosts-apt-update.yaml
 
-- name: Install base os additional packages
+- name: hosts-configure-base-os | Install base os additional packages
+  when: (base_os_packages is defined) and (base_os_packages | length > 0)
   ansible.builtin.package:
     name: "{{ item }}"
     state: present

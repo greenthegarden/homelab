@@ -1,28 +1,21 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
+- name: deploy-node-exporter | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
-
-- name: Set Node Exporter facts
+- name: deploy-node-exporter | Set Node Exporter facts
   ansible.builtin.set_fact:
     node_exporter_image: "{{ node_exporter_image | default('prom/node-exporter:latest') }}"
     node_exporter_service_name: "{{ node_exporter_service_name | default('node-exporter') }}"
     node_exporter_service_port: "{{ node_exporter_service_port | default(9100) }}"
     node_exporter_service_protocol: "{{ node_exporter_service_protocol | default('http') }}"
 
-- name: Set Node Exporter aggregated facts
+- name: deploy-node-exporter | Set Node Exporter aggregated facts
   ansible.builtin.set_fact:
     node_exporter_fqdn: "{{ node_exporter_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Node Exporter service facts
+- name: deploy-node-exporter | Set Node Exporter service facts
   ansible.builtin.set_fact:
     node_exporter_networks:
       - name: "{{ monitoring_network_name | default('monitoring') }}"
@@ -36,7 +29,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Node Exporter container labels
+- name: deploy-node-exporter | Create Node Exporter container labels
   ansible.builtin.set_fact:
     node_exporter_container_labels: "{{ node_exporter_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -75,12 +68,12 @@
       "value": "https://github.com/prometheus/node_exporter/releases/tag/v$${major}.$${minor}.$${patch}",
     }
 
-- name: Pull Node Exporter image
+- name: deploy-node-exporter | Pull Node Exporter image
   community.docker.docker_image:
     name: "{{ node_exporter_image }}"
     source: pull
 
-- name: Deploy Node Exporter
+- name: deploy-node-exporter | Deploy Node Exporter
   community.docker.docker_container:
     name: "{{ node_exporter_service_name }}"
     image: "{{ node_exporter_image }}"
@@ -95,7 +88,7 @@
     volumes: "{{ node_exporter_volumes }}"
   register: node_exporter_container_state
 
-# - name: Wait for Node Exporter to accept connections
+# - name: deploy-node-exporter | Wait for Node Exporter to accept connections
 #   ansible.builtin.wait_for:
 #     host: "{{ node_exporter_fqdn }}"
 #     port: 80

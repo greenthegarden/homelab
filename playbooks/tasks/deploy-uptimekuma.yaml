@@ -1,22 +1,15 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
-
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
+- name: deploy-uptimekuma | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
 ####### UPTIMEKUMA SECTION
 
 # https://hub.docker.com/_/uptimekuma
 # https://codeopolis.com/posts/how-to-install-uptimekuma-using-docker/
 
-- name: Set Uptime Kuma facts
+- name: deploy-uptimekuma | Set Uptime Kuma facts
   ansible.builtin.set_fact:
     uptimekuma_image: "{{ uptimekuma_image | default('louislam/uptime-kuma:latest') }}"
     uptimekuma_image_tag: "{{ uptimekuma_image_tag | default('latest') }}"
@@ -24,11 +17,11 @@
     uptimekuma_service_port: "{{ uptimekuma_service_port | default(3001) }}"
     uptimekuma_volume_name: "{{ uptimekuma_volume_name | default('uptimekuma') }}"
 
-- name: Set Uptime Kuma aggregated facts
+- name: deploy-uptimekuma | Set Uptime Kuma aggregated facts
   ansible.builtin.set_fact:
     uptimekuma_fqdn: "{{ uptimekuma_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Uptime Kuma service facts
+- name: deploy-uptimekuma | Set Uptime Kuma service facts
   ansible.builtin.set_fact:
     uptimekuma_networks:
       - name: "{{ web_network_name | default('web') }}"
@@ -40,7 +33,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Uptime Kuma container labels
+- name: deploy-uptimekuma | Create Uptime Kuma container labels
   ansible.builtin.set_fact:
     uptimekuma_container_labels: "{{ uptimekuma_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -92,40 +85,40 @@
     }
     - { "key": "homepage.widget.slug", "value": "homelab" }
 
-- name: Create Uptime Kuma volume
+- name: deploy-uptimekuma | Create Uptime Kuma volume
   community.docker.docker_volume:
     name: "{{ uptimekuma_volume_name }}"
     state: present
 
-- name: Check if Uptime Kuma is running
+- name: deploy-uptimekuma | Check if Uptime Kuma is running
   community.docker.docker_container_info:
     name: "{{ uptimekuma_service_name }}"
   register: uptimekuma_state
 
-- name: Remove uptimekuma container if changing version
+- name: deploy-uptimekuma | Remove uptimekuma container if changing version
   when:
     - uptimekuma_state.exists
     - uptimekuma_image_tag != uptimekuma_state.container.Config.Image | split(':') | last
   block:
-    - name: Stop and remove existing Uptime Kuma container
+    - name: deploy-uptimekuma | Stop and remove existing Uptime Kuma container
       community.docker.docker_container:
         name: "{{ uptimekuma_service_name }}"
         state: absent
 
-    - name: Set update uptimekuma
+    - name: deploy-uptimekuma | Set update uptimekuma
       ansible.builtin.set_fact:
         uptimekuma_update: true
 
-- name: Deploy Uptime Kuma if not running
+- name: deploy-uptimekuma | Deploy Uptime Kuma if not running
   when:
     - not uptimekuma_state.exists or (uptimekuma_update | default(false))
   block:
-    - name: Pull uptimekuma image
+    - name: deploy-uptimekuma | Pull uptimekuma image
       community.docker.docker_image:
         name: "{{ uptimekuma_image }}"
         source: pull
 
-    - name: Deploy Uptime Kuma
+    - name: deploy-uptimekuma | Deploy Uptime Kuma
       community.docker.docker_container:
         name: "{{ uptimekuma_service_name }}"
         image: "{{ uptimekuma_image }}"
@@ -142,7 +135,7 @@
         volumes: "{{ uptimekuma_volumes }}"
       register: uptimekuma_container_state
 
-    - name: Wait for Uptime Kuma to accept connections
+    - name: deploy-uptimekuma | Wait for Uptime Kuma to accept connections
       ansible.builtin.wait_for:
         host: "{{ uptimekuma_fqdn }}"
         port: 80

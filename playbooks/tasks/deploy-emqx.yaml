@@ -1,22 +1,15 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
-
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
+- name: deploy-emqx | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
 # https://hub.docker.com/r/emqx/emqx
 # https://github.com/iotblue/emqx-docker
 # https://www.emqx.com/en/try?product=broker (EMQX Open Source)
 # https://dev.to/emqtech/running-emqx-mqtt-broker-on-docker-bonus-clustering-and-persistence-4mo3
 
-- name: Set EMQX facts
+- name: deploy-emqx | Set EMQX facts
   ansible.builtin.set_fact:
     emqx_image: "{{ emqx_image | default('emqx/emqx:latest') }}"
     emqx_image_tag: "{{ emqx_image_tag | default('latest') }}"
@@ -26,47 +19,47 @@
     emqx_data_volume_name: "{{ emqx_data_volume_name | default('data') }}"
     emqx_log_volume_name: "{{ emqx_log_volume_name | default('log') }}"
 
-- name: Set EMQX aggregated facts
+- name: deploy-emqx | Set EMQX aggregated facts
   ansible.builtin.set_fact:
     emqx_fqdn: "{{ emqx_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Get status of Prometheus Docker container
+- name: deploy-emqx | Get status of Prometheus Docker container
   community.docker.docker_container_info:
     name: "{{ prometheus_service_name | default('prometheus') }}"
   register: prometheus_container_status
   ignore_errors: true
 
-- name: Ensure Prometheus container is deployed
+- name: deploy-emqx | Ensure Prometheus container is deployed
   ansible.builtin.assert:
     that: prometheus_container_status.exists
     fail_msg: Prometheus is required to be deployed on host
 
-- name: Set Prometheus aggregated facts
+- name: deploy-emqx | Set Prometheus aggregated facts
   ansible.builtin.set_fact:
     prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Create Prometheus configuration directory
+- name: deploy-emqx | Create Prometheus configuration directory
   ansible.builtin.file:
     path: /root/prometheus
     mode: "644"
     state: directory
   register: prometheus_configuration_creation
 
-- name: Create Prometheus configuration file for EMQX
+- name: deploy-emqx | Create Prometheus configuration file for EMQX
   ansible.builtin.template:
     src: templates/prometheus/prometheus-emqx.yml.j2
     dest: /root/prometheus/prometheus.yml
     mode: "644"
   register: prometheus_configuration_creation
 
-- name: Redeploy Prometheus with new configuration  # noqa: syntax-check[unknown-module]
+- name: deploy-emqx | Redeploy Prometheus with new configuration  # noqa: syntax-check[unknown-module]
   community.docker.docker_container:
     name: "{{ prometheus_service_name | default('prometheus') }}"
     restart: true
     state: started
   register: prometheus_container_state
 
-- name: Set EMQX service facts
+- name: deploy-emqx | Set EMQX service facts
   ansible.builtin.set_fact:
     emqx_networks:
       - name: "{{ broker_network_name | default('broker') }}"
@@ -84,7 +77,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create EMQX container labels
+- name: deploy-emqx | Create EMQX container labels
   ansible.builtin.set_fact:
     emqx_container_labels: "{{ emqx_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -125,35 +118,35 @@
     - { "key": "homepage.href", "value": "https://{{ emqx_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ emqx_fqdn }}/" }
 
-- name: Check if EMQX is running
+- name: deploy-emqx | Check if EMQX is running
   community.docker.docker_container_info:
     name: "{{ emqx_service_name }}"
   register: emqx_state
 
-- name: Remove EMQX container if changing version
+- name: deploy-emqx | Remove EMQX container if changing version
   when:
     - emqx_state.exists
     - emqx_image_tag != emqx_state.container.Config.Image | split(':') | last
   block:
-    - name: Stop and remove existing EMQX container
+    - name: deploy-emqx | Stop and remove existing EMQX container
       community.docker.docker_container:
         name: "{{ emqx_service_name }}"
         state: absent
 
-    - name: Set update EMQX
+    - name: deploy-emqx | Set update EMQX
       ansible.builtin.set_fact:
         emqx_update: true
 
-- name: Deploy EMQX if not running
+- name: deploy-emqx | Deploy EMQX if not running
   when:
     - not emqx_state.exists or (emqx_update | default(false))
   block:
-    - name: Pull EMQX image
+    - name: deploy-emqx | Pull EMQX image
       community.docker.docker_image:
         name: "{{ emqx_image }}"
         source: pull
 
-    - name: Deploy EMQX
+    - name: deploy-emqx | Deploy EMQX
       community.docker.docker_container:
         name: "{{ emqx_service_name }}"
         image: "{{ emqx_image }}"
@@ -176,7 +169,7 @@
         volumes: "{{ emqx_volumes }}"
       register: emqx_container_state
 
-    - name: Wait for EMQX to accept connections
+    - name: deploy-emqx | Wait for EMQX to accept connections
       ansible.builtin.wait_for:
         host: "{{ emqx_fqdn }}"
         port: 80

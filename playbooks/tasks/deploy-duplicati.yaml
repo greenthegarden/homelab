@@ -1,21 +1,14 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
+- name: deploy-duplicati | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
-
-- name: Set Global facts
+- name: deploy-duplicati | Set Global facts
   ansible.builtin.set_fact:
     local_backups_dir: "{{ local_backups_dir | default('/tmp/backups') }}"
 
-- name: Set Duplicati facts
+- name: deploy-duplicati | Set Duplicati facts
   ansible.builtin.set_fact:
     duplicati_image: "{{ duplicati_image | default('lscr.io/linuxserver/duplicati:latest') }}"
     duplicati_service_name: "{{ duplicati_service_name | default('duplicati') }}"
@@ -24,11 +17,11 @@
     duplicati_volume_backups: "{{ duplicati_volume_backups | default('backups') }}"
     duplicati_volume_source: "{{ duplicati_volume_source | default('source') }}"
 
-- name: Set Duplicati aggregated facts
+- name: deploy-duplicati | Set Duplicati aggregated facts
   ansible.builtin.set_fact:
     duplicati_fqdn: "{{ duplicati_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Duplicati service facts
+- name: deploy-duplicati | Set Duplicati service facts
   ansible.builtin.set_fact:
     duplicati_networks:
       - name: "{{ web_network_name | default('web') }}"
@@ -41,7 +34,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Duplicati container labels
+- name: deploy-duplicati | Create Duplicati container labels
   ansible.builtin.set_fact:
     duplicati_container_labels: "{{ duplicati_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -74,39 +67,39 @@
       "value": "https://github.com/linuxserver/docker-duplicati/releases/tag/v$${major}.$${minor}.$${patch}",
     }
 
-- name: Check if Duplicati is running
+- name: deploy-duplicati | Check if Duplicati is running
   community.docker.docker_container_info:
     name: "{{ duplicati_service_name }}"
   register: duplicati_state
 
-- name: Remove Duplicati container if changing version
+- name: deploy-duplicati | Remove Duplicati container if changing version
   when:
     - duplicati_state.exists
     - duplicati_image_tag != duplicati_state.container.Config.Image | split(':') | last
   block:
-    - name: Stop and remove existing Duplicati container
+    - name: deploy-duplicati | Stop and remove existing Duplicati container
       community.docker.docker_container:
         name: "{{ duplicati_service_name }}"
         state: absent
 
-    - name: Set update Duplicati
+    - name: deploy-duplicati | Set update Duplicati
       ansible.builtin.set_fact:
         duplicati_update: true
 
-- name: Deploy Duplicati if not running
+- name: deploy-duplicati | Deploy Duplicati if not running
   when: not duplicati_state.exists or (duplicati_update | default(false))
   block:
-    - name: Create Duplicati config volume
+    - name: deploy-duplicati | Create Duplicati config volume
       community.docker.docker_volume:
         name: "{{ duplicati_volume_config }}"
         state: present
 
-    - name: Pull Duplicati image
+    - name: deploy-duplicati | Pull Duplicati image
       community.docker.docker_image:
         name: "{{ duplicati_image }}"
         source: pull
 
-    - name: Deploy Duplicati
+    - name: deploy-duplicati | Deploy Duplicati
       community.docker.docker_container:
         name: "{{ duplicati_service_name }}"
         image: "{{ duplicati_image }}"

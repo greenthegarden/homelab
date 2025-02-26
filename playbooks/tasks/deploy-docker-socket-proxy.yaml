@@ -1,27 +1,20 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
+- name: deploy-docker-socket-proxy | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
-
-- name: Set Docker Socket Proxy facts
+- name: deploy-docker-socket-proxy | Set Docker Socket Proxy facts
   ansible.builtin.set_fact:
     docker_socket_proxy_image: "{{ docker_socket_proxy_image | default('ghcr.io/tecnativa/docker-socket-proxy:edge') }}"
     docker_socket_proxy_service_name: "{{ docker_socket_proxy_service_name | default('docker-socket-proxy') }}"
     docker_socket_proxy_service_port: "{{ docker_socket_proxy_service_port | default(2375) }}"
 
-- name: Set Docker Socket Proxy aggregated facts
+- name: deploy-docker-socket-proxy | Set Docker Socket Proxy aggregated facts
   ansible.builtin.set_fact:
     docker_socket_proxy_fqdn: "{{ docker_socket_proxy_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Docker Socket Proxy service facts
+- name: deploy-docker-socket-proxy | Set Docker Socket Proxy service facts
   ansible.builtin.set_fact:
     docker_socket_proxy_networks:
       - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
@@ -33,11 +26,11 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Set Docker Socket Proxy configuration facts
+- name: deploy-docker-socket-proxy | Set Docker Socket Proxy configuration facts
   ansible.builtin.set_fact:
     configure_for_docker_volume_backup: "{{ configure_for_docker_volume_backup | default(false) }}"
 
-- name: Create Docker Socket Proxy container labels
+- name: deploy-docker-socket-proxy | Create Docker Socket Proxy container labels
   ansible.builtin.set_fact:
     docker_socket_proxy_container_labels: "{{ docker_socket_proxy_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -51,12 +44,12 @@
       "value": "https://github.com/Tecnativa/docker-socket-proxy/releases/tag/v$${major}.$${minor}.$${patch}",
     }
 
-- name: Pull Docker Socket Proxy image
+- name: deploy-docker-socket-proxy | Pull Docker Socket Proxy image
   community.docker.docker_image:
     name: "{{ docker_socket_proxy_image }}"
     source: pull
 
-- name: Deploy Docker Socket Proxy
+- name: deploy-docker-socket-proxy | Deploy Docker Socket Proxy
   community.docker.docker_container:
     name: "{{ docker_socket_proxy_service_name }}"
     image: "{{ docker_socket_proxy_image }}"
@@ -104,7 +97,7 @@
     volumes: "{{ docker_socket_proxy_volumes }}"
   register: docker_socket_proxy_container_state
 
-- name: Wait for Docker Socket Proxy to accept connections
+- name: deploy-docker-socket-proxy | Wait for Docker Socket Proxy to accept connections
   ansible.builtin.wait_for:
     host: "{{ docker_socket_proxy_container_state['container']\
       ['NetworkSettings']\

@@ -1,21 +1,14 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
-
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
+- name: deploy-journal | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
 ####### Journal SECTION
 
 # https://docs.plant-it.org/0.9.0/server-installation/#quickstart
 
-- name: Set Journal facts
+- name: deploy-journal | Set Journal facts
   ansible.builtin.set_fact:
     journal_image: "{{ journal_image | default('journal:latest') }}"
     journal_service_name: "{{ journal_service_name | default('journal') }}"
@@ -23,11 +16,11 @@
     journal_db_backup_volume_name: "{{ journal_db_backup_volume_name | default('journal_db_backup') }}"
     journal_config_dir: /root/journal
 
-- name: Set Journal aggregated facts
+- name: deploy-journal | Set Journal aggregated facts
   ansible.builtin.set_fact:
     journal_fqdn: "{{ journal_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Journal service facts
+- name: deploy-journal | Set Journal service facts
   ansible.builtin.set_fact:
     journal_networks:
       - name: "{{ web_network_name | default('web') }}"
@@ -37,7 +30,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Journal container labels
+- name: deploy-journal | Create Journal container labels
   ansible.builtin.set_fact:
     journal_container_labels: "{{ journal_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -84,7 +77,7 @@
       "value": "https://{{ journal_fqdn }}",
     }
 
-# - name: Create Journal DB container labels
+# - name: deploy-journal | Create Journal DB container labels
 #   ansible.builtin.set_fact:
 #     journal_db_container_labels: "{{ journal_db_container_labels | default({}) | combine({item.key: item.value}) }}"
 #   with_items:
@@ -95,13 +88,13 @@
 #       -p{{ plant_it.db_password }} --all-databases > /tmp/dumps/dump.sql'"
 #     }
 
-- name: Create Journal configuration directory
+- name: deploy-journal | Create Journal configuration directory
   ansible.builtin.file:
     path: "{{ journal_config_dir }}"
     state: directory
     mode: "0644"
 
-- name: Create Journal configuration
+- name: deploy-journal | Create Journal configuration
   ansible.builtin.template:
     src: "templates/journal/{{ item }}.j2"
     dest: "{{ journal_config_dir }}/{{ item }}"
@@ -109,17 +102,17 @@
   loop:
     - docker-compose.yml
 
-- name: Create Journal backup volume  # noqa: syntax-check[unknown-module]
+- name: deploy-journal | Create Journal backup volume  # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ journal_db_backup_volume_name }}"
     state: present
 
-# - name: Tear down existing services
+# - name: deploy-journal | Tear down existing services
 #   community.docker.docker_compose_v2:
 #     project_src: /root/Journal
 #     state: absent
 
-- name: Deploy Journal services  # noqa: syntax-check[unknown-module]
+- name: deploy-journal | Deploy Journal services  # noqa: syntax-check[unknown-module]
   community.docker.docker_compose_v2:
     project_src: "{{ journal_config_dir }}"
   register: output

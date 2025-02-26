@@ -1,32 +1,25 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
-
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
+- name: deploy-homepage | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
 ####### HOMEPAGE SECTION
 
 # https://homepage.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-homepage-dashboard/
 
-- name: Set Homepage facts
+- name: deploy-homepage | Set Homepage facts
   ansible.builtin.set_fact:
     homepage_image: "{{ homepage_image | default('ghcr.io/benphelps/homepag:latest') }}"
     homepage_service_name: "{{ homepage_service_name | default('homepage') }}"
     homepage_service_port: "{{ homepage_service_port | default(3000) }}"
     homepage_config_dir: /root/homepage
 
-- name: Set Homepage aggregated facts
+- name: deploy-homepage | Set Homepage aggregated facts
   ansible.builtin.set_fact:
     homepage_fqdn: "{{ homepage_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Homepage service facts
+- name: deploy-homepage | Set Homepage service facts
   ansible.builtin.set_fact:
     homepage_networks:
       - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
@@ -38,7 +31,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Homepage container labels
+- name: deploy-homepage | Create Homepage container labels
   ansible.builtin.set_fact:
     homepage_container_labels: "{{ homepage_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -87,19 +80,19 @@
       "value": "https://{{ homepage_fqdn }}/"
     }
 
-- name: Create Homepage configuration directory
+- name: deploy-homepage | Create Homepage configuration directory
   ansible.builtin.file:
     path: "{{ homepage_config_dir }}"
     state: directory
     mode: "0644"
 
-- name: Copy Homepage static configuration
+- name: deploy-homepage | Copy Homepage static configuration
   ansible.builtin.copy:
     src: files/homepage
     dest: /root/
     mode: "0644"
 
-- name: Create Homepage configuration
+- name: deploy-homepage | Create Homepage configuration
   ansible.builtin.template:
     src: "templates/homepage/config/{{ item }}.yaml.j2"
     dest: "{{ homepage_config_dir }}/config/{{ item }}.yaml"
@@ -108,13 +101,13 @@
     - services
     - widgets
 
-- name: Pull Homepage image
+- name: deploy-homepage | Pull Homepage image
   community.docker.docker_image:
     name: "{{ homepage_image }}"
     source: pull
 
 # docker run -d -p 3000:3000 homepage/homepage
-- name: Deploy Homepage
+- name: deploy-homepage | Deploy Homepage
   community.docker.docker_container:
     name: "{{ homepage_service_name }}"
     image: "{{ homepage_image }}"
@@ -128,7 +121,7 @@
     volumes: "{{ homepage_volumes }}"
   register: homepage_container_state
 
-- name: Wait for Homepage to accept connections
+- name: deploy-homepage | Wait for Homepage to accept connections
   ansible.builtin.wait_for:
     host: "{{ homepage_fqdn }}"
     port: 80

@@ -1,23 +1,16 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
+- name: deploy-portainer-agent | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
-
-- name: Set Portainer Agent facts
+- name: deploy-portainer-agent | Set Portainer Agent facts
   ansible.builtin.set_fact:
     portainer_agent_image: "{{ portainer_agent_image | default('portainer/agent:latest') }}"
     portainer_agent_service_name: "{{ portainer_agent_service_name | default('portainer_agent') }}"
     portainer_agent_service_port: "{{ portainer_agent_service_port | default(9001) }}"
 
-- name: Set Portainer Agent service facts
+- name: deploy-portainer-agent | Set Portainer Agent service facts
   ansible.builtin.set_fact:
     portainer_agent_ports:
       - "{{ portainer_agent_service_port }}:9001"
@@ -25,7 +18,7 @@
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/volumes:/var/lib/docker/volumes
 
-- name: Create Portainer Agent container labels
+- name: deploy-portainer-agent | Create Portainer Agent container labels
   ansible.builtin.set_fact:
     portainer_agent_container_labels: "{{ portainer_agent_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -39,7 +32,7 @@
       "value": "https://github.com/portainer/agent/releases/tag/$${major}.$${minor}.$${patch}",
     }
 
-- name: Pull Portainer Agent image
+- name: deploy-portainer-agent | Pull Portainer Agent image
   community.docker.docker_image:
     name: "{{ portainer_agent_image }}"
     source: pull
@@ -52,7 +45,7 @@
 #   -v /var/lib/docker/volumes:/var/lib/docker/volumes \
 #   portainer/agent:2.18.3
 
-- name: Deploy Portainer Agent
+- name: deploy-portainer-agent | Deploy Portainer Agent
   community.docker.docker_container:
     name: "{{ portainer_agent_service_name }}"
     image: "{{ portainer_agent_image }}"
@@ -65,7 +58,7 @@
     volumes: "{{ portainer_agent_volumes }}"
   register: portainer_agent_container_state
 
-# - name: Wait for Portainer Agent to accept connections
+# - name: deploy-portainer-agent | Wait for Portainer Agent to accept connections
 #   ansible.builtin.wait_for:
 #     host: "{{ portainer_agent_fqdn }}"
 #     port: "{{ portainer_agent_service_port }}"

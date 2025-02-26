@@ -64,11 +64,10 @@ repos:
   #         - ruff                  # Required for mdformat-ruff
   #       stages: [pre-commit]
 
-  # STRICT
-  - repo: https://github.com/markdownlint/markdownlint
-    rev: v0.12.0
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.17.2
     hooks:
-      - id: markdownlint
+      - id: markdownlint-cli2
         name: "📝 markdown · Lint markdown"
         stages: [pre-commit]
 

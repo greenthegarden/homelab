@@ -1,28 +1,21 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
+- name: deploy-homebox | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
-
-- name: Set Homebox facts
+- name: deploy-homebox | Set Homebox facts
   ansible.builtin.set_fact:
     homebox_image: "{{ homebox_image | default('ghcr.io/hay-kot/homebox:latest') }}"
     homebox_service_name: "{{ homebox_service_name | default('homebox') }}"
     homebox_service_port: "{{ homebox_service_port | default(7745) }}"
     homebox_volume_name: "{{ homebox_volume_name | default('homebox') }}"
 
-- name: Set Homebox aggregated facts
+- name: deploy-homebox | Set Homebox aggregated facts
   ansible.builtin.set_fact:
     homebox_fqdn: "{{ homebox_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Homebox service facts
+- name: deploy-homebox | Set Homebox service facts
   ansible.builtin.set_fact:
     homebox_networks:
       - name: "{{ web_network_name | default('web') }}"
@@ -33,7 +26,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Homebox container labels
+- name: deploy-homebox | Create Homebox container labels
   ansible.builtin.set_fact:
     homebox_container_labels: "{{ homebox_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -84,40 +77,40 @@
     - { "key": "homepage.widget.fields", "value": "['items', 'locations', 'totalValue']" }
 
 
-- name: Create Homebox volume
+- name: deploy-homebox | Create Homebox volume
   community.docker.docker_volume:
     name: "{{ homebox_volume_name }}"
     state: present
 
-- name: Check if Homebox is running
+- name: deploy-homebox | Check if Homebox is running
   community.docker.docker_container_info:
     name: "{{ homebox_service_name }}"
   register: homebox_state
 
-- name: Remove Homebox container if changing version
+- name: deploy-homebox | Remove Homebox container if changing version
   when:
     - homebox_state.exists
     - homebox_image_tag != homebox_state.container.Config.Image | split(':') | last
   block:
-    - name: Stop and remove existing Homebox container
+    - name: deploy-homebox | Stop and remove existing Homebox container
       community.docker.docker_container:
         name: "{{ homebox_service_name }}"
         state: absent
 
-    - name: Set update Homebox
+    - name: deploy-homebox | Set update Homebox
       ansible.builtin.set_fact:
         homebox_update: true
 
-- name: Deploy Homebox if not running
+- name: deploy-homebox | Deploy Homebox if not running
   when: not homebox_state.exists or (homebox_update | default(false))
   block:
-    - name: Pull homebox image
+    - name: deploy-homebox | Pull homebox image
       community.docker.docker_image:
         name: "{{ homebox_image }}"
         source: pull
 
     # docker run -d -p 3000:3000 homebox/homebox
-    - name: Deploy Homebox
+    - name: deploy-homebox | Deploy Homebox
       community.docker.docker_container:
         name: "{{ homebox_service_name }}"
         image: "{{ homebox_image }}"
@@ -136,7 +129,7 @@
         volumes: "{{ homebox_volumes }}"
       register: homebox_container_state
 
-    - name: Wait for Homebox to accept connections
+    - name: deploy-homebox | Wait for Homebox to accept connections
       ansible.builtin.wait_for:
         host: "{{ homebox_fqdn }}"
         port: 80

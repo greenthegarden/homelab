@@ -1,21 +1,14 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
-
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
+- name: deploy-hortusfox | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
 ####### HORTUSFOX SECTION
 
 # https://hortusfox.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-hortusfox-dashboard/
 
-- name: Set Hortusfox facts
+- name: deploy-hortusfox | Set Hortusfox facts
   ansible.builtin.set_fact:
     hortusfox_image: "{{ hortusfox_image | default('ghcr.io/danielbrendel/hortusfox-web:latest') }}"
     hortusfox_service_name: "{{ hortusfox_service_name | default('hortusfox') }}"
@@ -23,11 +16,11 @@
     hortusfox_db_backup_volume_name: "{{ hortusfox_db_backup_volume_name | default('hortusfox_db_backup') }}"
     hortusfox_config_dir: /root/hortusfox
 
-- name: Set Hortusfox aggregated facts
+- name: deploy-hortusfox | Set Hortusfox aggregated facts
   ansible.builtin.set_fact:
     hortusfox_fqdn: "{{ hortusfox_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Hortusfox service facts
+- name: deploy-hortusfox | Set Hortusfox service facts
   ansible.builtin.set_fact:
     hortusfox_networks:
       - name: "{{ web_network_name | default('web') }}"
@@ -38,7 +31,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Hortusfox container labels
+- name: deploy-hortusfox | Create Hortusfox container labels
   ansible.builtin.set_fact:
     hortusfox_container_labels: "{{ hortusfox_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -85,7 +78,7 @@
       "value": "https://{{ hortusfox_fqdn }}/",
     }
 
-- name: Create Hortusfox DB container labels
+- name: deploy-hortusfox | Create Hortusfox DB container labels
   ansible.builtin.set_fact:
     hortusfox_db_container_labels: "{{ hortusfox_db_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -96,29 +89,29 @@
       -p{{ hortusfox.db_password }} --all-databases > /tmp/dumps/dump.sql'"
     }
 
-- name: Create Hortusfox configuration directory
+- name: deploy-hortusfox | Create Hortusfox configuration directory
   ansible.builtin.file:
     path: "{{ hortusfox_config_dir }}"
     state: directory
     mode: "0644"
 
-- name: Create Hortusfox configuration
+- name: deploy-hortusfox | Create Hortusfox configuration
   ansible.builtin.template:
     src: templates/hortusfox/docker-compose.yml.j2
     dest: "{{ hortusfox_config_dir }}/docker-compose.yml"
     mode: "0644"
 
-- name: Create Hortusfox backup volume  # noqa: syntax-check[unknown-module]
+- name: deploy-hortusfox | Create Hortusfox backup volume  # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ hortusfox_db_backup_volume_name }}"
     state: present
 
-# - name: Tear down existing services
+# - name: deploy-hortusfox | Tear down existing services
 #   community.docker.docker_compose_v2:
 #     project_src: /root/hortusfox
 #     state: absent
 
-- name: Deploy Hortusfox services  # noqa: syntax-check[unknown-module]
+- name: deploy-hortusfox | Deploy Hortusfox services  # noqa: syntax-check[unknown-module]
   community.docker.docker_compose_v2:
     project_src: "{{ hortusfox_config_dir }}"
   register: output

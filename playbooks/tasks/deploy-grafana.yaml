@@ -1,46 +1,39 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
+- name: deploy-grafana | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
-
-- name: Get status of Prometheus Docker container
+- name: deploy-grafana | Get status of Prometheus Docker container
   community.docker.docker_container_info:
     name: "{{ prometheus_service_name | default('prometheus') }}"
   register: prometheus_container_status
   ignore_errors: true
 
-- name: Ensure Prometheus container is deployed
+- name: deploy-grafana | Ensure Prometheus container is deployed
   ansible.builtin.assert:
     that: prometheus_container_status.exists
     fail_msg: Prometheus is required to be deployed on host
 
-- name: Set Prometheus aggregated facts
+- name: deploy-grafana | Set Prometheus aggregated facts
   ansible.builtin.set_fact:
     prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Create Prometheus configuration directory
+- name: deploy-grafana | Create Prometheus configuration directory
   ansible.builtin.file:
     path: /root/prometheus
     mode: "0644"
     state: directory
   register: prometheus_configuration_creation
 
-- name: Create federation Prometheus configuration file
+- name: deploy-grafana | Create federation Prometheus configuration file
   ansible.builtin.template:
     src: templates/prometheus/prometheus-federation.yml.j2
     dest: /root/prometheus/prometheus.yml
     mode: "0644"
   register: prometheus_configuration_creation
 
-- name: Redeploy Prometheus with new configuration  # noqa: syntax-check[unknown-module]
+- name: deploy-grafana | Redeploy Prometheus with new configuration  # noqa: syntax-check[unknown-module]
   community.docker.docker_container:
     name: "{{ prometheus_service_name | default('prometheus') }}"
     restart: true
@@ -49,18 +42,18 @@
 
 # https://grafana.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-grafana-dashboard/
 
-- name: Set Grafana facts
+- name: deploy-grafana | Set Grafana facts
   ansible.builtin.set_fact:
     grafana_image: "{{ grafana_image | default('grafana/grafana:latest') }}"
     grafana_service_name: "{{ grafana_service_name | default('grafana') }}"
     grafana_service_port: "{{ grafana_service_port | default(3000) }}"
     grafana_volume_name: "{{ grafana_volume_name | default('grafana') }}"
 
-- name: Set Grafana aggregated facts
+- name: deploy-grafana | Set Grafana aggregated facts
   ansible.builtin.set_fact:
     grafana_fqdn: "{{ grafana_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Grafana service facts
+- name: deploy-grafana | Set Grafana service facts
   ansible.builtin.set_fact:
     grafana_instance: "{{ grafana_service_name | default('grafana') }}"
     grafana_networks:
@@ -74,7 +67,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Grafana container labels
+- name: deploy-grafana | Create Grafana container labels
   ansible.builtin.set_fact:
     grafana_container_labels: "{{ grafana_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -125,40 +118,40 @@
       "value": "https://{{ grafana_fqdn }}/",
     }
 
-- name: Create Grafana volume
+- name: deploy-grafana | Create Grafana volume
   community.docker.docker_volume:
     name: "{{ grafana_volume_name }}"
     state: present
 
-- name: Check if Grafana is running
+- name: deploy-grafana | Check if Grafana is running
   community.docker.docker_container_info:
     name: "{{ grafana_service_name }}"
   register: grafana_state
 
-- name: Remove Grafana container if changing version
+- name: deploy-grafana | Remove Grafana container if changing version
   when:
     - grafana_state.exists
     - grafana_image_tag != grafana_state.container.Config.Image | split(':') | last
   block:
-    - name: Stop and remove existing Grafana container
+    - name: deploy-grafana | Stop and remove existing Grafana container
       community.docker.docker_container:
         name: "{{ grafana_service_name }}"
         state: absent
 
-    - name: Set update Grafana
+    - name: deploy-grafana | Set update Grafana
       ansible.builtin.set_fact:
         grafana_update: true
 
-- name: Deploy Grafana if not running
+- name: deploy-grafana | Deploy Grafana if not running
   when: not grafana_state.exists or (grafana_update | default(false))
   block:
-    - name: Pull Grafana image
+    - name: deploy-grafana | Pull Grafana image
       community.docker.docker_image:
         name: "{{ grafana_image }}"
         source: pull
 
     # docker run -d -p 3000:3000 grafana/grafana
-    - name: Deploy Grafana
+    - name: deploy-grafana | Deploy Grafana
       community.docker.docker_container:
         name: "{{ grafana_service_name }}"
         image: "{{ grafana_image }}"
@@ -194,7 +187,7 @@
         volumes: "{{ grafana_volumes }}"
       register: grafana_container_state
 
-    # - name: Wait for Grafana to accept connections
+    # - name: deploy-grafana | Wait for Grafana to accept connections
     #   ansible.builtin.wait_for:
     #     host: "{{ grafana_fqdn }}"
     #     port: 80

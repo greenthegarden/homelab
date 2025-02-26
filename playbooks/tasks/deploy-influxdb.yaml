@@ -1,21 +1,14 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
-
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
+- name: deploy-influxdb | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
 ####### INFLUXDB SECTION
 
 # https://hub.docker.com/_/influxdb/
 
-- name: Set InfluxDB facts
+- name: deploy-influxdb | Set InfluxDB facts
   ansible.builtin.set_fact:
     influxdb_image: "{{ influxdb_image | default('influxdb:latest') }}"
     influxdb_service_name: "{{ influxdb_service_name | default('influxdb') }}"
@@ -25,11 +18,11 @@
     influxdb_init_mode: "{{ influxdb_init_mode | default(omit) }}"
     influxdb_init_retention: "{{ influxdb_init_retention | default(omit) }}"
 
-- name: Set InfluxDB aggregated facts
+- name: deploy-influxdb | Set InfluxDB aggregated facts
   ansible.builtin.set_fact:
     influxdb_fqdn: "{{ influxdb_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set InfluxDB service facts
+- name: deploy-influxdb | Set InfluxDB service facts
   ansible.builtin.set_fact:
     influxdb_networks:
       - name: "{{ web_network_name | default('web') }}"
@@ -44,7 +37,7 @@
 # Should be creating a homeassistant bucket here as defined at
 # https://docs.influxdata.com/influxdb/v2.1/organizations/buckets/create-bucket/
 
-- name: Create InfluxDB container labels
+- name: deploy-influxdb | Create InfluxDB container labels
   ansible.builtin.set_fact:
     influxdb_container_labels: "{{ influxdb_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -93,7 +86,7 @@
       "value": "https://{{ influxdb_fqdn }}/"
     }
 
-- name: Create InfluxDB volumes  # noqa: syntax-check[unknown-module]
+- name: deploy-influxdb | Create InfluxDB volumes  # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
@@ -101,34 +94,34 @@
     - "{{ influxdb_config_volume_name }}"
     - "{{ influxdb_data_volume_name }}"
 
-- name: Check if InfluxDB is running
+- name: deploy-influxdb | Check if InfluxDB is running
   community.docker.docker_container_info:
     name: "{{ influxdb_service_name }}"
   register: influxdb_state
 
-- name: Remove InfluxDB container if changing version
+- name: deploy-influxdb | Remove InfluxDB container if changing version
   when:
     - influxdb_state.exists
     - influxdb_image_tag != influxdb_state.container.Config.Image | split(':') | last
   block:
-    - name: Stop and remove existing InfluxDB container
+    - name: deploy-influxdb | Stop and remove existing InfluxDB container
       community.docker.docker_container:
         name: "{{ influxdb_service_name }}"
         state: absent
 
-    - name: Set update InfluxDB
+    - name: deploy-influxdb | Set update InfluxDB
       ansible.builtin.set_fact:
         influxdb_update: true
 
-- name: Deploy InfluxDB if not running
+- name: deploy-influxdb | Deploy InfluxDB if not running
   when: not influxdb_state.exists or (influxdb_update | default(false))
   block:
-    - name: Pull InfluxDB image
+    - name: deploy-influxdb | Pull InfluxDB image
       community.docker.docker_image:
         name: "{{ influxdb_image }}"
         source: pull
 
-    - name: Deploy InfluxDB
+    - name: deploy-influxdb | Deploy InfluxDB
       community.docker.docker_container:
         name: "{{ influxdb_service_name }}"
         image: "{{ influxdb_image }}"
@@ -151,7 +144,7 @@
         volumes: "{{ influxdb_volumes }}"
       register: influxdb_container_state
 
-    # - name: Wait for InfluxDB to accept connections
+    # - name: deploy-influxdb | Wait for InfluxDB to accept connections
     #   ansible.builtin.wait_for:
     #     host: "{{ influxdb_fqdn }}"
     #     port: 80

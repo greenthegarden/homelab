@@ -1,32 +1,25 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
-
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
+- name: deploy-dozzle | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
 ####### DOZZLE SECTION
 
 # https://dozzle.dev/guide/getting-started
 
-- name: Set Dozzle facts
+- name: deploy-dozzle | Set Dozzle facts
   ansible.builtin.set_fact:
     dozzle_image: "{{ dozzle_image | default('amir20/dozzle:latest') }}"
     dozzle_service_name: "{{ dozzle_service_name | default('dozzle') }}"
     dozzle_service_port: "{{ dozzle_service_port | default(8080) }}"
     dozzle_config_dir: /root/dozzle
 
-- name: Set Dozzle aggregated facts
+- name: deploy-dozzle | Set Dozzle aggregated facts
   ansible.builtin.set_fact:
     dozzle_fqdn: "{{ dozzle_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Dozzle service facts
+- name: deploy-dozzle | Set Dozzle service facts
   ansible.builtin.set_fact:
     dozzle_networks:
       - name: "{{ monitoring_network_name | default('monitoring') }}"
@@ -37,7 +30,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Dozzle container labels
+- name: deploy-dozzle | Create Dozzle container labels
   ansible.builtin.set_fact:
     dozzle_container_labels: "{{ dozzle_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -90,13 +83,13 @@
       "value": "https://{{ dozzle_fqdn }}/"
     }
 
-- name: Pull Dozzle image
+- name: deploy-dozzle | Pull Dozzle image
   community.docker.docker_image:
     name: "{{ dozzle_image }}"
     source: pull
 
 # docker run -d -v /var/run/docker.sock:/var/run/docker.sock -p 8080:8080 amir20/dozzle:latest
-- name: Deploy Dozzle
+- name: deploy-dozzle | Deploy Dozzle
   community.docker.docker_container:
     name: "{{ dozzle_service_name }}"
     image: "{{ dozzle_image }}"
@@ -120,7 +113,7 @@
     volumes: "{{ dozzle_volumes }}"
   register: dozzle_container_state
 
-- name: Wait for Dozzle to accept connections
+- name: deploy-dozzle | Wait for Dozzle to accept connections
   ansible.builtin.wait_for:
     host: "{{ dozzle_fqdn }}"
     port: 80

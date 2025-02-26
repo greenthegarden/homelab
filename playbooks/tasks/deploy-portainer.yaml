@@ -1,15 +1,8 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
-
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
+- name: deploy-portainer | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
 ####### PORTAINER SECTION
 
@@ -17,18 +10,18 @@
 # https://docs.portainer.io/start/install/server/docker/linux
 # https://docs.portainer.io/advanced/reverse-proxy/traefik
 
-- name: Set Portainer facts
+- name: deploy-portainer | Set Portainer facts
   ansible.builtin.set_fact:
     portainer_image: "{{ portainer_image | default('portainer/portainer-ce:latest') }}"
     portainer_service_name: "{{ portainer_service_name | default('portainer') }}"
     portainer_service_port: "{{ portainer_service_port | default(9443) }}"
     portainer_volume_name: "{{ portainer_volume_name | default('portainer') }}"
 
-- name: Set Portainer aggregated facts
+- name: deploy-portainer | Set Portainer aggregated facts
   ansible.builtin.set_fact:
     portainer_fqdn: "{{ portainer_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Portainer service facts
+- name: deploy-portainer | Set Portainer service facts
   ansible.builtin.set_fact:
     portainer_ports:
       - "{{ portainer_service_port }}:9000"
@@ -41,7 +34,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Portainer container labels
+- name: deploy-portainer | Create Portainer container labels
   ansible.builtin.set_fact:
     portainer_container_labels: "{{ portainer_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -106,39 +99,39 @@
     #     "value": "ptr_+Au92kp00xt8cbvCSmSH6MfUZbtGnwHlDbuhckEvaIU=",
     #   }
 
-- name: Create volume for Portainer  # noqa: syntax-check[unknown-module]
+- name: deploy-portainer | Create volume for Portainer  # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ portainer_volume_name }}"
 
-- name: Check if Portainer is running
+- name: deploy-portainer | Check if Portainer is running
   community.docker.docker_container_info:
     name: "{{ portainer_service_name }}"
   register: portainer_state
 
-- name: Remove Portainer container if changing version
+- name: deploy-portainer | Remove Portainer container if changing version
   when:
     - portainer_state.exists
     - portainer_image_tag != portainer_state.container.Config.Image | split(':') | last
   block:
-    - name: Stop and remove existing Portainer container
+    - name: deploy-portainer | Stop and remove existing Portainer container
       community.docker.docker_container:
         name: "{{ portainer_service_name }}"
         state: absent
 
-    - name: Set update Portainer
+    - name: deploy-portainer | Set update Portainer
       ansible.builtin.set_fact:
         portainer_update: true
 
-- name: Deploy Portainer if not running
+- name: deploy-portainer | Deploy Portainer if not running
   when:
     - not portainer_state.exists or (portainer_update | default(false))
   block:
-    - name: Pull Portainer image
+    - name: deploy-portainer | Pull Portainer image
       community.docker.docker_image:
         name: "{{ portainer_image }}"
         source: pull
 
-    - name: Deploy Portainer
+    - name: deploy-portainer | Deploy Portainer
       community.docker.docker_container:
         name: "{{ portainer_service_name }}"
         image: "{{ portainer_image }}"
@@ -154,7 +147,7 @@
         volumes: "{{ portainer_volumes }}"
       register: portainer_container_state
 
-    - name: Wait for Portainer to accept connections
+    - name: deploy-portainer | Wait for Portainer to accept connections
       ansible.builtin.wait_for:
         host: "{{ portainer_fqdn }}"
         port: 80

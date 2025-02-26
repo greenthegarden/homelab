@@ -1,22 +1,15 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
-
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
+- name: deploy-traefik | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
 # https://stackoverflow.com/questions/58554731/traefik-v2-0-metrics-with-prometheus
 # https://doc.traefik.io/traefik/reference/static-configuration/env/
 # https://medium.com/@joshuaavalon/setup-traefik-v2-step-by-step-fae44ed8f76d
 # https://github.com/scafer/traefik-duckdns-letsencrypt/tree/main
 
-- name: Set Traefik facts
+- name: deploy-traefik | Set Traefik facts
   ansible.builtin.set_fact:
     traefik_image: "{{ traefik_image | default('traefik:latest') }}"
     traefik_service_name: "{{ traefik_service_name | default('traefik') }}"
@@ -25,14 +18,14 @@
     traefik_provider: "{{ traefik_provider | default('docker') }}"
     traefik_volume_letsencrypt_name: "{{ traefik_volume_letsencrypt_name | default('letsencrypt') }}"
 
-- name: Set Traefik aggregated facts
+- name: deploy-traefik | Set Traefik aggregated facts
   ansible.builtin.set_fact:
     traefik_fqdn: "{{ traefik_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 # https://github.com/karvounis/traefik-tutorial-docker-compose-files/blob/master/standalone/advanced/docker-compose.ping.yml
 # https://github.com/ChristianLempa/homelab/blob/main/traefik/traefik-demo-1/config/traefik.yaml
 
-- name: Set Traefik service facts
+- name: deploy-traefik | Set Traefik service facts
   ansible.builtin.set_fact:
     traefik_command:
       #### These are the CLI commands that will configure Traefik and tell it how to work! ####
@@ -98,7 +91,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Traefik container labels
+- name: deploy-traefik | Create Traefik container labels
   ansible.builtin.set_fact:
     traefik_container_labels: "{{ traefik_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -205,26 +198,26 @@
       "value": "https://github.com/traefik/traefik/releases/tag/v$${major}.$${minor}.$${patch}",
     }
 
-- name: Create acme directory
+- name: deploy-traefik | Create acme directory
   ansible.builtin.file:
     path: /root/letsencrypt
     mode: "644"
     state: directory
   register: acme_directory_creation
 
-- name: Create acme configuration file
+- name: deploy-traefik | Create acme configuration file
   ansible.builtin.file:
     path: /root/letsencrypt/acme.json
     state: touch
     mode: "600"
   register: acme_configuration_creation
 
-- name: Pull image
+- name: deploy-traefik | Pull image
   community.docker.docker_image:
     name: "{{ traefik_image }}"
     source: pull
 
-- name: Deploy Traefik with Docker as provider
+- name: deploy-traefik | Deploy Traefik with Docker as provider
   community.docker.docker_container:
     name: "{{ traefik_service_name }}"
     image: "{{ traefik_image }}"
@@ -251,7 +244,7 @@
   register: traefik_container_state
   when: traefik_provider == "docker"
 
-# - name: Wait for Traefik to accept connections
+# - name: deploy-traefik | Wait for Traefik to accept connections
 #   ansible.builtin.wait_for:
 #     host: "{{ traefik_fqdn }}"
 #     port: "{{ traefik_service_port | default(80) }}"

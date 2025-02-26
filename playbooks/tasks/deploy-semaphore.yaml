@@ -1,22 +1,15 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
-
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
+- name: deploy-semaphore | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
 ####### SEMAPHORE SECTION
 
 # https://hub.docker.com/_/semaphore
 # https://codeopolis.com/posts/how-to-install-semaphore-using-docker/
 
-- name: Set Semaphore facts
+- name: deploy-semaphore | Set Semaphore facts
   ansible.builtin.set_fact:
     semaphore_image: "{{ semaphore_image | default('semaphoreui/semaphore:latest') }}"
     semaphore_service_name: "{{ semaphore_service_name | default('semaphore') }}"
@@ -26,11 +19,11 @@
     semaphore_volume_tmp_name: "{{ semaphore_volume_tmp_name | default('semaphore_tmp') }}"
     semaphore_db_dialect: "{{ semaphore_db_dialect | default('bolt') }}"
 
-- name: Set Semaphore aggregated facts
+- name: deploy-semaphore | Set Semaphore aggregated facts
   ansible.builtin.set_fact:
     semaphore_fqdn: "{{ semaphore_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Semaphore service facts
+- name: deploy-semaphore | Set Semaphore service facts
   ansible.builtin.set_fact:
     semaphore_networks:
       - name: "{{ web_network_name | default('web') }}"
@@ -43,7 +36,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Semaphore container labels
+- name: deploy-semaphore | Create Semaphore container labels
   ansible.builtin.set_fact:
     semaphore_container_labels: "{{ semaphore_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -89,7 +82,7 @@
       "value": "https://{{ semaphore_fqdn }}/",
     }
 
-- name: Create Semaphore volumes
+- name: deploy-semaphore | Create Semaphore volumes
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
@@ -98,30 +91,30 @@
     - "{{ semaphore_volume_config_name }}"
     - "{{ semaphore_volume_tmp_name }}"
 
-- name: Check if Semaphore is running
+- name: deploy-semaphore | Check if Semaphore is running
   community.docker.docker_container_info:
     name: "{{ semaphore_service_name }}"
   register: semaphore_state
 
-- name: Remove Semaphore container if changing version
+- name: deploy-semaphore | Remove Semaphore container if changing version
   when:
     - semaphore_state.exists
     - semaphore_image_tag != semaphore_state.container.Config.Image | split(':') | last
   block:
-    - name: Stop and remove existing Semaphore container
+    - name: deploy-semaphore | Stop and remove existing Semaphore container
       community.docker.docker_container:
         name: "{{ semaphore_service_name }}"
         state: absent
 
-    - name: Set update Semaphore
+    - name: deploy-semaphore | Set update Semaphore
       ansible.builtin.set_fact:
         semaphore_update: true
 
-- name: Deploy Semaphore if not running
+- name: deploy-semaphore | Deploy Semaphore if not running
   when:
     - not semaphore_state.exists or (semaphore_update | default(false))
   block:
-    - name: Pull Semaphore image
+    - name: deploy-semaphore | Pull Semaphore image
       community.docker.docker_image:
         name: "{{ semaphore_image }}"
         source: pull
@@ -138,7 +131,7 @@
     # -v semaphore_tmp:/tmp/semaphore \
     # -d semaphoreui/semaphore:v2.12.4
 
-    - name: Deploy Semaphore
+    - name: deploy-semaphore | Deploy Semaphore
       community.docker.docker_container:
         name: "{{ semaphore_service_name }}"
         image: "{{ semaphore_image }}"
@@ -158,7 +151,7 @@
         volumes: "{{ semaphore_volumes }}"
       register: semaphore_container_state
 
-    - name: Wait for Semaphore to accept connections
+    - name: deploy-semaphore | Wait for Semaphore to accept connections
       ansible.builtin.wait_for:
         host: "{{ semaphore_fqdn }}"
         port: 80

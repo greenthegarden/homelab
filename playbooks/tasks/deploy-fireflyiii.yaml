@@ -1,21 +1,14 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
-
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
+- name: deploy-fireflyiii | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
 ####### fireflyiii SECTION
 
 # https://fireflyiii.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-fireflyiii-dashboard/
 
-- name: Set Firefly III facts
+- name: deploy-fireflyiii | Set Firefly III facts
   ansible.builtin.set_fact:
     fireflyiii_image_name: "{{ fireflyiii_image_name | default('fireflyiii/core') }}"
     fireflyiii_image_tag: "{{ fireflyiii_image_tag | default('latest') }}"
@@ -24,12 +17,12 @@
     fireflyiii_db_backup_volume_name: "{{ fireflyiii_db_backup_volume_name | default('fireflyiii_db_backup') }}"
     fireflyiii_config_dir: /root/fireflyiii
 
-- name: Set Firefly III aggregated facts
+- name: deploy-fireflyiii | Set Firefly III aggregated facts
   ansible.builtin.set_fact:
     fireflyiii_image: "{{ fireflyiii_image_name }}:{{ fireflyiii_image_tag }}"
     fireflyiii_fqdn: "{{ fireflyiii_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Firefly III service facts
+- name: deploy-fireflyiii | Set Firefly III service facts
   ansible.builtin.set_fact:
     fireflyiii_networks:
       - name: "{{ web_network_name | default('web') }}"
@@ -40,7 +33,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Firefly III container labels
+- name: deploy-fireflyiii | Create Firefly III container labels
   ansible.builtin.set_fact:
     fireflyiii_container_labels: "{{ fireflyiii_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -89,7 +82,7 @@
       "value": "https://{{ fireflyiii_fqdn }}/",
     }
 
-- name: Create Firefly III DB container labels
+- name: deploy-fireflyiii | Create Firefly III DB container labels
   ansible.builtin.set_fact:
     fireflyiii_db_container_labels: "{{ fireflyiii_db_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -101,13 +94,13 @@
       -p{{ fireflyiii.db_password }} --all-databases > /tmp/dumps/dump.sql'"
     }
 
-- name: Create Firefly III configuration directory
+- name: deploy-fireflyiii | Create Firefly III configuration directory
   ansible.builtin.file:
     path: "{{ fireflyiii_config_dir }}"
     state: directory
     mode: "0644"
 
-- name: Create Firefly III configuration
+- name: deploy-fireflyiii | Create Firefly III configuration
   ansible.builtin.template:
     src: "templates/fireflyiii/{{ item }}.j2"
     dest: "{{ fireflyiii_config_dir }}/{{ item }}"
@@ -117,17 +110,17 @@
     - fireflyiii.env
     - fireflyiii_importer.env
 
-- name: Create Firefly III backup volume  # noqa: syntax-check[unknown-module]
+- name: deploy-fireflyiii | Create Firefly III backup volume  # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ fireflyiii_db_backup_volume_name }}"
     state: present
 
-# - name: Tear down existing services
+# - name: deploy-fireflyiii | Tear down existing services
 #   community.docker.docker_compose_v2:
 #     project_src: /root/fireflyiii
 #     state: absent
 
-- name: Deploy Firefly III services  # noqa: syntax-check[unknown-module]
+- name: deploy-fireflyiii | Deploy Firefly III services  # noqa: syntax-check[unknown-module]
   community.docker.docker_compose_v2:
     project_src: "{{ fireflyiii_config_dir }}"
     env_files:

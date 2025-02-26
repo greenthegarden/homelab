@@ -1,21 +1,14 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
-
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
+- name: deploy-frigate | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
 ####### FRIGATE SECTION
 
 # https://docs.frigate.video/frigate/installation
 
-- name: Set Frigate facts
+- name: deploy-frigate | Set Frigate facts
   ansible.builtin.set_fact:
     frigate_image: "{{ frigate_image | default('ghcr.io/blakeblackshear/frigate:stable') }}"
     frigate_service_name: "{{ frigate_service_name | default('frigate') }}"
@@ -27,11 +20,11 @@
     frigate_mount_point: /mnt/storage/frigate
     frigate_config_dir: "/root/frigate"
 
-- name: Set Frigate aggregated facts
+- name: deploy-frigate | Set Frigate aggregated facts
   ansible.builtin.set_fact:
     frigate_fqdn: "{{ frigate_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Frigate service facts
+- name: deploy-frigate | Set Frigate service facts
   ansible.builtin.set_fact:
     frigate_mounts:
       - type: tmpfs # Optional: 1GB of memory, reduces SSD/SD Card wear
@@ -50,7 +43,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Frigate container labels
+- name: deploy-frigate | Create Frigate container labels
   ansible.builtin.set_fact:
     frigate_container_labels: "{{ frigate_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -101,29 +94,29 @@
     - { "key": "homepage.widget.fields", "value": "['cameras', 'uptime', 'version']."}
     - { "key": "homepage.widget.enableRecentEvents", "value": "true" }
 
-- name: Create Frigate configuration directory
+- name: deploy-frigate | Create Frigate configuration directory
   ansible.builtin.file:
     path: "{{ frigate_config_dir }}"
     state: directory
     mode: "0644"
 
-- name: Create Frigate configuration file
+- name: deploy-frigate | Create Frigate configuration file
   ansible.builtin.template:
     src: templates/frigate/config.yml.j2
     dest: "{{ frigate_config_dir }}/config.yml"
     mode: "0644"
   register: frigate_configuration_creation
 
-- name: Create volume for Frigate
+- name: deploy-frigate | Create volume for Frigate
   community.docker.docker_volume:
     name: "{{ frigate_volume_name }}"
 
-- name: Pull Frigate image
+- name: deploy-frigate | Pull Frigate image
   community.docker.docker_image:
     name: "{{ frigate_image }}"
     source: pull
 
-- name: Deploy Frigate
+- name: deploy-frigate | Deploy Frigate
   community.docker.docker_container:
     name: "{{ frigate_service_name }}"
     image: "{{ frigate_image }}"
@@ -142,7 +135,7 @@
     volumes: "{{ frigate_volumes }}"
   register: frigate_container_state
 
-# - name: Wait for Frigate to accept connections
+# - name: deploy-frigate | Wait for Frigate to accept connections
 #   ansible.builtin.wait_for:
 #     host: "{{ frigate_fqdn }}"
 #     port: 80

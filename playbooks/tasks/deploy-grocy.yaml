@@ -1,15 +1,8 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
-
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
+- name: deploy-grocy | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
 ####### GROCY SECTION
 
@@ -17,18 +10,18 @@
 # https://codeopolis.com/posts/how-to-install-grocy-using-docker/
 # Initial login: User: admin, Password: admin
 
-- name: Set Grocy facts
+- name: deploy-grocy | Set Grocy facts
   ansible.builtin.set_fact:
     grocy_image: "{{ grocy_image | default('linuxserver/grocy:latest') }}"
     grocy_service_name: "{{ grocy_service_name | default('grocy') }}"
     grocy_service_port: "{{ grocy_service_port | default(9283) }}"
     grocy_volume_name: "{{ grocy_volume_name | default('grocy') }}"
 
-- name: Set Grocy aggregated facts
+- name: deploy-grocy | Set Grocy aggregated facts
   ansible.builtin.set_fact:
     grocy_fqdn: "{{ grocy_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Grocy service facts
+- name: deploy-grocy | Set Grocy service facts
   ansible.builtin.set_fact:
     grocy_networks:
       - name: "{{ web_network_name | default('web') }}"
@@ -40,7 +33,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Grocy container labels
+- name: deploy-grocy | Create Grocy container labels
   ansible.builtin.set_fact:
     grocy_container_labels: "{{ grocy_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -91,35 +84,35 @@
       "value": "https://{{ grocy_fqdn }}/",
     }
 
-- name: Create Grocy volume  # noqa: syntax-check[unknown-module]
+- name: deploy-grocy | Create Grocy volume  # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ grocy_volume_name }}"
     state: present
 
-- name: Check if Grocy is running  # noqa: syntax-check[unknown-module]
+- name: deploy-grocy | Check if Grocy is running  # noqa: syntax-check[unknown-module]
   community.docker.docker_container_info:
     name: "{{ grocy_service_name }}"
   register: grocy_state
 
-- name: Remove Grocy container if changing version
+- name: deploy-grocy | Remove Grocy container if changing version
   when:
     - grocy_state.exists
     - grocy_image_tag != grocy_state.container.Config.Image | split(':') | last
   block:
-    - name: Stop and remove existing Grocy container
+    - name: deploy-grocy | Stop and remove existing Grocy container
       community.docker.docker_container:
         name: "{{ grocy_service_name }}"
         state: absent
 
-    - name: Set update Grocy
+    - name: deploy-grocy | Set update Grocy
       ansible.builtin.set_fact:
         grocy_update: true
 
-- name: Deploy Grocy if not running
+- name: deploy-grocy | Deploy Grocy if not running
   when:
     - not grocy_state.exists or (grocy_update | default(false))
   block:
-    - name: Pull Grocy image
+    - name: deploy-grocy | Pull Grocy image
       community.docker.docker_image:
         name: "{{ grocy_image }}"
         source: pull
@@ -135,7 +128,7 @@
     #   lscr.io/linuxserver/grocy:latest
 
     # initial password: user: admin, password: admin
-    - name: Deploy Grocy
+    - name: deploy-grocy | Deploy Grocy
       community.docker.docker_container:
         name: "{{ grocy_service_name }}"
         image: "{{ grocy_image }}"
@@ -153,7 +146,7 @@
         volumes: "{{ grocy_volumes }}"
       register: grocy_container_state
 
-    - name: Wait for Grocy to accept connections
+    - name: deploy-grocy | Wait for Grocy to accept connections
       ansible.builtin.wait_for:
         host: "{{ grocy_fqdn }}"
         port: 80

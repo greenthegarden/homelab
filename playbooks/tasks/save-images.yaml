@@ -1,6 +1,6 @@
 ---
 
-- name: Archive image {{ item.image }}  # noqa: syntax-check[unknown-module]
+- name: save-images | Archive image {{ item.image }}  # noqa: syntax-check[unknown-module]
   community.docker.docker_image:
     name: "{{ item.image }}"
     tag: "{{ item.tag }}"
@@ -9,7 +9,7 @@
     mode: "0644"
     state: present
 
-- name: Copy, to ansible host, image {{ item.name }}
+- name: save-images | Copy, to ansible host, image {{ item.name }}
   ansible.builtin.fetch:
     src: /tmp/{{ item.name }}.tar
     dest: /tmp/images/

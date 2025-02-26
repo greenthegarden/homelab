@@ -1,0 +1,12 @@
+---
+
+- name: hosts-dependency-check-docker-version | Get host Docker status
+  community.docker.docker_host_info:
+  register: host_docker_info
+  ignore_errors: true
+
+- name: hosts-dependency-check-docker-version | Ensure Docker is available on host
+  ansible.builtin.assert:
+    that:
+      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
+    fail_msg: A version of Docker >= 25 is required to be installed

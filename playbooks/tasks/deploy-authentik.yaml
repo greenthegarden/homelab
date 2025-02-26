@@ -1,19 +1,12 @@
 ---
 
-- name: Get host Docker status
-  community.docker.docker_host_info:
-  register: host_docker_info
-  ignore_errors: true
-
-- name: Ensure Docker is available on host
-  ansible.builtin.assert:
-    that:
-      - host_docker_info.host_info.ServerVersion is version('25.0', '>=')
-    fail_msg: A version of Docker >= 20 is required to be installed
+- name: deploy-authentik | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
 
 # https://authentik.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-authentik-dashboard/
 
-- name: Set Authentik facts
+- name: deploy-authentik | Set Authentik facts
   ansible.builtin.set_fact:
     authentik_image_name: "{{ authentik_image_name | default('ghcr.io/benphelps/authentik') }}"
     authentik_image_tag: "{{ authentik_image_tag | default('latest') }}"
@@ -21,12 +14,12 @@
     authentik_service_port: "{{ authentik_service_port | default(3000) }}"
     authentik_config_dir: /root/authentik
 
-- name: Set Authentik aggregated facts
+- name: deploy-authentik | Set Authentik aggregated facts
   ansible.builtin.set_fact:
     authentik_image: "{{ authentik_image_name }}:{{ authentik_image_tag }}"
     authentik_fqdn: "{{ authentik_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: Set Authentik API facts
+- name: deploy-authentik | Set Authentik API facts
   ansible.builtin.set_fact:
     authentik_networks:
       - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
@@ -38,7 +31,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: Create Authentik container labels
+- name: deploy-authentik | Create Authentik container labels
   ansible.builtin.set_fact:
     authentik_container_labels: "{{ authentik_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -78,7 +71,7 @@
       "value": "https://{{ authentik_fqdn }}/",
     }
 
-- name: Create Authentik  DB container labels
+- name: deploy-authentik | Create Authentik  DB container labels
   ansible.builtin.set_fact:
     authentik_db_container_labels: "{{ authentik_db_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -88,13 +81,13 @@
       "value": "/bin/sh -c 'PGPASSWORD={{ authentik.db_password }} pg_dump -U {{ authentik.db_user }} {{ authentik.db_name }} > /tmp/dumps/dump.sql'"
     }
 
-- name: Create Authentik configuration directory
+- name: deploy-authentik | Create Authentik configuration directory
   ansible.builtin.file:
     path: "{{ authentik_config_dir }}"
     state: directory
     mode: "0644"
 
-- name: Create Authentik configuration
+- name: deploy-authentik | Create Authentik configuration
   ansible.builtin.template:
     src: "templates/authentik/{{ item }}.j2"
     dest: "{{ authentik_config_dir }}/"
@@ -103,12 +96,12 @@
     - docker-compose.yml
     - authentik.env
 
-# - name: Tear down existing services
+# - name: deploy-authentik | Tear down existing services
 #   community.docker.docker_compose_v2:
 #     project_src: /root/authentik
 #     state: absent
 
-- name: Deploy Authentik services  # noqa: syntax-check[unknown-module]
+- name: deploy-authentik | Deploy Authentik services  # noqa: syntax-check[unknown-module]
   community.docker.docker_compose_v2:
     project_src: "{{ authentik_config_dir }}"
     env_files:

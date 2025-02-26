@@ -1,12 +1,12 @@
 ---
 
-- name: Copy to host image {{ item.name }}
+- name: load-images | Copy to host image {{ item.name }}
   ansible.builtin.copy:
     src: /tmp/images/{{ item.name }}.tar
     dest: /tmp/{{ item.name }}.tar
     mode: "0644"
 
-- name: Load image {{ item.name }}  # noqa: syntax-check[unknown-module]
+- name: load-images | Load image {{ item.name }}  # noqa: syntax-check[unknown-module]
   community.docker.docker_image:
     name: "{{ item.image }}"
     tag: "{{ item.tag }}"
