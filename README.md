@@ -18,11 +18,11 @@ Please feel free to reuse any of the code or provide feedback and suggestions.
 - [Software](#software)
   - [Compute Server Software](#compute-server-software)
   - [Storage Server Software](#storage-server-software)
-  - [Homelab Applications andServices](#homelab-applications-andservices)
-  - [Ansible Details](#ansible-details)
-    - [Naming Conventions](#naming-conventions)
+  - [Homelab Applications and Services](#homelab-applications-and-services)
   - [Maintenance](#maintenance)
 - [Guides](#guides)
+  - [Ansible](#ansible)
+    - [Naming Conventions](#naming-conventions)
   - [Renovate](#renovate)
   - [Setting up Semaphore UI](#setting-up-semaphore-ui)
   - [Managing secrets](#managing-secrets)
@@ -58,6 +58,7 @@ The major hardware which makes up the Homelab is shown in the following diagram.
 ### Network Hardware
 
 A [Ubiquity Cloud Gateway Ultra][network] is used to manage the network aspects of the Homelab.
+
 The UCG runs the Unifi Network application.
 
 Some good sources of information for setting up a Unifi network are:
@@ -67,9 +68,9 @@ Some good sources of information for setting up a Unifi network are:
 
 ### Compute Server Hardware
 
-I selected the [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC][compserv]
-as a Homelab compute server. The system uses an i5-1235U processor, which with 10 cores,
-provides a good amount of parallel processing in a compact unit.
+I selected the [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC][compserv] as a Homelab compute server.
+
+The system uses an i5-1235U processor, which with 10 cores, provides a good amount of parallel processing in a compact unit.
 
 Server Specifications
 
@@ -84,8 +85,9 @@ Server Specifications
 
 ### Storage Server Hardware
 
-For a Storage server I am using a [ZimaBlade 7700 NAS kit][storserv], which uses a quad-core version
-of the Zimablade single-board x86 computer. For storage, two Seagate Barracuda Green 2TB SATA hard drives are used.
+For a Storage server I am using a [ZimaBlade 7700 NAS kit][storserv], which uses a quad-core version of the Zimablade single-board x86 computer.
+
+For storage, two Seagate Barracuda Green 2TB SATA hard drives are used.
 
 Server Specifications
 
@@ -107,9 +109,8 @@ Server Specifications
 
 ### Compute Server Software
 
-The compute server is running [Proxmox Virtual Environment 8 hypervisor][compsoft]
-as the OS. This allows both virtual machines and LXC Linux Containers to be used to host the
-services and applications within the Homelab.
+The compute server is running [Proxmox Virtual Environment 8 hypervisor][compsoft] as the OS.
+This allows both virtual machines and LXC Linux Containers to be used to host the services and applications within the Homelab.
 
 Proxmox 8 was installed on top of Debian 12 as I was unable to boot directly into the Proxmox installer.
 
@@ -125,13 +126,11 @@ TrueNAS Scale ElectricEel-24.10.2 was installed directly on to the Zimaboard.
 
 The initial configuration of TrueNAS was based on details described in [6 Crucial Settings to Enable on TrueNAS SCALE][truenassettings].
 
-### Homelab Applications andServices
+### Homelab Applications and Services
 
-The majority of applications and services running within the Homelab are
-deployed as [Docker containers][docker], running within
-[LXC Linux containers][linuxcontainers]. The exceptions are Nextcloud
-and Home Assistant, which are running in virtual machines. The Linux containers
-run [Debian 12 Bookworm][debian] as the host OS.
+The majority of applications and services running within the Homelab are deployed as [Docker containers][docker], running within
+[LXC Linux containers][linuxcontainers]. The exceptions are Nextcloud and Home Assistant, which are running in virtual machines.
+The Linux containers run [Debian 12 Bookworm][debian] as the host OS.
 
 The following resource details are used for LXC Linux Containers:
 
@@ -158,25 +157,25 @@ using an architecture as shown in the following diagram.
 
 ![Homelab application deployment architecture](docs/homelab-application-deployment-architecture.drawio.png "Homelab application deployment architecture")
 
-[Ansible] is used to automate the configuration of the Linux containers,
-including the installation of Docker, and deploy the containerised applications. The
-Ansible files make up the majority of this repository, which is structured to work
-with with [Semaphore UI][semaphoreui].
+[Ansible] is used to automate the configuration of the Linux containers, including the installation of Docker, and deploy the containerised applications. The
+Ansible files make up the majority of this repository, which is structured to work with [Semaphore UI][semaphoreui].
 
 The current iteration of the Homelab hosts the following applications:
 
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/nextcloud.svg" height="25" width="auto" alt="Nextcloud"> [Nextcloud] - Open source content collaboration platform. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/home-assistant.svg" height="25" width="auto" alt="Home Assistant"> [Home Assistant][homeassistant] - Open source home automation that puts local control and privacy first. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/authentik.svg" height="25" width="auto" alt="Authentik"> [Authentik] - Identity manager. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/dozzle.svg" height="25" width="auto" alt="Dozzle"> [Dozzle] - Realtime log viewer for docker containers. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/emqx.svg" height="25" width="auto" alt="EMQX"> [EMQX] - MQTT platform. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/firefly-iii.svg" height="25" width="auto" alt="Firefly III"> [Firefly III][fireflyiii] - A free and open source personal finance manager. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/frigate.svg" height="25" width="auto" alt="Frigate"> [Frigate] - An open source NVR. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grafana.svg" height="25" width="auto" alt="Grafana"> [Grafana] - An open source tool to create dashboards. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grafana.svg" height="25" width="auto" alt="Grafana"> [Grafana] - An open source tool to create dashboards. - REPLACED BY DOZZLE <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grocy.svg" height="25" width="auto" alt="Grocy"> [Grocy] - An open source web-based self-hosted groceries & household management solution. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/homebox.svg" height="25" width="auto" alt="Homebox"> [Homebox] - An open source inventory and organization system. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/homepage.png" height="25" width="auto" alt="Homepage"> [Homepage] - A modern, fully static, fast, secure fully proxied, highly customizable application dashboard. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/hortusfox.png" height="25" width="auto" alt="Hortusfox"> [Hortusfox] - A free and open-sourced self-hosted plant manager system. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/influxdb.svg" height="25" width="auto" alt="InfluxDB"> [InfluxDB] - A time-series database. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- 📓 [Journal] - A simple self-hosted journaling app
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/portainer.svg" height="25" width="auto" alt="Portainer"> [Portainer] - A universal container management platform. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/semaphore.svg" height="25" width="auto" alt="Semaphore"> [Semaphore] - User friendly web interface for executing Ansible playbooks, Terraform, OpenTofu code and Bash scripts. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/uptime-kuma.svg" height="25" width="auto" alt="Uptime Kuma"> [Uptime Kuma][uptimekuma] - An easy-to-use self-hosted monitoring tool. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
@@ -184,21 +183,28 @@ The current iteration of the Homelab hosts the following applications:
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg" height="25" width="auto" alt="Wazuh"> [Wazuh][wazuh] - A free and open-source platform for threat prevention, detection, and response, capable of protecting workloads across on-premises, virtualized, containerized, and cloud-based environments. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/whats-up-docker.svg" height="25" width="auto" alt="WUD (What's up Docker)"> [WUD (What's up Docker)][wud] - A tool to keep Docker containers up-to-date. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 
-Underpinning the applications are a number of other services:
+Underpinning the applications are a number of support services:
 
-- [Docker Socket Proxy][dockersocketproxy] - A security-enhanced proxy for the Docker Socket.
+- [Docker Socket Proxy][dockersocketproxy] - A security-enhanced proxy for the Docker socket.
 - [Docker Volume Backup][dockervolumebackup] - Companion container to backup Docker volumes.
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/portainer.svg" height="25" width="auto" alt="Portainer"> [Portainer Agent][portaineragent] - Provide a Portainer Server instance with access to node resources. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- [Node Exporter][nodeexporter]- Prometheus exporter for hardware and OS metrics.
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/prometheus.svg" height="25" width="auto" alt="Prometheus"> [Prometheus] - An open-source systems monitoring and alerting toolkit. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/dozzle.svg" height="25" width="auto" alt="Dozzle Agent"> [Dozzle Agent][dozzleagent] - Provide a Dozzle Server instance access to external node resources. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/portainer.svg" height="25" width="auto" alt="Portainer Agent"> [Portainer Agent][portaineragent] - Provide a Portainer Server instance access to external node resources. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- [Node Exporter][nodeexporter]- Prometheus exporter for hardware and OS metrics. - REPLACED BY DOZZLE
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/prometheus.svg" height="25" width="auto" alt="Prometheus"> [Prometheus] - An open-source systems monitoring and alerting toolkit.  - REPLACED BY DOZZLE <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/traefik-proxy.svg" height="25" width="auto" alt="Traefik"> [Traefik] - An open source application proxy. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg" height="25" width="auto" alt="Wazuh"> [Wazuh Agent][wazuhagent] - Wazuh agent for endpoints. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 
-### Ansible Details
+### Maintenance
+
+## Guides
+
+### Ansible
 
 #### Naming Conventions
 
-When naming Ansible playbooks and roles, it is recommended to follow consistent conventions. [Here are some examples of naming conventions][ansiblenaming]:
+When naming Ansible playbooks and roles, it is recommended to follow consistent conventions.
+
+[Here are some examples of naming conventions][ansiblenaming]:
 
 - Playbooks: Use names like site.yml, webapp.yml, database.yml.
 
@@ -209,10 +215,6 @@ When naming Ansible playbooks and roles, it is recommended to follow consistent 
 - Task names: Start with a verb to indicate the action, e.g. "start_webserver".
 
 - Variable names: Use lowercase letters and underscores to separate words.
-
-### Maintenance
-
-## Guides
 
 ### Renovate
 
@@ -482,6 +484,8 @@ ssh://nextcloud@truenas:2222/mnt/homelab-backup/nextcloud-aio-backup
 [docker]: https://www.docker.com/
 [dockersocketproxy]: https://github.com/Tecnativa/docker-socket-proxy
 [dockervolumebackup]: https://github.com/offen/docker-volume-backup
+[dozzle]: https://dozzle.dev/
+[dozzleagent]: https://dozzle.dev/guide/agent
 [dv]: https://docs.docker.com/engine/storage/volumes/
 [dvb]: https://github.com/offen/docker-volume-backup "docker-volume-backup"
 [dvbcr]: https://offen.github.io/docker-volume-backup/reference/
@@ -495,6 +499,7 @@ ssh://nextcloud@truenas:2222/mnt/homelab-backup/nextcloud-aio-backup
 [homepage]: https://gethomepage.dev/
 [hortusfox]: https://www.hortusfox.com/
 [influxdb]: https://www.influxdata.com/
+[journal]: https://github.com/inoda/journal
 [linuxcontainers]: https://linuxcontainers.org/
 [network]: https://techspecs.ui.com/unifi/unifi-cloud-gateways/ucg-ultra
 [nextcloud]: https://nextcloud.com/
