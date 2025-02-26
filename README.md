@@ -18,8 +18,7 @@ Please feel free to reuse any of the code or provide feedback and suggestions.
 - [Software](#software)
   - [Compute Server Software](#compute-server-software)
   - [Storage Server Software](#storage-server-software)
-  - [Homelab Services](#homelab-services)
-    - [Application Deployment](#application-deployment)
+  - [Homelab Applications andServices](#homelab-applications-andservices)
   - [Ansible Details](#ansible-details)
     - [Naming Conventions](#naming-conventions)
   - [Maintenance](#maintenance)
@@ -32,6 +31,7 @@ Please feel free to reuse any of the code or provide feedback and suggestions.
     - [Container Data](#container-data)
     - [Off-Site Backup](#off-site-backup)
     - [Nextcloud AOI](#nextcloud-aoi)
+- [To Do](#to-do)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -125,40 +125,7 @@ TrueNAS Scale ElectricEel-24.10.2 was installed directly on to the Zimaboard.
 
 The initial configuration of TrueNAS was based on details described in [6 Crucial Settings to Enable on TrueNAS SCALE][truenassettings].
 
-### Homelab Services
-
-The current iteration of the Homelab hosts the following applications:
-
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/nextcloud.svg" height="25" width="auto" alt="Nextcloud"> [Nextcloud] - Open source content collaboration platform. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/home-assistant.svg" height="25" width="auto" alt="Home Assistant"> [Home Assistant][homeassistant] - Open source home automation that puts local control and privacy first. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/authentik.svg" height="25" width="auto" alt="Authentik"> [Authentik] - Identity manager. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/emqx.svg" height="25" width="auto" alt="EMQX"> [EMQX] - MQTT platform. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/firefly-iii.svg" height="25" width="auto" alt="Firefly III"> [Firefly III][fireflyiii] - A free and open source personal finance manager. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/frigate.svg" height="25" width="auto" alt="Frigate"> [Frigate] - An open source NVR. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grafana.svg" height="25" width="auto" alt="Grafana"> [Grafana] - An open source tool to create dashboards. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grocy.svg" height="25" width="auto" alt="Grocy"> [Grocy] - An open source web-based self-hosted groceries & household management solution. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/homebox.svg" height="25" width="auto" alt="Homebox"> [Homebox] - An open source inventory and organization system. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/homepage.png" height="25" width="auto" alt="Homepage"> [Homepage] - A modern, fully static, fast, secure fully proxied, highly customizable application dashboard. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/hortusfox.png" height="25" width="auto" alt="Hortusfox"> [Hortusfox] - A free and open-sourced self-hosted plant manager system. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/influxdb.svg" height="25" width="auto" alt="InfluxDB"> [InfluxDB] - A time-series database. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/portainer.svg" height="25" width="auto" alt="Portainer"> [Portainer] - A universal container management platform. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
--<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/semaphore.svg" height="25" width="auto" alt="Semaphore"> [Semaphore] - User friendly web interface for executing Ansible playbooks, Terraform, OpenTofu code and Bash scripts. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/uptime-kuma.svg" height="25" width="auto" alt="Uptime Kuma"> [Uptime Kuma][uptimekuma] - An easy-to-use self-hosted monitoring tool. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/vaultwarden.svg" height="25" width="auto" alt="Vaultwarden"> [Vaultwarden] - An alternative server implementation of the Bitwarden Client API. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg" height="25" width="auto" alt="Wazuh"> [Wazuh][wazuh] - A free and open-source platform for threat prevention, detection, and response, capable of protecting workloads across on-premises, virtualized, containerized, and cloud-based environments. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/whats-up-docker.svg" height="25" width="auto" alt="WUD (What's up Docker)"> [WUD (What's up Docker)][wud] - A tool to keep Docker containers up-to-date. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-
-Underpinning the applications are a number of other services:
-
-- [Docker Socket Proxy][dockersocketproxy] - A security-enhanced proxy for the Docker Socket.
-- [Docker Volume Backup][dockervolumebackup] - Companion container to backup Docker volumes.
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/portainer.svg" height="25" width="auto" alt="Portainer"> [Portainer Agent][portaineragent] - Provide a Portainer Server instance with access to node resources. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- [Node Exporter][nodeexporter]- Prometheus exporter for hardware and OS metrics.
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/prometheus.svg" height="25" width="auto" alt="Prometheus"> [Prometheus] - An open-source systems monitoring and alerting toolkit. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/traefik-proxy.svg" height="25" width="auto" alt="Traefik"> [Traefik] - An open source application proxy. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg" height="25" width="auto" alt="Wazuh"> [Wazuh Agent][wazuhagent] - Wazuh agent for endpoints. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-
-#### Application Deployment
+### Homelab Applications andServices
 
 The majority of applications and services running within the Homelab are
 deployed as [Docker containers][docker], running within
@@ -186,10 +153,6 @@ Medium resource services:
 | Cores     | 2                  |
 | Disk size | 24GB |
 
-To be able to install Docker on a Proxmox LXC Linux Container, ensure `keyctl=1` is set via the Container Options settings.
-
-![Proxmox container options for Docker](docs/screenshot_container-options_proxmox.jpeg "Proxmox container options for Docker")
-
 Each application is hosted in a single LXC Linux Container,
 using an architecture as shown in the following diagram.
 
@@ -199,6 +162,37 @@ using an architecture as shown in the following diagram.
 including the installation of Docker, and deploy the containerised applications. The
 Ansible files make up the majority of this repository, which is structured to work
 with with [Semaphore UI][semaphoreui].
+
+The current iteration of the Homelab hosts the following applications:
+
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/nextcloud.svg" height="25" width="auto" alt="Nextcloud"> [Nextcloud] - Open source content collaboration platform. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/home-assistant.svg" height="25" width="auto" alt="Home Assistant"> [Home Assistant][homeassistant] - Open source home automation that puts local control and privacy first. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/authentik.svg" height="25" width="auto" alt="Authentik"> [Authentik] - Identity manager. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/emqx.svg" height="25" width="auto" alt="EMQX"> [EMQX] - MQTT platform. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/firefly-iii.svg" height="25" width="auto" alt="Firefly III"> [Firefly III][fireflyiii] - A free and open source personal finance manager. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/frigate.svg" height="25" width="auto" alt="Frigate"> [Frigate] - An open source NVR. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grafana.svg" height="25" width="auto" alt="Grafana"> [Grafana] - An open source tool to create dashboards. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grocy.svg" height="25" width="auto" alt="Grocy"> [Grocy] - An open source web-based self-hosted groceries & household management solution. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/homebox.svg" height="25" width="auto" alt="Homebox"> [Homebox] - An open source inventory and organization system. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/homepage.png" height="25" width="auto" alt="Homepage"> [Homepage] - A modern, fully static, fast, secure fully proxied, highly customizable application dashboard. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/hortusfox.png" height="25" width="auto" alt="Hortusfox"> [Hortusfox] - A free and open-sourced self-hosted plant manager system. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/influxdb.svg" height="25" width="auto" alt="InfluxDB"> [InfluxDB] - A time-series database. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/portainer.svg" height="25" width="auto" alt="Portainer"> [Portainer] - A universal container management platform. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/semaphore.svg" height="25" width="auto" alt="Semaphore"> [Semaphore] - User friendly web interface for executing Ansible playbooks, Terraform, OpenTofu code and Bash scripts. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/uptime-kuma.svg" height="25" width="auto" alt="Uptime Kuma"> [Uptime Kuma][uptimekuma] - An easy-to-use self-hosted monitoring tool. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/vaultwarden.svg" height="25" width="auto" alt="Vaultwarden"> [Vaultwarden] - An alternative server implementation of the Bitwarden Client API. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg" height="25" width="auto" alt="Wazuh"> [Wazuh][wazuh] - A free and open-source platform for threat prevention, detection, and response, capable of protecting workloads across on-premises, virtualized, containerized, and cloud-based environments. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/whats-up-docker.svg" height="25" width="auto" alt="WUD (What's up Docker)"> [WUD (What's up Docker)][wud] - A tool to keep Docker containers up-to-date. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+
+Underpinning the applications are a number of other services:
+
+- [Docker Socket Proxy][dockersocketproxy] - A security-enhanced proxy for the Docker Socket.
+- [Docker Volume Backup][dockervolumebackup] - Companion container to backup Docker volumes.
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/portainer.svg" height="25" width="auto" alt="Portainer"> [Portainer Agent][portaineragent] - Provide a Portainer Server instance with access to node resources. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- [Node Exporter][nodeexporter]- Prometheus exporter for hardware and OS metrics.
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/prometheus.svg" height="25" width="auto" alt="Prometheus"> [Prometheus] - An open-source systems monitoring and alerting toolkit. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/traefik-proxy.svg" height="25" width="auto" alt="Traefik"> [Traefik] - An open source application proxy. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg" height="25" width="auto" alt="Wazuh"> [Wazuh Agent][wazuhagent] - Wazuh agent for endpoints. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 
 ### Ansible Details
 
@@ -476,6 +470,8 @@ Use a Remote borg repo - could not get this to work
 ssh://user@host:port/path/to/repo
 ssh://nextcloud@truenas:2222/mnt/homelab-backup/nextcloud-aio-backup
 ```
+
+## To Do
 
 [ansible]: https://docs.ansible.com/ansible/latest/index.html
 [ansiblenaming]: https://www.techchorus.net/posts/ansible-naming-conventions/
