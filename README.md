@@ -162,6 +162,8 @@ Ansible files make up the majority of this repository, which is structured to wo
 
 The current iteration of the Homelab hosts the following applications:
 
+<!-- uses https://gist.github.com/stevecondylios/dcadb4fc73e63f27a3bbcf17e52058bf -->
+
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/nextcloud.svg" height="25" width="auto" alt="Nextcloud"> [Nextcloud] - Open source content collaboration platform. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/home-assistant.svg" height="25" width="auto" alt="Home Assistant"> [Home Assistant][homeassistant] - Open source home automation that puts local control and privacy first. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/authentik.svg" height="25" width="auto" alt="Authentik"> [Authentik] - Identity manager. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
@@ -175,7 +177,7 @@ The current iteration of the Homelab hosts the following applications:
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/homepage.png" height="25" width="auto" alt="Homepage"> [Homepage] - A modern, fully static, fast, secure fully proxied, highly customizable application dashboard. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/hortusfox.png" height="25" width="auto" alt="Hortusfox"> [Hortusfox] - A free and open-sourced self-hosted plant manager system. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/influxdb.svg" height="25" width="auto" alt="InfluxDB"> [InfluxDB] - A time-series database. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- 📓 [Journal] - A simple self-hosted journaling app
+- 📓 [Journal] - A simple self-hosted journaling app.
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/portainer.svg" height="25" width="auto" alt="Portainer"> [Portainer] - A universal container management platform. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/semaphore.svg" height="25" width="auto" alt="Semaphore"> [Semaphore] - User friendly web interface for executing Ansible playbooks, Terraform, OpenTofu code and Bash scripts. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/uptime-kuma.svg" height="25" width="auto" alt="Uptime Kuma"> [Uptime Kuma][uptimekuma] - An easy-to-use self-hosted monitoring tool. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
