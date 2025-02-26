@@ -50,6 +50,10 @@ docker-influxdb:
   host: influxdb.localdomain
   port: 2375
 
+docker-journal:
+  host: journal.localdomain
+  port: 2375
+
 docker-plantit:
   host: plant-it.localdomain
   port: 2375

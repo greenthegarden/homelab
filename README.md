@@ -477,6 +477,8 @@ ssh://nextcloud@truenas:2222/mnt/homelab-backup/nextcloud-aio-backup
 
 ## To Do
 
+- Explore using an Proxmox network for Proxmox nodes, rather than having them on main network.
+
 [ansible]: https://docs.ansible.com/ansible/latest/index.html
 [ansiblenaming]: https://www.techchorus.net/posts/ansible-naming-conventions/
 [authentik]: https://goauthentik.io/
