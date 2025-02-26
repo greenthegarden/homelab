@@ -130,33 +130,33 @@ The initial configuration of TrueNAS was based on details described in [6 Crucia
 The current iteration of the Homelab hosts the following applications:
 
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/nextcloud.svg" height="25" width="auto" alt="Nextcloud"> [Nextcloud] - Open source content collaboration platform. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- ![Home Assistant](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/home-assistant.svg "Home Assistant"){:height=25px" width="25px"} [Home Assistant][homeassistant] - Open source home automation that puts local control and privacy first.
-- ![Authentik](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/authentik.svg "Authentik"){:height=25px" width="25px"} [Authentik] - Identity manager.
-- ![EMQX](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/emqx.svg "EMQX"){:height=25px" width="25px"} [EMQX] - MQTT platform.
-- ![Firefly III](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/firefly-iii.svg "Firefly III"){:height=25px" width="25px"} [Firefly III][fireflyiii] - A free and open source personal finance manager.
-- ![Frigate](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/frigate.svg "Frigate"){:height=25px" width="25px"} [Frigate] - An open source NVR.
-- ![Grafana](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grafana.svg "Grafana"){:height=25px" width="25px"} [Grafana] - An open source tool to create dashboards.
-- ![Grocy](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grocy.svg "Grocy"){:height=25px" width="25px"} [Grocy] - An open source web-based self-hosted groceries & household management solution.
-- ![Homebox](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/homebox.svg "Homebox"){:height=25px" width="25px"} [Homebox] - An open source inventory and organization system.
-- ![Homepage](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/homepage.png "Homepage"){:height=25px" width="25px"} [Homepage] - A modern, fully static, fast, secure fully proxied, highly customizable application dashboard.
-- ![Hortusfox](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/hortusfox.png "Hortusfox"){:height=25px" width="25px"} [Hortusfox] - A free and open-sourced self-hosted plant manager system.
-- ![InfluxDB](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/influxdb.svg "InfluxDB"){:height=25px" width="25px"} [InfluxDB] - A time-series database.
-- ![Portainer](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/portainer.svg "Portainer"){:height=25px" width="25px"} [Portainer] - A universal container management platform.
-- ![Semaphore](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/semaphore.svg "Semaphore"){:height=25px" width="25px"} [Semaphore] - User friendly web interface for executing Ansible playbooks, Terraform, OpenTofu code and Bash scripts.
-- ![Uptime Kuma](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/uptime-kuma.svg "Uptime Kuma"){:height=25px" width="25px"} [Uptime Kuma][uptimekuma] - An easy-to-use self-hosted monitoring tool.
-- ![Vaultwarden](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/vaultwarden.svg "Vaultwarden"){:height=25px" width="25px"} [Vaultwarden] - An alternative server implementation of the Bitwarden Client API.
-- ![Wazuh](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg "Wazuh"){:height=25px" width="25px"} [Wazuh][wazuh] - A free and open-source platform for threat prevention, detection, and response, capable of protecting workloads across on-premises, virtualized, containerized, and cloud-based environments.
-- ![WUD (What's up Docker)](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/whats-up-docker.svg "WUD (What's up Docker)"){:height=25px" width="25px"} [WUD (What's up Docker)][wud] - A tool to keep Docker containers up-to-date.
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/home-assistant.svg" height="25" width="auto" alt="Home Assistant"> [Home Assistant][homeassistant] - Open source home automation that puts local control and privacy first. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/authentik.svg" height="25" width="auto" alt="Authentik"> [Authentik] - Identity manager. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/emqx.svg" height="25" width="auto" alt="EMQX"> [EMQX] - MQTT platform. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/firefly-iii.svg" height="25" width="auto" alt="Firefly III"> [Firefly III][fireflyiii] - A free and open source personal finance manager. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/frigate.svg" height="25" width="auto" alt="Frigate"> [Frigate] - An open source NVR. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grafana.svg" height="25" width="auto" alt="Grafana"> [Grafana] - An open source tool to create dashboards. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grocy.svg" height="25" width="auto" alt="Grocy"> [Grocy] - An open source web-based self-hosted groceries & household management solution. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/homebox.svg" height="25" width="auto" alt="Homebox"> [Homebox] - An open source inventory and organization system. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/homepage.png" height="25" width="auto" alt="Homepage"> [Homepage] - A modern, fully static, fast, secure fully proxied, highly customizable application dashboard. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/hortusfox.png" height="25" width="auto" alt="Hortusfox"> [Hortusfox] - A free and open-sourced self-hosted plant manager system. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/influxdb.svg" height="25" width="auto" alt="InfluxDB"> [InfluxDB] - A time-series database. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/portainer.svg" height="25" width="auto" alt="Portainer"> [Portainer] - A universal container management platform. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+-<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/semaphore.svg" height="25" width="auto" alt="Semaphore"> [Semaphore] - User friendly web interface for executing Ansible playbooks, Terraform, OpenTofu code and Bash scripts. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/uptime-kuma.svg" height="25" width="auto" alt="Uptime Kuma"> [Uptime Kuma][uptimekuma] - An easy-to-use self-hosted monitoring tool. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/vaultwarden.svg" height="25" width="auto" alt="Vaultwarden"> [Vaultwarden] - An alternative server implementation of the Bitwarden Client API. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg" height="25" width="auto" alt="Wazuh"> [Wazuh][wazuh] - A free and open-source platform for threat prevention, detection, and response, capable of protecting workloads across on-premises, virtualized, containerized, and cloud-based environments. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/whats-up-docker.svg" height="25" width="auto" alt="WUD (What's up Docker)"> [WUD (What's up Docker)][wud] - A tool to keep Docker containers up-to-date. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 
 Underpinning the applications are a number of other services:
 
 - [Docker Socket Proxy][dockersocketproxy] - A security-enhanced proxy for the Docker Socket.
 - [Docker Volume Backup][dockervolumebackup] - Companion container to backup Docker volumes.
-- ![Portainer](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/portainer.svg "Portainer"){:height=25px" width="25px"} [Portainer Agent][portaineragent] - Provide a Portainer Server instance with access to node resources.
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/portainer.svg" height="25" width="auto" alt="Portainer"> [Portainer Agent][portaineragent] - Provide a Portainer Server instance with access to node resources. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - [Node Exporter][nodeexporter]- Prometheus exporter for hardware and OS metrics.
-- ![Prometheus](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/prometheus.svg "Prometheus"){:height=25px" width="25px"} [Prometheus] - An open-source systems monitoring and alerting toolkit.
-- ![Traefik](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/traefik-proxy.svg "Traefik"){:height=25px" width="25px"} [Traefik] - An open source application proxy.
-- ![Wazuh](https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg "Wazuh"){:height=25px" width="25px"} [Wazuh Agent][wazuhagent] - Wazuh agent for endpoints.
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/prometheus.svg" height="25" width="auto" alt="Prometheus"> [Prometheus] - An open-source systems monitoring and alerting toolkit. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/traefik-proxy.svg" height="25" width="auto" alt="Traefik"> [Traefik] - An open source application proxy. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg" height="25" width="auto" alt="Wazuh"> [Wazuh Agent][wazuhagent] - Wazuh agent for endpoints. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 
 #### Application Deployment
 
