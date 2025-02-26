@@ -1,15 +1,9 @@
 # Homelab
 
-## Introduction {#introduction}
-
-Welcome to my Homelab definition-in-code! The repository consists largely of Ansible code which is used
-to provision and maintain the services which make up the functionality provided by my Homelab.
-
-Please feel free to reuse any of the code or provide feedback and suggestions.
-
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+- [Introduction](#introduction)
 - [A Homelab](#a-homelab)
 - [Hardware](#hardware)
   - [Network Hardware](#network-hardware)
@@ -35,6 +29,13 @@ Please feel free to reuse any of the code or provide feedback and suggestions.
 - [To Do](#to-do)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Introduction
+
+Welcome to my Homelab definition-in-code! The repository consists largely of Ansible code which is used
+to provision and maintain the services which make up the functionality provided by my Homelab.
+
+Please feel free to reuse any of the code or provide feedback and suggestions.
 
 ## A Homelab
 
