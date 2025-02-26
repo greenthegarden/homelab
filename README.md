@@ -1,6 +1,6 @@
 # Homelab
 
-## Introduction
+## Introduction {#introduction}
 
 Welcome to my Homelab definition-in-code! The repository consists largely of Ansible code which is used
 to provision and maintain the services which make up the functionality provided by my Homelab.
@@ -10,17 +10,18 @@ Please feel free to reuse any of the code or provide feedback and suggestions.
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [A Homelab](#a-homelab)
-- [Hardware](#hardware)
-  - [Network Hardware](#network-hardware)
-  - [Compute Server Hardware](#compute-server-hardware)
-  - [Storage Server Hardware](#storage-server-hardware)
-- [Software](#software)
-  - [Compute Server Software](#compute-server-software)
-  - [Storage Server Software](#storage-server-software)
-  - [Homelab Applications and Services](#homelab-applications-and-services)
+- [A Homelab {#a-homelab}](#a-homelab-a-homelab)
+- [Hardware {#hardware}](#hardware-hardware)
+  - [Network Hardware {#hardware-network}](#network-hardware-hardware-network)
+  - [Compute Server Hardware {#hardware-compute}](#compute-server-hardware-hardware-compute)
+  - [Storage Server Hardware {#hardware-storage}](#storage-server-hardware-hardware-storage)
+- [Software {#software}](#software-software)
+  - [Compute Server Software {#software-compute}](#compute-server-software-software-compute)
+  - [Storage Server Software {#software-storage}](#storage-server-software-software-storage)
+  - [Homelab Applications and Services {#applications}](#homelab-applications-and-services-applications)
   - [Maintenance](#maintenance)
 - [Guides](#guides)
+  - [Markdown](#markdown)
   - [Ansible](#ansible)
     - [Naming Conventions](#naming-conventions)
   - [Renovate](#renovate)
@@ -35,7 +36,7 @@ Please feel free to reuse any of the code or provide feedback and suggestions.
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## A Homelab
+## A Homelab {#a-homelab}
 
 Some good sources of information about what is a Homelab include:
 
@@ -49,26 +50,30 @@ In addition, information about setting up a Homelab include:
 
 [youtube_mistakeshomelab]: https://www.youtube.com/watch?v=8B1Kp_ylUSY
 
-## Hardware
+## Hardware {#hardware}
 
 The major hardware which makes up the Homelab is shown in the following diagram.
 
 ![Homelab hardware](docs/homelab-network-wired-hardware.drawio.png "Homelab hardware")
 
-### Network Hardware
+### Network Hardware {#hardware-network}
 
 A [Ubiquity Cloud Gateway Ultra][network] is used to manage the network aspects of the Homelab.
 
-The UCG runs the Unifi Network application.
+The UCG runs UniFi OS as the operating system which hosts the [Unifi Network Application][unifi].
 
 Some good sources of information for setting up a Unifi network are:
 
 - [Full Unifi Config - Setup from Start to Finish][youtube_unififullconfig]
 - [COMPLETE UniFi Network Setup Guide (Detailed for Beginners)][youtube_unifisetup]
 
-### Compute Server Hardware
+In addition, a Raspberry Pi 3 Model B+ single board computer, running Rasbian  Bullseye, is used to host an instance of [AdGuard Home][adguard], to provide a local DNS service.
 
-I selected the [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC][compserv] as a Homelab compute server.
+All hosts within the Homelab are configured automatically by the Gateway, to use the DNS capability within AdGuard Home to resolve hostnames internal to the Homelab.
+
+### Compute Server Hardware {#hardware-compute}
+
+The [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC][compserv] was selected as the Homelab compute server.
 
 The system uses an i5-1235U processor, which with 10 cores, provides a good amount of parallel processing in a compact unit.
 
@@ -78,12 +83,12 @@ Server Specifications
 | --------- | ------------------------------------------------------------------------------------------ |
 | CPU       | Intel Core i5-1235U 2P-8E-12H 3.3-4.4GHz / 15-55 W TDP / 10 nm (Intel 7)                   |
 | GPU       | Intel Xe / 80 EU / 1200 MHz                                                                |
-| RAM       | 64GB DDR4 3200MHz max Crucial / 2x SODIMM                                                  |
-| Storage   | 500GB M.2 2280 NVMe / 2TB SATA 3 2.5″                                                      |
+| RAM       | 64GB DDR4 3200MHz max which is fullyu utilised by 2x Crucial 32GB SODIMM modules           |
+| Storage   | 500GB M.2 2280 NVMe plus 2TB SATA 3 2.5″ SSD                                               |
 | Network   | 1x Gigabit Ethernet (Realtek)                                                              |
 | Ports     | 1x USB 3.1 Type-C (data) / 2x USB 3.0 / 2x USB 2.0 / 2x HDMI 2.1 / Audio Jack / BIOS Reset |
 
-### Storage Server Hardware
+### Storage Server Hardware {#hardware-storage}
 
 For a Storage server I am using a [ZimaBlade 7700 NAS kit][storserv], which uses a quad-core version of the Zimablade single-board x86 computer.
 
@@ -105,9 +110,9 @@ Server Specifications
 | Power     | 45 W USB Type-C power adapter                            |
 | Thermal   | 6 W TDP with passive cooling                             |
 
-## Software
+## Software {#software}
 
-### Compute Server Software
+### Compute Server Software {#software-compute}
 
 The compute server is running [Proxmox Virtual Environment 8 hypervisor][compsoft] as the OS.
 This allows both virtual machines and LXC Linux Containers to be used to host the services and applications within the Homelab.
@@ -118,7 +123,7 @@ Some good sources of information for setting up Proxmox are:
 
 ADD DETAILS!!
 
-### Storage Server Software
+### Storage Server Software {#software-storage}
 
 The storage service is running [TrueNAS Scale Community Edition][storsoft] as the storage solution.
 
@@ -126,7 +131,7 @@ TrueNAS Scale ElectricEel-24.10.2 was installed directly on to the Zimaboard.
 
 The initial configuration of TrueNAS was based on details described in [6 Crucial Settings to Enable on TrueNAS SCALE][truenassettings].
 
-### Homelab Applications and Services
+### Homelab Applications and Services {#applications}
 
 The majority of applications and services running within the Homelab are deployed as [Docker containers][docker], running within
 [LXC Linux containers][linuxcontainers]. The exceptions are Nextcloud and Home Assistant, which are running in virtual machines.
@@ -196,9 +201,15 @@ Underpinning the applications are a number of support services:
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/traefik-proxy.svg" height="25" width="auto" alt="Traefik"> [Traefik] - An open source application proxy. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg" height="25" width="auto" alt="Wazuh"> [Wazuh Agent][wazuhagent] - Wazuh agent for endpoints. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 
+**NOTE: Following sections are work in progress.**
+
 ### Maintenance
 
 ## Guides
+
+### Markdown
+
+All documentation is writtern in Markdown, using the [Markdown Guide][markdownguide] as a reference, and linted, using [markdownlint-cli2][markdownlint].
 
 ### Ansible
 
@@ -479,6 +490,7 @@ ssh://nextcloud@truenas:2222/mnt/homelab-backup/nextcloud-aio-backup
 
 - Explore using an Proxmox network for Proxmox nodes, rather than having them on main network.
 
+[adguard]: https://adguard.com/en/adguard-home/overview.html
 [ansible]: https://docs.ansible.com/ansible/latest/index.html
 [ansiblenaming]: https://www.techchorus.net/posts/ansible-naming-conventions/
 [authentik]: https://goauthentik.io/
@@ -505,6 +517,8 @@ ssh://nextcloud@truenas:2222/mnt/homelab-backup/nextcloud-aio-backup
 [influxdb]: https://www.influxdata.com/
 [journal]: https://github.com/inoda/journal
 [linuxcontainers]: https://linuxcontainers.org/
+[markdownguide]: https://www.markdownguide.org/
+[markdownlint]: https://github.com/DavidAnson/markdownlint-cli2
 [network]: https://techspecs.ui.com/unifi/unifi-cloud-gateways/ucg-ultra
 [nextcloud]: https://nextcloud.com/
 [nodeexporter]: https://github.com/prometheus/node_exporter
@@ -519,6 +533,7 @@ ssh://nextcloud@truenas:2222/mnt/homelab-backup/nextcloud-aio-backup
 [tndnfs]: https://www.truenas.com/docs/scale/24.10/scaletutorials/shares/addingnfsshares
 [traefik]: https://doc.traefik.io/traefik/
 [truenassettings]: https://www.youtube.com/watch?v=dP0wagQVctc "6 Crucial Settings to Enable on TrueNAS SCALE"
+[unifi]: https://help.ui.com/hc/en-us/articles/360012192813-Introduction-to-UniFi
 [uptimekuma]: https://github.com/louislam/uptime-kuma
 [youtube_unififullconfig]: https://www.youtube.com/watch?v=pbgM6Cyh_BY
 [youtube_unifisetup]: https://www.youtube.com/watch?v=3ZxnCtQ31ew
