@@ -6,7 +6,7 @@
   vars:
 
     # EMQX facts
-    emqx_image: emqx/emqx:5.8.4
+    emqx_image: emqx/emqx:5.8.4 # renovate: datasource=docker depName=emqx/emqx
     emqx_service_name: emqx
     emqx_service_port_api: 18083
     emqx_service_port_mqtt: 1883

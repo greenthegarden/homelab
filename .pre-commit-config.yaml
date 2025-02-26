@@ -29,6 +29,7 @@ repos:
   #                              🔄 Pre-Commit Hooks                             #
   # ---------------------------------------------------------------------------- #
 
+
   # ----------------------------- 🔒 Security Tools ---------------------------- #
 
   - repo: https://github.com/gitleaks/gitleaks
@@ -79,7 +80,6 @@ repos:
         stages: [pre-commit]
 
   ### Shell ###
-
   # STRICT
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.10.0.1
@@ -88,6 +88,7 @@ repos:
         name: "🐚 shell · Lint shell scripts"
         stages: [pre-commit]
 
+  ### Bash ###
   # STRICT
   - repo: https://github.com/openstack/bashate
     rev: 2.1.1
@@ -97,7 +98,6 @@ repos:
         stages: [pre-commit]
 
   ### PNG Images ###
-
   - repo: https://github.com/shssoichiro/oxipng
     rev: v9.1.4
     hooks:
@@ -107,7 +107,6 @@ repos:
         stages: [pre-commit]
 
   ### Ansible ###
-
   - repo: https://github.com/ansible-community/ansible-lint
     rev: v25.1.3
     hooks:
@@ -124,6 +123,13 @@ repos:
       - id: codespell
         name: "📝 spelling · Run codespell to check for common misspellings in files"
         stages: [pre-commit]
+
+  ### Renovate ###
+  - repo: https://github.com/renovatebot/pre-commit-hooks
+    rev: 39.180.2
+    hooks:
+      - id: renovate-config-validator
+        # args: [--strict]
 
   # ---------------------------- 📁 Filesystem Tools --------------------------- #
 
@@ -186,6 +192,7 @@ repos:
       - id: check-yaml
         name: "📝 yaml · Validate YAML files"
         stages: [pre-commit]
+
 
   # ---------------------------------------------------------------------------- #
   #                            📝 Commit Message Hooks                           #

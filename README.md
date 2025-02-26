@@ -7,7 +7,6 @@ Please feel free to reuse any of the code or provide feedback and suggestions.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 - [A Homelab](#a-homelab)
 - [Hardware](#hardware)
@@ -23,6 +22,7 @@ Please feel free to reuse any of the code or provide feedback and suggestions.
     - [Naming Conventions](#naming-conventions)
   - [Maintenance](#maintenance)
 - [Guides](#guides)
+  - [Renovate](#renovate)
   - [Setting up Semaphore UI](#setting-up-semaphore-ui)
   - [Managing secrets](#managing-secrets)
   - [Backup Strategy](#backup-strategy)
@@ -217,6 +217,20 @@ When naming Ansible playbooks and roles, it is recommended to follow consistent 
 ### Maintenance
 
 ## Guides
+
+### Renovate
+
+The repository uses [Mend Renovate][mend-renovate], via the [Renovate Github App][github-app-renovate], to assist with maintaining versions for the services able to be deployed.
+
+The following are sources used to setup and configure Renovate:
+
+- [Meet Renovate - Your Update Automation Bot for Kubernetes and More!][youtube_meetrenovate]
+- [Renovate bot cheat sheet – the 11 most useful customizations][renbotcs]
+
+[mend-renovate]: https://www.mend.io/mend-renovate/
+[github-app-renovate]: https://github.com/marketplace/renovate
+[renbotcs]: https://www.augmentedmind.de/2023/07/30/renovate-bot-cheat-sheet/
+[youtube_meetrenovate]: https://www.youtube.com/watch?v=3ZxnCtQ31ew
 
 ### Setting up Semaphore UI
 
