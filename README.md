@@ -10,15 +10,15 @@ Please feel free to reuse any of the code or provide feedback and suggestions.
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [A Homelab {#a-homelab}](#a-homelab-a-homelab)
-- [Hardware {#hardware}](#hardware-hardware)
-  - [Network Hardware {#hardware-network}](#network-hardware-hardware-network)
-  - [Compute Server Hardware {#hardware-compute}](#compute-server-hardware-hardware-compute)
-  - [Storage Server Hardware {#hardware-storage}](#storage-server-hardware-hardware-storage)
-- [Software {#software}](#software-software)
-  - [Compute Server Software {#software-compute}](#compute-server-software-software-compute)
-  - [Storage Server Software {#software-storage}](#storage-server-software-software-storage)
-  - [Homelab Applications and Services {#applications}](#homelab-applications-and-services-applications)
+- [A Homelab](#a-homelab)
+- [Hardware](#hardware)
+  - [Network Hardware](#network-hardware)
+  - [Compute Server Hardware](#compute-server-hardware)
+  - [Storage Server Hardware](#storage-server-hardware)
+- [Software](#software)
+  - [Compute Server Software](#compute-server-software)
+  - [Storage Server Software](#storage-server-software)
+  - [Homelab Applications and Services](#homelab-applications-and-services)
   - [Maintenance](#maintenance)
 - [Guides](#guides)
   - [Markdown](#markdown)
@@ -36,7 +36,7 @@ Please feel free to reuse any of the code or provide feedback and suggestions.
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## A Homelab {#a-homelab}
+## A Homelab
 
 Some good sources of information about what is a Homelab include:
 
@@ -50,13 +50,13 @@ In addition, information about setting up a Homelab include:
 
 [youtube_mistakeshomelab]: https://www.youtube.com/watch?v=8B1Kp_ylUSY
 
-## Hardware {#hardware}
+## Hardware
 
 The major hardware which makes up the Homelab is shown in the following diagram.
 
 ![Homelab hardware](docs/homelab-network-wired-hardware.drawio.png "Homelab hardware")
 
-### Network Hardware {#hardware-network}
+### Network Hardware
 
 A [Ubiquity Cloud Gateway Ultra][network] is used to manage the network aspects of the Homelab.
 
@@ -71,7 +71,7 @@ In addition, a Raspberry Pi 3 Model B+ single board computer, running Rasbian  B
 
 All hosts within the Homelab are configured automatically by the Gateway, to use the DNS capability within AdGuard Home to resolve hostnames internal to the Homelab.
 
-### Compute Server Hardware {#hardware-compute}
+### Compute Server Hardware
 
 The [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC][compserv] was selected as the Homelab compute server.
 
@@ -88,7 +88,7 @@ Server Specifications
 | Network   | 1x Gigabit Ethernet (Realtek)                                                              |
 | Ports     | 1x USB 3.1 Type-C (data) / 2x USB 3.0 / 2x USB 2.0 / 2x HDMI 2.1 / Audio Jack / BIOS Reset |
 
-### Storage Server Hardware {#hardware-storage}
+### Storage Server Hardware
 
 For a Storage server I am using a [ZimaBlade 7700 NAS kit][storserv], which uses a quad-core version of the Zimablade single-board x86 computer.
 
@@ -110,9 +110,9 @@ Server Specifications
 | Power     | 45 W USB Type-C power adapter                            |
 | Thermal   | 6 W TDP with passive cooling                             |
 
-## Software {#software}
+## Software
 
-### Compute Server Software {#software-compute}
+### Compute Server Software
 
 The compute server is running [Proxmox Virtual Environment 8 hypervisor][compsoft] as the OS.
 This allows both virtual machines and LXC Linux Containers to be used to host the services and applications within the Homelab.
@@ -123,7 +123,7 @@ Some good sources of information for setting up Proxmox are:
 
 ADD DETAILS!!
 
-### Storage Server Software {#software-storage}
+### Storage Server Software
 
 The storage service is running [TrueNAS Scale Community Edition][storsoft] as the storage solution.
 
@@ -131,7 +131,7 @@ TrueNAS Scale ElectricEel-24.10.2 was installed directly on to the Zimaboard.
 
 The initial configuration of TrueNAS was based on details described in [6 Crucial Settings to Enable on TrueNAS SCALE][truenassettings].
 
-### Homelab Applications and Services {#applications}
+### Homelab Applications and Services
 
 The majority of applications and services running within the Homelab are deployed as [Docker containers][docker], running within
 [LXC Linux containers][linuxcontainers]. The exceptions are Nextcloud and Home Assistant, which are running in virtual machines.
