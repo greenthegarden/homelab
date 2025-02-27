@@ -91,7 +91,7 @@
 - name: deploy-whatsupdocker | Remove What's up Docker? container if changing version
   when:
     - whatsupdocker_state.exists
-    - whatsupdocker_image_tag != whatsupdocker_state.container.Config.Image | split(':') | last
+    - whatsupdocker_image | split(':') | last != whatsupdocker_state.container.Config.Image | split(':') | last
   block:
     - name: deploy-whatsupdocker | Stop and remove existing What's up Docker? container
       community.docker.docker_container:
