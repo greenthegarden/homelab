@@ -29,35 +29,33 @@
   register: prometheus_container_status
   ignore_errors: true
 
-- name: deploy-emqx | Ensure Prometheus container is deployed
-  ansible.builtin.assert:
-    that: prometheus_container_status.exists
-    fail_msg: Prometheus is required to be deployed on host
+- name: deploy-emqx | Configure Prometheus when deployed
+  when: prometheus_container_status.exists
+  block:
+    - name: deploy-emqx | Set Prometheus aggregated facts
+      ansible.builtin.set_fact:
+        prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: deploy-emqx | Set Prometheus aggregated facts
-  ansible.builtin.set_fact:
-    prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    - name: deploy-emqx | Create Prometheus configuration directory
+      ansible.builtin.file:
+        path: /root/prometheus
+        mode: "644"
+        state: directory
+      register: prometheus_configuration_creation
 
-- name: deploy-emqx | Create Prometheus configuration directory
-  ansible.builtin.file:
-    path: /root/prometheus
-    mode: "644"
-    state: directory
-  register: prometheus_configuration_creation
+    - name: deploy-emqx | Create Prometheus configuration file for EMQX
+      ansible.builtin.template:
+        src: templates/prometheus/prometheus-emqx.yml.j2
+        dest: /root/prometheus/prometheus.yml
+        mode: "644"
+      register: prometheus_configuration_creation
 
-- name: deploy-emqx | Create Prometheus configuration file for EMQX
-  ansible.builtin.template:
-    src: templates/prometheus/prometheus-emqx.yml.j2
-    dest: /root/prometheus/prometheus.yml
-    mode: "644"
-  register: prometheus_configuration_creation
-
-- name: deploy-emqx | Redeploy Prometheus with new configuration  # noqa: syntax-check[unknown-module]
-  community.docker.docker_container:
-    name: "{{ prometheus_service_name | default('prometheus') }}"
-    restart: true
-    state: started
-  register: prometheus_container_state
+    - name: deploy-emqx | Redeploy Prometheus with new configuration  # noqa: syntax-check[unknown-module]
+      community.docker.docker_container:
+        name: "{{ prometheus_service_name | default('prometheus') }}"
+        restart: true
+        state: started
+      register: prometheus_container_state
 
 - name: deploy-emqx | Set EMQX service facts
   ansible.builtin.set_fact:
