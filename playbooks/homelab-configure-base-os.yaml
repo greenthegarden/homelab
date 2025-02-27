@@ -12,4 +12,4 @@
 
     - name: Update and upgrade hosts using apt
       ansible.builtin.include_tasks:
-        file: tasks/hosts-configure-base-os.yaml
+        file: tasks/homelab-configure-base-os.yaml

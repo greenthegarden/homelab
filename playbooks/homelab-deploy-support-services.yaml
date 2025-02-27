@@ -30,4 +30,4 @@
 
     - name: Configure base OS
       ansible.builtin.include_tasks:
-        file: tasks/hosts-install-docker-base.yaml
+        file: tasks/homelab-deploy-support-services.yaml

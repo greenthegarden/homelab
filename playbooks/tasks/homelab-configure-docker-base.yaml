@@ -1,0 +1,39 @@
+---
+
+- name: homelab-configure-docker-base | Load homelab vars
+  ansible.builtin.include_vars:
+    file: vars/homelab_env.yaml
+
+- name: homelab-configure-docker-base | Configure base OS
+  ansible.builtin.include_tasks:
+    file: tasks/homelab-configure-base-os.yaml
+
+- name: homelab-configure-docker-base | Check Docker is available  # noqa: syntax-check[unknown-module]
+  community.docker.docker_host_info:
+  register: host_docker_info
+  ignore_errors: true
+
+- name: homelab-configure-docker-base | Install Docker
+  when: host_docker_info.can_talk_to_docker is defined
+  ansible.builtin.import_role:
+    name: geerlingguy.docker
+  vars:
+    docker_install_compose: false
+    docker_users:
+      - root
+
+- name: homelab-configure-docker-base | Create Homelab Docker networks  # noqa: syntax-check[unknown-module]
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver }}"
+    internal: "{{ item.internal }}"
+  loop:
+    - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+      driver: bridge
+      internal: "{{ docker_socket_proxy_network_interal | default(true) }}"
+    - name: "{{ monitoring_network_name | default('monitoring') }}"
+      driver: bridge
+      internal: "{{ monitoring_network_internal | default(true) }}"
+    - name: "{{ web_network_name | default('web') }}"
+      driver: bridge
+      internal: "{{ web_network_internal | default(false) }}"
