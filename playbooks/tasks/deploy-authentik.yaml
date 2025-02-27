@@ -87,7 +87,7 @@
 - name: deploy-authentik | Create Authentik configuration
   ansible.builtin.template:
     src: "templates/authentik/{{ item }}.j2"
-    dest: "{{ authentik_config_dir }}/"
+    dest: "{{ authentik_config_dir }}/{{ item }}"
     mode: "0644"
   loop:
     - docker-compose.yml
