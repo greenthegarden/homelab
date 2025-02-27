@@ -88,73 +88,40 @@
       "key": "homepage.siteMonitor",
       "value": "https://{{ portainer_fqdn }}/"
     }
-    # - { "key": "homepage.widget.type", "value": "portainer" }
-    # - {
-    #     "key": "homepage.widget.url",
-    #     "value": "https://{{ portainer_fqdn }}",
-    #   }
-    # - { "key": "homepage.widget.env", "value": "25" }
-    # - {
-    #     "key": "homepage.widget.key",
-    #     "value": "ptr_+Au92kp00xt8cbvCSmSH6MfUZbtGnwHlDbuhckEvaIU=",
-    #   }
 
 - name: deploy-portainer | Create volume for Portainer  # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ portainer_volume_name }}"
 
-- name: deploy-portainer | Check if Portainer is running
-  community.docker.docker_container_info:
+- name: deploy-portainer | Pull Portainer image
+  community.docker.docker_image:
+    name: "{{ portainer_image }}"
+    source: pull
+
+- name: deploy-portainer | Deploy Portainer
+  community.docker.docker_container:
     name: "{{ portainer_service_name }}"
-  register: portainer_state
+    image: "{{ portainer_image }}"
+    detach: true
+    env:
+      DOCKER_HOST: tcp://docker-socket-proxy:2375
+    labels: "{{ portainer_container_labels }}"
+    networks_cli_compatible: true
+    networks: "{{ portainer_networks }}"
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    volumes: "{{ portainer_volumes }}"
+  register: portainer_container_state
 
-- name: deploy-portainer | Remove Portainer container if changing version
-  when:
-    - portainer_state.exists
-    - portainer_image_tag != portainer_state.container.Config.Image | split(':') | last
-  block:
-    - name: deploy-portainer | Stop and remove existing Portainer container
-      community.docker.docker_container:
-        name: "{{ portainer_service_name }}"
-        state: absent
-
-    - name: deploy-portainer | Set update Portainer
-      ansible.builtin.set_fact:
-        portainer_update: true
-
-- name: deploy-portainer | Deploy Portainer if not running
-  when:
-    - not portainer_state.exists or (portainer_update | default(false))
-  block:
-    - name: deploy-portainer | Pull Portainer image
-      community.docker.docker_image:
-        name: "{{ portainer_image }}"
-        source: pull
-
-    - name: deploy-portainer | Deploy Portainer
-      community.docker.docker_container:
-        name: "{{ portainer_service_name }}"
-        image: "{{ portainer_image }}"
-        detach: true
-        env:
-          DOCKER_HOST: tcp://docker-socket-proxy:2375
-        labels: "{{ portainer_container_labels }}"
-        networks_cli_compatible: true
-        networks: "{{ portainer_networks }}"
-        restart: true
-        restart_policy: unless-stopped
-        state: started
-        volumes: "{{ portainer_volumes }}"
-      register: portainer_container_state
-
-    - name: deploy-portainer | Wait for Portainer to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ portainer_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: portainer_running
-      until: portainer_running is success
-      retries: 10
+- name: deploy-portainer | Wait for Portainer to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ portainer_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: portainer_running
+  until: portainer_running is success
+  retries: 10
