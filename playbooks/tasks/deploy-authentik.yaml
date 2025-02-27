@@ -8,15 +8,12 @@
 
 - name: deploy-authentik | Set Authentik facts
   ansible.builtin.set_fact:
-    authentik_image_name: "{{ authentik_image_name | default('ghcr.io/benphelps/authentik') }}"
-    authentik_image_tag: "{{ authentik_image_tag | default('latest') }}"
     authentik_service_name: "{{ authentik_service_name | default('authentik') }}"
     authentik_service_port: "{{ authentik_service_port | default(3000) }}"
     authentik_config_dir: /root/authentik
 
 - name: deploy-authentik | Set Authentik aggregated facts
   ansible.builtin.set_fact:
-    authentik_image: "{{ authentik_image_name }}:{{ authentik_image_tag }}"
     authentik_fqdn: "{{ authentik_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
 - name: deploy-authentik | Set Authentik API facts
