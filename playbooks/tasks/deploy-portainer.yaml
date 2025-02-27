@@ -83,10 +83,10 @@
     - { "key": "homepage.name", "value": "Portainer" }
     - { "key": "homepage.description", "value": "Container management" }
     - { "key": "homepage.icon", "value": "portainer.png" }
-    - { "key": "homepage.href", "value": "https://{{ portainer_fqdn }}/" }
+    - { "key": "homepage.href", "value": "https://{{ portainer_fqdn }}" }
     - {
       "key": "homepage.siteMonitor",
-      "value": "https://{{ portainer_fqdn }}/"
+      "value": "https://{{ portainer_fqdn }}"
     }
 
 - name: deploy-portainer | Create volume for Portainer  # noqa: syntax-check[unknown-module]
