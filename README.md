@@ -44,11 +44,15 @@ Some good sources of information about what is a Homelab include:
 
 - [How to start your HomeLab journey?][youtube_homelabjourney]
 
+- MORE TO COME!!
+
 [youtube_homelabjourney]: https://www.youtube.com/watch?v=3-Nm15utD3g
 
 In addition, information about setting up a Homelab include:
 
 - [Top 5 Mistakes HomeLabs Make (watch before you start)][youtube_mistakeshomelab]
+
+- MORE TO COME!!
 
 [youtube_mistakeshomelab]: https://www.youtube.com/watch?v=8B1Kp_ylUSY
 
@@ -60,7 +64,7 @@ The major hardware which makes up the Homelab is shown in the following diagram.
 
 ### Network Hardware
 
-A [Ubiquity Cloud Gateway Ultra][network] is used to manage the network aspects of the Homelab.
+A [Ubiquity Cloud Gateway (UCG) Ultra][network] is used to manage the network aspects of the Homelab.
 
 The UCG runs UniFi OS as the operating system which hosts the [Unifi Network Application][unifi].
 
@@ -75,7 +79,7 @@ All hosts within the Homelab are configured automatically by the Gateway, to use
 
 ### Compute Server Hardware
 
-The [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC][compserv] was selected as the Homelab compute server.
+A [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC][compserv] was selected as the Homelab compute server.
 
 The system uses an i5-1235U processor, which with 10 cores, provides a good amount of parallel processing in a compact unit.
 
@@ -92,9 +96,7 @@ Server Specifications
 
 ### Storage Server Hardware
 
-For a Storage server I am using a [ZimaBlade 7700 NAS kit][storserv], which uses a quad-core version of the Zimablade single-board x86 computer.
-
-For storage, two Seagate Barracuda Green 2TB SATA hard drives are used.
+A [ZimaBlade 7700 NAS kit][storserv], which uses a quad-core version of the Zimablade single-board x86 computer, is used as a storage server.
 
 Server Specifications
 
@@ -112,6 +114,8 @@ Server Specifications
 | Power     | 45 W USB Type-C power adapter                            |
 | Thermal   | 6 W TDP with passive cooling                             |
 
+For storage, two Seagate Barracuda Green 2TB SATA hard drives are used.
+
 ## Software
 
 ### Compute Server Software
@@ -119,7 +123,7 @@ Server Specifications
 The compute server is running [Proxmox Virtual Environment 8 hypervisor][compsoft] as the OS.
 This allows both virtual machines and LXC Linux Containers to be used to host the services and applications within the Homelab.
 
-Proxmox 8 was installed on top of Debian 12 as I was unable to boot directly into the Proxmox installer.
+Proxmox 8 was installed on top of Debian 12 as I was unable to boot the Compute Server directly into the Proxmox installer.
 
 Some good sources of information for setting up Proxmox are:
 
@@ -129,14 +133,15 @@ ADD DETAILS!!
 
 The storage service is running [TrueNAS Scale Community Edition][storsoft] as the storage solution.
 
-TrueNAS Scale ElectricEel-24.10.2 was installed directly on to the Zimaboard.
+TrueNAS Scale ElectricEel-24.10.2 was installed directly on to the Storage Server.
 
 The initial configuration of TrueNAS was based on details described in [6 Crucial Settings to Enable on TrueNAS SCALE][truenassettings].
 
 ### Homelab Applications and Services
 
-The majority of applications and services running within the Homelab are deployed as [Docker containers][docker], running within
-[LXC Linux containers][linuxcontainers]. The exceptions are Nextcloud and Home Assistant, which are running in virtual machines.
+The majority of applications and services running within the Homelab are deployed as [Docker containers][docker], running within [LXC Linux containers][linuxcontainers].
+The exceptions are Nextcloud and Home Assistant, which are running in virtual machines.
+
 The Linux containers run [Debian 12 Bookworm][debian] as the host OS.
 
 The following resource details are used for LXC Linux Containers:
@@ -159,8 +164,7 @@ Medium resource services:
 | Cores     | 2                  |
 | Disk size | 24GB |
 
-Each application is hosted in a single LXC Linux Container,
-using an architecture as shown in the following diagram.
+Each application is hosted in a single LXC Linux Container, using an architecture as shown in the following diagram.
 
 ![Homelab application deployment architecture](docs/homelab-application-deployment-architecture.drawio.png "Homelab application deployment architecture")
 
@@ -223,7 +227,7 @@ A number of different tools are utilised to support monitoring.
 
   - Useful to check logs from multiple containers running on a host.
 
-In terms of an overall system dashboard, Home Assistant is utilised, supported by the following integrations:
+In terms of an overall system dashboard, [Home Assistant][home-assistant] is utilised, supported by the following integrations:
 
 - [AdGuard Home][adguardhome-integration]: allows control and monitor your AdGuard Home instance in Home Assistant
 
@@ -246,6 +250,7 @@ Using Home Assistant has a number of advantages:
 - Provides a secure remote access mechanism via its [cloud offering][nabucasa].
 
 [adguardhome-integration]: https://www.home-assistant.io/integrations/adguard
+[home-assistant]: https://www.home-assistant.io/
 [nabucasa]: https://www.nabucasa.com/
 [nextcloud-integration]: https://www.home-assistant.io/integrations/nextcloud
 [nextcloud-serverinfo]: https://github.com/nextcloud/serverinfo
