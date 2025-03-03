@@ -13,6 +13,7 @@
   - [Compute Server Software](#compute-server-software)
   - [Storage Server Software](#storage-server-software)
   - [Homelab Applications and Services](#homelab-applications-and-services)
+  - [Monitoring](#monitoring)
   - [Maintenance](#maintenance)
 - [Guides](#guides)
   - [Markdown](#markdown)
@@ -201,6 +202,65 @@ Underpinning the applications are a number of support services:
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/prometheus.svg" height="25" width="auto" alt="Prometheus"> [Prometheus] - An open-source systems monitoring and alerting toolkit.  - REPLACED BY DOZZLE <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/traefik-proxy.svg" height="25" width="auto" alt="Traefik"> [Traefik] - An open source application proxy. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg" height="25" width="auto" alt="Wazuh"> [Wazuh Agent][wazuhagent] - Wazuh agent for endpoints. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+
+### Monitoring
+
+Monitoring is a key requirement to aid in maintaining a reliable system.
+
+A number of different tools are utilised to support monitoring.
+
+- Portainer
+
+  - Used to check configuration and state of containers.
+
+  - Assist with the cleanup Docker artifacts (images, volumes) which are no longer being utilised.
+
+  - Good for checking logs of individual containers.
+
+- Dozzle:
+
+  - Provides a quick overview of systems.
+
+  - Useful to check logs from multiple containers running on a host.
+
+In terms of an overall system dashboard, Home Assistant is utilised, supported by the following integrations:
+
+- [AdGuard Home][adguardhome-integration]: allows control and monitor your AdGuard Home instance in Home Assistant
+
+- [Nextcloud][nextcloud-integration]: provides sensors and binary sensors for most of the data points that the built-in [Nextcloud serverinfo][nextcloud-serverinfo] app provides.
+
+- [Proxmox][proxmox-custom-integration]: allows various data and controls from a Proxmox instance to be as sensors and controls.
+
+- [TrueNAS][truenas-integration]: allows monitoring and controlling TrueNAS systems
+
+- [UniFi Network][unifi-network-integration]: Monitor and control Unifi gateway, switches and access points.
+
+- [Uptime Kuma][uptime-kuma-integration]: exposes UptimeKuma monitors in Home Assistant
+
+Using Home Assistant has a number of advantages:
+
+- Provides ability to manually monitor and control systems.
+
+- Supports automating controls and alerts for systems.
+
+- Provides a secure remote access mechanism via its [cloud offering][nabucasa].
+
+[adguardhome-integration]: https://www.home-assistant.io/integrations/adguard
+[nabucasa]: https://www.nabucasa.com/
+[nextcloud-integration]: https://www.home-assistant.io/integrations/nextcloud
+[nextcloud-serverinfo]: https://github.com/nextcloud/serverinfo
+[proxmox-custom-integration]: https://github.com/dougiteixeira/proxmoxve
+[truenas-integration]: https://github.com/tomaae/homeassistant-truenas
+[unifi-network-integration]: https://www.home-assistant.io/integrations/unifi
+[uptime-kuma-integration]: https://github.com/meichthys/uptime_kuma
+
+Current 'prototype' implementations of dashboards within Home Assistant are shown in the following images.
+
+![Homelab Server dashboard](docs/homeassistant-homelab-server-dashboard.jpeg)
+
+![Homelab Proxmox dashboard](docs/homeassistant-homelab-proxmox-dashboard.jpeg)
+
+![Homelab LXC Containers dashboard](docs/homeassistant-homelab-lxc-hosts-dashboard.jpeg)
 
 **NOTE: Following sections are work in progress.**
 
