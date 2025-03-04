@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-emqx | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -50,7 +49,7 @@
         mode: "644"
       register: prometheus_configuration_creation
 
-    - name: deploy-emqx | Redeploy Prometheus with new configuration  # noqa: syntax-check[unknown-module]
+    - name: deploy-emqx | Redeploy Prometheus with new configuration # noqa: syntax-check[unknown-module]
       community.docker.docker_container:
         name: "{{ prometheus_service_name | default('prometheus') }}"
         restart: true
@@ -106,7 +105,7 @@
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/emqx/emqx/releases/tag/v$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/emqx/emqx/releases/tag/v${major}.${minor}.${patch}",
     }
     # Homepage labels
     - { "key": "homepage.group", "value": "Monitoring" }

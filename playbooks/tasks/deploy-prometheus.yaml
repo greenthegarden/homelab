@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-prometheus | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -47,14 +46,8 @@
     prometheus_container_labels: "{{ prometheus_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # Traefik labels
-    - {
-      "key": "traefik.enable",
-      "value": "true"
-    }
-    - {
-      "key": "traefik.docker.network",
-      "value": "{{ web_network_name }}"
-    }
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ prometheus_service_name }}-http.rule",
       "value": "Host(`{{ prometheus_fqdn }}`)",
@@ -72,13 +65,10 @@
       "value": "true",
     }
     # What's up Docker? labels
-    - {
-      "key": "wud.tag.include",
-      "value": '^\d+\.\d+\.\d+$$'
-    }
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/prometheus/prometheus/releases/tag/v$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/prometheus/prometheus/releases/tag/v${major}.${minor}.${patch}",
     }
 
 - name: deploy-prometheus | Create Prometheus configuration directory
@@ -117,7 +107,6 @@
     state: started
     volumes: "{{ prometheus_volumes }}"
   register: prometheus_container_state
-
 # - name: deploy-prometheus | Wait for Prometheus to accept connections
 #   ansible.builtin.wait_for:
 #     host: "{{ prometheus_fqdn }}"

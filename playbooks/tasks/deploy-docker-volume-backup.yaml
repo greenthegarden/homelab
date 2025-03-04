@@ -1,9 +1,7 @@
 ---
-
 - name: deploy-docker-volume-backup | Only run is volume to backup has been defined
   when: docker_volume_backup_volume_to_backup is defined
   block:
-
     - name: deploy-docker-volume-backup | Ensure modern version of Docker is available on host
       ansible.builtin.include_tasks:
         file: tasks/hosts-dependency-check-docker-version.yaml
@@ -64,7 +62,7 @@
         - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
         - {
           "key": "wud.link.template",
-          "value": "https://github.com/offen/docker-volume-backup/releases/tag/v$${major}.$${minor}.$${patch}",
+          "value": "https://github.com/offen/docker-volume-backup/releases/tag/v${major}.${minor}.${patch}",
         }
 
     - name: deploy-docker-volume-backup | Create Docker Volume Backup local archive directory

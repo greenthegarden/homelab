@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-plant_it |  Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -87,7 +86,7 @@
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/MDeLuise/plant-it/releases/tag/v$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/MDeLuise/plant-it/releases/tag/v${major}.${minor}.${patch}",
     }
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
@@ -98,10 +97,7 @@
     }
     - { "key": "homepage.icon", "value": "plant-it.png" }
     - { "key": "homepage.href", "value": "https://{{ plant_it_fqdn }}" }
-    - {
-      "key": "homepage.siteMonitor",
-      "value": "https://{{ plant_it_fqdn }}",
-    }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ plant_it_fqdn }}" }
 
 # - name: deploy-plant_it | Create Plant it DB container labels
 #   ansible.builtin.set_fact:
@@ -129,7 +125,7 @@
     - docker-compose.yml
     - plant_it.env
 
-- name: deploy-plant_it | Create Plant it backup volume  # noqa: syntax-check[unknown-module]
+- name: deploy-plant_it | Create Plant it backup volume # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ plant_it_db_backup_volume_name }}"
     state: present
@@ -139,7 +135,7 @@
 #     project_src: /root/Plant it
 #     state: absent
 
-- name: deploy-plant_it | Deploy Plant it services  # noqa: syntax-check[unknown-module]
+- name: deploy-plant_it | Deploy Plant it services # noqa: syntax-check[unknown-module]
   community.docker.docker_compose_v2:
     project_src: "{{ plant_it_config_dir }}"
     env_files:

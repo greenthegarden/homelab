@@ -1,0 +1,2 @@
+# See https://ansible.readthedocs.io/projects/lint/configuring/#ignoring-rules-for-entire-files
+playbooks/tasks/deploy-dozzle.yaml line-length # dozzle env configuration

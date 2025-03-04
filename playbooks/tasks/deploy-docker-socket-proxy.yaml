@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-docker-socket-proxy | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -35,13 +34,10 @@
     docker_socket_proxy_container_labels: "{{ docker_socket_proxy_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # What's up Docker? labels
-    - {
-      "key": "wud.tag.include",
-      "value": '^\d+\.\d+\.\d+$$'
-    }
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/Tecnativa/docker-socket-proxy/releases/tag/v$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/Tecnativa/docker-socket-proxy/releases/tag/v${major}.${minor}.${patch}",
     }
 
 - name: deploy-docker-socket-proxy | Pull Docker Socket Proxy image

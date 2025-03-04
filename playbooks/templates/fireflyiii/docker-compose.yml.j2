@@ -59,7 +59,7 @@ services:
     labels:
       # What's up Docker? labels
       - 'wud.tag.include=^\d+\.\d+\.\d+$$'
-      - 'wud.link.template=https://github.com/firefly-iii/data-importer/releases/tag/v$${major}.$${minor}.$${patch}'
+      - 'wud.link.template=https://github.com/firefly-iii/data-importer/releases/tag/v${major}.${minor}.${patch}'
     networks:
       - firefly_iii
     ports:

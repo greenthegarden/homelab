@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-hortusfox | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -62,7 +61,7 @@
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/danielbrendel/hortusfox-web/releases/tag/v$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/danielbrendel/hortusfox-web/releases/tag/v${major}.${minor}.${patch}",
     }
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
@@ -85,8 +84,9 @@
     # Docker Volume Backup labels
     - {
       "key": "docker-volume-backup.archive-pre",
-      "value": "/bin/sh -c 'mariadb-dump --single-transaction --user={{ hortusfox.db_user }}
-      -p{{ hortusfox.db_password }} --all-databases > /tmp/dumps/dump.sql'"
+      "value":
+        "/bin/sh -c 'mariadb-dump --single-transaction --user={{ hortusfox.db_user }}
+        -p{{ hortusfox.db_password }} --all-databases > /tmp/dumps/dump.sql'",
     }
 
 - name: deploy-hortusfox | Create Hortusfox configuration directory
@@ -101,7 +101,7 @@
     dest: "{{ hortusfox_config_dir }}/docker-compose.yml"
     mode: "0644"
 
-- name: deploy-hortusfox | Create Hortusfox backup volume  # noqa: syntax-check[unknown-module]
+- name: deploy-hortusfox | Create Hortusfox backup volume # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ hortusfox_db_backup_volume_name }}"
     state: present
@@ -111,7 +111,7 @@
 #     project_src: /root/hortusfox
 #     state: absent
 
-- name: deploy-hortusfox | Deploy Hortusfox services  # noqa: syntax-check[unknown-module]
+- name: deploy-hortusfox | Deploy Hortusfox services # noqa: syntax-check[unknown-module]
   community.docker.docker_compose_v2:
     project_src: "{{ hortusfox_config_dir }}"
   register: output

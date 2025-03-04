@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-dozzle-agent | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -32,13 +31,10 @@
     dozzle_agent_container_labels: "{{ dozzle_agent_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # What's up Docker? labels
-    - {
-      "key": "wud.tag.include",
-      "value": '^\d+\.\d+\.\d+$$'
-    }
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/amir20/dozzle/releases/tag/v$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/amir20/dozzle/releases/tag/v${major}.${minor}.${patch}",
     }
 
 - name: deploy-dozzle-agent | Pull Dozzle Agent image

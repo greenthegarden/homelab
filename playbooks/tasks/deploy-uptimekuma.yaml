@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-uptimekuma | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -64,7 +63,7 @@
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-alpine+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/louislam/uptime-kuma/releases/tag/$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/louislam/uptime-kuma/releases/tag/${major}.${minor}.${patch}",
     }
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
@@ -79,10 +78,7 @@
       "value": "https://{{ uptimekuma_fqdn }}/",
     }
     - { "key": "homepage.widget.type", "value": "uptimekuma" }
-    - {
-      "key": "homepage.widget.url",
-      "value": "https://{{ uptimekuma_fqdn }}",
-    }
+    - { "key": "homepage.widget.url", "value": "https://{{ uptimekuma_fqdn }}" }
     - { "key": "homepage.widget.slug", "value": "homelab" }
 
 - name: deploy-uptimekuma | Create Uptime Kuma volume

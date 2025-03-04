@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-vaultwarden | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -37,14 +36,8 @@
     vaultwarden_container_labels: "{{ vaultwarden_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # Traefik labels
-    - {
-      "key": "traefik.enable",
-      "value": "true"
-    }
-    - {
-      "key": "traefik.docker.network",
-      "value": "{{ web_network_name }}"
-    }
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ vaultwarden_service_name }}.entrypoints",
       "value": "websecure",
@@ -62,13 +55,10 @@
       "value": "true",
     }
     # What's up Docker? labels
-    - {
-      "key": "wud.tag.include",
-      "value": '^\d+\.\d+\.\d+-alpine+$$'
-    }
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-alpine+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/dani-garcia/vaultwarden/releases/tag/$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/dani-garcia/vaultwarden/releases/tag/${major}.${minor}.${patch}",
     }
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
@@ -97,7 +87,7 @@
     group: root
     mode: "0644"
 
-- name: deploy-vaultwarden | Create Vaultwarden volume  # noqa: syntax-check[unknown-module]
+- name: deploy-vaultwarden | Create Vaultwarden volume # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ vaultwarden_volume_name }}"
     state: present

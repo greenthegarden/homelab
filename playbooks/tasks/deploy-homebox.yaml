@@ -53,7 +53,7 @@
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/sysadminsmedia/homebox/releases/tag/v$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/sysadminsmedia/homebox/releases/tag/v${major}.${minor}.${patch}",
     }
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }

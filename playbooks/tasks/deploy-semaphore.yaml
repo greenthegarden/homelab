@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-semaphore | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -67,7 +66,7 @@
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/semaphoreui/semaphore/releases/tag/v$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/semaphoreui/semaphore/releases/tag/v${major}.${minor}.${patch}",
     }
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }

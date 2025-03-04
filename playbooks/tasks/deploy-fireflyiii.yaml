@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-fireflyiii | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -64,17 +63,14 @@
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/getfireflyiii/fireflyiii/releases/tag/v$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/getfireflyiii/fireflyiii/releases/tag/v${major}.${minor}.${patch}",
     }
     # Docker Volume Back labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Firefly III" }
-    - {
-      "key": "homepage.description",
-      "value": "Personal finances manager",
-    }
+    - { "key": "homepage.description", "value": "Personal finances manager" }
     - { "key": "homepage.icon", "value": "firefly-iii.png" }
     - { "key": "homepage.href", "value": "https://{{ fireflyiii_fqdn }}/" }
     - {
@@ -90,8 +86,8 @@
     - {
       "key": "docker-volume-backup.archive-pre",
       "value": "/bin/sh -c 'mariadb-dump --single-transaction
-      --user={{ fireflyiii.db_user }}
-      -p{{ fireflyiii.db_password }} --all-databases > /tmp/dumps/dump.sql'"
+        --user={{ fireflyiii.db_user }}
+        -p{{ fireflyiii.db_password }} --all-databases > /tmp/dumps/dump.sql'",
     }
 
 - name: deploy-fireflyiii | Create Firefly III configuration directory
@@ -110,7 +106,7 @@
     - fireflyiii.env
     - fireflyiii_importer.env
 
-- name: deploy-fireflyiii | Create Firefly III backup volume  # noqa: syntax-check[unknown-module]
+- name: deploy-fireflyiii | Create Firefly III backup volume # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ fireflyiii_db_backup_volume_name }}"
     state: present
@@ -120,7 +116,7 @@
 #     project_src: /root/fireflyiii
 #     state: absent
 
-- name: deploy-fireflyiii | Deploy Firefly III services  # noqa: syntax-check[unknown-module]
+- name: deploy-fireflyiii | Deploy Firefly III services # noqa: syntax-check[unknown-module]
   community.docker.docker_compose_v2:
     project_src: "{{ fireflyiii_config_dir }}"
     env_files:

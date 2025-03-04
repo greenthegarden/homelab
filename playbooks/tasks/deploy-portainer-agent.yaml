@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-portainer-agent | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -23,13 +22,10 @@
     portainer_agent_container_labels: "{{ portainer_agent_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # What's up Docker? labels
-    - {
-      "key": "wud.tag.include",
-      "value": '^\d+\.\d+\.\d+-alpine+$$'
-    }
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-alpine+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/portainer/agent/releases/tag/$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/portainer/agent/releases/tag/${major}.${minor}.${patch}",
     }
 
 - name: deploy-portainer-agent | Pull Portainer Agent image
@@ -57,7 +53,6 @@
     state: started
     volumes: "{{ portainer_agent_volumes }}"
   register: portainer_agent_container_state
-
 # - name: deploy-portainer-agent | Wait for Portainer Agent to accept connections
 #   ansible.builtin.wait_for:
 #     host: "{{ portainer_agent_fqdn }}"

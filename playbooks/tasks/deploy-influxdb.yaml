@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-influxdb | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -42,14 +41,8 @@
     influxdb_container_labels: "{{ influxdb_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # Traefik labels
-    - {
-      "key": "traefik.enable",
-      "value": "true"
-    }
-    - {
-      "key": "traefik.docker.network",
-      "value": "{{ web_network_name }}"
-    }
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ influxdb_service_name }}.entrypoints",
       "value": "websecure",
@@ -67,13 +60,10 @@
       "value": "true",
     }
     # What's up Docker? labels
-    - {
-      "key": "wud.tag.include",
-      "value": '^\d+\.\d+\.\d+-alpine+$$'
-    }
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-alpine+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/influxdata/influxdb/releases/tag/v$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/influxdata/influxdb/releases/tag/v${major}.${minor}.${patch}",
     }
     # Homepage labels
     - { "key": "homepage.group", "value": "Monitoring" }
@@ -81,12 +71,9 @@
     - { "key": "homepage.description", "value": "Time-series data" }
     - { "key": "homepage.icon", "value": "influxdb.png" }
     - { "key": "homepage.href", "value": "https://{{ influxdb_fqdn }}/" }
-    - {
-      "key": "homepage.siteMonitor",
-      "value": "https://{{ influxdb_fqdn }}/"
-    }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ influxdb_fqdn }}/" }
 
-- name: deploy-influxdb | Create InfluxDB volumes  # noqa: syntax-check[unknown-module]
+- name: deploy-influxdb | Create InfluxDB volumes # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
@@ -155,7 +142,6 @@
     #   register: influxdb_running
     #   until: influxdb_running is success
     #   retries: 10
-
 # - name: deploy-influxdb | Get status of Grafana Docker container
 #   community.docker.docker_container_info:
 #     name: "{{ grafana_service_name | default('grafana') }}"

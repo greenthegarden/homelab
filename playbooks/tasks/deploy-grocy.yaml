@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-grocy | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -38,14 +37,8 @@
     grocy_container_labels: "{{ grocy_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # Traefik labels
-    - {
-      "key": "traefik.enable",
-      "value": "true"
-    }
-    - {
-      "key": "traefik.docker.network",
-      "value": "{{ web_network_name }}"
-    }
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ grocy_service_name }}.entrypoints",
       "value": "websecure",
@@ -63,13 +56,10 @@
       "value": "true",
     }
     # What's up Docker? labels
-    - {
-      "key": "wud.tag.include",
-      "value": '^\d+\.\d+\.\d+$$'
-    }
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/grocy/grocy/releases/tag/v$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/grocy/grocy/releases/tag/v${major}.${minor}.${patch}",
     }
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
@@ -79,17 +69,14 @@
     - { "key": "homepage.description", "value": "What's in the pantry?" }
     - { "key": "homepage.icon", "value": "grocy.png" }
     - { "key": "homepage.href", "value": "https://{{ grocy_fqdn }}/" }
-    - {
-      "key": "homepage.siteMonitor",
-      "value": "https://{{ grocy_fqdn }}/",
-    }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ grocy_fqdn }}/" }
 
-- name: deploy-grocy | Create Grocy volume  # noqa: syntax-check[unknown-module]
+- name: deploy-grocy | Create Grocy volume # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ grocy_volume_name }}"
     state: present
 
-- name: deploy-grocy | Check if Grocy is running  # noqa: syntax-check[unknown-module]
+- name: deploy-grocy | Check if Grocy is running # noqa: syntax-check[unknown-module]
   community.docker.docker_container_info:
     name: "{{ grocy_service_name }}"
   register: grocy_state

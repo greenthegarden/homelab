@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-homepage | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -36,38 +35,29 @@
     homepage_container_labels: "{{ homepage_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # Traefik labels
-    - {
-      "key": "traefik.enable",
-      "value": "true"
-    }
-    - {
-      "key": "traefik.docker.network",
-      "value": "{{ web_network_name }}"
-    }
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ homepage_service_name }}.entrypoints",
-      "value": "websecure"
+      "value": "websecure",
     }
     - {
       "key": "traefik.http.routers.{{ homepage_service_name }}.rule",
-      "value": "Host(`{{ homepage_fqdn }}`)"
+      "value": "Host(`{{ homepage_fqdn }}`)",
     }
     - {
       "key": "traefik.http.routers.{{ homepage_service_name }}.service",
-      "value": "{{ homepage_service_name }}"
+      "value": "{{ homepage_service_name }}",
     }
     - {
       "key": "traefik.http.routers.{{ homepage_service_name }}.tls",
-      "value": "true"
+      "value": "true",
     }
     # What's up Docker? labels
-    - {
-      "key": "wud.tag.include",
-      "value": '^\d+\.\d+\.\d+$$'
-    }
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/gethomepage/homepage/releases/tag/v$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/gethomepage/homepage/releases/tag/v${major}.${minor}.${patch}",
     }
     # Homepage labels
     - { "key": "homepage.group", "value": "Monitoring" }
@@ -75,10 +65,7 @@
     - { "key": "homepage.description", "value": "This page" }
     - { "key": "homepage.icon", "value": "homepage.png" }
     - { "key": "homepage.href", "value": "https://{{ homepage_fqdn }}/" }
-    - {
-      "key": "homepage.siteMonitor",
-      "value": "https://{{ homepage_fqdn }}/"
-    }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ homepage_fqdn }}/" }
 
 - name: deploy-homepage | Create Homepage configuration directory
   ansible.builtin.file:

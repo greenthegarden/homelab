@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-authentik | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -55,7 +54,7 @@
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/getauthentik/authentik/releases/tag/v$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/getauthentik/authentik/releases/tag/v${major}.${minor}.${patch}",
     }
     # Homepage labels
     - { "key": "homepage.group", "value": "System" }
@@ -75,7 +74,7 @@
     # Docker Volume Backup labels
     - {
       "key": "docker-volume-backup.archive-pre",
-      "value": "/bin/sh -c 'PGPASSWORD={{ authentik.db_password }} pg_dump -U {{ authentik.db_user }} {{ authentik.db_name }} > /tmp/dumps/dump.sql'"
+      "value": "/bin/sh -c 'PGPASSWORD={{ authentik.db_password }} pg_dump -U {{ authentik.db_user }} {{ authentik.db_name }} > /tmp/dumps/dump.sql'",
     }
 
 - name: deploy-authentik | Create Authentik configuration directory
@@ -98,7 +97,7 @@
 #     project_src: /root/authentik
 #     state: absent
 
-- name: deploy-authentik | Deploy Authentik services  # noqa: syntax-check[unknown-module]
+- name: deploy-authentik | Deploy Authentik services # noqa: syntax-check[unknown-module]
   community.docker.docker_compose_v2:
     project_src: "{{ authentik_config_dir }}"
     env_files:

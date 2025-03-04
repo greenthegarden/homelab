@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-dozzle | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -35,53 +34,44 @@
     dozzle_container_labels: "{{ dozzle_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # Traefik labels
-    - {
-      "key": "traefik.enable",
-      "value": "true"
-    }
-    - {
-      "key": "traefik.docker.network",
-      "value": "{{ web_network_name }}"
-    }
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ dozzle_service_name }}.entrypoints",
-      "value": "websecure"
+      "value": "websecure",
     }
     - {
       "key": "traefik.http.routers.{{ dozzle_service_name }}.rule",
-      "value": "Host(`{{ dozzle_fqdn }}`)"
+      "value": "Host(`{{ dozzle_fqdn }}`)",
     }
     - {
       "key": "traefik.http.routers.{{ dozzle_service_name }}.service",
-      "value": "{{ dozzle_service_name }}"
+      "value": "{{ dozzle_service_name }}",
     }
     - {
       "key": "traefik.http.routers.{{ dozzle_service_name }}.tls",
-      "value": "true"
+      "value": "true",
     }
     - {
       "key": "traefik.http.services.{{ dozzle_service_name }}.loadbalancer.server.port",
       "value": "{{ dozzle_service_port | quote }}",
     }
     # What's up Docker? labels
-    - {
-      "key": "wud.tag.include",
-      "value": '^\d+\.\d+\.\d+$$'
-    }
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/amir20/dozzle/releases/tag/v$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/amir20/dozzle/releases/tag/v${major}.${minor}.${patch}",
     }
     # Homepage labels
     - { "key": "homepage.group", "value": "Monitoring" }
     - { "key": "homepage.name", "value": "Dozzle" }
-    - { "key": "homepage.description", "value": "Realtime log viewer for docker containers" }
+    - {
+      "key": "homepage.description",
+      "value": "Realtime log viewer for docker containers",
+    }
     - { "key": "homepage.icon", "value": "dozzle.png" }
     - { "key": "homepage.href", "value": "https://{{ dozzle_fqdn }}/" }
-    - {
-      "key": "homepage.siteMonitor",
-      "value": "https://{{ dozzle_fqdn }}/"
-    }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ dozzle_fqdn }}/" }
 
 - name: deploy-dozzle | Pull Dozzle image
   community.docker.docker_image:
@@ -96,8 +86,7 @@
     detach: true
     env:
       DOZZLE_ENABLE_ACTIONS: "true"
-      DOZZLE_REMOTE_AGENT:
-        dozzle-agent:7007,ansible.localdomain:7007,broker.localdomain:7007,fireflyiii.localdomain:7007,frigate.localdomain:7007,homebox.localdomain:7007,homepage.localdomain:7007,influxdb.localdomain:7007,portainer.localdomain:7007,uptimekuma.localdomain:7007,vaultwarden.localdomain:7007,whatsupdocker.localdomain:7007
+      DOZZLE_REMOTE_AGENT: dozzle-agent:7007,ansible.localdomain:7007,broker.localdomain:7007,fireflyiii.localdomain:7007,frigate.localdomain:7007,homebox.localdomain:7007,homepage.localdomain:7007,influxdb.localdomain:7007,portainer.localdomain:7007,uptimekuma.localdomain:7007,vaultwarden.localdomain:7007,whatsupdocker.localdomain:7007
     healthcheck:
       test: ["CMD", "/dozzle", "healthcheck"]
       interval: 3s

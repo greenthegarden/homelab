@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-traefik | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -96,14 +95,8 @@
     traefik_container_labels: "{{ traefik_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # - "traefik.enable=true"
-    - {
-      "key": "traefik.enable",
-      "value": "true"
-    }
-    - {
-      "key": "traefik.docker.network",
-      "value": "{{ web_network_name }}"
-    }
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     # - "traefik.http.routers.traefik.entrypoints=http"
     # - "traefik.http.routers.traefik.rule=Host(`traefik.homelab.greenthegarden.com`)"
     - {
@@ -189,13 +182,10 @@
       "value": "prometheus@internal",
     }
     # What's up Docker? labels
-    - {
-      "key": "wud.tag.include",
-      "value": '^\d+\.\d+\.\d+$$'
-    }
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/traefik/traefik/releases/tag/v$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/traefik/traefik/releases/tag/v${major}.${minor}.${patch}",
     }
 
 - name: deploy-traefik | Create acme directory
@@ -234,7 +224,7 @@
     labels: "{{ traefik_container_labels }}"
     networks: "{{ traefik_networks }}"
     published_ports: "{{ traefik_ports }}"
-    recreate: true  # Recreate to ensure any configuration changes are used
+    recreate: true # Recreate to ensure any configuration changes are used
     restart: true
     restart_policy: unless-stopped
     security_opts:
@@ -243,7 +233,6 @@
     volumes: "{{ traefik_volumes }}"
   register: traefik_container_state
   when: traefik_provider == "docker"
-
 # - name: deploy-traefik | Wait for Traefik to accept connections
 #   ansible.builtin.wait_for:
 #     host: "{{ traefik_fqdn }}"

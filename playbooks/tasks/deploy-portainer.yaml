@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-portainer | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
@@ -39,25 +38,22 @@
     portainer_container_labels: "{{ portainer_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # Traefik labels
-    - {
-      "key": "traefik.enable",
-      "value": "true"
-    }
+    - { "key": "traefik.enable", "value": "true" }
     - {
       "key": "traefik.docker.network",
-      "value": "{{ web_network_name | default('web') }}"
+      "value": "{{ web_network_name | default('web') }}",
     }
     - {
       "key": "traefik.http.routers.{{ portainer_service_name }}.entrypoints",
-      "value": "websecure"
+      "value": "websecure",
     }
     - {
       "key": "traefik.http.routers.{{ portainer_service_name }}.rule",
-      "value": "Host(`{{ portainer_fqdn }}`)"
+      "value": "Host(`{{ portainer_fqdn }}`)",
     }
     - {
       "key": "traefik.http.routers.{{ portainer_service_name }}.service",
-      "value": "{{ portainer_service_name }}"
+      "value": "{{ portainer_service_name }}",
     }
     - {
       "key": "traefik.http.routers.{{ portainer_service_name }}.tls",
@@ -68,13 +64,10 @@
       "value": "9000",
     }
     # What's up Docker? labels
-    - {
-      "key": "wud.tag.include",
-      "value": '^\d+\.\d+\.\d+-alpine+$$'
-    }
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-alpine+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/portainer/portainer/releases/tag/$${major}.$${minor}.$${patch}",
+      "value": "https://github.com/portainer/portainer/releases/tag/${major}.${minor}.${patch}",
     }
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
@@ -84,12 +77,9 @@
     - { "key": "homepage.description", "value": "Container management" }
     - { "key": "homepage.icon", "value": "portainer.png" }
     - { "key": "homepage.href", "value": "https://{{ portainer_fqdn }}" }
-    - {
-      "key": "homepage.siteMonitor",
-      "value": "https://{{ portainer_fqdn }}"
-    }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ portainer_fqdn }}" }
 
-- name: deploy-portainer | Create volume for Portainer  # noqa: syntax-check[unknown-module]
+- name: deploy-portainer | Create volume for Portainer # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ portainer_volume_name }}"
 
