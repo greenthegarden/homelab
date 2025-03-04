@@ -156,56 +156,50 @@
     #   until: influxdb_running is success
     #   retries: 10
 
-    # - name: Set Grafana facts
-    #   ansible.builtin.set_fact:
-    #     grafana_service_name: grafana
-    #     grafana_service_port: 3000
-    #   tags:
-    #     - influxdb
-    #     - grafana
+# - name: deploy-influxdb | Get status of Grafana Docker container
+#   community.docker.docker_container_info:
+#     name: "{{ grafana_service_name | default('grafana') }}"
+#   register: grafana_container_status
+#   ignore_errors: true
 
-    # - name: Set Grafana API facts
-    #   ansible.builtin.set_fact:
-    #     grafana_instance: "{{ grafana_service_name | default('grafana') }}"
-    #     # Use domain name here as Grafana is running on a different Docker network
-    #     grafana_api_url: "http://{{ ansible_default_ipv4.address }}:{{ grafana_service_port }}"
-    #     grafana_security: {admin_user: admin, admin_password: "monitoring"}
-    #     grafana_use_provisioning: false  # will use API
-    #   tags:
-    #     - influxdb
-    #     - grafana
+# - name: deploy-influxdb | Configure Grafana when deployed
+#   when: grafana_container_status.exists
+#   block:
 
-    # - name: Check if Grafana is running
-    #   community.docker.docker_container_info:
-    #     name: "{{ grafana_service_name }}"
-    #   register: grafana_state
-    #   tags:
-    #     - influxdb
-    #     - grafana
+#     - name: deploy-influxdb | Set Grafana API facts
+#       ansible.builtin.set_fact:
+#         grafana_instance: "{{ grafana_service_name | default('grafana') }}"
+#         # Use domain name here as Grafana is running on a different Docker network
+#         grafana_api_url: "http://{{ ansible_default_ipv4.address }}:{{ grafana_service_port }}"
+#         grafana_security: {
+#           admin_user: "{{ grafana.admin_user }}",
+#           admin_password: "{{ grafana.admin_password }}"
+#         }
+#         grafana_use_provisioning: false  # will use API
+#       tags:
+#         - influxdb
+#         - grafana
 
-    # - name: Create Grafana datasources
-    #   community.grafana.grafana_datasource:
-    #     name: "{{ item.name }}"
-    #     grafana_url: "{{ grafana_api_url }}"
-    #     grafana_user: "{{ grafana_security.admin_user }}"
-    #     grafana_password: "{{ grafana_security.admin_password }}"
-    #     org_id: "1"
-    #     ds_type: "{{ item.type }}"
-    #     ds_url: "{{ item.url }}"
-    #     database: "{{ influxdb_db }}"
-    #     access: "{{ item.access }}"
-    #     tls_skip_verify: true
-    #     state: present
-    #   with_items: "{{ grafana_datasources }}"
-    #   vars:
-    #     grafana_datasources:
-    #       - name: InfluxDB
-    #         type: influxdb
-    #         access: proxy
-    #         url: "http://{{ ansible_default_ipv4.address }}:{{ influxdb_service_port | default(8086) }}"
-    #         user: "{{ influxdb_read_user }}"
-    #         basic_auth_user: "{{ influxdb_read_user }}"
-    #         basic_auth_password: "{{ influxdb_read_password }}"
-    #   tags:
-    #     - influxdb
-    #     - grafana
+#     - name: deploy-influxdb | Add InfluxDB as a Grafana datasource
+#       community.grafana.grafana_datasource:
+#         name: "{{ item.name }}"
+#         grafana_url: "{{ grafana_api_url }}"
+#         grafana_user: "{{ grafana_security.admin_user }}"
+#         grafana_password: "{{ grafana_security.admin_password }}"
+#         org_id: "1"
+#         ds_type: "{{ item.type }}"
+#         ds_url: "{{ item.url }}"
+#         database: "{{ influxdb_db }}"
+#         access: "{{ item.access }}"
+#         tls_skip_verify: true
+#         state: present
+#       with_items: "{{ grafana_datasources }}"
+#       vars:
+#         grafana_datasources:
+#           - name: InfluxDB
+#             type: influxdb
+#             access: proxy
+#             url: "http://{{ ansible_default_ipv4.address }}:{{ influxdb_service_port | default(8086) }}"
+#             user: "{{ influxdb_read_user }}"
+#             basic_auth_user: "{{ influxdb_read_user }}"
+#             basic_auth_password: "{{ influxdb_read_password }}"

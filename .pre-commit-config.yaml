@@ -47,6 +47,14 @@ repos:
         files: ^playbooks/(files/homepage/config/bookmarks\.yaml|vars/homelab_env\.yaml)$
         stages: [pre-commit]
 
+  - repo: https://github.com/Checkmarx/kics
+    rev: "2.1.5" # change to correct tag or sha
+    hooks:
+      - id: kics-scan
+        name: "🔒 security · Keeping Infrastructure as Code Secure"
+        verbose: true
+        args: [--ignore-on-exit, "all"]
+
 
   # --------------------------- 🔍 Code Quality Tools -------------------------- #
 
@@ -125,7 +133,7 @@ repos:
 
   ### Renovate ###
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 39.180.2
+    rev: 39.185.6
     hooks:
       - id: renovate-config-validator
         # args: [--strict]
@@ -202,7 +210,7 @@ repos:
   ### Commit Message Standards ###
 
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.2.2
+    rev: v4.4.1
     hooks:
       - id: commitizen
         name: "🌳 git · Validate commit message"
