@@ -13,7 +13,9 @@
   - [Compute Server Software](#compute-server-software)
   - [Storage Server Software](#storage-server-software)
   - [Homelab Applications and Services](#homelab-applications-and-services)
-  - [Monitoring](#monitoring)
+  - [Monitoring and Alerting](#monitoring-and-alerting)
+    - [Monitoring Tools](#monitoring-tools)
+    - [Monitoring System](#monitoring-system)
   - [Maintenance](#maintenance)
 - [Guides](#guides)
   - [Markdown](#markdown)
@@ -33,22 +35,35 @@
 
 ## Introduction
 
-Welcome to my Homelab definition-in-code! The repository consists largely of Ansible code which is used
-to provision and maintain the services which make up the functionality provided by my Homelab.
+Welcome to my Homelab definition-in-code! The repository consists largely of Ansible code which is used to provision and maintain the services which make up the functionality within my Homelab.
 
 Please feel free to reuse any of the code or provide feedback and suggestions.
 
 ## A Homelab
 
-Some good sources of information about what is a Homelab include:
+A Homelab is many things to many people, but I use it primarily to
+
+- self host capabilities that I want to run locally, without exposing data outside my home
+
+- develop skills and knowledge around [cloud native technologies][cncf]
+
+- exploring different technologies and how they can be used to enhance my home
+
+- enjoy building something I use everyday
+
+Some good sources of information about what a Homelab is include:
+
+- [What is a HomeLab and How Do I Get Started?][youtube_whatisahomelab]
 
 - [How to start your HomeLab journey?][youtube_homelabjourney]
 
 - MORE TO COME!!
 
+[cncf]: https://www.cncf.io
+[youtube_whatisahomelab]: https://www.youtube.com/watch?v=gPGf4Y8nQqM
 [youtube_homelabjourney]: https://www.youtube.com/watch?v=3-Nm15utD3g
 
-In addition, information about setting up a Homelab include:
+In addition, sources of information about setting up a Homelab include:
 
 - [Top 5 Mistakes HomeLabs Make (watch before you start)][youtube_mistakeshomelab]
 
@@ -58,17 +73,17 @@ In addition, information about setting up a Homelab include:
 
 ## Hardware
 
-The major hardware which makes up the Homelab is shown in the following diagram.
+The major hardware compoenents which makes up the Homelab are shown in the following diagram.
 
 ![Homelab hardware](docs/homelab-network-wired-hardware.drawio.png "Homelab hardware")
 
 ### Network Hardware
 
-A [Ubiquity Cloud Gateway (UCG) Ultra][network] is used to manage the network aspects of the Homelab.
+A [Ubiquity Cloud Gateway (UCG) Ultra][network] is used to create and manage the primary network aspects of the Homelab.
 
 The UCG runs UniFi OS as the operating system which hosts the [Unifi Network Application][unifi].
 
-Some good sources of information for setting up a Unifi network are:
+Some good sources of information for setting up a Unifi network include:
 
 - [Full Unifi Config - Setup from Start to Finish][youtube_unififullconfig]
 - [COMPLETE UniFi Network Setup Guide (Detailed for Beginners)][youtube_unifisetup]
@@ -77,11 +92,15 @@ In addition, a Raspberry Pi 3 Model B+ single board computer, running Rasbian  B
 
 All hosts within the Homelab are configured automatically by the Gateway, to use the DNS capability within AdGuard Home to resolve hostnames internal to the Homelab.
 
+I wrote an article about using AdGuard Home as a DNS service which is [available on Medium][medium_dns].
+
+[medium_dns]: https://medium.com/@greenthegarden/home-network-dns-configuration-8d6174492dd9
+
 ### Compute Server Hardware
 
 A [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC][compserv] was selected as the Homelab compute server.
 
-The system uses an i5-1235U processor, which with 10 cores, provides a good amount of parallel processing in a compact unit.
+The system uses an i5-1235U processor, which with 10 cores, provides a good amount of parallel processing in a relatviely efficient, compact, unit.
 
 Server Specifications
 
@@ -96,7 +115,7 @@ Server Specifications
 
 ### Storage Server Hardware
 
-A [ZimaBlade 7700 NAS kit][storserv], which uses a quad-core version of the Zimablade single-board x86 computer, is used as a storage server.
+A [ZimaBlade 7700 NAS kit][storserv], which uses a quad-core version of the ZimaBlade single-board x86 computer, is used as the storage server.
 
 Server Specifications
 
@@ -121,7 +140,7 @@ For storage, two Seagate Barracuda Green 2TB SATA hard drives are used.
 ### Compute Server Software
 
 The compute server is running [Proxmox Virtual Environment 8 hypervisor][compsoft] as the OS.
-This allows both virtual machines and LXC Linux Containers to be used to host the services and applications within the Homelab.
+Proxmox supports both Virtual Machines and LXC Linux Containers to be used to host the services and applications.
 
 Proxmox 8 was installed on top of Debian 12 as I was unable to boot the Compute Server directly into the Proxmox installer.
 
@@ -133,20 +152,20 @@ ADD DETAILS!!
 
 The storage service is running [TrueNAS Scale Community Edition][storsoft] as the storage solution.
 
-TrueNAS Scale ElectricEel-24.10.2 was installed directly on to the Storage Server.
+TrueNAS Scale ElectricEel-24.10.2 was installed directly on to the ZimBlade.
 
 The initial configuration of TrueNAS was based on details described in [6 Crucial Settings to Enable on TrueNAS SCALE][truenassettings].
 
 ### Homelab Applications and Services
 
 The majority of applications and services running within the Homelab are deployed as [Docker containers][docker], running within [LXC Linux containers][linuxcontainers].
-The exceptions are Nextcloud and Home Assistant, which are running in virtual machines.
+The exceptions are Nextcloud and Home Assistant, which are running in virtual machines, and Wazuh is installed directly on an LXC Linux Container.
 
 The Linux containers run [Debian 12 Bookworm][debian] as the host OS.
 
 The following resource details are used for LXC Linux Containers:
 
-Low resource services:
+Low resource services, those which are largely stateless:
 
 | Resource  | Value                                                  |
 | --------- | -------------------------------------------------------- |
@@ -155,7 +174,7 @@ Low resource services:
 | Cores     | 1                  |
 | Disk size | 16GB |
 
-Medium resource services:
+Medium resource services, those which host datastores of some type:
 
 | Resource  | Value                                                  |
 | --------- | -------------------------------------------------------- |
@@ -207,43 +226,51 @@ Underpinning the applications are a number of support services:
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/traefik-proxy.svg" height="25" width="auto" alt="Traefik"> [Traefik] - An open source application proxy. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg" height="25" width="auto" alt="Wazuh"> [Wazuh Agent][wazuhagent] - Wazuh agent for endpoints. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 
-### Monitoring
+### Monitoring and Alerting
 
-Monitoring is a key requirement to aid in maintaining a reliable system.
+Monitoring is a key aspect of the Homelab I wanted to work on.
+
+#### Monitoring Tools
 
 A number of different tools are utilised to support monitoring.
 
-- Portainer
+- Portainer, which provides a frontend to Docker to:
 
-  - Used to check configuration and state of containers.
+  - check the configuration and state of deployed containers.
 
-  - Assist with the cleanup Docker artifacts (images, volumes) which are no longer being utilised.
+  - cleanup artifacts (images, volumes) which are no longer being utilised.
 
-  - Good for checking logs of individual containers.
+  - check logs of individual containers.
 
-- Dozzle:
+- Dozzle, which provides a frontend to Docker hosts to:
 
-  - Provides a quick overview of systems.
+  - visualise the state of multiple hosts.
 
-  - Useful to check logs from multiple containers running on a host.
+  - check logs from multiple containers running on a host.
 
-In terms of an overall system dashboard, [Home Assistant][home-assistant] is utilised, supported by the following integrations:
+- Uptime Kuma, which provides a frontend to:
 
-- [AdGuard Home][adguardhome-integration]: allows control and monitor your AdGuard Home instance in Home Assistant
+  - configure and monitor probes into different resource types, include host systems, Docker containers, and MQTT clients.
 
-- [Nextcloud][nextcloud-integration]: provides sensors and binary sensors for most of the data points that the built-in [Nextcloud serverinfo][nextcloud-serverinfo] app provides.
+#### Monitoring System
 
-- [Proxmox][proxmox-custom-integration]: allows various data and controls from a Proxmox instance to be as sensors and controls.
+In terms of an overall monitoring and alerting system, [Home Assistant][home-assistant] is utilised, supported by the following integration, which provide sensors to ingest data from various services and enable controlling of services:
 
-- [TrueNAS][truenas-integration]: allows monitoring and controlling TrueNAS systems
+- [AdGuard Home][adguardhome-integration]
 
-- [UniFi Network][unifi-network-integration]: Monitor and control Unifi gateway, switches and access points.
+- [Nextcloud][nextcloud-integration]
 
-- [Uptime Kuma][uptime-kuma-integration]: exposes UptimeKuma monitors in Home Assistant
+- [Proxmox][proxmox-custom-integration]
 
-Using Home Assistant has a number of advantages:
+- [TrueNAS][truenas-integration]
 
-- Provides ability to manually monitor and control systems.
+- [UniFi Network][unifi-network-integration]
+
+- [Uptime Kuma][uptime-kuma-integration]
+
+Using Home Assistant has a number of advantages in my case:
+
+- Provides an ability to manually monitor and control systems.
 
 - Supports automating controls and alerts for systems.
 
@@ -253,13 +280,12 @@ Using Home Assistant has a number of advantages:
 [home-assistant]: https://www.home-assistant.io/
 [nabucasa]: https://www.nabucasa.com/
 [nextcloud-integration]: https://www.home-assistant.io/integrations/nextcloud
-[nextcloud-serverinfo]: https://github.com/nextcloud/serverinfo
 [proxmox-custom-integration]: https://github.com/dougiteixeira/proxmoxve
 [truenas-integration]: https://github.com/tomaae/homeassistant-truenas
 [unifi-network-integration]: https://www.home-assistant.io/integrations/unifi
 [uptime-kuma-integration]: https://github.com/meichthys/uptime_kuma
 
-Current 'prototype' implementations of dashboards within Home Assistant are shown in the following images.
+Current 'prototype' implementations of dashboards implemented within Home Assistant are shown in the following images.
 
 ![Homelab Server dashboard](docs/homeassistant-homelab-server-dashboard.jpeg)
 
