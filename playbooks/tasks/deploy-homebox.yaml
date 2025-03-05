@@ -90,7 +90,7 @@
 - name: deploy-homebox | Remove Homebox container if changing version
   when:
     - homebox_state.exists
-    - homebox_image_tag != homebox_state.container.Config.Image | split(':') | last
+    - (homebox_image  | split(':') | last) != (homebox_state.container.Config.Image | split(':') | last)
   block:
     - name: deploy-homebox | Stop and remove existing Homebox container
       community.docker.docker_container:
