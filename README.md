@@ -13,23 +13,30 @@
   - [Compute Server Software](#compute-server-software)
   - [Storage Server Software](#storage-server-software)
   - [Homelab Applications and Services](#homelab-applications-and-services)
-  - [Monitoring and Alerting](#monitoring-and-alerting)
-    - [Monitoring Tools](#monitoring-tools)
-    - [Monitoring System](#monitoring-system)
-  - [Maintenance](#maintenance)
-- [Guides](#guides)
-  - [Markdown](#markdown)
+- [Provisioning](#provisioning)
   - [Ansible](#ansible)
-    - [Naming Conventions](#naming-conventions)
+    - [Ansible linting](#ansible-linting)
+    - [Ansible naming conventions](#ansible-naming-conventions)
+  - [Semaphore UI](#semaphore-ui)
+- [Monitoring and Alerting](#monitoring-and-alerting)
+  - [Monitoring Tools](#monitoring-tools)
+  - [Monitoring System](#monitoring-system)
+  - [Automation](#automation)
+- [Maintenance](#maintenance)
   - [Renovate](#renovate)
-  - [Setting up Semaphore UI](#setting-up-semaphore-ui)
-  - [Managing secrets](#managing-secrets)
-  - [Backup Strategy](#backup-strategy)
-    - [Container Configuration](#container-configuration)
-    - [Container Data](#container-data)
-    - [Off-Site Backup](#off-site-backup)
-    - [Nextcloud AOI](#nextcloud-aoi)
-- [To Do](#to-do)
+  - [Automation via Semaphore UI](#automation-via-semaphore-ui)
+  - [Source code quality and security](#source-code-quality-and-security)
+  - [Secrets management](#secrets-management)
+- [Backup Strategy](#backup-strategy)
+  - [Container configuration](#container-configuration)
+  - [Container data](#container-data)
+    - [Docker volume backup](#docker-volume-backup)
+    - [Database volume backup](#database-volume-backup)
+    - [Off-Site backup](#off-site-backup)
+    - [Nextcloud AOI Backup](#nextcloud-aoi-backup)
+- [Documentation](#documentation)
+  - [Markdown](#markdown)
+- [Still to do](#still-to-do)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -187,9 +194,6 @@ Each application is hosted in a single LXC Linux Container, using an architectur
 
 ![Homelab application deployment architecture](docs/homelab-application-deployment-architecture.drawio.png "Homelab application deployment architecture")
 
-[Ansible] is used to automate the configuration of the Linux containers, including the installation of Docker, and deploy the containerised applications. The
-Ansible files make up the majority of this repository, which is structured to work with [Semaphore UI][semaphoreui].
-
 The current iteration of the Homelab hosts the following applications:
 
 <!-- uses https://gist.github.com/stevecondylios/dcadb4fc73e63f27a3bbcf17e52058bf -->
@@ -226,11 +230,47 @@ Underpinning the applications are a number of support services:
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/traefik-proxy.svg" height="25" width="auto" alt="Traefik"> [Traefik] - An open source application proxy. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg" height="25" width="auto" alt="Wazuh"> [Wazuh Agent][wazuhagent] - Wazuh agent for endpoints. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 
-### Monitoring and Alerting
+## Provisioning
+
+### Ansible
+
+[Ansible] is used to define and automate the configuration of the Linux containers, including the installation of Docker, and deployment of the containerised applications. The
+Ansible files make up the majority of this repository, which is structured to work with [Semaphore UI][semaphoreui].
+
+The adoption of Ansible allows the configuration to be defined in code, and therefore version controlled in a source code repository.
+
+#### Ansible linting
+
+All Ansible code is linted using [Ansible Lint][ansible-lint], using the configuration in [.ansible-lint.yaml](.ansible-lint.yaml).
+
+[ansible-lint]: https://ansible.readthedocs.io/projects/lint/
+
+#### Ansible naming conventions
+
+The following [naming convention][ansiblenaming] is to be adopted within the repository:
+
+- Playbooks: Use names like site.yml, webapp.yml, database.yml.
+
+- Roles: Use lowercase letters and hyphens to separate words, e.g. web-server or database-backup.
+
+- Task file names: Use lowercase letters and underscores, and end with .yml instead of .yaml.
+
+- Task names: Start with a verb to indicate the action, e.g. "start_webserver".
+
+- Variable names: Use lowercase letters and underscores to separate words.
+
+TO DO: update code to align with naming convention
+
+### Semaphore UI
+
+[Semaphore UI][semaphore] is used to manage and run the various Ansible artifacts, including the inventories, and playbooks. All initial provisioning of the services within the Homelab
+is  run from Semaphore. The history of all playbook runs is maintained within Semaphore UI in order to be able to monitor the the outcome of each run.
+
+## Monitoring and Alerting
 
 Monitoring is a key aspect of the Homelab I wanted to work on.
 
-#### Monitoring Tools
+### Monitoring Tools
 
 A number of different tools are utilised to support monitoring.
 
@@ -252,9 +292,10 @@ A number of different tools are utilised to support monitoring.
 
   - configure and monitor probes into different resource types, include host systems, Docker containers, and MQTT clients.
 
-#### Monitoring System
+### Monitoring System
 
-In terms of an overall monitoring and alerting system, [Home Assistant][home-assistant] is utilised, supported by the following integration, which provide sensors to ingest data from various services and enable controlling of services:
+In terms of an overall monitoring and alerting system, [Home Assistant][home-assistant] is utilised, supported by the following integration,
+which provide sensors to ingest data from various services and enable controlling of services:
 
 - [AdGuard Home][adguardhome-integration]
 
@@ -293,37 +334,37 @@ Current 'prototype' implementations of dashboards implemented within Home Assist
 
 ![Homelab LXC Containers dashboard](docs/homeassistant-homelab-lxc-hosts-dashboard.jpeg)
 
-**NOTE: Following sections are work in progress.**
+### Automation
 
-### Maintenance
+The [automation capability][home-assistant-automation] of Home Assistant is utilised to trigger [notifications][home-assistant-notification] or take automated actions to resolve issues.
 
-## Guides
+For example:
 
-### Markdown
+- Notifications generated when hosts become unavailable from the network.
 
-All documentation is writtern in Markdown, using the [Markdown Guide][markdownguide] as a reference, and linted, using [markdownlint-cli2][markdownlint].
+- Notifications generated when host resources (CPU, Disk and memory) exceed thresholds.
 
-### Ansible
+- Automating the restarting of resources which appear in an unstable state.
 
-#### Naming Conventions
+- Automating the shutdown and restart of systems to reduce power consumption.
 
-When naming Ansible playbooks and roles, it is recommended to follow consistent conventions.
+[home-assistant-automation]: https://www.home-assistant.io/docs/automation/basics/
+[home-assistant-notification]: https://www.home-assistant.io/integrations/notify/
 
-[Here are some examples of naming conventions][ansiblenaming]:
+## Maintenance
 
-- Playbooks: Use names like site.yml, webapp.yml, database.yml.
+The intent is to automate as much of the maintenance of the Homelab as possible. Although tools such as [Watchtower][docker-watchtower] automate the updating of a running system,
+my intention is to have the Ansible code as the source-of-truth, that the running system needs then to reflect, in the style of [GitOps][gitops].
 
-- Roles: Use lowercase letters and hyphens to separate words, e.g. web-server or database-backup.
-
-- Task file names: Use lowercase letters and underscores, and end with .yml instead of .yaml.
-
-- Task names: Start with a verb to indicate the action, e.g. "start_webserver".
-
-- Variable names: Use lowercase letters and underscores to separate words.
+[docker-watchtower]: https://containrrr.dev/watchtower/
+[gitops]: https://www.gitops.tech/
 
 ### Renovate
 
-The repository uses [Mend Renovate][mend-renovate], via the [Renovate Github App][github-app-renovate], to assist with maintaining versions for the services able to be deployed.
+The repository uses [Mend Renovate][mend-renovate], via the [Renovate Github App][github-app-renovate], to assist with maintaining versions defined within the source code.
+
+At present Renovate is successfully automatically creating pull requests for updates to Ansible dependencies, however, I had hoped it would also update Docker image versions,
+but have not seen this to occur.
 
 The following are sources used to setup and configure Renovate:
 
@@ -335,54 +376,60 @@ The following are sources used to setup and configure Renovate:
 [renbotcs]: https://www.augmentedmind.de/2023/07/30/renovate-bot-cheat-sheet/
 [youtube_meetrenovate]: https://www.youtube.com/watch?v=3ZxnCtQ31ew
 
-### Setting up Semaphore UI
+### Automation via Semaphore UI
 
-### Managing secrets
+A major benefit for the adoption of Semaphore UI to manage Ansible is the capability to be able to [schedule the running of Ansible playbooks][semaphore-ui-schedule].
 
-```sh
-ansible-vault create playbooks/files/config.yaml
-```
+For example, an automation is configured to run daily updates of the host systems, using the [hosts-update.yaml playbook](playbooks/hosts-update.yaml).
 
-### Backup Strategy
+[semaphore-ui-schedule]: https://docs.semaphoreui.com/user-guide/schedules/
 
-A critical aspect of the Homelab is having a robust capability to back it up.
+### Source code quality and security
 
-#### Container Configuration
+[Pre-commit][pre-commit] is utilised to automate the running of tools to ensure code quality and security is maintained before any code changes are committed to the source code.
+The tools run are configured within the [.pre-commit-config.yaml](.pre-commit-config.yaml) file.
 
-All configuration is maintained in this version controlled
-repository so is not separately backed up.
+[pre-commit]: https://pre-commit.com/
 
-The majority of the services are configured at runtime using
-either environment variables or labels. Writing configuration,
+### Secrets management
+
+All secrets, such as passwords, tokens and personal identifiers, are maintained within the code base using [ansible-vault][ansible-vault] functionality to ensure they are encrypted
+ and not exposed in plain text. In addition, tools are run by pre-commit, to ensure the encrypted files are in an encrypted state before committing to source code,
+ and all files are scanned for passwords and tokens.
+
+[ansible-vault]: https://docs.ansible.com/ansible/latest/cli/ansible-vault.html
+
+## Backup Strategy
+
+A critical aspect of the Homelab is having a robust capability to ensure all data is being regularly backed-up. A number of different approaches are used to support the
+different services running in the Homelab.
+
+### Container configuration
+
+All configuration for the Homelab is maintained in this version controlled repository so is not separately backed up.
+
+The majority of the services are configured at runtime using either environment variables or labels. Writing configuration,
 or .env, files to the file system is kept to a minimum.
 
-#### Container Data
+### Container data
 
-All containers which persist data use [Docker Volumes][dv]
-as data stores, rather than bind mounting directly to the file system.
+All containers which persist data use [Docker Volumes][dv] as data stores, rather than bind mounting directly to the file system.
 
-In order to backup the volumes, the service
-[docker-volume-backup][dvb] is utilised. The approach
-offers a lightweight containerised solution which can
-backup locally, to shared volumes, or cloud.
+In order to backup the volumes, the service [docker-volume-backup][dvb] is utilised. The approach
+offers a lightweight containerised solution which can backup locally, to shared volumes, or cloud.
 
-The configuration for docker-volume-backup is managed via the
-[templated .env file](/playbooks/templates/docker-volume-backup/docker-volume-backup.env.j2),
-which is derived from [docker-volume-backup Configuration reference][dvbcr]
+The configuration for docker-volume-backup is managed via the [templated .env file](/playbooks/templates/docker-volume-backup/docker-volume-backup.env.j2),
+which is derived from [docker-volume-backup Configuration reference][dvbcr].
 
-A local copy of the data is retained, as well as a copy pushed to
-the TrueNAS server, via ssh. The data is encrypted via GPG.
-Pruning of the backups also is enabled, to ensure only 7 days
-of backups are retained. Backups are initiated `@daily` which
+A local copy of the data is retained, as well as a copy pushed to the Storage server, via ssh. The data is encrypted via GPG.
+Pruning of the backups also is enabled, to ensure only 7 days of backups are retained. Backups are initiated `@daily` which
 occurs at midnight.
 
-For services which store data outside of a dedicated database,
-the associated data volume is mounted into the
-docker-volume-backup container.
+#### Docker volume backup
 
-An example of how this is achieved, taken from the
-[deploy-homebox playbook](playbooks/deploy-homebox.yaml), is
-shown below.
+For services which store data outside of a dedicated database, the associated data volume is mounted into the docker-volume-backup container.
+
+An example of how this is achieved, taken from the [deploy-homebox playbook](playbooks/deploy-homebox.yaml), is shown below.
 
 ```yaml
 - name: Deploy a containerised instance of Docker Volume Backup
@@ -394,10 +441,8 @@ shown below.
     docker_volume_backup_backup_label: "{{ homebox_service_name }}"
 ```
 
-A label is added to the associated container, to ensure the
-container is stopped before the data volume is backed up. An
-example of this, taken from
-[deploy-homebox task](playbooks/tasks/deploy-homebox.yaml), is shown below.
+A label is added to the associated container, to ensure the container is stopped before the data volume is backed up. An
+example of this, taken from [deploy-homebox task](playbooks/tasks/deploy-homebox.yaml), is shown below.
 
 ```yaml
 - name: Create Homebox container labels
@@ -410,35 +455,13 @@ example of this, taken from
     ...
 ```
 
-```yaml
-    - name: Deploy Homebox
-      community.docker.docker_container:
-        name: "{{ homebox_service_name }}"
-        image: "{{ homebox_image }}"
-        detach: true
-        env:
-          HBOX_LOG_LEVEL: "info"
-          HBOX_LOG_FORMAT: "text"
-          HBOX_WEB_MAX_UPLOAD_SIZE: "10"
-          TZ: "{{ homelab.timezone | default(omit) }}"
-        labels: "{{ (homebox_container_labels | default({})) | default(omit) }}"
-        networks_cli_compatible: true
-        networks: "{{ homebox_networks }}"
-        restart: true
-        restart_policy: unless-stopped
-        state: started
-        volumes: "{{ homebox_volumes }}"
-      register: homebox_container_state
-```
+#### Database volume backup
 
-For services which store data in a separate database
-container, the database contents are dumped to a file, which
+For services which store data in a dedicated database container, the database contents are dumped to a file, which
 is then backed up.
 
-For MariaDB databases, the backup is achieved using
-`mariadb-dump`, an example of which, taken from
-[deploy-hortusfox task](/playbooks/tasks/deploy-hortusfox.yaml),
-is shown below.
+For MariaDB databases, the backup is achieved using `mariadb-dump`, an example of which, taken from
+[deploy-hortusfox task](/playbooks/tasks/deploy-hortusfox.yaml), is shown below.
 
 ```yaml
 - name: Create Hortusfox DB container labels
@@ -453,8 +476,7 @@ is shown below.
 ```
 
 In addition, a dedicated volume is created to store the backup file, an example of which, taken from
-[deploy-hortusfox task](/playbooks/tasks/deploy-hortusfox.yaml),
-is shown below.
+[deploy-hortusfox task](/playbooks/tasks/deploy-hortusfox.yaml), is shown below.
 
 ```yaml
 - name: Create Hortusfox backup volume  # noqa: syntax-check[unknown-module]
@@ -463,10 +485,8 @@ is shown below.
     state: present
 ```
 
-Within the associated deployment of the database service, the
-volume is mounted into the container, an example of which,
-taken from [hortusfox/docker-compose.yml](/playbooks/templates/hortusfox/docker-compose.yml.j2),
-is shown below.
+Within the associated deployment of the database service, the volume is mounted into the container, an example of which,
+taken from [hortusfox/docker-compose.yml](/playbooks/templates/hortusfox/docker-compose.yml.j2), is shown below.
 
 ```yaml
   db:
@@ -504,8 +524,7 @@ volumes:
   app_migrate:
 ```
 
-As volume must also be mounted to the docker-volume-backup
-container, an example of which, taken from
+As volume must also be mounted to the docker-volume-backup container, an example of which, taken from
 [deploy-hortusfox.yaml playbook](/playbooks/deploy-hortusfox.yaml), is shown below.
 
 ```yaml
@@ -518,67 +537,33 @@ container, an example of which, taken from
     docker_volume_backup_backup_label: "{{ hortusfox_service_name }}-db"
 ```
 
-NOTE: I could not get the database backups to work using
-docker-socket-proxy and had to bind to the docker socket
-directly.
+TO DO: I could not get the database backups to work using docker-socket-proxy and had to bind to the docker socket directly.
 
-#### Off-Site Backup
+#### Off-Site backup
 
-For off-site backup, a `Cloud Sync Task` is configured
-within the TrueNAS server to push the backup files created by
-docker-volume-backup to a cloud storage provider. The task
-is scheduled to be run daily at 1am.
+For off-site backup, a `Cloud Sync Task` is configured within the Storage server to push the backup files created by
+docker-volume-backup to a cloud storage provider. The task is scheduled to be run daily at 1am.
 
-#### Nextcloud AOI
+#### Nextcloud AOI Backup
 
-Nextcloud AOI (All in One) uses BorgBackup to manage backups. An issue with the way
-the back up location is configured is that it cannot easily be changed once it is
-initially set.
+Nextcloud AOI (All in One) uses BorgBackup to manage backups.
 
-A way to manage this is described in the [Github project page][nxtcldaio] using
-the following to be able to have the `Reset backup location` button show in the
-AIO Interface.
+An issue with the way the back up location is configured is that it cannot easily be changed once it is initially set.
+A way to manage this is described in the [Github project page][nxtcldaio] using the following to be able to have the
+`Reset backup location` button show in the AIO Interface.
 
 ```bash
 root@nextcloud:~# docker exec nextcloud-aio-mastercontainer rm /mnt/docker-aio-config/data/borg.config
 ```
 
-Refer to the [TrueNAS documentation][tndnfs] for creating NFS Shares. Ensure `Maproot User`
-and `Maproot Group` are both set to `root` within the Advanced Options.
+## Documentation
 
-To use an external location for the backups, a mount point to the host operating system
-needs to be created.
+### Markdown
 
-```bash
-root@nextcloud:~# mkdir -p /mnt/truenas/backup
-```
+All documentation is written in Markdown, using the [Markdown Guide][markdownguide] as a reference, and linted, using [markdownlint-cli2][markdownlint]. The configuration
+for markdownlint is defined in [.markdownlint.yaml](.markdownlint.yaml).
 
-To test the mount point use `mount -t nfs {IPaddressOfTrueNASsystem}:{path/to/nfsShare} {localMountPoint}`.
-
-```bash
-root@nextcloud:~# mount -t nfs truenas:/mnt/homelab-backup/nextcloud-aio-backup /mnt/truenas/backup
-```
-
-Set the mount within `/etc/fstab` to ensure it is persistent, by adding the following
-
-```bash
-truenas:/mnt/homelab-backup/nextcloud-aio-backup /mnt/truenas/backup nfs defaults 0 0
-```
-
-Then apply it using
-
-```bash
-root@nextcloud:~# mount /mnt/truenas/backup
-```
-
-Use a Remote borg repo - could not get this to work
-
-```bash
-ssh://user@host:port/path/to/repo
-ssh://nextcloud@truenas:2222/mnt/homelab-backup/nextcloud-aio-backup
-```
-
-## To Do
+## Still to do
 
 - Explore using an Proxmox network for Proxmox nodes, rather than having them on main network.
 
@@ -622,7 +607,6 @@ ssh://nextcloud@truenas:2222/mnt/homelab-backup/nextcloud-aio-backup
 [semaphoreui]: https://semaphoreui.com/
 [storserv]: https://www.crowdsupply.com/icewhale-technology/zimablade
 [storsoft]: https://www.truenas.com/truenas-community-edition/
-[tndnfs]: https://www.truenas.com/docs/scale/24.10/scaletutorials/shares/addingnfsshares
 [traefik]: https://doc.traefik.io/traefik/
 [truenassettings]: https://www.youtube.com/watch?v=dP0wagQVctc "6 Crucial Settings to Enable on TrueNAS SCALE"
 [unifi]: https://help.ui.com/hc/en-us/articles/360012192813-Introduction-to-UniFi
