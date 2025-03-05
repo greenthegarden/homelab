@@ -117,7 +117,7 @@
         detach: true
         env:
           HBOX_LOG_LEVEL: "info"
-          HBOX_LOG_FORMAT: "text"
+          HBOX_LOG_FORMAT: "json"
           HBOX_WEB_MAX_UPLOAD_SIZE: "10"
           TZ: "{{ homelab.timezone | default(omit) }}"
         labels: "{{ (homebox_container_labels | default({})) | default(omit) }}"
