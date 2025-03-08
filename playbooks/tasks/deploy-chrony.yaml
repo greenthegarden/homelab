@@ -1,0 +1,43 @@
+---
+- name: deploy-chrony | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### CHRONY SECTION
+
+# https://dozzle.dev/guide/agent
+
+- name: deploy-chrony | Set Chrony facts
+  ansible.builtin.set_fact:
+    chrony_image: "{{ chrony_image | default('dockurr/chrony:latest') }}"
+    chrony_service_name: "{{ chrony_service_name | default('chrony') }}"
+    chrony_service_port: "{{ chrony_service_port | default(123) }}"
+
+- name: deploy-chrony | Set Chrony service facts
+  ansible.builtin.set_fact:
+    chrony_ports:
+      - "{{ chrony_service_port }}:123/udp"
+    chrony_volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-chrony | Pull Chrony image
+  community.docker.docker_image:
+    name: "{{ chrony_image }}"
+    source: pull
+
+# docker run -it --rm -p 123:123/udp dockurr/chrony
+- name: deploy-chrony | Deploy Chrony
+  community.docker.docker_container:
+    name: "{{ chrony_service_name }}"
+    image: "{{ chrony_image }}"
+    detach: true
+    env:
+      TZ: "{{ ansible_env.TZ | default('UTC') }}"
+    networks_cli_compatible: true
+    published_ports: "{{ chrony_ports }}"
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    volumes: "{{ chrony_volumes }}"
+  register: chrony_container_state

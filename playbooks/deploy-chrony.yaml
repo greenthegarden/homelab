@@ -1,0 +1,21 @@
+---
+- name: Deploy Chrony
+
+  hosts: chrony
+
+  vars:
+
+    # Dozzle facts
+    homepage_image: dockurr/chrony:latest # renovate: datasource=docker depName=amir20/dozzle
+    homepage_service_name: chrony
+    homepage_service_port: 123
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Chrony
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-chrony.yaml
