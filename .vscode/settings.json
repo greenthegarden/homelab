@@ -3,6 +3,7 @@
     "editor.formatOnSave": true, // Used to autoformat on save
     "files.associations": {
         "*.env.j2": "env",
+        "*.nomad": "hcl",
         "*.yml.j2": "yaml",
         "*.yaml.j2": "yaml"
     },
