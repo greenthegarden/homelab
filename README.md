@@ -83,7 +83,7 @@ In addition, sources of information about setting up a Homelab include:
 
 The major hardware compoenents which makes up the Homelab are shown in the following diagram.
 
-![Homelab hardware](docs/homelab-network-wired-hardware.drawio.png "Homelab hardware")
+![Homelab hardware](docs/homelab-network-wired-hardware.png "Homelab hardware")
 
 ### Network Hardware
 
@@ -580,8 +580,8 @@ Wazuh is installed across all the hosts via Ansible using a [forked version of t
 
 ### Markdown
 
-All documentation is written in Markdown, using the [Markdown Guide][markdownguide] as a reference, and linted, using [markdownlint-cli2][markdownlint]. The configuration
-for markdownlint is defined in [.markdownlint.yaml](.markdownlint.yaml).
+All documentation is written in Markdown, using the [Markdown Guide][markdownguide] as a reference, and linted, using [markdownlint-cli2][markdownlint].
+The configuration for markdownlint is defined in [.markdownlint.yaml](.markdownlint.yaml).
 
 ## Still to do
 
