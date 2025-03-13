@@ -34,6 +34,7 @@
     - [Database volume backup](#database-volume-backup)
     - [Off-Site backup](#off-site-backup)
     - [Nextcloud AOI Backup](#nextcloud-aoi-backup)
+- [Security](#security)
 - [Documentation](#documentation)
   - [Markdown](#markdown)
 - [Still to do](#still-to-do)
@@ -226,7 +227,6 @@ The current iteration of the Homelab hosts the following applications:
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/semaphore.svg" height="25" width="auto" alt="Semaphore"> [Semaphore] - User friendly web interface for executing Ansible playbooks, Terraform, OpenTofu code and Bash scripts. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/uptime-kuma.svg" height="25" width="auto" alt="Uptime Kuma"> [Uptime Kuma][uptimekuma] - An easy-to-use self-hosted monitoring tool. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/vaultwarden.svg" height="25" width="auto" alt="Vaultwarden"> [Vaultwarden] - An alternative server implementation of the Bitwarden Client API. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg" height="25" width="auto" alt="Wazuh"> [Wazuh][wazuh] - A free and open-source platform for threat prevention, detection, and response, capable of protecting workloads across on-premises, virtualized, containerized, and cloud-based environments. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/whats-up-docker.svg" height="25" width="auto" alt="WUD (What's up Docker)"> [WUD (What's up Docker)][wud] - A tool to keep Docker containers up-to-date. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 
 Underpinning the applications are a number of support services:
@@ -565,6 +565,16 @@ A way to manage this is described in the [Github project page][nxtcldaio] using 
 ```bash
 root@nextcloud:~# docker exec nextcloud-aio-mastercontainer rm /mnt/docker-aio-config/data/borg.config
 ```
+
+## Security
+
+The following services are used to monitor security of the system.
+
+- <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg" height="25" width="auto" alt="Wazuh"> [Wazuh][wazuh] - A free and open-source platform for threat prevention, detection, and response, capable of protecting workloads across on-premises, virtualized, containerized, and cloud-based environments. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
+
+Wazuh is installed across all the hosts via Ansible using a [forked version of the official Wazuh playbook][github-wazuh].
+
+[github-wazuh]: https://github.com/greenthegarden/wazuh-ansible
 
 ## Documentation
 
