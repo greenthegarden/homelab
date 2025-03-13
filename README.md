@@ -103,6 +103,16 @@ I wrote an article about using AdGuard Home as a DNS service which is [available
 
 [medium_dns]: https://medium.com/@greenthegarden/home-network-dns-configuration-8d6174492dd9
 
+In addition, [Chrony][chrony], an implementation of the Network Time Protocol, is deployed on the Raspberry Pi as a local time server.
+All network devices, utilise this time server, ensuring time synchronisation, without having to reach out to the internet.
+
+Given the importance of the time service, it is deployed as a [Docker container][chronyd], orchestrated via
+[Hashicorp Nomad][hashicorp-nomad]. Details of the deployment are [documented here](nomad/README.md).
+
+[hashicorp-nomad]: https://www.nomadproject.io/
+[chrony]: https://chrony-project.org/
+[chronyd]: https://github.com/dockur/chrony
+
 ### Compute Server Hardware
 
 A [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC][compserv] was selected as the Homelab compute server.
