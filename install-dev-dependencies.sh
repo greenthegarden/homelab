@@ -19,16 +19,33 @@ fi
 # Enable errtrace or the error trap handler will not work as expected
 set -o errtrace         # Ensure the error trap handler is inherited
 
-
 PYTHON_VERSION=3.11
 
 # R='\033[0;31m'   #'0;31' is Red's ANSI color code
 # G='\033[0;32m'   #'0;32' is Green's ANSI color code
 # Y='\033[1;32m'   #'1;32' is Yellow's ANSI color code
-# B='\033[0;34m'   #'0;34' is Blue's ANSI color code
-
-INFO='\033[0;36m'   #'0;36' is Cyan's ANSI color code
+B='\033[0;34m'   #'0;34' is Blue's ANSI color code
 NC='\033[0m'     # No Color
+
+INFO="[${B}INFO${NC}]"
+# ERROR="[${R}ERROR${NC}]"
+
+
+echo -e "Running script: ${B}$(basename "$0")${NC}"
+echo -e "Running in directory: ${B}$(pwd)${NC}"
+echo -e "Running on host: ${B}$(hostname)${NC}"
+echo -e "Running on OS: ${B}$(lsb_release -d | cut -f2)${NC}"
+echo -e "Running on kernel: ${B}$(uname -r)${NC}"
+echo -e "Running on architecture: ${B}$(uname -m)${NC}"
+# shellcheck disable=SC2116,SC2086
+echo -e "Running on shell: ${B}$(echo $SHELL)${NC}"
+echo -e "Running on shell version: ${B}$(bash --version | head -n 1)${NC}"
+echo -e "Running on shell options: ${B}$(shopt)${NC}"
+echo -e "Running on shell options: ${B}$(set | grep -E 'DEBUG|PS1|PS2|PS4')${NC}"
+echo -e "Running on shell options: ${B}$(set | grep -E 'BASH|BASH_VERSION|BASH_ENV')${NC}"
+echo -e "Running on shell options: ${B}$(set | grep -E 'PROMPT_COMMAND|PS4')${NC}"
+
+
 
 echo -e "${INFO} Updating system packages...${NC}"
 apt update && apt -y upgrade
