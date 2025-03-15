@@ -77,6 +77,9 @@
       "key": "homepage.siteMonitor",
       "value": "https://{{ fireflyiii_fqdn }}/",
     }
+    - { "key": "homepage.widget.type", "value": "firefly" }
+    - { "key": "homepage.widget.url", "value": "https://{{ fireflyiii_fqdn }}" }
+    - { "key": "homepage.widget.key", "value": "{{ fireflyiii.homepage_access_token }}" }
 
 - name: deploy-fireflyiii | Create Firefly III DB container labels
   ansible.builtin.set_fact:
