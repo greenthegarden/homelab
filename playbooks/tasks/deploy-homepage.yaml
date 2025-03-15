@@ -99,6 +99,8 @@
     name: "{{ homepage_service_name }}"
     image: "{{ homepage_image }}"
     detach: true
+    env:
+      - HOMEPAGE_ALLOWED_HOSTS: "{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
     labels: "{{ (homepage_container_labels | default({})) | default(omit) }}"
     networks_cli_compatible: true
     networks: "{{ homepage_networks }}"
