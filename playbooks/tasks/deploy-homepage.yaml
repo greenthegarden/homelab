@@ -5,6 +5,7 @@
 
 ####### HOMEPAGE SECTION
 
+# https://gethomepage.dev/installation/docker/
 # https://homepage.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-homepage-dashboard/
 
 - name: deploy-homepage | Set Homepage facts
@@ -93,14 +94,13 @@
     name: "{{ homepage_image }}"
     source: pull
 
-# docker run -d -p 3000:3000 homepage/homepage
 - name: deploy-homepage | Deploy Homepage
   community.docker.docker_container:
     name: "{{ homepage_service_name }}"
     image: "{{ homepage_image }}"
     detach: true
     env:
-      HOMEPAGE_ALLOWED_HOSTS: "{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+      HOMEPAGE_ALLOWED_HOSTS: "{{ homepage_fqdn }}"
     labels: "{{ (homepage_container_labels | default({})) | default(omit) }}"
     networks_cli_compatible: true
     networks: "{{ homepage_networks }}"
