@@ -100,7 +100,9 @@
     detach: true
     env:
       TZ: "{{ homelab.timezone | default(omit) }}"
-      # WUD_TRIGGER_DOCKER_UPDATE_DRYRUN: "true"
+      WUD_TRIGGER_DOCKER_UPDATE_DRYRUN: "{{ true | quote }}"
+      WUD_TRIGGER_DOCKER_UPDATE_PRUNE: "{{ true | quote }}"
+      WUD_TRIGGER_DOCKER_UPDATE_THRESHOLD: "{{ minor | quote }}"
       # WUD_TRIGGER_MQTT_MOSQUITTO_URL: "mqtt://broker.{{ lan_dns_domain }}:1883"
       # WUD_TRIGGER_MQTT_MOSQUITTO_USER: "client"
       # WUD_TRIGGER_MQTT_MOSQUITTO_PASSWORD: "qY#BS&c7"
