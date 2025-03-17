@@ -7,7 +7,7 @@
   vars:
 
     # Authentik facts
-    authentik_image_tag: 2024.12.3
+    authentik_image_tag: 2025.2.2
     authentik_service_name: authentik
     authentik_service_port: 9443
 
