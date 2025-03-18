@@ -67,10 +67,20 @@
       "value": "https://{{ authentik_fqdn }}/",
     }
 
-- name: deploy-authentik | Create Authentik  DB container labels
+- name: deploy-authentik | Create Authentik DB container labels
   ansible.builtin.set_fact:
     authentik_db_container_labels: "{{ authentik_db_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^16+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.watch.digest",
+      "value": "true"
+    }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/postgres/postgres/releases/tag/REL_${major}_${minor}",
+    }
     # Docker Volume Backup labels
     - {
       "key": "docker-volume-backup.archive-pre",
