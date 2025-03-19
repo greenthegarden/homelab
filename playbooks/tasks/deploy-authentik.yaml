@@ -72,6 +72,7 @@
     authentik_db_container_labels: "{{ authentik_db_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # What's up Docker? labels
+    # Fix WUD to version 16 for PostgreSQL
     - { "key": "wud.tag.include", "value": '^16+\.\d+\.\d+$$' }
     - {
       "key": "wud.watch.digest",
