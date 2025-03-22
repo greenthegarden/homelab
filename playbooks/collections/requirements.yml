@@ -2,5 +2,5 @@
 collections:
   # required to use Docker
   - name: community.docker
-    version: 4.5.1
+    version: 4.5.2
     type: galaxy
