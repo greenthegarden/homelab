@@ -123,7 +123,7 @@
 - name: deploy-emqx | Remove EMQX container if changing version
   when:
     - emqx_state.exists
-    - emqx_image_tag != emqx_state.container.Config.Image | split(':') | last
+    - (emqx_image | split(':') | last) != (emqx_state.container.Config.Image | split(':') | last)
   block:
     - name: deploy-emqx | Stop and remove existing EMQX container
       community.docker.docker_container:
