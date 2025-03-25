@@ -33,7 +33,7 @@ repos:
   # ----------------------------- 🔒 Security Tools ---------------------------- #
 
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.24.0
+    rev: v8.24.2
     hooks:
       - id: gitleaks
         name: "🔒 security · Detect hardcoded secrets"
@@ -48,7 +48,7 @@ repos:
         stages: [pre-commit]
 
   - repo: https://github.com/Checkmarx/kics
-    rev: "2.1.5" # change to correct tag or sha
+    rev: "v2.1.6-integrations" # change to correct tag or sha
     hooks:
       - id: kics-scan
         name: "🔒 security · Keeping Infrastructure as Code Secure"
@@ -135,7 +135,7 @@ repos:
 
   ### Renovate ###
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 39.194.0
+    rev: 39.213.4
     hooks:
       - id: renovate-config-validator
         # args: [--strict]
