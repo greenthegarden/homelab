@@ -5,8 +5,6 @@
 
 ####### CHRONY SECTION
 
-# https://dozzle.dev/guide/agent
-
 - name: deploy-chrony | Set Chrony facts
   ansible.builtin.set_fact:
     chrony_image: "{{ chrony_image | default('dockurr/chrony:latest') }}"

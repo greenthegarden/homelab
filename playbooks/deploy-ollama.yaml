@@ -1,0 +1,22 @@
+---
+- name: Deploy Ollama
+
+  hosts: ollama
+
+  vars:
+
+    # Ollama facts
+    ollama_image: ollama/ollama:0.6.5 # renovate: datasource=docker depName=ollama/ollama
+    ollama_service_name: ollama
+    ollama_service_port: 11434
+    ollama_volume_name: ollama
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Ollama
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-ollama.yaml

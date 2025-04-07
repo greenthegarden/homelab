@@ -1,0 +1,50 @@
+---
+- name: deploy-ollama | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### OLLAMA SECTION
+
+# https://hub.docker.com/r/ollama/ollama
+
+- name: deploy-ollama | Set Ollama facts
+  ansible.builtin.set_fact:
+    ollama_image: "{{ ollama_image | default('ollama/ollama:latest') }}"
+    ollama_service_name: "{{ ollama_service_name | default('ollama') }}"
+    ollama_service_port: "{{ ollama_service_port | default(11434) }}"
+    ollama_volume_name: "{{ ollama_volume_name | default('ollama') }}"
+
+- name: deploy-ollama | Set Ollama service facts
+  ansible.builtin.set_fact:
+    ollama_ports:
+      - "{{ ollama_service_port }}:11434"
+    ollama_volumes:
+      - "{{ ollama_volume_name }}:/root/.ollama"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-ollama | Create Ollama volume
+  community.docker.docker_volume:
+    name: "{{ uptimekuma_volume_name }}"
+    state: present
+
+- name: deploy-ollama | Pull Ollama image
+  community.docker.docker_image:
+    name: "{{ ollama_image }}"
+    source: pull
+
+# docker run -d -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama
+- name: deploy-ollama | Deploy Ollama
+  community.docker.docker_container:
+    name: "{{ ollama_service_name }}"
+    image: "{{ ollama_image }}"
+    detach: true
+    env:
+      TZ: "{{ ansible_env.TZ | default('UTC') }}"
+    networks_cli_compatible: true
+    published_ports: "{{ ollama_ports }}"
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    volumes: "{{ ollama_volumes }}"
+  register: ollama_container_state
