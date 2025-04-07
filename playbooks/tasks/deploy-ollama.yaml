@@ -25,7 +25,7 @@
 
 - name: deploy-ollama | Create Ollama volume
   community.docker.docker_volume:
-    name: "{{ uptimekuma_volume_name }}"
+    name: "{{ ollama_volume_name }}"
     state: present
 
 - name: deploy-ollama | Pull Ollama image
