@@ -22,11 +22,11 @@
 
 - name: deploy-portainer | Set Portainer service facts
   ansible.builtin.set_fact:
-    portainer_ports:
-      - "{{ portainer_service_port }}:9000"
     portainer_networks:
       - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
       - name: "{{ web_network_name | default('web') }}"
+    portainer_ports:
+      - "{{ portainer_service_port }}:9000"
     portainer_volumes:
       - "{{ portainer_volume_name }}:/data"
       - /var/run/docker.sock:/var/run/docker.sock:ro

@@ -16,6 +16,8 @@
 
 - name: deploy-ollama | Set Ollama service facts
   ansible.builtin.set_fact:
+    ollama_networks:
+      - name: "{{ web_network_name | default('web') }}"
     ollama_ports:
       - "{{ ollama_service_port }}:11434"
     ollama_volumes:
@@ -42,6 +44,7 @@
     env:
       TZ: "{{ ansible_env.TZ | default('UTC') }}"
     networks_cli_compatible: true
+    networks: "{{ ollama_networks }}"
     published_ports: "{{ ollama_ports }}"
     restart: true
     restart_policy: unless-stopped

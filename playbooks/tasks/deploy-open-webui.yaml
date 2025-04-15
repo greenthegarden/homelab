@@ -1,0 +1,129 @@
+---
+
+- name: deploy-open-webui | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+- name: deploy-open-webui | Set Open-webui facts
+  ansible.builtin.set_fact:
+    open_webui_image: "{{ open_webui_image | default('ghcr.io/open-webui/open-webui:0.6.5') }}"
+    open_webui_service_name: "{{ open_webui_service_name | default('open-webui') }}"
+    open_webui_service_port: "{{ open_webui_service_port | default(3000) }}"
+    open_webui_volume_name: "{{ open_webui_volume_name | default('open-webui') }}"
+
+- name: deploy-open-webui | Set Open-webui aggregated facts
+  ansible.builtin.set_fact:
+    open_webui_fqdn: "{{ open_webui_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: deploy-open-webui | Set Open-webui service facts
+  ansible.builtin.set_fact:
+    open_webui_networks:
+      - name: "{{ web_network_name | default('web') }}"
+    open_webui_ports:
+      - "{{ open_webui_service_port | default(3000) }}:3000"
+    open_webui_volumes:
+      - "{{ open_webui_volume_name }}:/app/backend/data"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-open-webui | Create Open-webui container labels
+  ansible.builtin.set_fact:
+    open_webui_container_labels: "{{ open_webui_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    - {
+      "key": "traefik.http.routers.{{ open_webui_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ open_webui_service_name }}.rule",
+      "value": "Host(`{{ open_webui_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ open_webui_service_name }}.service",
+      "value": "{{ open_webui_service_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ open_webui_service_name }}.tls",
+      "value": "true",
+    }
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/open-webui/open-webui/releases/tag/v${major}.${minor}.${patch}",
+    }
+    # Docker Volume Backup labels
+    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Open WebUI" }
+    - { "key": "homepage.description", "value": "AI platform" }
+    - { "key": "homepage.icon", "value": "open-webui.png" }
+    - { "key": "homepage.href", "value": "https://{{ open_webui_fqdn }}/" }
+    - {
+      "key": "homepage.siteMonitor",
+      "value": "https://{{ open_webui_fqdn }}/",
+    }
+
+
+- name: deploy-open-webui | Create Open-webui volume
+  community.docker.docker_volume:
+    name: "{{ open_webui_volume_name }}"
+    state: present
+
+- name: deploy-open-webui | Check if Open-webui is running
+  community.docker.docker_container_info:
+    name: "{{ open_webui_service_name }}"
+  register: open_webui_state
+
+- name: deploy-open-webui | Remove Open-webui container if changing version
+  when:
+    - open_webui_state.exists
+    - (open_webui_image | split(':') | last) != (open_webui_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-open-webui | Stop and remove existing Open-webui container
+      community.docker.docker_container:
+        name: "{{ open_webui_service_name }}"
+        state: absent
+
+    - name: deploy-open-webui | Set update Open-webui
+      ansible.builtin.set_fact:
+        open_webui_update: true
+
+- name: deploy-open-webui | Deploy Open-webui if not running
+  when: not open_webui_state.exists or (open_webui_update | default(false))
+  block:
+    - name: deploy-open-webui | Pull open-webui image
+      community.docker.docker_image:
+        name: "{{ open_webui_image }}"
+        source: pull
+
+    # docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:main
+    - name: deploy-open-webui | Deploy Open-webui
+      community.docker.docker_container:
+        name: "{{ open_webui_service_name }}"
+        image: "{{ open_webui_image }}"
+        detach: true
+        labels: "{{ (open_webui_container_labels | default({})) | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ open_webui_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ open_webui_volumes }}"
+      register: open_webui_container_state
+
+    - name: deploy-open-webui | Wait for Open-webui to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ open_webui_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: open_webui_running
+      until: open_webui_running is success
+      retries: 10
