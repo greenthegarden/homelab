@@ -50,6 +50,10 @@ layout:
       tab: Websites
       style: row
       columns: 3
+  - Finance:
+      tab: Websites
+      style: row
+      columns: 3
   - News:
       tab: Websites
       style: row
