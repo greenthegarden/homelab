@@ -6,7 +6,7 @@
   vars:
 
     # Portainer facts
-    portainer_image: portainer/portainer-ce:2.28.1-alpine
+    portainer_image: portainer/portainer-ce:2.29.0-alpine
     portainer_service_name: portainer
     portainer_service_port: 9000
     portainer_volume_name: portainer
