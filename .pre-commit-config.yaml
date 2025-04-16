@@ -33,7 +33,7 @@ repos:
   # ----------------------------- 🔒 Security Tools ---------------------------- #
 
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.24.2
+    rev: v8.24.3
     hooks:
       - id: gitleaks
         name: "🔒 security · Detect hardcoded secrets"
@@ -135,7 +135,7 @@ repos:
 
   ### Renovate ###
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 39.227.2
+    rev: 39.245.2
     hooks:
       - id: renovate-config-validator
         # args: [--strict]
@@ -212,7 +212,7 @@ repos:
   ### Commit Message Standards ###
 
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.5.1
+    rev: v4.6.0
     hooks:
       - id: commitizen
         name: "🌳 git · Validate commit message"
