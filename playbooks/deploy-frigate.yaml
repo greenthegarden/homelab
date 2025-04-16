@@ -6,7 +6,7 @@
   vars:
 
     # Frigate facts
-    frigate_image: ghcr.io/blakeblackshear/frigate:0.15.0
+    frigate_image: ghcr.io/blakeblackshear/frigate:0.15.1
     frigate_service_name: frigate
     frigate_service_port: 5000
     frigate_service_port_rtsp: 8554
