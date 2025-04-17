@@ -6,9 +6,9 @@
   vars:
 
     # Dozzle facts
-    homepage_image: amir20/dozzle:v8.12.8 # renovate: datasource=docker depName=amir20/dozzle
-    homepage_service_name: dozzle
-    homepage_service_port: 8080
+    dozzle_image: amir20/dozzle:v8.12.8 # renovate: datasource=docker depName=amir20/dozzle
+    dozzle_service_name: dozzle
+    dozzle_service_port: 8080
 
   tasks:
 
