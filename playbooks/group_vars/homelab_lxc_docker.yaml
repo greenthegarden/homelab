@@ -39,7 +39,7 @@ prometheus_service_name: prometheus
 prometheus_service_port: 9090
 prometheus_volume_name: prometheus
 # Traefik facts
-traefik_image: traefik:3.3.5
+traefik_image: traefik:3.3.6
 traefik_service_name: traefik
 traefik_service_port: 80
 traefik_service_port_http: 80
