@@ -1,0 +1,85 @@
+---
+- name: deploy-tinyauth | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+# https://tinyauth.app/docs/getting-started.html
+
+- name: deploy-tinyauth | Set Tinyauth facts
+  ansible.builtin.set_fact:
+    tinyauth_image: "{{ tinyauth_image | default('ghcr.io/steveiliop56/tinyauth:v3') }}"
+    tinyauth_service_name: "{{ tinyauth_service_name | default('tinyauth') }}"
+    tinyauth_service_port: "{{ tinyauth_service_port | default(3000) }}"
+
+- name: deploy-tinyauth | Set Tinyauth aggregated facts
+  ansible.builtin.set_fact:
+    tinyauth_fqdn: "{{ tinyauth_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: deploy-tinyauth | Set Tinyauth service facts
+  ansible.builtin.set_fact:
+    tinyauth_networks:
+      - name: "{{ monitoring_network_name | default('monitoring') }}"
+      - name: "{{ web_network_name | default('web') }}"
+    tinyauth_ports:
+      - "{{ tinyauth_service_port }}:3000"
+    tinyauth_volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-tinyauth | Create Tinyauth container labels
+  ansible.builtin.set_fact:
+    tinyauth_container_labels: "{{ tinyauth_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    - {
+      "key": "traefik.http.routers.{{ tinyauth_service_name }}-http.rule",
+      "value": "Host(`{{ tinyauth_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.middlewares.{{ tinyauth_service_name }}forwardauth.address",
+      "value": "http://tinyauth:3000/api/auth/traefik",
+    }
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/tinyauth/tinyauth/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-tinyauth | Pull Tinyauth image
+  community.docker.docker_image:
+    name: "{{ tinyauth_image }}"
+    source: pull
+
+- name: deploy-tinyauth | Deploy Tinyauth
+  community.docker.docker_container:
+    name: "{{ tinyauth_service_name | default('tinyauth') }}"
+    image: "{{ tinyauth_image }}"
+    detach: true
+    env:
+      SECRET: "{{ tinyauth.secret }}"
+      APP_URL: "{{ tinyauth_fqdn }}"
+      USERS: "{{ tinyauth.user }}"
+    labels: "{{ tinyauth_container_labels }}"
+    networks_cli_compatible: true
+    networks: "{{ tinyauth_networks }}"
+    recreate: true
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    volumes: "{{ tinyauth_volumes }}"
+  register: tinyauth_container_state
+
+# - name: deploy-tinyauth | Wait for Tinyauth to accept connections
+#   ansible.builtin.wait_for:
+#     host: "{{ tinyauth_fqdn }}"
+#     port: 80
+#     connect_timeout: 1
+#     delay: 10
+#     state: started
+#     timeout: 30
+#   register: tinyauth_running
+#   until: tinyauth_running is success
+#   retries: 10

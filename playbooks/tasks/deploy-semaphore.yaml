@@ -47,6 +47,10 @@
       "value": "websecure",
     }
     - {
+      "key": "traefik.http.routers.{{ semaphore_service_name }}.middlewares",
+      "value": "tinyauth",
+    }
+    - {
       "key": "traefik.http.routers.{{ semaphore_service_name }}.rule",
       "value": "Host(`{{ semaphore_fqdn }}`)",
     }

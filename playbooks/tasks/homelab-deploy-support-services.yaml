@@ -24,6 +24,10 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-traefik.yaml
 
+- name: homelab-deploy-support-services | Deploy a containerised instance of Tinyauth
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-tinyauth.yaml
+
 # - name: homelab-deploy-support-services | Deploy a containerised instance of Node Exporter
 #   ansible.builtin.include_tasks:
 #     file: tasks/deploy-node-exporter.yaml

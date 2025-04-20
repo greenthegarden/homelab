@@ -107,6 +107,7 @@
     state: started
     volumes: "{{ prometheus_volumes }}"
   register: prometheus_container_state
+
 # - name: deploy-prometheus | Wait for Prometheus to accept connections
 #   ansible.builtin.wait_for:
 #     host: "{{ prometheus_fqdn }}"
