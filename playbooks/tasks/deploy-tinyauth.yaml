@@ -60,7 +60,7 @@
     detach: true
     env:
       SECRET: "{{ tinyauth.secret }}"
-      APP_URL: "{{ tinyauth_fqdn }}"
+      APP_URL: "https://{{ tinyauth_fqdn }}"
       USERS: "{{ tinyauth.user }}"
     labels: "{{ tinyauth_container_labels }}"
     networks_cli_compatible: true
