@@ -39,7 +39,7 @@
     }
     - {
       "key": "traefik.http.middlewares.{{ tinyauth_service_name }}forwardauth.address",
-      "value": "http://tinyauth:3000/api/auth/traefik",
+      "value": "http://{{ tinyauth_fqdn }}:3000/api/auth/traefik",
     }
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
