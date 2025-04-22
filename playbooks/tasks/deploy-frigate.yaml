@@ -11,8 +11,7 @@
   ansible.builtin.set_fact:
     frigate_image: "{{ frigate_image | default('ghcr.io/blakeblackshear/frigate:stable') }}"
     frigate_service_name: "{{ frigate_service_name | default('frigate') }}"
-    frigate_service_port: "{{ frigate_service_port | default(5000) }}"
-    frigate_service_port_rtmp: "{{ frigate_service_port_rtmp | default(1935) }}"
+    frigate_service_port: "{{ frigate_service_port | default(8971) }}"
     frigate_service_port_rtsp: "{{ frigate_service_port_rtsp | default(8554) }}"
     frigate_service_port_webrtc: "{{ frigate_service_port_webrtc | default(8555) }}"
     frigate_volume_name: "{{ frigate_volume_name | default('frigate') }}"
@@ -32,7 +31,7 @@
     frigate_networks:
       - name: "{{ web_network_name | default('web') }}"
     frigate_ports:
-      - "{{ frigate_service_port }}:5000"
+      - "{{ frigate_service_port }}:8971"
       - "{{ frigate_service_port_rtsp }}:8554"
       - "{{ frigate_service_port_webrtc }}:8555/tcp"
       - "{{ frigate_service_port_webrtc }}:8555/udp"
@@ -67,7 +66,7 @@
     }
     - {
       "key": "traefik.http.services.{{ frigate_service_name }}.loadbalancer.server.port",
-      "value": "5000",
+      "value": "{{ frigate_service_port }}",
     }
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
@@ -112,6 +111,7 @@
     name: "{{ frigate_image }}"
     source: pull
 
+# https://docs.frigate.video/frigate/installation#docker
 - name: deploy-frigate | Deploy Frigate
   community.docker.docker_container:
     name: "{{ frigate_service_name }}"
@@ -128,8 +128,10 @@
     restart_policy: unless-stopped
     shm_size: 64M
     state: started
+    stop_grace_period: 30s # allow enough time to shut down the various services
     volumes: "{{ frigate_volumes }}"
   register: frigate_container_state
+
 # - name: deploy-frigate | Wait for Frigate to accept connections
 #   ansible.builtin.wait_for:
 #     host: "{{ frigate_fqdn }}"
