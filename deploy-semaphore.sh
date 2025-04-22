@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-ansible-playbook --inventory-file hosts.yaml --vault-password-file vault.pass playbooks/deploy-semaphore.yaml
+ansible-playbook --inventory-file inventory-homelab_lxc.yaml --vault-password-file vault.pass playbooks/deploy-semaphore.yaml
