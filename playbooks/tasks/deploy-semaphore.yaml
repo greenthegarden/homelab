@@ -46,10 +46,10 @@
       "key": "traefik.http.routers.{{ semaphore_service_name }}.entrypoints",
       "value": "websecure",
     }
-    - {
-      "key": "traefik.http.routers.{{ semaphore_service_name }}.middlewares",
-      "value": "tinyauth",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ semaphore_service_name }}.middlewares",
+    #   "value": "tinyauth",
+    # }
     - {
       "key": "traefik.http.routers.{{ semaphore_service_name }}.rule",
       "value": "Host(`{{ semaphore_fqdn }}`)",
@@ -102,7 +102,7 @@
 - name: deploy-semaphore | Remove Semaphore container if changing version
   when:
     - semaphore_state.exists
-    - semaphore_image_tag != semaphore_state.container.Config.Image | split(':') | last
+    - (semaphore_image | split(':') | last) != semaphore_state.container.Config.Image | split(':') | last
   block:
     - name: deploy-semaphore | Stop and remove existing Semaphore container
       community.docker.docker_container:
