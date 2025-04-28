@@ -21,7 +21,7 @@ docker_volume_backup_image: offen/docker-volume-backup:v2.43.3
 docker_volume_backup_service_name: docker-volume-backup
 docker_volume_backup_local_archive_dir: /root/backups
 # Dozzle Agent facts
-dozzle_agent_image: amir20/dozzle:v8.12.10
+dozzle_agent_image: amir20/dozzle:v8.12.13
 dozzle_agent_service_name: dozzle-agent
 dozzle_agent_service_port: 7007
 # Node Exporter facts
