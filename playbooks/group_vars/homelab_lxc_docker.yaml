@@ -38,6 +38,10 @@ prometheus_image: prom/prometheus:v3.3.0
 prometheus_service_name: prometheus
 prometheus_service_port: 9090
 prometheus_volume_name: prometheus
+# Tinyauth facts
+tinyauth_image: ghcr.io/steveiliop56/tinyauth:v3.2.1
+tinyauth_service_name: tinyauth
+tinyauth_service_port: 3000
 # Traefik facts
 traefik_image: traefik:3.3.6
 traefik_service_name: traefik
