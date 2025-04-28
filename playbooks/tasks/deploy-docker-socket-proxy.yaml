@@ -44,6 +44,7 @@
   community.docker.docker_image:
     name: "{{ docker_socket_proxy_image }}"
     source: pull
+    force_source: true
 
 - name: deploy-docker-socket-proxy | Deploy Docker Socket Proxy
   community.docker.docker_container:
