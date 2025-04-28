@@ -108,7 +108,7 @@ repos:
 
   ### PNG Images ###
   - repo: https://github.com/shssoichiro/oxipng
-    rev: v9.1.4
+    rev: v9.1.5
     hooks:
       - id: oxipng
         name: "🖼️ images · Optimize PNG files"
@@ -135,7 +135,7 @@ repos:
 
   ### Renovate ###
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 39.257.3
+    rev: 39.262.0
     hooks:
       - id: renovate-config-validator
         # args: [--strict]
