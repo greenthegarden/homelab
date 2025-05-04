@@ -89,7 +89,7 @@
 - name: deploy-influxdb | Remove InfluxDB container if changing version
   when:
     - influxdb_state.exists
-    - influxdb_image_tag != influxdb_state.container.Config.Image | split(':') | last
+    - influxdb_image | split(':') | last != influxdb_state.container.Config.Image | split(':') | last
   block:
     - name: deploy-influxdb | Stop and remove existing InfluxDB container
       community.docker.docker_container:
