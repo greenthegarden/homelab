@@ -34,12 +34,12 @@ portainer_agent_image: portainer/agent:2.29.2-alpine
 portainer_agent_service_name: portainer_agent
 portainer_agent_service_port: 9001
 # Prometheus facts
-prometheus_image: prom/prometheus:v3.3.0
+prometheus_image: prom/prometheus:v3.3.1
 prometheus_service_name: prometheus
 prometheus_service_port: 9090
 prometheus_volume_name: prometheus
 # Tinyauth facts
-tinyauth_image: ghcr.io/steveiliop56/tinyauth:v3.2.1
+tinyauth_image: ghcr.io/steveiliop56/tinyauth:v3.3.1
 tinyauth_service_name: tinyauth
 tinyauth_service_port: 3000
 # Traefik facts
