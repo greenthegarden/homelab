@@ -80,7 +80,7 @@ repos:
   #       stages: [pre-commit]
 
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.18.0
+    rev: v0.18.1
     hooks:
       - id: markdownlint-cli2
         name: "📝 markdown · Lint markdown"
@@ -135,7 +135,7 @@ repos:
 
   ### Renovate ###
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 40.10.4
+    rev: 40.13.0
     hooks:
       - id: renovate-config-validator
         # args: [--strict]
@@ -212,7 +212,7 @@ repos:
   ### Commit Message Standards ###
 
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.7.0
+    rev: v4.7.1
     hooks:
       - id: commitizen
         name: "🌳 git · Validate commit message"
