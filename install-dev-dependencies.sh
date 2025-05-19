@@ -50,16 +50,16 @@ echo -e "Running on shell options: ${B}$(set | grep -E 'PROMPT_COMMAND|PS4')${NC
 echo -e "${INFO} Updating system packages...${NC}"
 apt update && apt -y upgrade
 
-# install pipx
-apt install -y python3-pip python${PYTHON_VERSION}-venv pipx
 
-# install base python modules
+# install pip and pipx
+apt install -y python3-pip python${PYTHON_VERSION}-venv pipx python3-passlib
+
+# configure pipx
 python3 -m pipx ensurepath
 
-python_modules=(
+python_app_modules=(
     ansible
     docker
-    passlib
     jmespath
     pre-commit
     yamllint
@@ -67,7 +67,7 @@ python_modules=(
 )
 
 # now use pipx to install the defined modules
-for module in "${python_modules[@]}"; do
+for module in "${python_app_modules[@]}"; do
     pipx install --include-deps "$module"
 done
 
@@ -78,10 +78,10 @@ pipx upgrade-all
 pre-commit install --hook-type pre-commit --hook-type pre-push
 pre-commit autoupdate
 
-# Get Proxmox dynamic inventory plugin
-# needs the ansible module to run
-python3 -m pip install --user --break-system-packages ansible
-if [ ! -f ansible/proxmox.py ]; then
-    wget -O ansible/proxmox.py \
-    https://github.com/xezpeleta/Ansible-Proxmox-inventory/raw/master/proxmox.py
-fi
+# # Get Proxmox dynamic inventory plugin
+# # needs the ansible module to run
+# python3 -m pip install --user --break-system-packages ansible
+# if [ ! -f ansible/proxmox.py ]; then
+#     wget -O ansible/proxmox.py \
+#     https://github.com/xezpeleta/Ansible-Proxmox-inventory/raw/master/proxmox.py
+# fi
