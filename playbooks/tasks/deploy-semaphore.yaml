@@ -140,7 +140,7 @@
         image: "{{ semaphore_image }}"
         detach: true
         env:
-          SEMAPHORE_DB_DIALECT: "{{ semaphore_db_dialect | default('bolt') }}"
+          SEMAPHORE_DB_DIALECT: "{{ semaphore_db_dialect }}"
           SEMAPHORE_ADMIN: "{{ semaphore.admin_username | default('dummy') }}"
           SEMAPHORE_ADMIN_PASSWORD: "{{ semaphore.admin_password | default('dummy') }}"
           SEMAPHORE_ADMIN_NAME: "{{ semaphore.admin_name | default('dummy') }}"
