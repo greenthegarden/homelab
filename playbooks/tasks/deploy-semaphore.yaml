@@ -145,6 +145,7 @@
           SEMAPHORE_ADMIN_PASSWORD: "{{ semaphore.admin_password | default('dummy') }}"
           SEMAPHORE_ADMIN_NAME: "{{ semaphore.admin_name | default('dummy') }}"
           SEMAPHORE_ADMIN_EMAIL: "{{ semaphore.admin_email | default('dummy') }}"
+          SEMAPHORE_MAX_TASKS_PER_TEMPLATE: "{{ 10 | quote | default(omit) }}"
         labels: "{{ (semaphore_container_labels | default({})) | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ semaphore_networks }}"
