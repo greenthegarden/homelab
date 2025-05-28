@@ -6,7 +6,7 @@
 
 - name: deploy-open-webui | Set Open-webui facts
   ansible.builtin.set_fact:
-    open_webui_image: "{{ open_webui_image | default('ghcr.io/open-webui/open-webui:0.6.5') }}"
+    open_webui_image: "{{ open_webui_image | default('ghcr.io/open-webui/open-webui:0.6.11') }}"
     open_webui_service_name: "{{ open_webui_service_name | default('open-webui') }}"
     open_webui_service_port: "{{ open_webui_service_port | default(3000) }}"
     open_webui_volume_name: "{{ open_webui_volume_name | default('open-webui') }}"

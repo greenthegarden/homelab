@@ -11,6 +11,12 @@
     ollama_service_port: 11434
     ollama_volume_name: ollama
 
+    # Open WebUI facts
+    open_webui_image: ghcr.io/open-webui/open-webui:0.6.11
+    open_webui_service_name: open-webui
+    open_webui_service_port: 3000
+    open_webui_volume_name: open-webui
+
   tasks:
 
     - name: Load homelab vars
@@ -20,3 +26,7 @@
     - name: Deploy a containerised instance of Ollama
       ansible.builtin.include_tasks:
         file: tasks/deploy-ollama.yaml
+
+    - name: Deploy a containerised instance of Open WebUI
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-open-webui.yaml
