@@ -12,6 +12,7 @@
     frigate_image: "{{ frigate_image | default('ghcr.io/blakeblackshear/frigate:stable') }}"
     frigate_service_name: "{{ frigate_service_name | default('frigate') }}"
     frigate_service_port: "{{ frigate_service_port | default(8971) }}"
+    frigate_service_port_http: "{{ frigate_service_port | default(5000) }}"
     frigate_service_port_rtsp: "{{ frigate_service_port_rtsp | default(8554) }}"
     frigate_service_port_webrtc: "{{ frigate_service_port_webrtc | default(8555) }}"
     frigate_volume_name: "{{ frigate_volume_name | default('frigate') }}"
@@ -32,6 +33,7 @@
       - name: "{{ web_network_name | default('web') }}"
     frigate_ports:
       - "{{ frigate_service_port }}:8971"
+      - "{{ frigate_service_port_http }}:5000"
       - "{{ frigate_service_port_rtsp }}:8554"
       - "{{ frigate_service_port_webrtc }}:8555/tcp"
       - "{{ frigate_service_port_webrtc }}:8555/udp"
