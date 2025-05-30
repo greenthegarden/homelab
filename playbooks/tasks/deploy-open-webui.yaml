@@ -49,6 +49,10 @@
       "key": "traefik.http.routers.{{ open_webui_service_name }}.tls",
       "value": "true",
     }
+    - {
+      "key": "traefik.http.services.{{ open_webui_service_name }}.loadBalancer.server.port",
+      "value": "{{ open_webui_service_port }}",
+    }
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
@@ -116,14 +120,14 @@
         volumes: "{{ open_webui_volumes }}"
       register: open_webui_container_state
 
-    - name: deploy-open-webui | Wait for Open-webui to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ open_webui_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: open_webui_running
-      until: open_webui_running is success
-      retries: 10
+    # - name: deploy-open-webui | Wait for Open-webui to accept connections
+    #   ansible.builtin.wait_for:
+    #     host: "{{ open_webui_fqdn }}"
+    #     port: 80
+    #     connect_timeout: 1
+    #     delay: 10
+    #     state: started
+    #     timeout: 30
+    #   register: open_webui_running
+    #   until: open_webui_running is success
+    #   retries: 10
