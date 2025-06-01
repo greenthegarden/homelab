@@ -119,7 +119,7 @@
           # RAG_WEB_SEARCH_CONCURRENT_REQUESTS: "10"
           # SEARXNG_QUERY_URL: "http://searxng:8080/search?q=<query>"
         etc_hosts:
-          - "host.docker.internal:host-gateway"
+          host.docker.internal: host-gateway
         labels: "{{ (open_webui_container_labels | default({})) | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ open_webui_networks }}"
