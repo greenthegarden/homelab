@@ -25,6 +25,42 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
+- name: deploy-ollama | Create Ollama container labels
+  ansible.builtin.set_fact:
+    ollama_container_labels: "{{ ollama_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    - {
+      "key": "traefik.http.routers.{{ ollama_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ ollama_service_name }}.rule",
+      "value": "Host(`{{ ollama_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ ollama_service_name }}.service",
+      "value": "{{ ollama_service_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ ollama_service_name }}.tls",
+      "value": "true",
+    }
+    - {
+      "key": "traefik.http.services.{{ ollama_service_name }}.loadBalancer.server.port",
+      "value": "{{ ollama_service_port }}",
+    }
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/open-webui/open-webui/releases/tag/v${major}.${minor}.${patch}",
+    }
+    # Docker Volume Backup labels
+    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+
 - name: deploy-ollama | Create Ollama volume
   community.docker.docker_volume:
     name: "{{ ollama_volume_name }}"

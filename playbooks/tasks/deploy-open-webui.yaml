@@ -8,7 +8,7 @@
   ansible.builtin.set_fact:
     open_webui_image: "{{ open_webui_image | default('ghcr.io/open-webui/open-webui:0.6.11') }}"
     open_webui_service_name: "{{ open_webui_service_name | default('open-webui') }}"
-    open_webui_service_port: "{{ open_webui_service_port | default(3000) }}"
+    open_webui_service_port: "{{ open_webui_service_port | default(8080) }}"
     open_webui_volume_name: "{{ open_webui_volume_name | default('open-webui') }}"
 
 - name: deploy-open-webui | Set Open-webui aggregated facts
@@ -20,7 +20,7 @@
     open_webui_networks:
       - name: "{{ web_network_name | default('web') }}"
     open_webui_ports:
-      - "{{ open_webui_service_port | default(3000) }}:3000"
+      - "{{ open_webui_service_port | default(8080) }}:8080"
     open_webui_volumes:
       - "{{ open_webui_volume_name }}:/app/backend/data"
       - /etc/localtime:/etc/localtime:ro
@@ -111,6 +111,15 @@
         name: "{{ open_webui_service_name }}"
         image: "{{ open_webui_image }}"
         detach: true
+        env:
+          OLLAMA_BASE_URL: "http://ollama:11434"
+          # ENABLE_RAG_WEB_SEARCH: "True"
+          # RAG_WEB_SEARCH_ENGINE: "searxng"
+          # RAG_WEB_SEARCH_RESULT_COUNT: "3"
+          # RAG_WEB_SEARCH_CONCURRENT_REQUESTS: "10"
+          # SEARXNG_QUERY_URL: "http://searxng:8080/search?q=<query>"
+        etc_hosts:
+          - "host.docker.internal:host-gateway"
         labels: "{{ (open_webui_container_labels | default({})) | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ open_webui_networks }}"

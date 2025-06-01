@@ -14,8 +14,14 @@
     # Open WebUI facts
     open_webui_image: ghcr.io/open-webui/open-webui:0.6.13
     open_webui_service_name: open-webui
-    open_webui_service_port: 3000
+    open_webui_service_port: 8080
     open_webui_volume_name: open-webui
+
+    # SearXNG facts
+    searxng_image: searxng/searxng:latest
+    searxng_service_name: searxng
+    searxng_service_port: 8080
+    searxng_volume_name: searxng
 
   tasks:
 
@@ -26,6 +32,10 @@
     - name: Deploy a containerised instance of Ollama
       ansible.builtin.include_tasks:
         file: tasks/deploy-ollama.yaml
+
+    - name: Deploy a containerised instance of SearXNG
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-searxng.yaml
 
     - name: Deploy a containerised instance of Open WebUI
       ansible.builtin.include_tasks:

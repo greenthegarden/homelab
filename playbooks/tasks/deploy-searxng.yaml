@@ -1,0 +1,132 @@
+---
+
+- name: deploy-searxng | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+- name: deploy-searxng | Set SearXNG facts
+  ansible.builtin.set_fact:
+    searxng_image: "{{ searxng_image | default('searxng/searxng:latest') }}"
+    searxng_service_name: "{{ searxng_service_name | default('searxng') }}"
+    searxng_service_port: "{{ searxng_service_port | default(8080) }}"
+    searxng_volume_name: "{{ searxng_volume_name | default('searxng') }}"
+
+- name: deploy-searxng | Set SearXNG aggregated facts
+  ansible.builtin.set_fact:
+    searxng_fqdn: "{{ searxng_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: deploy-searxng | Set SearXNG service facts
+  ansible.builtin.set_fact:
+    searxng_networks:
+      - name: "{{ web_network_name | default('web') }}"
+    searxng_ports:
+      - "{{ searxng_service_port | default(8080) }}:8080"
+    searxng_volumes:
+      - "{{ searxng_volume_name }}:/etc/searxng"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-searxng | Create SearXNG container labels
+  ansible.builtin.set_fact:
+    searxng_container_labels: "{{ searxng_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    - {
+      "key": "traefik.http.routers.{{ searxng_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ searxng_service_name }}.rule",
+      "value": "Host(`{{ searxng_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ searxng_service_name }}.service",
+      "value": "{{ searxng_service_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ searxng_service_name }}.tls",
+      "value": "true",
+    }
+    - {
+      "key": "traefik.http.services.{{ searxng_service_name }}.loadBalancer.server.port",
+      "value": "{{ searxng_service_port }}",
+    }
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/searxng/searxng/releases/tag/v${major}.${minor}.${patch}",
+    }
+    # Docker Volume Backup labels
+    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Searxng" }
+    - { "key": "homepage.description", "value": "Search engine" }
+    - { "key": "homepage.icon", "value": "searxng.png" }
+    - { "key": "homepage.href", "value": "https://{{ searxng_fqdn }}/" }
+    - {
+      "key": "homepage.siteMonitor",
+      "value": "https://{{ searxng_fqdn }}/",
+    }
+
+
+- name: deploy-searxng | Create SearXNG volume
+  community.docker.docker_volume:
+    name: "{{ searxng_volume_name }}"
+    state: present
+
+- name: deploy-searxng | Check if SearXNG is running
+  community.docker.docker_container_info:
+    name: "{{ searxng_service_name }}"
+  register: searxng_state
+
+- name: deploy-searxng | Remove SearXNG container if changing version
+  when:
+    - searxng_state.exists
+    - (searxng_image | split(':') | last) != (searxng_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-searxng | Stop and remove existing SearXNG container
+      community.docker.docker_container:
+        name: "{{ searxng_service_name }}"
+        state: absent
+
+    - name: deploy-searxng | Set update SearXNG
+      ansible.builtin.set_fact:
+        searxng_update: true
+
+- name: deploy-searxng | Deploy SearXNG if not running
+  when: not searxng_state.exists or (searxng_update | default(false))
+  block:
+    - name: deploy-searxng | Pull searxng image
+      community.docker.docker_image:
+        name: "{{ searxng_image }}"
+        source: pull
+
+    - name: deploy-searxng | Deploy SearXNG
+      community.docker.docker_container:
+        name: "{{ searxng_service_name }}"
+        image: "{{ searxng_image }}"
+        detach: true
+        labels: "{{ (searxng_container_labels | default({})) | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ searxng_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ searxng_volumes }}"
+      register: searxng_container_state
+
+    # - name: deploy-searxng | Wait for SearXNG to accept connections
+    #   ansible.builtin.wait_for:
+    #     host: "{{ searxng_fqdn }}"
+    #     port: 80
+    #     connect_timeout: 1
+    #     delay: 10
+    #     state: started
+    #     timeout: 30
+    #   register: searxng_running
+    #   until: searxng_running is success
+    #   retries: 10
