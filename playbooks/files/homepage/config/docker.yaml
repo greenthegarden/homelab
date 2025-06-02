@@ -10,9 +10,9 @@ docker-ansible:
   host: ansible.localdomain
   port: 2375
 
-docker-authentik:
-  host: authentik.localdomain
-  port: 2375
+# docker-authentik:
+#   host: authentik.localdomain
+#   port: 2375
 
 docker-broker:
   host: broker.localdomain
@@ -30,13 +30,13 @@ docker-frigate:
   host: frigate.localdomain
   port: 2375
 
-docker-grafana:
-  host: grafana.localdomain
-  port: 2375
+# docker-grafana:
+#   host: grafana.localdomain
+#   port: 2375
 
-docker-grocy:
-  host: grocy.localdomain
-  port: 2375
+# docker-grocy:
+#   host: grocy.localdomain
+#   port: 2375
 
 docker-homebox:
   host: homebox.localdomain
@@ -46,17 +46,21 @@ docker-hortusfox:
   host: hortusfox.localdomain
   port: 2375
 
-docker-influxdb:
-  host: influxdb.localdomain
+# docker-influxdb:
+#   host: influxdb.localdomain
+#   port: 2375
+
+# docker-journal:
+#   host: journal.localdomain
+#   port: 2375
+
+docker-ollama:
+  host: ollama.localdomain
   port: 2375
 
-docker-journal:
-  host: journal.localdomain
-  port: 2375
-
-docker-plantit:
-  host: plant-it.localdomain
-  port: 2375
+# docker-plantit:
+#   host: plant-it.localdomain
+#   port: 2375
 
 docker-portainer:
   host: portainer.localdomain

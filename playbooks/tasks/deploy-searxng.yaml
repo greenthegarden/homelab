@@ -63,7 +63,7 @@
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
-    - { "key": "homepage.name", "value": "Searxng" }
+    - { "key": "homepage.name", "value": "SearXNG" }
     - { "key": "homepage.description", "value": "Search engine" }
     - { "key": "homepage.icon", "value": "searxng.png" }
     - { "key": "homepage.href", "value": "https://{{ searxng_fqdn }}/" }
