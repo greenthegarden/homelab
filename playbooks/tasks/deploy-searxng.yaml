@@ -72,7 +72,6 @@
       "value": "https://{{ searxng_fqdn }}/",
     }
 
-
 - name: deploy-searxng | Create SearXNG volume
   community.docker.docker_volume:
     name: "{{ searxng_volume_name }}"
