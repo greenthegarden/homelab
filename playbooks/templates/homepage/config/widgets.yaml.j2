@@ -14,11 +14,18 @@
           timeStyle: short
           hour12: true
 
+# - search:
+#     provider: google # google, duckduckgo, bing, baidu, brave or custom
+#     focus: true # Optional, will set focus to the search bar on page load
+#     showSearchSuggestions: true # Optional, will show search suggestions. Defaults to false
+#     target: _blank # One of _self, _blank, _parent or _top
+
 - search:
-    provider: google # google, duckduckgo, bing, baidu, brave or custom
-    focus: true # Optional, will set focus to the search bar on page load
-    showSearchSuggestions: true # Optional, will show search suggestions. Defaults to false
-    target: _blank # One of _self, _blank, _parent or _top
+    provider: custom
+    url: https://searxng.ollama.homelab.greenthegarden.com/search?q=
+    target: _blank
+    suggestionUrl: https://searxng.ollama.homelab.greenthegarden.com/autocomplete?type=list&q= # Optional
+    showSearchSuggestions: true # Optional
 
 - openmeteo:
       label: Adelaide # optional
