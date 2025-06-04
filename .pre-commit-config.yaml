@@ -48,7 +48,7 @@ repos:
         stages: [pre-commit]
 
   - repo: https://github.com/Checkmarx/kics
-    rev: "v2.1.9" # change to correct tag or sha
+    rev: "v2.1.10" # change to correct tag or sha
     hooks:
       - id: kics-scan
         name: "🔒 security · Keeping Infrastructure as Code Secure"
