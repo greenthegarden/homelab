@@ -4,18 +4,18 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
-- name: deploy-open-webui | Set Open-webui facts
+- name: deploy-open-webui | Set Open WebUI facts
   ansible.builtin.set_fact:
     open_webui_image: "{{ open_webui_image | default('ghcr.io/open-webui/open-webui:0.6.11') }}"
     open_webui_service_name: "{{ open_webui_service_name | default('open-webui') }}"
     open_webui_service_port: "{{ open_webui_service_port | default(8080) }}"
     open_webui_volume_name: "{{ open_webui_volume_name | default('open-webui') }}"
 
-- name: deploy-open-webui | Set Open-webui aggregated facts
+- name: deploy-open-webui | Set Open WebUI aggregated facts
   ansible.builtin.set_fact:
     open_webui_fqdn: "{{ open_webui_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: deploy-open-webui | Set Open-webui service facts
+- name: deploy-open-webui | Set Open WebUI service facts
   ansible.builtin.set_fact:
     open_webui_networks:
       - name: "{{ web_network_name | default('web') }}"
@@ -26,7 +26,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: deploy-open-webui | Create Open-webui container labels
+- name: deploy-open-webui | Create Open WebUI container labels
   ansible.builtin.set_fact:
     open_webui_container_labels: "{{ open_webui_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -72,41 +72,44 @@
       "value": "https://{{ open_webui_fqdn }}/",
     }
 
-
-- name: deploy-open-webui | Create Open-webui volume
+- name: deploy-open-webui | Create Open WebUI volume
   community.docker.docker_volume:
     name: "{{ open_webui_volume_name }}"
     state: present
 
-- name: deploy-open-webui | Check if Open-webui is running
+- name: deploy-open-webui | Check if Open WebUI is running
   community.docker.docker_container_info:
     name: "{{ open_webui_service_name }}"
   register: open_webui_state
 
-- name: deploy-open-webui | Remove Open-webui container if changing version
+- name: deploy-open-webui | Update Open WebUI container if changing version
   when:
     - open_webui_state.exists
     - (open_webui_image | split(':') | last) != (open_webui_state.container.Config.Image | split(':') | last)
   block:
-    - name: deploy-open-webui | Stop and remove existing Open-webui container
+    - name: deploy-open-webui | Use watchtower to update Open WebUI container
       community.docker.docker_container:
         name: "{{ open_webui_service_name }}"
         state: absent
+    # - name: deploy-open-webui | Stop and remove existing Open-webui container
+    #   community.docker.docker_container:
+    #     name: "{{ open_webui_service_name }}"
+    #     state: absent
 
-    - name: deploy-open-webui | Set update Open-webui
-      ansible.builtin.set_fact:
-        open_webui_update: true
+    # - name: deploy-open-webui | Set update Open WebUI
+    #   ansible.builtin.set_fact:
+    #     open_webui_update: true
 
-- name: deploy-open-webui | Deploy Open-webui if not running
+- name: deploy-open-webui | Deploy Open WebUI if not running
   when: not open_webui_state.exists or (open_webui_update | default(false))
   block:
-    - name: deploy-open-webui | Pull open-webui image
+    - name: deploy-open-webui | Pull Open WebUI image
       community.docker.docker_image:
         name: "{{ open_webui_image }}"
         source: pull
 
     # docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:0.6.13
-    - name: deploy-open-webui | Deploy Open-webui
+    - name: deploy-open-webui | Deploy Open WebUI
       community.docker.docker_container:
         name: "{{ open_webui_service_name }}"
         image: "{{ open_webui_image }}"
@@ -129,7 +132,7 @@
         volumes: "{{ open_webui_volumes }}"
       register: open_webui_container_state
 
-    # - name: deploy-open-webui | Wait for Open-webui to accept connections
+    # - name: deploy-open-webui | Wait for Open WebUI to accept connections
     #   ansible.builtin.wait_for:
     #     host: "{{ open_webui_fqdn }}"
     #     port: 80
