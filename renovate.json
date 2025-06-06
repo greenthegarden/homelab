@@ -1,21 +1,48 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base"
+    "config:recommended",
+    "docker:pinDigests",
+    ":semanticCommitsDisabled",
+    ":rebaseStalePrs",
+    ":disableRateLimiting"
   ],
+  "timezone": "Australia/Adelaide",
   "ansible": {
     "fileMatch": [
       "(^|/)playbooks/[^/]+\\.ya?ml$"
     ]
   },
+  "ignoreTests": true,
   "packageRules": [
     {
-      "datasources": ["docker"],
-      "updateTypes": ["major"],
-      "enabled": true
+      "matchDatasources": ["docker"],
+      "enabled": true,
+      "commitMessageTopic": "container image {{depName}}",
+      "commitMessageExtra": "to {{#if isSingleVersion}}v{{{newVersion}}}{{else}}{{{newValue}}}{{/if}}",
+      "matchUpdateTypes": ["major", "minor", "patch"]
+    },
+    {
+      "matchDatasources": ["docker"],
+      "semanticCommitScope": "images",
+      "commitMessageTopic": "{{depName}}",
+      "commitMessageExtra": "to {{{newValue}}}",
+      "separateMinorPatch": true
     }
   ],
   "docker": {
     "pinDigests": true
-  }
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "(^|/)playbooks/[^/]+\\.ya?ml$"
+      ],
+      "matchStrings": [
+        "renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s.*_version: '(?<currentValue>.*)'\\s"
+      ],
+      "datasourceTemplate": "docker"
+    }
+  ]
 }
