@@ -1,11 +1,21 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:base"
   ],
   "ansible": {
     "fileMatch": [
       "(^|/)playbooks/[^/]+\\.ya?ml$"
     ]
+  },
+  "packageRules": [
+    {
+      "datasources": ["docker"],
+      "updateTypes": ["major"],
+      "enabled": true
+    }
+  ],
+  "docker": {
+    "pinDigests": true
   }
 }

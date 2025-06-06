@@ -88,9 +88,15 @@
     - (open_webui_image | split(':') | last) != (open_webui_state.container.Config.Image | split(':') | last)
   block:
     - name: deploy-open-webui | Use watchtower to update Open WebUI container
+      # docker run --rm --volume /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once open-webui
       community.docker.docker_container:
-        name: "{{ open_webui_service_name }}"
-        state: absent
+        name: containrrr/watchtower:latest
+        auto_remove: true
+        command: "--run-once {{ open_webui_image }}"
+        state: started
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+
     # - name: deploy-open-webui | Stop and remove existing Open-webui container
     #   community.docker.docker_container:
     #     name: "{{ open_webui_service_name }}"

@@ -70,24 +70,61 @@
     name: "{{ ollama_volume_name }}"
     state: present
 
-- name: deploy-ollama | Pull Ollama image
-  community.docker.docker_image:
-    name: "{{ ollama_image }}"
-    source: pull
-
-# docker run -d -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama
-- name: deploy-ollama | Deploy Ollama
-  community.docker.docker_container:
+- name: deploy-ollama | Check if Ollama is running
+  community.docker.docker_container_info:
     name: "{{ ollama_service_name }}"
-    image: "{{ ollama_image }}"
-    detach: true
-    env:
-      TZ: "{{ ansible_env.TZ | default('UTC') }}"
-    networks_cli_compatible: true
-    networks: "{{ ollama_networks }}"
-    published_ports: "{{ ollama_ports }}"
-    restart: true
-    restart_policy: unless-stopped
-    state: started
-    volumes: "{{ ollama_volumes }}"
-  register: ollama_container_state
+  register: ollama_state
+
+- name: deploy-ollama | UPdate Ollama container if changing version
+  when:
+    - ollama_state.exists
+    - (ollama_image | split(':') | last) != (ollama.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-ollama | Use watchtower to update Ollama container
+      # docker run --rm --volume /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once ollama
+      community.docker.docker_container:
+        name: containrrr/watchtower:latest
+        auto_remove: true
+        command:
+          - "--run-once"
+          - "--cleanup=true"
+          - "{{ ollama_image | split(':') | last }}"
+        state: started
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+          - /etc/localtime:/etc/localtime:ro
+          - /etc/timezone:/etc/timezone:ro
+
+    # - name: deploy-searxng | Stop and remove existing SearXNG container
+    #   community.docker.docker_container:
+    #     name: "{{ searxng_service_name }}"
+    #     state: absent
+
+    # - name: deploy-searxng | Set update SearXNG
+    #   ansible.builtin.set_fact:
+    #     searxng_update: true
+
+- name: deploy-ollama | Deploy Ollama if not running
+  when: not ollama_state.exists or (ollama_update | default(false))
+  block:
+    - name: deploy-ollama | Pull Ollama image
+      community.docker.docker_image:
+        name: "{{ ollama_image }}"
+        source: pull
+
+    # docker run -d -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama
+    - name: deploy-ollama | Deploy Ollama
+      community.docker.docker_container:
+        name: "{{ ollama_service_name }}"
+        image: "{{ ollama_image }}"
+        detach: true
+        env:
+          TZ: "{{ ansible_env.TZ | default('UTC') }}"
+        networks_cli_compatible: true
+        networks: "{{ ollama_networks }}"
+        published_ports: "{{ ollama_ports }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ ollama_volumes }}"
+      register: ollama_container_state
