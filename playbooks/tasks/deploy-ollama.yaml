@@ -75,10 +75,10 @@
     name: "{{ ollama_service_name }}"
   register: ollama_state
 
-- name: deploy-ollama | UPdate Ollama container if changing version
+- name: deploy-ollama | Update Ollama container if changing version
   when:
     - ollama_state.exists
-    - (ollama_image | split(':') | last) != (ollama.container.Config.Image | split(':') | last)
+    - (ollama_image | split(':') | last) != (ollama_state.container.Config.Image | split(':') | last)
   block:
     - name: deploy-ollama | Use watchtower to update Ollama container
       # docker run --rm --volume /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once ollama
@@ -88,7 +88,7 @@
         command:
           - "--run-once"
           - "--cleanup=true"
-          - "{{ ollama_image | split(':') | last }}"
+          - "{{ ollama_image | split(':') | first }}"
         state: started
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
