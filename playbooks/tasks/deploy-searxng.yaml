@@ -87,24 +87,14 @@
     - searxng_state.exists
     - (searxng_image | split(':') | last) != (searxng_state.container.Config.Image | split(':') | last)
   block:
-    - name: deploy-searxng | Use watchtower to update Open WebUI container
-      # docker run --rm --volume /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once open-webui
+    - name: deploy-searxng | Stop and remove existing SearXNG container
       community.docker.docker_container:
-        name: containrrr/watchtower:latest
-        auto_remove: true
-        command: "--run-once {{ searxng_image }}"
-        state: started
-        volumes:
-          - /var/run/docker.sock:/var/run/docker.sock
+        name: "{{ searxng_service_name }}"
+        state: absent
 
-    # - name: deploy-searxng | Stop and remove existing SearXNG container
-    #   community.docker.docker_container:
-    #     name: "{{ searxng_service_name }}"
-    #     state: absent
-
-    # - name: deploy-searxng | Set update SearXNG
-    #   ansible.builtin.set_fact:
-    #     searxng_update: true
+    - name: deploy-searxng | Set update SearXNG
+      ansible.builtin.set_fact:
+        searxng_update: true
 
 - name: deploy-searxng | Deploy SearXNG if not running
   when: not searxng_state.exists or (searxng_update | default(false))

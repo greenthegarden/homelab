@@ -80,29 +80,14 @@
     - ollama_state.exists
     - (ollama_image | split(':') | last) != (ollama_state.container.Config.Image | split(':') | last)
   block:
-    - name: deploy-ollama | Use watchtower to update Ollama container
-      # docker run --rm --volume /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once ollama
+    - name: deploy-ollama | Stop and remove existing Ollama container
       community.docker.docker_container:
-        name: containrrr/watchtower:latest
-        auto_remove: true
-        command:
-          - "--run-once"
-          - "--cleanup=true"
-          - "{{ ollama_image | split(':') | first }}"
-        state: started
-        volumes:
-          - /var/run/docker.sock:/var/run/docker.sock
-          - /etc/localtime:/etc/localtime:ro
-          - /etc/timezone:/etc/timezone:ro
+        name: "{{ ollama_service_name }}"
+        state: absent
 
-    # - name: deploy-searxng | Stop and remove existing SearXNG container
-    #   community.docker.docker_container:
-    #     name: "{{ searxng_service_name }}"
-    #     state: absent
-
-    # - name: deploy-searxng | Set update SearXNG
-    #   ansible.builtin.set_fact:
-    #     searxng_update: true
+    - name: deploy-ollama | Set update Ollama
+      ansible.builtin.set_fact:
+        ollama_update: true
 
 - name: deploy-ollama | Deploy Ollama if not running
   when: not ollama_state.exists or (ollama_update | default(false))
