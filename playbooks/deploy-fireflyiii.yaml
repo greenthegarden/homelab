@@ -7,7 +7,7 @@
   vars:
 
     # Firefly III facts
-    fireflyiii_image_tag: version-6.2.16
+    fireflyiii_image_tag: version-6.2.17
     fireflyiii_service_name: fireflyiii
     fireflyiii_service_port: 8080
     fireflyiii_db_backup_volume_name: fireflyiii_db_backup
