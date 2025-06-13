@@ -99,7 +99,7 @@
 - name: deploy-searxng | Deploy SearXNG if not running
   when: not searxng_state.exists or (searxng_update | default(false))
   block:
-    - name: deploy-searxng | Pull searxng image
+    - name: deploy-searxng | Pull SearXNG image
       community.docker.docker_image:
         name: "{{ searxng_image }}"
         source: pull
