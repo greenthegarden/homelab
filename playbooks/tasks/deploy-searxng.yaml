@@ -22,7 +22,7 @@
     searxng_ports:
       - "{{ searxng_service_port | default(8080) }}:8080"
     searxng_volumes:
-      - "{{ searxng_volume_name }}:/etc/searxng"
+      - "{{ searxng_volume_name }}:/etc/searxng:rw"
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
