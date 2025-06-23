@@ -21,7 +21,7 @@ docker_volume_backup_image: offen/docker-volume-backup:v2.43.4
 docker_volume_backup_service_name: docker-volume-backup
 docker_volume_backup_local_archive_dir: /root/backups
 # Dozzle Agent facts
-dozzle_agent_image: amir20/dozzle:v8.13.1
+dozzle_agent_image: amir20/dozzle:v8.13.2
 dozzle_agent_service_name: dozzle-agent
 dozzle_agent_service_port: 7007
 # Node Exporter facts
@@ -34,7 +34,7 @@ portainer_agent_image: portainer/agent:2.31.1-alpine
 portainer_agent_service_name: portainer_agent
 portainer_agent_service_port: 9001
 # Prometheus facts
-prometheus_image: prom/prometheus:v3.3.1
+prometheus_image: prom/prometheus:v3.4.1
 prometheus_service_name: prometheus
 prometheus_service_port: 9090
 prometheus_volume_name: prometheus
