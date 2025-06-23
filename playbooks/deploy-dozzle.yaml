@@ -19,3 +19,7 @@
     - name: Deploy a containerised instance of Dozzle
       ansible.builtin.include_tasks:
         file: tasks/deploy-dozzle.yaml
+
+    - name: Deploy a containerised instance of Beszel
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-beszel.yaml

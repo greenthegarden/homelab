@@ -1,0 +1,107 @@
+---
+- name: deploy-beszel | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### BESZEL SECTION
+
+# https://beszel.dev/guide/hub-installation
+
+- name: deploy-beszel | Set Beszel facts
+  ansible.builtin.set_fact:
+    beszel_image: "{{ beszel_image | default('henrygd/beszel:latest') }}"
+    beszel_service_name: "{{ beszel_service_name | default('beszel') }}"
+    beszel_service_port: "{{ beszel_service_port | default(8090) }}"
+    beszel_config_dir: /root/beszel
+
+- name: deploy-beszel | Set Beszel aggregated facts
+  ansible.builtin.set_fact:
+    beszel_fqdn: "{{ beszel_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: deploy-beszel | Set Beszel service facts
+  ansible.builtin.set_fact:
+    beszel_networks:
+      - name: "{{ monitoring_network_name | default('monitoring') }}"
+      - name: "{{ web_network_name | default('web') }}"
+    beszel_ports:
+      - "{{ beszel_service_port }}:8090"
+    beszel_volumes:
+      - ./beszel_data:/beszel_data:rw
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-beszel | Create Beszel container labels
+  ansible.builtin.set_fact:
+    beszel_container_labels: "{{ beszel_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    - {
+      "key": "traefik.http.routers.{{ beszel_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ beszel_service_name }}.rule",
+      "value": "Host(`{{ beszel_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ beszel_service_name }}.service",
+      "value": "{{ beszel_service_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ beszel_service_name }}.tls",
+      "value": "true",
+    }
+    - {
+      "key": "traefik.http.services.{{ beszel_service_name }}.loadbalancer.server.port",
+      "value": "{{ beszel_service_port | quote }}",
+    }
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/henrygd/beszel/releases/tag/v${major}.${minor}.${patch}",
+    }
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Monitoring" }
+    - { "key": "homepage.name", "value": "Beszel" }
+    - {
+      "key": "homepage.description",
+      "value": "Lightweight server monitoring hub with historical data, docker stats, and alerts.",
+    }
+    - { "key": "homepage.icon", "value": "beszel.png" }
+    - { "key": "homepage.href", "value": "https://{{ beszel_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ beszel_fqdn }}/" }
+
+- name: deploy-beszel | Pull Beszel image
+  community.docker.docker_image:
+    name: "{{ beszel_image }}"
+    source: pull
+
+# docker run -d -v /var/run/docker.sock:/var/run/docker.sock -p 8080:8080 amir20/beszel:latest
+- name: deploy-beszel | Deploy Beszel
+  community.docker.docker_container:
+    name: "{{ beszel_service_name }}"
+    image: "{{ beszel_image }}"
+    detach: true
+    labels: "{{ (beszel_container_labels | default({})) | default(omit) }}"
+    networks_cli_compatible: true
+    networks: "{{ beszel_networks }}"
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    volumes: "{{ beszel_volumes }}"
+  register: beszel_container_state
+
+- name: deploy-beszel | Wait for Beszel to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ beszel_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: beszel_running
+  until: beszel_running is success
+  retries: 10
