@@ -6,7 +6,7 @@
   vars:
 
     # Ollama facts
-    ollama_image: ollama/ollama:0.9.2 # renovate: datasource=docker depName=ollama/ollama
+    ollama_image: ollama/ollama:0.9.3 # renovate: datasource=docker depName=ollama/ollama
     ollama_service_name: ollama
     ollama_service_port: 11434
     ollama_volume_name: ollama
@@ -18,7 +18,7 @@
     open_webui_volume_name: open-webui
 
     # SearXNG facts
-    searxng_image: searxng/searxng:2025.6.25-776ac0a  # renovate: datasource=docker depName=searxng/searxng
+    searxng_image: searxng/searxng:2025.6.26-c6e0ad9  # renovate: datasource=docker depName=searxng/searxng
     searxng_service_name: searxng
     searxng_service_port: 8080
     searxng_volume_name: searxng
