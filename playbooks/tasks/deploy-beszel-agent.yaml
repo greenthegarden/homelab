@@ -9,19 +9,20 @@
 
 - name: deploy-beszel-agent | Set Beszel Agent facts
   ansible.builtin.set_fact:
-    beszel_agent_image: "{{ beszel_agent_image | default('amir20/beszel:latest') }}"
+    beszel_agent_image: "{{ beszel_agent_image | default('henrygd/beszel-agent:latest') }}"
     beszel_agent_service_name: "{{ beszel_agent_service_name | default('beszel-agent') }}"
-    beszel_agent_service_port: "{{ beszel_agent_service_port | default(7007) }}"
+    beszel_agent_service_port: "{{ beszel_agent_service_port | default(45876) }}"
+    beszel_agent_config_dir: /root/beszel-agent
 
 - name: deploy-beszel-agent | Set Beszel Agent service facts
   ansible.builtin.set_fact:
-    # beszel_agent_networks:
-    #   - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-    #   - name: "{{ montitoring_network_name | default('monitoring') }}"
-    #   - name: "{{ web_network_name | default('web') }}"
+    beszel_agent_networks:
+      - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+      - name: "{{ web_network_name | default('web') }}"
     beszel_agent_ports:
-      - "{{ beszel_agent_service_port }}:7007"
+      - "{{ beszel_agent_service_port }}:45876"
     beszel_agent_volumes:
+      - ./beszel_socket:/beszel_socket
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -34,8 +35,22 @@
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/amir20/beszel/releases/tag/v${major}.${minor}.${patch}",
+      "value": "https://github.com/henrygd/beszel/releases/tag/v${major}.${minor}.${patch}",
     }
+
+- name: deploy-beszel-agent | Create Beszel Agent configuration directory
+  ansible.builtin.file:
+    path: "{{ beszel_agent_config_dir }}"
+    mode: "0644"
+    state: directory
+  register: beszel_agent_configuration_creation
+
+- name: deploy-beszel-agent | Create Beszel Agent configuration
+  ansible.builtin.template:
+    src: templates/beszel-agent/beszel-agent.env.j2
+    dest: "{{ beszel_agent_config_dir }}/beszel-agent.env"
+    mode: "0644"
+  register: beszel_agent_configuration_creation
 
 - name: deploy-beszel-agent | Pull Beszel Agent image
   community.docker.docker_image:
@@ -47,20 +62,30 @@
   community.docker.docker_container:
     name: "{{ beszel_agent_service_name }}"
     image: "{{ beszel_agent_image }}"
-    command: agent
     detach: true
-    healthcheck:
-      test: ["CMD", "/beszel", "healthcheck"]
-      interval: 5s
-      retries: 5
-      start_period: 5s
-      start_interval: 5s
+    env_file: "{{ beszel_agent_config_dir }}/beszel-agent.env"
+    env:
+      LISTEN: 45876
     labels: "{{ (beszel_agent_container_labels | default({})) | default(omit) }}"
-    # networks_cli_compatible: true
-    # networks: "{{ beszel_agent_networks }}"
+    networks_cli_compatible: true
+    networks: "{{ beszel_agent_networks }}"
     published_ports: "{{ beszel_agent_ports }}"
     restart: true
     restart_policy: unless-stopped
     state: started
     volumes: "{{ beszel_agent_volumes }}"
   register: beszel_agent_container_state
+
+# services:
+#   beszel-agent:
+#     image: "henrygd/beszel-agent"
+#     container_name: "beszel-agent"
+#     restart: unless-stopped
+#     network_mode: host
+#     volumes:
+#       - /var/run/docker.sock:/var/run/docker.sock:ro
+#       # monitor other disks / partitions by mounting a folder in /extra-filesystems
+#       # - /mnt/disk/.beszel:/extra-filesystems/sda1:ro
+#     environment:
+#       LISTEN: 45876
+#       KEY: "key"
