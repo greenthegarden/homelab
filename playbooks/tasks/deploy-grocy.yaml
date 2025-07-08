@@ -84,7 +84,7 @@
 - name: deploy-grocy | Remove Grocy container if changing version
   when:
     - grocy_state.exists
-    - grocy_image_tag != grocy_state.container.Config.Image | split(':') | last
+    - (grocy_image | split(':') | last) != (grocy_state.container.Config.Image | split(':') | last)
   block:
     - name: deploy-grocy | Stop and remove existing Grocy container
       community.docker.docker_container:
