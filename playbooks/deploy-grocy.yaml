@@ -6,7 +6,7 @@
   vars:
 
     # Grocy facts
-    grocy_image: linuxserver/grocy:4.5.0
+    grocy_image: linuxserver/grocy:4.4.2 # 4.5.0
     grocy_service_name: grocy
     grocy_service_port: 9283
     grocy_volume_name: grocy
