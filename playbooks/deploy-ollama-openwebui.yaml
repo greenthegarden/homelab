@@ -18,7 +18,7 @@
     open_webui_volume_name: open-webui
 
     # SearXNG facts
-    searxng_image: searxng/searxng:2025.7.8-fe52290  # renovate: datasource=docker depName=searxng/searxng
+    searxng_image: searxng/searxng:2025.7.11-d8c74c8  # renovate: datasource=docker depName=searxng/searxng
     searxng_service_name: searxng
     searxng_service_port: 8080
     searxng_volume_name: searxng
