@@ -39,7 +39,7 @@ prometheus_service_name: prometheus
 prometheus_service_port: 9090
 prometheus_volume_name: prometheus
 # Tinyauth facts
-tinyauth_image: ghcr.io/steveiliop56/tinyauth:v3.4.1
+tinyauth_image: ghcr.io/steveiliop56/tinyauth:v3.6.1
 tinyauth_service_name: tinyauth
 tinyauth_service_port: 3000
 # Traefik facts
