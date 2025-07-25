@@ -16,6 +16,7 @@
     portainer_agent_volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/volumes:/var/lib/docker/volumes
+      - /:/host
 
 - name: deploy-portainer-agent | Create Portainer Agent container labels
   ansible.builtin.set_fact:
