@@ -117,7 +117,7 @@ repos:
 
   ### Ansible ###
   - repo: https://github.com/ansible-community/ansible-lint
-    rev: v25.6.1
+    rev: v25.7.0
     hooks:
       - id: ansible-lint
         name: "⚙️ ansible · Lint Ansible playbooks"
