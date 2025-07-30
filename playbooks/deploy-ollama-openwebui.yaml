@@ -6,7 +6,7 @@
   vars:
 
     # Ollama facts
-    ollama_image: ollama/ollama:0.9.6 # renovate: datasource=docker depName=ollama/ollama
+    ollama_image: ollama/ollama:0.10.0 # renovate: datasource=docker depName=ollama/ollama
     ollama_service_name: ollama
     ollama_service_port: 11434
     ollama_volume_name: ollama
