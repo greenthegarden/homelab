@@ -52,7 +52,23 @@ apt update && apt -y upgrade
 
 
 # install pip and pipx
-apt install -y python3-pip python${PYTHON_VERSION}-venv pipx python3-passlib
+apt install -y python3-pip python${PYTHON_VERSION}-venv pipx python3-passlib ncdu
+
+# use ncdu to check disk usage
+echo -e "${INFO} Checking disk usage with ncdu...${NC}"
+ncdu --exclude .cache --exclude .local --exclude .config --exclude .vscode
+
+# ensure pipx is available in the PATH
+if ! command -v pipx &> /dev/null; then
+    echo -e "${INFO} pipx not found, adding to PATH...${NC}"
+    export PATH="$PATH:/home/$USER/.local/bin"
+    # echo 'export PATH="$PATH:/home/$USER/.local/bin"' >> ~/.bashrc
+    # echo 'export PATH="$PATH:/home/$USER/.local/bin"' >> ~/.profile
+    # echo 'export PATH="$PATH:/home/$USER/.local/bin"' >> ~/.bash_profile
+    # echo 'export PATH="$PATH:/home/$USER/.local/bin"' >> ~/.zsh
+else
+    echo -e "${INFO} pipx is already in PATH.${NC}"
+fi
 
 # configure pipx
 python3 -m pipx ensurepath
@@ -77,6 +93,10 @@ pipx upgrade-all
 # install git hook scripts
 pre-commit install --hook-type pre-commit --hook-type pre-push
 pre-commit autoupdate
+
+
+# Run pre-commit gc to clean up old hooks
+pre-commit gc
 
 # # Get Proxmox dynamic inventory plugin
 # # needs the ansible module to run
