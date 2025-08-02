@@ -50,9 +50,33 @@ echo -e "Running on shell options: ${B}$(set | grep -E 'PROMPT_COMMAND|PS4')${NC
 echo -e "${INFO} Updating system packages...${NC}"
 apt update && apt -y upgrade
 
+# install required packages
+echo -e "${INFO} Installing required packages...${NC}"
+apt install -y \
+    build-essential \
+    curl \
+    wget \
+    git \
+    vim \
+    htop \
+    jq \
+    tree \
+    unzip \
+    zip \
+    software-properties-common \
+    apt-transport-https \
+    ca-certificates \
+    ncdu \
+    zsh \
+    bash-completion \
+    autojump \
+    fonts-powerline
+
+# install Python 3.11 modules
+echo -e "${INFO} Installing Python ${PYTHON_VERSION}...${NC}"
 
 # install pip and pipx
-apt install -y python3-pip python${PYTHON_VERSION}-venv pipx python3-passlib ncdu
+apt install -y python3-pip python${PYTHON_VERSION}-venv pipx python3-passlib
 
 # use ncdu to check disk usage
 echo -e "${INFO} Checking disk usage with ncdu...${NC}"
@@ -65,7 +89,8 @@ if ! command -v pipx &> /dev/null; then
     # echo 'export PATH="$PATH:/home/$USER/.local/bin"' >> ~/.bashrc
     # echo 'export PATH="$PATH:/home/$USER/.local/bin"' >> ~/.profile
     # echo 'export PATH="$PATH:/home/$USER/.local/bin"' >> ~/.bash_profile
-    # echo 'export PATH="$PATH:/home/$USER/.local/bin"' >> ~/.zsh
+    # echo 'export PATH="$PATH:/home/$USER/.local/bin"' >> ~/.zshrc
+    echo -e "${INFO} pipx added to PATH. Please restart your terminal or run 'source ~/.bashrc' to apply changes.${NC}"
 else
     echo -e "${INFO} pipx is already in PATH.${NC}"
 fi
