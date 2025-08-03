@@ -78,10 +78,6 @@ echo -e "${INFO} Installing Python ${PYTHON_VERSION}...${NC}"
 # install pip and pipx
 apt install -y python3-pip python${PYTHON_VERSION}-venv pipx python3-passlib
 
-# use ncdu to check disk usage
-echo -e "${INFO} Checking disk usage with ncdu...${NC}"
-ncdu --exclude .cache --exclude .local --exclude .config --exclude .vscode
-
 # ensure pipx is available in the PATH
 if ! command -v pipx &> /dev/null; then
     echo -e "${INFO} pipx not found, adding to PATH...${NC}"
@@ -119,7 +115,6 @@ pipx upgrade-all
 pre-commit install --hook-type pre-commit --hook-type pre-push
 pre-commit autoupdate
 
-
 # Run pre-commit gc to clean up old hooks
 pre-commit gc
 
@@ -130,3 +125,7 @@ pre-commit gc
 #     wget -O ansible/proxmox.py \
 #     https://github.com/xezpeleta/Ansible-Proxmox-inventory/raw/master/proxmox.py
 # fi
+
+# use ncdu to check disk usage
+echo -e "${INFO} Checking disk usage with ncdu...${NC}"
+ncdu --exclude .cache --exclude .local --exclude .config --exclude .vscode
