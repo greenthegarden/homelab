@@ -11,7 +11,7 @@
     dozzle_service_port: 8080
 
     # Beszel facts
-    beszel_image: henrygd/beszel:0.12.2 # renovate: datasource=docker depName=ahenrygd/beszel
+    beszel_image: henrygd/beszel:0.12.3 # renovate: datasource=docker depName=ahenrygd/beszel
     beszel_service_name: beszel
     beszel_service_port: 8090
 
