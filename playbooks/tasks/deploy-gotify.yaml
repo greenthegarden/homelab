@@ -1,0 +1,125 @@
+---
+- name: deploy-gotify | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+# https://hub.docker.com/r/gotify/gotify
+# https://gotify.net/docs/traefik
+# https://github.com/1RandomDev/homeassistant-gotify
+
+- name: deploy-gotify | Set Gotify facts
+  ansible.builtin.set_fact:
+    gotify_image: "{{ gotify_image | default('gotify/server:latest') }}"
+    gotify_image_tag: "{{ gotify_image_tag | default('latest') }}"
+    gotify_service_name: "{{ gotify_service_name | default('gotify') }}"
+    gotify_service_port: "{{ gotify_service_port | default(80) }}"
+
+- name: deploy-gotify | Set Gotify aggregated facts
+  ansible.builtin.set_fact:
+    gotify_fqdn: "{{ gotify_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: deploy-gotify | Set Gotify service facts
+  ansible.builtin.set_fact:
+    gotify_networks:
+      - name: "{{ web_network_name | default('web') }}"
+    gotify_ports:
+      - "{{ gotify_service_port }}:80"
+    gotify_volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-gotify | Create Gotify container labels
+  ansible.builtin.set_fact:
+    gotify_container_labels: "{{ gotify_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    - {
+      "key": "traefik.http.routers.{{ gotify_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ gotify_service_name }}.rule",
+      "value": "Host(`{{ gotify_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ gotify_service_name }}.service",
+      "value": "{{ gotify_service_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ gotify_service_name }}.tls",
+      "value": "true",
+    }
+    - {
+      "key": "traefik.http.services.{{ gotify_service_name }}.loadbalancer.server.port",
+      "value": "{{ gotify_service_port_api | quote }}",
+    }
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/gotify/gotify/releases/tag/v${major}.${minor}.${patch}",
+    }
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Monitoring" }
+    - { "key": "homepage.name", "value": "Messaging" }
+    - { "key": "homepage.description", "value": "Gotify" }
+    - { "key": "homepage.icon", "value": "gotify.png" }
+    - { "key": "homepage.href", "value": "https://{{ gotify_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ gotify_fqdn }}/" }
+
+- name: deploy-gotify | Check if Gotify is running
+  community.docker.docker_container_info:
+    name: "{{ gotify_service_name }}"
+  register: gotify_state
+
+- name: deploy-gotify | Remove Gotify container if changing version
+  when:
+    - gotify_state.exists
+    - (gotify_image | split(':') | last) != (gotify_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-gotify | Stop and remove existing GOTIFY container
+      community.docker.docker_container:
+        name: "{{ gotify_service_name }}"
+        state: absent
+
+    - name: deploy-gotify | Set update Gotify
+      ansible.builtin.set_fact:
+        gotify_update: true
+
+- name: deploy-gotify | Deploy Gotify if not running
+  when:
+    - not gotify_state.exists or (gotify_update | default(false))
+  block:
+    - name: deploy-gotify | Pull Gotify image
+      community.docker.docker_image:
+        name: "{{ gotify_image }}"
+        source: pull
+
+    - name: deploy-gotify | Deploy Gotify
+      community.docker.docker_container:
+        name: "{{ gotify_service_name }}"
+        image: "{{ gotify_image }}"
+        detach: true
+        labels: "{{ gotify_container_labels }}"
+        networks_cli_compatible: true
+        networks: "{{ gotify_networks }}"
+        published_ports: "{{ gotify_ports }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ gotify_volumes }}"
+      register: gotify_container_state
+
+    - name: deploy-gotify | Wait for GOTIFY to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ gotify_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: gotify_running
+      until: gotify_running is success
+      retries: 10

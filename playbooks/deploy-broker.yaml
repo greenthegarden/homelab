@@ -13,6 +13,11 @@
     emqx_data_volume_name: data
     emqx_log_volume_name: log
 
+    # Gotify facts
+    gotify_image: gotify/server:2.1.0 # renovate: datasource=docker depName=gotify/server
+    gotify_service_name: gotify
+    gotify_service_port: 80 # Default HTTP port for Gotify
+
   tasks:
 
     - name: Load homelab vars
