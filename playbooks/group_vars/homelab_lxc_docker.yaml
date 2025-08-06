@@ -17,7 +17,7 @@ web_network_internal: false
 
 # Containerised service facts
 # Docker Volume Backup facts
-docker_volume_backup_image: offen/docker-volume-backup:v2.43.4
+docker_volume_backup_image: offen/docker-volume-backup:v2.44.0
 docker_volume_backup_service_name: docker-volume-backup
 docker_volume_backup_local_archive_dir: /root/backups
 # Dozzle Agent facts
