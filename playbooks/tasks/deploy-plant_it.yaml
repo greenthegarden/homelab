@@ -3,11 +3,11 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
-####### Plant it SECTION
+####### Plant-it SECTION
 
 # https://docs.plant-it.org/0.9.0/server-installation/#quickstart
 
-- name: deploy-plant_it | Set Plant it facts
+- name: deploy-plant_it | Set Plant-it facts
   ansible.builtin.set_fact:
     plant_it_image: "{{ plant_it_image | default('msdeluise/plant-it-server:latest') }}"
     plant_it_service_name: "{{ plant_it_service_name | default('plant-it') }}"
@@ -17,12 +17,12 @@
     plant_it_db_backup_volume_name: "{{ plant_it_db_backup_volume_name | default('plant_it_db_backup') }}"
     plant_it_config_dir: /root/plant-it
 
-- name: deploy-plant_it | Set Plant it aggregated facts
+- name: deploy-plant_it | Set Plant-it aggregated facts
   ansible.builtin.set_fact:
     plant_it_fqdn: "{{ plant_it_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
     plant_it_api_fqdn: "{{ plant_it_service_name }}-api.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
 
-- name: deploy-plant_it | Set Plant it service facts
+- name: deploy-plant_it | Set Plant-it service facts
   ansible.builtin.set_fact:
     plant_it_networks:
       - name: "{{ web_network_name | default('web') }}"
@@ -34,7 +34,7 @@
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
-- name: deploy-plant_it | Create Plant it container labels
+- name: deploy-plant_it | Create Plant-it container labels
   ansible.builtin.set_fact:
     plant_it_container_labels: "{{ plant_it_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -90,7 +90,7 @@
     }
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
-    - { "key": "homepage.name", "value": "Plant it" }
+    - { "key": "homepage.name", "value": "Plant-it" }
     - {
       "key": "homepage.description",
       "value": "Beautiful, Simple, Self-Hostable Gardening Companion App",
@@ -99,7 +99,7 @@
     - { "key": "homepage.href", "value": "https://{{ plant_it_fqdn }}" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ plant_it_fqdn }}" }
 
-# - name: deploy-plant_it | Create Plant it DB container labels
+# - name: deploy-plant_it | Create Plant-it DB container labels
 #   ansible.builtin.set_fact:
 #     plant_it_db_container_labels: "{{ plant_it_db_container_labels | default({}) | combine({item.key: item.value}) }}"
 #   with_items:
@@ -110,13 +110,13 @@
 #       -p{{ plant_it.db_password }} --all-databases > /tmp/dumps/dump.sql'"
 #     }
 
-- name: deploy-plant_it | Create Plant it configuration directory
+- name: deploy-plant_it | Create Plant-it configuration directory
   ansible.builtin.file:
     path: "{{ plant_it_config_dir }}"
     state: directory
     mode: "0644"
 
-- name: deploy-plant_it | Create Plant it configuration
+- name: deploy-plant_it | Create Plant-it configuration
   ansible.builtin.template:
     src: "templates/plant-it/{{ item }}.j2"
     dest: "{{ plant_it_config_dir }}/{{ item }}"
@@ -125,17 +125,17 @@
     - docker-compose.yml
     - plant_it.env
 
-- name: deploy-plant_it | Create Plant it backup volume # noqa: syntax-check[unknown-module]
+- name: deploy-plant_it | Create Plant-it backup volume # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ plant_it_db_backup_volume_name }}"
     state: present
 
 # - name: Tear down existing services
 #   community.docker.docker_compose_v2:
-#     project_src: /root/Plant it
+#     project_src: /root/Plant-it
 #     state: absent
 
-- name: deploy-plant_it | Deploy Plant it services # noqa: syntax-check[unknown-module]
+- name: deploy-plant_it | Deploy Plant-it services # noqa: syntax-check[unknown-module]
   community.docker.docker_compose_v2:
     project_src: "{{ plant_it_config_dir }}"
     env_files:
