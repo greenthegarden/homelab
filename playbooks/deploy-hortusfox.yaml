@@ -12,6 +12,8 @@
     hortusfox_db_backup_volume_name: hortusfox_db_backup
 
     # Plant-it facts
+    # Note use following address to access Plant-it:
+    # https://plant-it-api.hortusfox.homelab.greenthegarden.com
     plant_it_image: msdeluise/plant-it-server:0.10.0
     plant_it_service_name: plant-it
     plant_it_service_port_ui: 3000
