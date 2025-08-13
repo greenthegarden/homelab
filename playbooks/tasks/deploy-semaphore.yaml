@@ -16,7 +16,7 @@
     semaphore_volume_data_name: "{{ semaphore_volume_data_name | default('semaphore_data') }}"
     semaphore_volume_config_name: "{{ semaphore_volume_config_name | default('semaphore_config') }}"
     semaphore_volume_tmp_name: "{{ semaphore_volume_tmp_name | default('semaphore_tmp') }}"
-    semaphore_db_dialect: "{{ semaphore_db_dialect | default('bolt') }}"
+    semaphore_db_dialect: "{{ semaphore_db_dialect | default('sqlite') }}"
 
 - name: deploy-semaphore | Set Semaphore aggregated facts
   ansible.builtin.set_fact:

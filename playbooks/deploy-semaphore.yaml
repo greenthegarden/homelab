@@ -6,13 +6,13 @@
   vars:
 
     # Semaphore facts
-    semaphore_image: semaphoreui/semaphore:v2.15.7
+    semaphore_image: semaphoreui/semaphore:v2.16.10
     semaphore_service_name: semaphore
     semaphore_service_port: 3000
     semaphore_volume_data_name: semaphore_data
     semaphore_volume_config_name: semaphore_config
     semaphore_volume_tmp_name: semaphore_tmp
-    semaphore_db_dialect: bolt
+    semaphore_db_dialect: sqlite
 
   tasks:
 
