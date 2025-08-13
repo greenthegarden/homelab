@@ -12,7 +12,7 @@
     semaphore_volume_data_name: semaphore_data
     semaphore_volume_config_name: semaphore_config
     semaphore_volume_tmp_name: semaphore_tmp
-    semaphore_db_dialect: sqlite
+    semaphore_db_dialect: bolt
 
   tasks:
 
