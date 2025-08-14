@@ -19,11 +19,9 @@ fi
 # Enable errtrace or the error trap handler will not work as expected
 set -o errtrace         # Ensure the error trap handler is inherited
 
-PYTHON_VERSION=3.11
-
 # R='\033[0;31m'   #'0;31' is Red's ANSI color code
 # G='\033[0;32m'   #'0;32' is Green's ANSI color code
-# Y='\033[1;32m'   #'1;32' is Yellow's ANSI color code
+# Y='\033[1;33m'   #'1;33' is Yellow's ANSI color code
 B='\033[0;34m'   #'0;34' is Blue's ANSI color code
 NC='\033[0m'     # No Color
 
@@ -40,12 +38,10 @@ echo -e "Running on architecture: ${B}$(uname -m)${NC}"
 # shellcheck disable=SC2116,SC2086
 echo -e "Running on shell: ${B}$(echo $SHELL)${NC}"
 echo -e "Running on shell version: ${B}$(bash --version | head -n 1)${NC}"
-echo -e "Running on shell options: ${B}$(shopt)${NC}"
-echo -e "Running on shell options: ${B}$(set | grep -E 'DEBUG|PS1|PS2|PS4')${NC}"
-echo -e "Running on shell options: ${B}$(set | grep -E 'BASH|BASH_VERSION|BASH_ENV')${NC}"
-echo -e "Running on shell options: ${B}$(set | grep -E 'PROMPT_COMMAND|PS4')${NC}"
-
-
+# echo -e "Running on shell options: ${B}$(shopt)${NC}"
+# echo -e "Running on shell options: ${B}$(set | grep -E 'DEBUG|PS1|PS2|PS4')${NC}"
+# echo -e "Running on shell options: ${B}$(set | grep -E 'BASH|BASH_VERSION|BASH_ENV')${NC}"
+# echo -e "Running on shell options: ${B}$(set | grep -E 'PROMPT_COMMAND|PS4')${NC}"
 
 echo -e "${INFO} Updating system packages...${NC}"
 apt update && apt -y upgrade
@@ -72,44 +68,49 @@ apt install -y \
     autojump \
     fonts-powerline
 
-# install Python 3.11 modules
-echo -e "${INFO} Installing Python ${PYTHON_VERSION}...${NC}"
-
-# install pip and pipx
-apt install -y python3-pip python${PYTHON_VERSION}-venv pipx python3-passlib
-
-# ensure pipx is available in the PATH
-if ! command -v pipx &> /dev/null; then
-    echo -e "${INFO} pipx not found, adding to PATH...${NC}"
-    export PATH="$PATH:/home/$USER/.local/bin"
-    # echo 'export PATH="$PATH:/home/$USER/.local/bin"' >> ~/.bashrc
-    # echo 'export PATH="$PATH:/home/$USER/.local/bin"' >> ~/.profile
-    # echo 'export PATH="$PATH:/home/$USER/.local/bin"' >> ~/.bash_profile
-    # echo 'export PATH="$PATH:/home/$USER/.local/bin"' >> ~/.zshrc
-    echo -e "${INFO} pipx added to PATH. Please restart your terminal or run 'source ~/.bashrc' to apply changes.${NC}"
+# install oh-my-zsh
+# https://ohmyz.sh/
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+    echo -e "${INFO} Installing oh-my-zsh...${NC}"
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" --unattended
 else
-    echo -e "${INFO} pipx is already in PATH.${NC}"
+    echo -e "${INFO} oh-my-zsh is already installed.${NC}"
 fi
 
-# configure pipx
-python3 -m pipx ensurepath
+# # install zsh plugins
+# if [ ! -d "$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions" ]; then
+#     echo -e "${INFO} Installing zsh-autosuggestions plugin...${NC}"
 
-python_app_modules=(
-    ansible
-    docker
-    jmespath
-    pre-commit
-    yamllint
-    ansible-lint
-)
+# install uv
+# https://docs.astral.sh/uv/getting-started/installation/
+if ! command -v uvx &> /dev/null; then
+    echo -e "${INFO} Installing uv...${NC}"
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+else
+    echo -e "${INFO} uv is already installed.${NC}"
+fi
 
-# now use pipx to install the defined modules
-for module in "${python_app_modules[@]}"; do
-    pipx install --include-deps "$module"
-done
+mkdir -p "$HOME/.local/bin"
+export PATH="$HOME/.local/bin:$PATH"
+# export UVX_HOME="$HOME/.local/share/uvx"
+# export UVX_CACHE="$HOME/.cache/uvx"
+# export UVX_CONFIG="$HOME/.config/uvx"
 
-# apply any upgrades
-pipx upgrade-all
+PYTHON_VERSION=3.13
+# install PYTHON_VERSION
+if ! uv python list | grep -q "python@${PYTHON_VERSION}"; then
+    echo -e "${INFO} Installing Python ${PYTHON_VERSION} via uv...${NC}"
+    uv python install ${PYTHON_VERSION}
+else
+    echo -e "${INFO} Upgrading Python installations.${NC}"
+    uv python upgrade
+fi
+
+# install ansible and ansible-lint via uv
+uv tool install --python 3.13 --with-executables-from ansible-core,ansible-lint ansible
+
+# https://adamj.eu/tech/2025/05/07/pre-commit-install-uv/
+uv tool install --python 3.13 pre-commit --with pre-commit-uv
 
 # install git hook scripts
 pre-commit install --hook-type pre-commit --hook-type pre-push
@@ -127,5 +128,33 @@ pre-commit gc
 # fi
 
 # use ncdu to check disk usage
-echo -e "${INFO} Checking disk usage with ncdu...${NC}"
-ncdu --exclude .cache --exclude .local --exclude .config --exclude .vscode
+# echo -e "${INFO} Checking disk usage with ncdu...${NC}"
+# ncdu --exclude .cache --exclude .local --exclude .config --exclude .vscode
+
+# uninstalled autopep8! ✨ 🌟 ✨
+# uninstalled jmespath! ✨ 🌟 ✨
+# uninstalled requests! ✨ 🌟 ✨
+# uninstalled pylint! ✨ 🌟 ✨
+# uninstalled ansible-lint! ✨ 🌟 ✨
+# uninstalled docker! ✨ 🌟 ✨
+# uninstalled flake8! ✨ 🌟 ✨
+# uninstalled yamllint! ✨ 🌟 ✨
+# uninstalled pycodestyle! ✨ 🌟 ✨
+# uninstalled molecule! ✨ 🌟 ✨
+# uninstalled black! ✨ 🌟 ✨
+
+# add aliases to .zshrc
+ZSHRC="$HOME/.zshrc"
+if ! grep -q "alias uvx=" "$ZSHRC"; then
+    echo -e "${INFO} Adding aliases to .zshrc...${NC}"
+    {
+        echo "alias uvx='uv tool run --python 3.13 --with-executables-from ansible-core,ansible-lint,pre-commit-uv'"
+        echo "alias ansible='uvx --from ansible-core ansible'"
+        echo "alias ansible-lint='uvx --from ansible-lint ansible-lint'"
+        echo "alias ansible-playbook='uvx --from ansible-core ansible-playbook'"
+        echo "alias pre-commit='uvx --from pre-commit-uv pre-commit'"
+    } >> "$ZSHRC"
+    echo -e "${INFO} Aliases added to .zshrc.${NC}"
+else
+    echo -e "${INFO} Aliases already exist in .zshrc.${NC}"
+fi
