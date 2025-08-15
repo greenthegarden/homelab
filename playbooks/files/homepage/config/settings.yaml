@@ -87,6 +87,10 @@ layout:
       tab: Finance
       style: row
       columns: 3
+  - Firefly III Accounts:
+      tab: Finance
+      style: row
+      columns: 2
   - Firefly III Reports:
       tab: Finance
       style: row
