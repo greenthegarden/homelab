@@ -91,11 +91,15 @@ layout:
       tab: Finance
       style: row
       columns: 2
+  - Firefly III Reports:
+      tab: Finance
+      style: row
+      columns: 2
   - Firefly III Expense Reports:
       tab: Finance
       style: row
       columns: 2
-  - Firefly III Category Reports:
+  - Firefly III Income Reports:
       tab: Finance
       style: row
       columns: 2
