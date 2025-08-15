@@ -91,7 +91,19 @@ layout:
       tab: Finance
       style: row
       columns: 2
-  - Firefly III Reports:
+  - Firefly III Expense Reports:
+      tab: Finance
+      style: row
+      columns: 2
+  - Firefly III Category Reports:
+      tab: Finance
+      style: row
+      columns: 2
+  - Firefly III Person Reports:
+      tab: Finance
+      style: row
+      columns: 2
+  - Firefly III Audit Reports:
       tab: Finance
       style: row
       columns: 2
