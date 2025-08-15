@@ -30,6 +30,7 @@ layout:
       tab: Main
       style: row
       columns: 2
+# Website Tab links
   - Services:
       tab: Websites
       style: row
@@ -47,10 +48,6 @@ layout:
       style: row
       columns: 3
   - Environment:
-      tab: Websites
-      style: row
-      columns: 3
-  - Finance:
       tab: Websites
       style: row
       columns: 3
@@ -85,6 +82,11 @@ layout:
       tab: Secondary
   - Storage:
       tab: Secondary
+# Finance Tab links
+  - Finance:
+      tab: Finance
+      style: row
+      columns: 3
   - Firefly III Reports:
       tab: Finance
       style: row
