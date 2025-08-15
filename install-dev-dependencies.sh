@@ -70,7 +70,7 @@ apt install -y \
 
 # install oh-my-zsh
 # https://ohmyz.sh/
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
+if [ ! -d "${HOME}/.oh-my-zsh" ]; then
     echo -e "${INFO} Installing oh-my-zsh...${NC}"
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" --unattended
 else
@@ -90,7 +90,7 @@ else
     echo -e "${INFO} uv is already installed.${NC}"
 fi
 
-mkdir -p "$HOME/.local/bin"
+mkdir -p "${HOME}/.local/bin"
 export PATH="$HOME/.local/bin:$PATH"
 # export UVX_HOME="$HOME/.local/share/uvx"
 # export UVX_CACHE="$HOME/.cache/uvx"
@@ -107,10 +107,10 @@ else
 fi
 
 # install ansible and ansible-lint via uv
-uv tool install --python 3.13 --with-executables-from ansible-core,ansible-lint ansible
+uv tool install --python ${PYTHON_VERSION} --with-executables-from ansible-core,ansible-lint ansible
 
 # https://adamj.eu/tech/2025/05/07/pre-commit-install-uv/
-uv tool install --python 3.13 pre-commit --with pre-commit-uv
+uv tool install --python ${PYTHON_VERSION} pre-commit --with pre-commit-uv
 
 # install git hook scripts
 pre-commit install --hook-type pre-commit --hook-type pre-push
@@ -148,7 +148,6 @@ ZSHRC="$HOME/.zshrc"
 if ! grep -q "alias uvx=" "$ZSHRC"; then
     echo -e "${INFO} Adding aliases to .zshrc...${NC}"
     {
-        echo "alias uvx='uv tool run --python 3.13 --with-executables-from ansible-core,ansible-lint,pre-commit-uv'"
         echo "alias ansible='uvx --from ansible-core ansible'"
         echo "alias ansible-lint='uvx --from ansible-lint ansible-lint'"
         echo "alias ansible-playbook='uvx --from ansible-core ansible-playbook'"
@@ -158,3 +157,17 @@ if ! grep -q "alias uvx=" "$ZSHRC"; then
 else
     echo -e "${INFO} Aliases already exist in .zshrc.${NC}"
 fi
+
+# source .zshrc to apply changes
+if [[ -f "$ZSHRC" ]]; then
+    echo -e "${INFO} Sourcing .zshrc to apply changes...${NC}"
+    # shellcheck source=${HOME}/.zshrc
+    # shellcheck disable=SC1090
+    # shellcheck disable=SC1091
+    source "$ZSHRC"
+else
+    echo -e "${INFO} .zshrc not found, skipping sourcing.${NC}"
+fi
+
+# print final message
+echo -e "${INFO} Development dependencies installed successfully!${NC}"

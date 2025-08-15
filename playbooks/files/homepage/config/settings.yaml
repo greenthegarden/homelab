@@ -85,3 +85,7 @@ layout:
       tab: Secondary
   - Storage:
       tab: Secondary
+  - Firefly III Reports:
+      tab: Finance
+      style: row
+      columns: 2
