@@ -26,36 +26,32 @@
 
 - name: deploy-traefik | Set Traefik service facts
   ansible.builtin.set_fact:
+
     traefik_command:
       #### These are the CLI commands that will configure Traefik and tell it how to work! ####
-      ## Global settings
-      - "--global.checkNewVersion=false"
-      - "--global.sendAnonymousUsage=false"
-      ## Log Settings (options: ERROR, DEBUG, PANIC, FATAL, WARN, INFO) - https://docs.traefik.io/observability/logs/ ##
-      - "--log.level=DEBUG" # <== Setting the level of the logs from traefik
-      - "--log.format=json"
+
       ## API Settings - https://docs.traefik.io/operations/api/, endpoints - https://docs.traefik.io/operations/api/#endpoints ##
       - "--api.dashboard=true" # <== Enabling the dashboard to view services, middlewares, routers, etc...
       - "--api.insecure=true" # <== Enabling insecure api, NOT RECOMMENDED FOR PRODUCTION
       - "--api.debug=true" # <== Enabling additional endpoints for debugging and profiling
-      ## Entrypoints Settings - https://docs.traefik.io/routing/entrypoints/#configuration ##
-      - "--entryPoints.web.address=:10080" # <== Defining an entrypoint for port :80 named web
-      - "--entryPoints.web.http.redirections.entryPoint.to=websecure"
-      - "--entryPoints.web.http.redirections.entryPoint.scheme=https"
-      - "--entryPoints.websecure.address=:10443"
+
       ## Certificate Settings (Let's Encrypt) -  https://docs.traefik.io/https/acme/#configuration-examples ##
-      - "--certificatesResolvers.cloudflare.acme.email=greenthegarden@gmail.com"
-      - "--certificatesResolvers.cloudflare.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=0"
+      - "--certificatesResolvers.letsencrypt.acme.dnsChallenge.provider=cloudflare"
+      - "--certificatesResolvers.letsencrypt.acme.dnsChallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
+
+      - "--certificatesResolvers.letsencrypt.acme.email=greenthegarden@gmail.com"
+      - "--certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+
       # CA server to use.
       # Uncomment the line to use Let's Encrypt's staging server,
       # leave commented to go to prod.
       #
       # Optional
       # Default: "https://acme-v02.api.letsencrypt.org/directory"
-      # - "--certificatesResolvers.cloudflare.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
-      - "--certificatesResolvers.cloudflare.acme.dnsChallenge.provider=cloudflare"
-      - "--certificatesResolvers.cloudflare.acme.dnsChallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
-      - "--serversTransport.insecureSkipVerify=true"
+      - "--certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
+
       ## Docker Provider Settings - https://docs.traefik.io/providers/docker/#provider-configuration ##
       - "--providers.docker=true"
       # https://medium.com/@containeroo/traefik-2-0-paranoid-about-mounting-var-run-docker-sock-22da9cb3e78c
@@ -63,26 +59,46 @@
       - "--providers.docker.endpoint=tcp://{{ docker_socket_proxy_service_name }}:{{ docker_socket_proxy_service_port }}"
       - "--providers.docker.network={{ web_network_name }}"
       - "--providers.docker.watch=true"
+
+      ## Entrypoints Settings - https://docs.traefik.io/routing/entrypoints/#configuration ##
+      - "--entryPoints.web.address=:10080" # <== Defining an entrypoint for port :80 named web
+      - "--entryPoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entryPoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entryPoints.websecure.address=:10443"
+      - "--serversTransport.insecureSkipVerify=true"
+
+      ## Global settings
+      - "--global.checkNewVersion=false"
+      - "--global.sendAnonymousUsage=false"
+
+      ## Log Settings (options: ERROR, DEBUG, PANIC, FATAL, WARN, INFO) - https://docs.traefik.io/observability/logs/ ##
+      - "--log.level=DEBUG" # <== Setting the level of the logs from traefik
+      - "--log.format=json"
+
       # Configure ping for health check
       - "--ping=true"
-      # ## Prometheus metrics - https://doc.traefik.io/traefik/observability/metrics/prometheus/
-      - "--entryPoints.metrics.address=:8082"
-      - "--metrics.prometheus=true"
-      - "--metrics.prometheus.addServicesLabels=true"
-      # ## Create a manual router instead of the default one
-      - --metrics.prometheus.manualRouting=true
-      - --metrics.prometheus.addRoutersLabels=true
-      - "--metrics.prometheus.entryPoint=metrics"
-      - "--metrics.prometheus.addEntryPointsLabels=true"
+
+      # # ## Prometheus metrics - https://doc.traefik.io/traefik/observability/metrics/prometheus/
+      # - "--entryPoints.metrics.address=:8082"
+      # - "--metrics.prometheus=true"
+      # - "--metrics.prometheus.addServicesLabels=true"
+      # # ## Create a manual router instead of the default one
+      # - --metrics.prometheus.manualRouting=true
+      # - --metrics.prometheus.addRoutersLabels=true
+      # - "--metrics.prometheus.entryPoint=metrics"
+      # - "--metrics.prometheus.addEntryPointsLabels=true"
+
     traefik_networks:
       - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
       - name: "{{ monitoring_network_name | default('monitoring') }}"
       - name: "{{ web_network_name | default('web') }}" # <== Placing traefik on the network named web, to access containers on this network
+
     traefik_ports:
       # use high ports inside the container so
       # we don't need to be root to bind the ports
       - "{{ traefik_service_port_http }}:10080"
       - "{{ traefik_service_port_secure }}:10443"
+
     traefik_volumes:
       # - /var/run/docker.sock:/var/run/docker.sock:ro
       # - /root/.env:./env-file:ro
@@ -152,7 +168,7 @@
     }
     - {
       "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.certresolver",
-      "value": "cloudflare",
+      "value": "letsencrypt",
     }
     - {
       "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.domains[0].main",
