@@ -50,7 +50,7 @@
       #
       # Optional
       # Default: "https://acme-v02.api.letsencrypt.org/directory"
-      - "--certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
+      # - "--certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
 
       ## Docker Provider Settings - https://docs.traefik.io/providers/docker/#provider-configuration ##
       - "--providers.docker=true"
