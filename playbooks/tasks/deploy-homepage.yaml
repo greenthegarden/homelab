@@ -54,6 +54,10 @@
       "key": "traefik.http.routers.{{ homepage_service_name }}.tls",
       "value": "true",
     }
+    - {
+      "key": "traefik.http.routers.{{ homepage_service_name }}.tls.certresolver",
+      "value": "letsencrypt",
+    }
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {

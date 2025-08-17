@@ -18,6 +18,7 @@
     - [Ansible linting](#ansible-linting)
     - [Ansible naming conventions](#ansible-naming-conventions)
   - [Semaphore UI](#semaphore-ui)
+  - [Nextcloud](#nextcloud)
 - [Monitoring and Alerting](#monitoring-and-alerting)
   - [Monitoring Tools](#monitoring-tools)
   - [Monitoring System](#monitoring-system)
@@ -275,6 +276,44 @@ TO DO: update code to align with naming convention
 
 [Semaphore UI][semaphore] is used to manage and run the various Ansible artifacts, including the inventories, and playbooks. All initial provisioning of the services within the Homelab
 is  run from Semaphore. The history of all playbook runs is maintained within Semaphore UI in order to be able to monitor the the outcome of each run.
+
+### Nextcloud
+
+[Nextcloud][nextcloud] is deployed on to a Proxmox Virtual Machine using [Nextcloud AOI][nextcloud-aio]. Includes a `docker-compose.yaml` file, which is run using the following
+
+```bash
+docker compose up --detach
+```
+
+In addition, it is deployed behind an instance of Nginx Proxy Manager and DuckDNS to provide it with a valid certificate. A Portainer Agent instance is also deployed to manage containers.
+
+[nextcloud-aio]: https://nextcloud.com/blog/how-to-install-the-nextcloud-all-in-one-on-linux/
+
+The Portainer Agent is deployed using the following script.
+
+```bash
+docker run -d \
+  -p 9001:9001 \
+  --name portainer_agent \
+  --restart=always  \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /var/lib/docker/volumes:/var/lib/docker/volumes \
+  -v /:/host \
+  portainer/agent:2.32.0-alpine
+```
+
+<!-- The Nginx Proxy Manager is deployed using the following script.
+
+```bash
+docker run -d \
+  --name nginx-proxy-manager \
+  --env DISABLE_IPV6=true \
+  --network=host \
+  --restart=unless-stopped \
+  -v /home/nextcloud/data:/data:rw \
+  -v /home/nextcloud/letsencrypt:/etc/letsencrypt:rw \
+  docker.io/jc21/nginx-proxy-manager:latest
+``` -->
 
 ## Monitoring and Alerting
 
