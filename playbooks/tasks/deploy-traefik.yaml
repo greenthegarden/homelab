@@ -176,7 +176,7 @@
     }
     - {
       "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.domains[0].sans",
-      "value": "*.homelab.{{ homelab.domain }}",
+      "value": "*.{{ homelab.domain }}",
     }
     # - "traefik.http.routers.traefik-secure.service=api@internal"
     - {
