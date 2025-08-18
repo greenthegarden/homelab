@@ -1,6 +1,16 @@
 {
   "recommendations": [
-     "redhat.ansible",
-     "ms-python.python"
+    "redhat.ansible",
+    "aaron-bond.better-comments",
+    "github.copilot",
+    "github.copilot-chat",
+    "codezombiech.gitignore",
+    "eamodio.gitlens",
+    "hashicorp.hcl",
+    "shd101wyy.markdown-preview-enhanced",
+    "davidanson.vscode-markdownlint",
+    "esbenp.prettier-vscode",
+    "gruntfuggly.todo-tree",
+    "redhat.vscode-yaml"
   ]
 }

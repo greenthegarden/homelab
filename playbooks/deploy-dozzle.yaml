@@ -15,6 +15,11 @@
     beszel_service_name: beszel
     beszel_service_port: 8090
 
+    # Beszel facts
+    it_tools_image: corentinth/it-tools:2024.10.22-7ca5933 # renovate: datasource=docker depName=corentinth/it-tools
+    it_tools_service_name: it-tools
+    it_tools_service_port: 8080
+
   tasks:
 
     - name: Load homelab vars
@@ -28,3 +33,7 @@
     - name: Deploy a containerised instance of Beszel
       ansible.builtin.include_tasks:
         file: tasks/deploy-beszel.yaml
+
+    # - name: Deploy a containerised instance of IT Tools
+    #   ansible.builtin.include_tasks:
+    #     file: tasks/deploy-ittools.yaml

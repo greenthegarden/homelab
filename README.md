@@ -14,6 +14,7 @@
   - [Storage Server Software](#storage-server-software)
   - [Homelab Applications and Services](#homelab-applications-and-services)
 - [Provisioning](#provisioning)
+  - [Network Infrastucutre](#network-infrastucutre)
   - [Ansible](#ansible)
     - [Ansible linting](#ansible-linting)
     - [Ansible naming conventions](#ansible-naming-conventions)
@@ -242,6 +243,17 @@ Underpinning the applications are a number of support services:
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/wazuh.svg" height="25" width="auto" alt="Wazuh"> [Wazuh Agent][wazuhagent] - Wazuh agent for endpoints. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 
 ## Provisioning
+
+### Network Infrastucutre
+
+TODO: Add details about setting up domain and DNS entries (Cloudflare, Letsencrypt, etc)
+
+TODO: Include ways of testing DNS records, and what the outputs mean. For example,
+
+```bash
+nslookup <domain>
+dig <domain>
+```
 
 ### Ansible
 
