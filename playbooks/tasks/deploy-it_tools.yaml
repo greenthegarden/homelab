@@ -1,0 +1,104 @@
+---
+- name: deploy-it_tools | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### IT-TOOLS SECTION
+
+# https://github.com/CorentinTh/it-tools
+
+- name: deploy-it_tools | Set It-tools facts
+  ansible.builtin.set_fact:
+    it_tools_image: "{{ it_tools_image | default('corentinth/it-tools:latest') }}"
+    it_tools_service_name: "{{ it_tools_service_name | default('it-tools') }}"
+    it_tools_service_port: "{{ it_tools_service_port | default(8080) }}"
+
+- name: deploy-it_tools | Set It-tools aggregated facts
+  ansible.builtin.set_fact:
+    it_tools_fqdn: "{{ it_tools_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: deploy-it_tools | Set It-tools service facts
+  ansible.builtin.set_fact:
+    it_tools_networks:
+      - name: "{{ web_network_name | default('web') }}"
+    it_tools_ports:
+      - "{{ it_tools_service_port }}:8080"
+    it_tools_volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-it_tools | Create It-tools container labels
+  ansible.builtin.set_fact:
+    it_tools_container_labels: "{{ it_tools_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    - {
+      "key": "traefik.http.routers.{{ it_tools_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ it_tools_service_name }}.rule",
+      "value": "Host(`{{ it_tools_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.routers.{{ it_tools_service_name }}.service",
+      "value": "{{ it_tools_service_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ it_tools_service_name }}.tls",
+      "value": "true",
+    }
+    - {
+      "key": "traefik.http.services.{{ it_tools_service_name }}.loadbalancer.server.port",
+      "value": "{{ it_tools_service_port | quote }}",
+    }
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/CorentinTh/it-tools/releases/tag/v${major}.${minor}.${patch}",
+    }
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Monitoring" }
+    - { "key": "homepage.name", "value": "It-tools" }
+    - {
+      "key": "homepage.description",
+      "value": "Useful tools for developer and people working in IT",
+    }
+    - { "key": "homepage.icon", "value": "it-tools.png" }
+    - { "key": "homepage.href", "value": "https://{{ it_tools_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ it_tools_fqdn }}/" }
+
+- name: deploy-it_tools | Pull It-tools image
+  community.docker.docker_image:
+    name: "{{ it_tools_image }}"
+    source: pull
+
+# docker run -d --name it-tools --restart unless-stopped -p 8080:80 corentinth/it-tools:latest
+- name: deploy-it_tools | Deploy It-tools
+  community.docker.docker_container:
+    name: "{{ it_tools_service_name }}"
+    image: "{{ it_tools_image }}"
+    detach: true
+    labels: "{{ (it_tools_container_labels | default({})) | default(omit) }}"
+    networks_cli_compatible: true
+    networks: "{{ it_tools_networks }}"
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    volumes: "{{ it_tools_volumes }}"
+  register: it_tools_container_state
+
+- name: deploy-it_tools | Wait for It-tools to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ it_tools_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: it_tools_running
+  until: it_tools_running is success
+  retries: 10
