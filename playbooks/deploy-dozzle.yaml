@@ -44,7 +44,7 @@
     # Beszel facts
     it_tools_image: corentinth/it-tools:2024.10.22-7ca5933 # renovate: datasource=docker depName=corentinth/it-tools
     it_tools_service_name: it-tools
-    it_tools_service_port: 8080
+    it_tools_service_port: 80
 
   tasks:
 

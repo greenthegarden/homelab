@@ -11,7 +11,7 @@
   ansible.builtin.set_fact:
     it_tools_image: "{{ it_tools_image | default('corentinth/it-tools:latest') }}"
     it_tools_service_name: "{{ it_tools_service_name | default('it-tools') }}"
-    it_tools_service_port: "{{ it_tools_service_port | default(8080) }}"
+    it_tools_service_port: "{{ it_tools_service_port | default(80) }}"
 
 - name: deploy-it_tools | Set It-tools aggregated facts
   ansible.builtin.set_fact:
@@ -21,8 +21,6 @@
   ansible.builtin.set_fact:
     it_tools_networks:
       - name: "{{ web_network_name | default('web') }}"
-    it_tools_ports:
-      - "{{ it_tools_service_port }}:8080"
     it_tools_volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -53,6 +51,10 @@
     - {
       "key": "traefik.http.services.{{ it_tools_service_name }}.loadbalancer.server.port",
       "value": "{{ it_tools_service_port | quote }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ homepage_service_name }}.tls.certresolver",
+      "value": "letsencrypt",
     }
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }

@@ -24,8 +24,6 @@
     homepage_networks:
       - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
       - name: "{{ web_network_name | default('web') }}"
-    homepage_ports:
-      - "{{ homepage_service_port | default(3000) }}:3000"
     homepage_volumes:
       - "{{ homepage_config_dir }}/config:/app/config"
       - /etc/localtime:/etc/localtime:ro

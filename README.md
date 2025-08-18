@@ -255,6 +255,8 @@ nslookup <domain>
 dig <domain>
 ```
 
+[DNS Checker](https://dnschecker.org/) offers a capability to check records.
+
 ### Ansible
 
 [Ansible] is used to define and automate the configuration of the Linux containers, including the installation of Docker, and deployment of the containerised applications. The
