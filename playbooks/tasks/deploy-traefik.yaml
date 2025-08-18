@@ -40,7 +40,7 @@
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=0"
       - "--certificatesResolvers.letsencrypt.acme.dnsChallenge.provider=cloudflare"
       - "--certificatesResolvers.letsencrypt.acme.dnsChallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
-
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.propagation.delayBeforeChecks=60s"
       - "--certificatesResolvers.letsencrypt.acme.email=greenthegarden@gmail.com"
       - "--certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
 
