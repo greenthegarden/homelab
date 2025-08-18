@@ -53,7 +53,7 @@
       "value": "{{ it_tools_service_port | quote }}",
     }
     - {
-      "key": "traefik.http.routers.{{ homepage_service_name }}.tls.certresolver",
+      "key": "traefik.http.routers.{{ it_tools_service_name }}.tls.certresolver",
       "value": "letsencrypt",
     }
     # What's up Docker? labels
