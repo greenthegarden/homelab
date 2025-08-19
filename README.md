@@ -255,6 +255,16 @@ nslookup <domain>
 dig <domain>
 ```
 
+Check TXT Record Creation
+
+Manually verify that _acme-challenge.greenthegarden.com exists:
+
+```bash
+dig TXT _acme-challenge.greenthegarden.com
+```
+
+If it returns NXDOMAIN, the record hasn’t been created or propagated.
+
 [DNS Checker](https://dnschecker.org/) offers a capability to check records.
 
 ### Ansible
