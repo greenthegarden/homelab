@@ -48,7 +48,7 @@
       #
       # Optional
       # Default: "https://acme-v02.api.letsencrypt.org/directory"
-      # - "--certificatesResolvers.cloudflare.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesResolvers.cloudflare.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
 
       ## Docker Provider Settings - https://docs.traefik.io/providers/docker/#provider-configuration ##
       - "--providers.docker=true"
@@ -135,7 +135,7 @@
     # - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
     - {
       "key": "traefik.http.middlewares.traefik-auth.basicauth.users",
-      "value": "admin:$$2y$$05$$Dkh7QIkBIex/l3hxH6oCXumT3DaJkbbWDW7cveoRLLrB0syGU5nze",
+      "value": "{{ traefik.dashboard_credentials }}",
     }
     - {
       "key": "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme",
