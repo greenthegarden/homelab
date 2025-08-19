@@ -31,15 +31,18 @@
       #### These are the CLI commands that will configure Traefik and tell it how to work! ####
 
       ## API Settings - https://docs.traefik.io/operations/api/, endpoints - https://docs.traefik.io/operations/api/#endpoints ##
+      ## ---------------------------------------------------------------
       - "--api.dashboard=true" # <== Enabling the dashboard to view services, middlewares, routers, etc...
       - "--api.insecure=true" # <== Enabling insecure api, NOT RECOMMENDED FOR PRODUCTION
       - "--api.debug=true" # <== Enabling additional endpoints for debugging and profiling
 
       ## Certificate Settings (Let's Encrypt) -  https://docs.traefik.io/https/acme/#configuration-examples ##
+      ## ---------------------------------------------------------------
       - "--certificatesresolvers.cloudflare.acme.dnschallenge=true"
-      - "--certificatesResolvers.cloudflare.acme.dnsChallenge.provider=cloudflare"
+      - "--certificatesResolvers.cloudflare.acme.dnsChallenge.provider={{ acme.provider }}"
       - "--certificatesResolvers.cloudflare.acme.dnsChallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
       # - "--certificatesresolvers.cloudflare.acme.dnschallenge.propagation.delayBeforeChecks=60s"
+      - "--certificatesResolvers.cloudflare.acme.email={{ acme.email }}"
       - "--certificatesResolvers.cloudflare.acme.storage=/letsencrypt/acme.json"
 
       # CA server to use.
@@ -51,32 +54,41 @@
       - "--certificatesResolvers.cloudflare.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
 
       ## Docker Provider Settings - https://docs.traefik.io/providers/docker/#provider-configuration ##
+      ## https://medium.com/@containeroo/traefik-2-0-paranoid-about-mounting-var-run-docker-sock-22da9cb3e78c
+      ## ---------------------------------------------------------------
       - "--providers.docker=true"
-      # https://medium.com/@containeroo/traefik-2-0-paranoid-about-mounting-var-run-docker-sock-22da9cb3e78c
       - "--providers.docker.exposedByDefault=false"
       - "--providers.docker.endpoint=tcp://{{ docker_socket_proxy_service_name }}:{{ docker_socket_proxy_service_port }}"
       - "--providers.docker.network={{ web_network_name }}"
       - "--providers.docker.watch=true"
 
       ## Entrypoints Settings - https://docs.traefik.io/routing/entrypoints/#configuration ##
+      ## ---------------------------------------------------------------
+      ## http entrypoints
       - "--entryPoints.web.address=:10080" # <== Defining an entrypoint for port :80 named web
       - "--entryPoints.web.http.redirections.entryPoint.to=websecure"
       - "--entryPoints.web.http.redirections.entryPoint.scheme=https"
+      ## https entrypoints
       - "--entryPoints.websecure.address=:10443"
+      ##
       - "--serversTransport.insecureSkipVerify=true"
 
       ## Global settings
+      ## ---------------------------------------------------------------
       - "--global.checkNewVersion=false"
       - "--global.sendAnonymousUsage=false"
 
       ## Log Settings (options: ERROR, DEBUG, PANIC, FATAL, WARN, INFO) - https://docs.traefik.io/observability/logs/ ##
+      ## ---------------------------------------------------------------
       - "--log.level=INFO" # <== Setting the level of the logs from traefik
       - "--log.format=json"
 
       # Configure ping for health check
+      ## ---------------------------------------------------------------
       - "--ping=true"
 
       # # ## Prometheus metrics - https://doc.traefik.io/traefik/observability/metrics/prometheus/
+      ## ---------------------------------------------------------------
       # - "--entryPoints.metrics.address=:8082"
       # - "--metrics.prometheus=true"
       # - "--metrics.prometheus.addServicesLabels=true"
@@ -108,11 +120,14 @@
   ansible.builtin.set_fact:
     traefik_container_labels: "{{ traefik_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # Traefik configuration labels
+    # ---------------------------------------------------------------
     # - "traefik.enable=true"
     - { "key": "traefik.enable", "value": "true" }
     - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
 
     # Traefik routers for http via port 80
+    # ---------------------------------------------------------------
     # - "traefik.http.routers.traefik.entrypoints=http"
     # - "traefik.http.routers.traefik.rule=Host(`traefik.homelab.greenthegarden.com`)"
     # - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
@@ -130,6 +145,7 @@
     }
 
     # Traefik middlewares
+    # ---------------------------------------------------------------
     # - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
     # - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
     # - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
@@ -147,6 +163,7 @@
     }
 
     # Traefik routers for https (secure) via port 443
+    # ---------------------------------------------------------------
     # - "traefik.http.routers.traefik-secure.entrypoints=https"
     # - "traefik.http.routers.traefik-secure.rule=Host(`traefik.hostname.homelab.greenthegarden.com`)"
     # - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
@@ -164,6 +181,7 @@
     #   }
 
     # Traefik secure router TLS configuration
+    # ---------------------------------------------------------------
     # - "traefik.http.routers.traefik-secure.tls=true"
     # - "traefik.http.routers.traefik-secure.tls.certresolver=cloudflare"
     # - "traefik.http.routers.traefik-secure.tls.domains[0].main=homelab.greenthegarden.com"
@@ -189,7 +207,9 @@
       "key": "traefik.http.routers.{{ traefik_service_name }}-https.service",
       "value": "api@internal",
     }
-    # Metrics router configuration
+
+    # Traefik metrics router configuration
+    # ---------------------------------------------------------------
     # - {
     #   "key": "traefik.http.routers.metrics.rule",
     #   "value": "Host(`{{ traefik_fqdn }}`) && PathPrefix(`/metrics`)",
@@ -203,6 +223,7 @@
     #   "key": "traefik.http.routers.metrics.service",
     #   "value": "prometheus@internal",
     # }
+
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
