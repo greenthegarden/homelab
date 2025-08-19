@@ -39,7 +39,7 @@
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
       - "--certificatesResolvers.letsencrypt.acme.dnsChallenge.provider=cloudflare"
       - "--certificatesResolvers.letsencrypt.acme.dnsChallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
-      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.propagation.delayBeforeChecks=60s"
+      # - "--certificatesresolvers.letsencrypt.acme.dnschallenge.propagation.delayBeforeChecks=60s"
       - "--certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
 
       # CA server to use.
@@ -228,7 +228,8 @@
     command: "{{ traefik_command }}"
     detach: true
     env:
-      CF_API_EMAIL: "{{ acme.cloudflare.api_email }}"
+      # Cloudflare API credentials for DNS challenge
+      ## For details see https://go-acme.github.io/lego/dns/cloudflare/
       CF_DNS_API_TOKEN: "{{ acme.cloudflare.dns_api_token }}"
     healthcheck:
       test: ["CMD", "traefik", "healthcheck", "--ping"]
