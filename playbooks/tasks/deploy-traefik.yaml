@@ -36,11 +36,11 @@
       - "--api.debug=true" # <== Enabling additional endpoints for debugging and profiling
 
       ## Certificate Settings (Let's Encrypt) -  https://docs.traefik.io/https/acme/#configuration-examples ##
-      - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
-      - "--certificatesResolvers.letsencrypt.acme.dnsChallenge.provider=cloudflare"
-      - "--certificatesResolvers.letsencrypt.acme.dnsChallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
-      # - "--certificatesresolvers.letsencrypt.acme.dnschallenge.propagation.delayBeforeChecks=60s"
-      - "--certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.cloudflare.acme.dnschallenge=true"
+      - "--certificatesResolvers.cloudflare.acme.dnsChallenge.provider=cloudflare"
+      - "--certificatesResolvers.cloudflare.acme.dnsChallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
+      # - "--certificatesresolvers.cloudflare.acme.dnschallenge.propagation.delayBeforeChecks=60s"
+      - "--certificatesResolvers.cloudflare.acme.storage=/letsencrypt/acme.json"
 
       # CA server to use.
       # Uncomment the line to use Let's Encrypt's staging server,
@@ -70,7 +70,7 @@
       - "--global.sendAnonymousUsage=false"
 
       ## Log Settings (options: ERROR, DEBUG, PANIC, FATAL, WARN, INFO) - https://docs.traefik.io/observability/logs/ ##
-      - "--log.level=DEBUG" # <== Setting the level of the logs from traefik
+      - "--log.level=INFO" # <== Setting the level of the logs from traefik
       - "--log.format=json"
 
       # Configure ping for health check
