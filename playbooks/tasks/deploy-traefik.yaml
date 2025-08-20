@@ -38,12 +38,14 @@
 
       ## Certificate Settings (Let's Encrypt) -  https://docs.traefik.io/https/acme/#configuration-examples ##
       ## ---------------------------------------------------------------
-      - "--certificatesresolvers.cloudflare.acme.dnschallenge=true"
-      - "--certificatesResolvers.cloudflare.acme.dnsChallenge.provider={{ acme.provider }}"
-      - "--certificatesResolvers.cloudflare.acme.dnsChallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
-      # - "--certificatesresolvers.cloudflare.acme.dnschallenge.propagation.delayBeforeChecks=60s"
-      - "--certificatesResolvers.cloudflare.acme.emailaddresses={{ acme.email }}"
-      - "--certificatesResolvers.cloudflare.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesResolvers.letsencrypt.acme.email={{ acme.email }}"
+      - "--certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
+      - "--certificatesResolvers.letsencrypt.acme.dnsChallenge.provider={{ acme.provider }}"
+      - "--certificatesResolvers.letsencrypt.acme.dnsChallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.propagation.delayBeforeChecks=120s"
+
 
       # CA server to use.
       # Uncomment the line to use Let's Encrypt's staging server,
@@ -51,7 +53,7 @@
       #
       # Optional
       # Default: "https://acme-v02.api.letsencrypt.org/directory"
-      - "--certificatesResolvers.cloudflare.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
 
       ## Docker Provider Settings - https://docs.traefik.io/providers/docker/#provider-configuration ##
       ## https://medium.com/@containeroo/traefik-2-0-paranoid-about-mounting-var-run-docker-sock-22da9cb3e78c
@@ -70,6 +72,11 @@
       - "--entryPoints.web.http.redirections.entryPoint.scheme=https"
       ## https entrypoints
       - "--entryPoints.websecure.address=:10443"
+      # ## Set up the TLS configuration for the websecure entrypoint
+      # - "--entryPoints.websecure.http.tls=true" # <== Enabling TLS for the websecure entrypoint
+      # - "--entryPoints.websecure.http.tls.certResolver=letsencrypt" # <== Using the Let's Encrypt resolver for TLS certificates
+      # - "--entryPoints.websecure.http.tls.domains[0].main={{ homelab.lan_domain }}" # <== Main domain for TLS
+      # - "--entryPoints.websecure.http.tls.domains[0].sans=*.{{ homelab.lan_domain }}" # <== Subject Alternative Names for TLS
       ##
       - "--serversTransport.insecureSkipVerify=true"
 
@@ -192,15 +199,15 @@
     }
     - {
       "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.certresolver",
-      "value": "cloudflare",
+      "value": "letsencrypt",
     }
     - {
       "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.domains[0].main",
-      "value": "{{ homelab.domain }}",
+      "value": "{{ homelab.lan_domain }}",
     }
     - {
       "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.domains[0].sans",
-      "value": "*.{{ homelab.domain }}",
+      "value": "*.{{ homelab.lan_domain }}",
     }
     # - "traefik.http.routers.traefik-secure.service=api@internal"
     - {
@@ -260,6 +267,7 @@
       # Cloudflare API credentials for DNS challenge
       ## For details see https://go-acme.github.io/lego/dns/cloudflare/
       CF_DNS_API_TOKEN: "{{ acme.cloudflare.dns_api_token }}"
+      CF_API_EMAIL: "{{ acme.cloudflare.api_email }}" # <== Should not need this if using token
     healthcheck:
       test: ["CMD", "traefik", "healthcheck", "--ping"]
       interval: 10s

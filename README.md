@@ -267,6 +267,26 @@ If it returns NXDOMAIN, the record hasn’t been created or propagated.
 
 [DNS Checker](https://dnschecker.org/) offers a capability to check records.
 
+Verify DNS Record Exists
+
+Use dig or nslookup to check if the TXT record is present:
+
+```bash
+dig TXT _acme-challenge.greenthegarden.com
+```
+
+If it returns NXDOMAIN, the record doesn't exist or hasn't propagated yet.
+
+Check Authoritative Nameservers
+
+Confirm that ns1.dnsowl.com is indeed authoritative for greenthegarden.com:
+
+```bash
+dig NS greenthegarden.com
+```
+
+If DNSOwl isn’t listed, update your domain registrar to point to the correct nameservers.
+
 ### Ansible
 
 [Ansible] is used to define and automate the configuration of the Linux containers, including the installation of Docker, and deployment of the containerised applications. The
