@@ -71,11 +71,11 @@
       - "--entryPoints.web.http.redirections.entryPoint.scheme=https"
       ## https entrypoints
       - "--entryPoints.websecure.address=:10443"
-      # ## Set up the TLS configuration for the websecure entrypoint
-      # - "--entryPoints.websecure.http.tls=true" # <== Enabling TLS for the websecure entrypoint
-      # - "--entryPoints.websecure.http.tls.certResolver=letsencrypt" # <== Using the Let's Encrypt resolver for TLS certificates
-      # - "--entryPoints.websecure.http.tls.domains[0].main={{ homelab.domain }}" # <== Main domain for TLS
-      # - "--entryPoints.websecure.http.tls.domains[0].sans=*.{{ homelab.domain }}" # <== Subject Alternative Names for TLS
+      ## Set up the TLS configuration for the websecure entrypoint
+      - "--entryPoints.websecure.http.tls=true" # <== Enabling TLS for the websecure entrypoint
+      - "--entryPoints.websecure.http.tls.certResolver=letsencrypt" # <== Using the Let's Encrypt resolver for TLS certificates
+      - "--entryPoints.websecure.http.tls.domains[0].main={{ homelab.domain }}" # <== Main domain for TLS
+      - "--entryPoints.websecure.http.tls.domains[0].sans=*.{{ homelab.domain }}" # <== Subject Alternative Names for TLS
       ##
       - "--serversTransport.insecureSkipVerify=true"
 
@@ -130,25 +130,25 @@
     # ---------------------------------------------------------------
     # - "traefik.enable=true"
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    # - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
 
     # Traefik routers for http via port 80
     # ---------------------------------------------------------------
     # - "traefik.http.routers.traefik.entrypoints=http"
     # - "traefik.http.routers.traefik.rule=Host(`traefik.homelab.greenthegarden.com`)"
     # - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
-    - {
-      "key": "traefik.http.routers.{{ traefik_service_name }}-http.entrypoints",
-      "value": "web",
-    }
-    - {
-      "key": "traefik.http.routers.{{ traefik_service_name }}-http.rule",
-      "value": "Host(`{{ traefik_fqdn }}`)",
-    }
-    - {
-      "key": "traefik.http.routers.{{ traefik_service_name }}-http.middlewares",
-      "value": "traefik-https-redirect",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ traefik_service_name }}-http.entrypoints",
+    #   "value": "web",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ traefik_service_name }}-http.rule",
+    #   "value": "Host(`{{ traefik_fqdn }}`)",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ traefik_service_name }}-http.middlewares",
+    #   "value": "traefik-https-redirect",
+    # }
 
     # Traefik middlewares
     # ---------------------------------------------------------------
@@ -159,10 +159,10 @@
       "key": "traefik.http.middlewares.traefik-auth.basicauth.users",
       "value": "{{ traefik.dashboard_credentials }}",
     }
-    - {
-      "key": "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme",
-      "value": "https",
-    }
+    # - {
+    #   "key": "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme",
+    #   "value": "https",
+    # }
     - {
       "key": "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto",
       "value": "https",
@@ -192,22 +192,22 @@
     # - "traefik.http.routers.traefik-secure.tls.certresolver=cloudflare"
     # - "traefik.http.routers.traefik-secure.tls.domains[0].main=homelab.greenthegarden.com"
     # - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.homelab.greenthegarden.com"
-    - {
-      "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls",
-      "value": "true",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls",
+    #   "value": "true",
+    # }
     - {
       "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.certresolver",
       "value": "letsencrypt",
     }
-    - {
-      "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.domains[0].main",
-      "value": "{{ homelab.domain }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.domains[0].sans",
-      "value": "*.{{ homelab.domain }}",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.domains[0].main",
+    #   "value": "{{ homelab.domain }}",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.domains[0].sans",
+    #   "value": "*.{{ homelab.domain }}",
+    # }
     # - "traefik.http.routers.traefik-secure.service=api@internal"
     - {
       "key": "traefik.http.routers.{{ traefik_service_name }}-https.service",
