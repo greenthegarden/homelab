@@ -6,7 +6,9 @@
   vars:
 
     # Portainer facts
-    portainer_image: portainer/portainer-ce:2.32.0-alpine
+    # Ensure image version is also updated in group_vars/homelab_lxc_docker.yaml.
+    # TODO: Ensure variables set here are used in group_vars
+    portainer_image: portainer/portainer-ce:2.33.0-alpine
     portainer_service_name: portainer
     portainer_service_port: 9000
     portainer_volume_name: portainer
