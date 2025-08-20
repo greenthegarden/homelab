@@ -86,7 +86,7 @@
 
       ## Log Settings (options: ERROR, DEBUG, PANIC, FATAL, WARN, INFO) - https://docs.traefik.io/observability/logs/ ##
       ## ---------------------------------------------------------------
-      - "--log.level=INFO" # <== Setting the level of the logs from traefik
+      - "--log.level=DEBUG" # <== Setting the level of the logs from traefik
       - "--log.format=json"
 
       # Configure ping for health check
