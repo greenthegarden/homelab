@@ -7,6 +7,7 @@
 # https://doc.traefik.io/traefik/reference/static-configuration/env/
 # https://medium.com/@joshuaavalon/setup-traefik-v2-step-by-step-fae44ed8f76d
 # https://github.com/scafer/traefik-duckdns-letsencrypt/tree/main
+# https://community.traefik.io/t/failing-to-get-certs-over-dns-challenge/25653
 
 - name: deploy-traefik | Set Traefik facts
   ansible.builtin.set_fact:
@@ -23,6 +24,7 @@
 
 # https://github.com/karvounis/traefik-tutorial-docker-compose-files/blob/master/standalone/advanced/docker-compose.ping.yml
 # https://github.com/ChristianLempa/homelab/blob/main/traefik/traefik-demo-1/config/traefik.yaml
+
 
 - name: deploy-traefik | Set Traefik service facts
   ansible.builtin.set_fact:
@@ -130,7 +132,7 @@
     # ---------------------------------------------------------------
     # - "traefik.enable=true"
     - { "key": "traefik.enable", "value": "true" }
-    # - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    # - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" } <= Defined in static configuration
 
     # Traefik routers for http via port 80
     # ---------------------------------------------------------------
@@ -174,11 +176,11 @@
     # - "traefik.http.routers.traefik-secure.rule=Host(`traefik.hostname.homelab.greenthegarden.com`)"
     # - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
     - {
-      "key": "traefik.http.routers.{{ traefik_service_name }}-https.entrypoints",
+      "key": "traefik.http.routers.{{ traefik_service_name }}.entrypoints",
       "value": "websecure",
     }
     - {
-      "key": "traefik.http.routers.{{ traefik_service_name }}-https.rule",
+      "key": "traefik.http.routers.{{ traefik_service_name }}.rule",
       "value": "Host(`{{ traefik_fqdn }}`)",
     }
     # - {
@@ -196,10 +198,10 @@
     #   "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls",
     #   "value": "true",
     # }
-    - {
-      "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.certresolver",
-      "value": "letsencrypt",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ traefik_service_name }}.tls.certresolver",
+    #   "value": "letsencrypt",
+    # }
     # - {
     #   "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.domains[0].main",
     #   "value": "{{ homelab.domain }}",
@@ -210,7 +212,7 @@
     # }
     # - "traefik.http.routers.traefik-secure.service=api@internal"
     - {
-      "key": "traefik.http.routers.{{ traefik_service_name }}-https.service",
+      "key": "traefik.http.routers.{{ traefik_service_name }}.service",
       "value": "api@internal",
     }
 
