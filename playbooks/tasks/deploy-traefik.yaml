@@ -40,13 +40,13 @@
 
       ## Certificate Settings (Let's Encrypt) -  https://docs.traefik.io/https/acme/#configuration-examples ##
       ## ---------------------------------------------------------------
-      - "--certificatesResolvers.letsencrypt.acme.email={{ acme.email }}"
+      - "--certificatesResolvers.letsencrypt.acme.emailAddresses={{ acme.email }}"
       - "--certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
 
-      - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
-      - "--certificatesResolvers.letsencrypt.acme.dnschallenge.provider={{ acme.provider }}"
-      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
-      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.propagation.delayBeforeChecks=3000s"
+      - "--certificatesresolvers.letsencrypt.acme.dnsChallenge=true"
+      - "--certificatesResolvers.letsencrypt.acme.dnsChallenge.provider={{ acme.provider }}"
+      - "--certificatesresolvers.letsencrypt.acme.dnsChallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
+      - "--certificatesresolvers.letsencrypt.acme.dnsChallenge.propagation.delayBeforeChecks=3000s"
 
       # CA server to use.
       # Uncomment the line to use Let's Encrypt's staging server,
