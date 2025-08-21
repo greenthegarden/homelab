@@ -80,7 +80,7 @@
       - "--entryPoints.websecure.http.tls.domains[0].main={{ ansible_hostname }}.{{ homelab.lan_domain }}" # <== Main domain for TLS
       - "--entryPoints.websecure.http.tls.domains[0].sans=*.{{ ansible_hostname }}.{{ homelab.lan_domain }}" # <== Subject Alternative Names for TLS
       ##
-      - "--serversTransport.insecureSkipVerify=true"
+      # - "--serversTransport.insecureSkipVerify=true"
 
       ## Global settings
       ## ---------------------------------------------------------------
