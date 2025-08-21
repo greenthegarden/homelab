@@ -36,9 +36,9 @@
   ansible.builtin.set_fact:
     uptimekuma_container_labels: "{{ uptimekuma_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ uptimekuma_service_name }}.entrypoints",
       "value": "websecure",
@@ -48,10 +48,6 @@
       "value": "Host(`{{ uptimekuma_fqdn }}`)",
     }
     - {
-      "key": "traefik.http.routers.{{ uptimekuma_service_name }}.service",
-      "value": "{{ uptimekuma_service_name }}",
-    }
-    - {
       "key": "traefik.http.routers.{{ uptimekuma_service_name }}.tls",
       "value": "true",
     }
@@ -59,14 +55,17 @@
       "key": "traefik.http.services.{{ uptimekuma_service_name }}.loadBalancer.server.port",
       "value": "{{ uptimekuma_service_port }}",
     }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-alpine+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/louislam/uptime-kuma/releases/tag/${major}.${minor}.${patch}",
     }
+    # ---------------------------------------------------------------
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Monitoring" }
     - { "key": "homepage.name", "value": "Uptimekuma" }

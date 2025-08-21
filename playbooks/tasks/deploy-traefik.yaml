@@ -128,8 +128,8 @@
   ansible.builtin.set_fact:
     traefik_container_labels: "{{ traefik_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
-    # Traefik configuration labels to override default static configuration
     # ---------------------------------------------------------------
+    # Traefik configuration labels to override default static configuration
     - { "key": "traefik.enable", "value": "true" }
     - {
       "key": "traefik.http.middlewares.traefik-auth.basicauth.users",
@@ -148,8 +148,8 @@
       "value": "api@internal",
     }
 
-    # Traefik metrics router configuration
     # ---------------------------------------------------------------
+    # Traefik metrics router configuration
     # - {
     #   "key": "traefik.http.routers.metrics.rule",
     #   "value": "Host(`{{ traefik_fqdn }}`) && PathPrefix(`/metrics`)",
@@ -164,6 +164,7 @@
     #   "value": "prometheus@internal",
     # }
 
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {

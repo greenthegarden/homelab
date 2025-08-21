@@ -35,9 +35,9 @@
   ansible.builtin.set_fact:
     vaultwarden_container_labels: "{{ vaultwarden_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    # - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ vaultwarden_service_name }}.entrypoints",
       "value": "websecure",
@@ -46,26 +46,17 @@
       "key": "traefik.http.routers.{{ vaultwarden_service_name }}.rule",
       "value": "Host(`{{ vaultwarden_fqdn }}`)",
     }
-    # - {
-    #   "key": "traefik.http.routers.{{ vaultwarden_service_name }}.service",
-    #   "value": "{{ vaultwarden_service_name }}",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ vaultwarden_service_name }}.tls",
-    #   "value": "true",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ vaultwarden_service_name }}.tls.certresolver",
-    #   "value": "letsencrypt",
-    # }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-alpine+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/dani-garcia/vaultwarden/releases/tag/${major}.${minor}.${patch}",
     }
+    # ---------------------------------------------------------------
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Family" }
     - { "key": "homepage.name", "value": "Vaultwarden" }
@@ -110,7 +101,7 @@
     labels: "{{ vaultwarden_container_labels }}"
     networks_cli_compatible: true
     networks: "{{ vaultwarden_networks }}"
-    published_ports: "{{ vaultwarden_ports }}"
+    # published_ports: "{{ vaultwarden_ports }}"
     restart: true
     restart_policy: unless-stopped
     volumes: "{{ vaultwarden_volumes }}"
