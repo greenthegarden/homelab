@@ -46,7 +46,7 @@
       - "--certificatesresolvers.letsencrypt.acme.dnsChallenge=true"
       - "--certificatesResolvers.letsencrypt.acme.dnsChallenge.provider={{ acme.provider }}"
       - "--certificatesresolvers.letsencrypt.acme.dnsChallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
-      # - "--certificatesresolvers.letsencrypt.acme.dnsChallenge.propagation.delayBeforeChecks=3000s"
+      - "--certificatesresolvers.letsencrypt.acme.dnsChallenge.propagation.delayBeforeChecks=30s"
 
       # CA server to use.
       # Uncomment the line to use Let's Encrypt's staging server,
