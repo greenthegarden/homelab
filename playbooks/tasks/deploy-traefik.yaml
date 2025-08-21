@@ -130,51 +130,11 @@
   with_items:
     # Traefik configuration labels to override default static configuration
     # ---------------------------------------------------------------
-    # - "traefik.enable=true"
     - { "key": "traefik.enable", "value": "true" }
-    # - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" } <= Defined in static configuration
-
-    # Traefik routers for http via port 80
-    # ---------------------------------------------------------------
-    # - "traefik.http.routers.traefik.entrypoints=http"
-    # - "traefik.http.routers.traefik.rule=Host(`traefik.homelab.greenthegarden.com`)"
-    # - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
-    # - {
-    #   "key": "traefik.http.routers.{{ traefik_service_name }}-http.entrypoints",
-    #   "value": "web",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ traefik_service_name }}-http.rule",
-    #   "value": "Host(`{{ traefik_fqdn }}`)",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ traefik_service_name }}-http.middlewares",
-    #   "value": "traefik-https-redirect",
-    # }
-
-    # Traefik middlewares
-    # ---------------------------------------------------------------
-    # - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
-    # - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
-    # - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
     - {
       "key": "traefik.http.middlewares.traefik-auth.basicauth.users",
       "value": "{{ traefik.dashboard_credentials }}",
     }
-    # - {
-    #   "key": "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme",
-    #   "value": "https",
-    # }
-    # - {
-    #   "key": "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto",
-    #   "value": "https",
-    # }
-
-    # Traefik routers for https (secure) via port 443
-    # ---------------------------------------------------------------
-    # - "traefik.http.routers.traefik-secure.entrypoints=https"
-    # - "traefik.http.routers.traefik-secure.rule=Host(`traefik.hostname.homelab.greenthegarden.com`)"
-    # - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
     - {
       "key": "traefik.http.routers.{{ traefik_service_name }}.entrypoints",
       "value": "websecure",
@@ -183,34 +143,6 @@
       "key": "traefik.http.routers.{{ traefik_service_name }}.rule",
       "value": "Host(`{{ traefik_fqdn }}`)",
     }
-    # - {
-    #     "key": "traefik.http.routers.{{ traefik_service_name }}-https.middlewares",
-    #     "value": "traefik-auth",
-    #   }
-
-    # Traefik secure router TLS configuration
-    # ---------------------------------------------------------------
-    # - "traefik.http.routers.traefik-secure.tls=true"
-    # - "traefik.http.routers.traefik-secure.tls.certresolver=cloudflare"
-    # - "traefik.http.routers.traefik-secure.tls.domains[0].main=homelab.greenthegarden.com"
-    # - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.homelab.greenthegarden.com"
-    # - {
-    #   "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls",
-    #   "value": "true",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ traefik_service_name }}.tls.certresolver",
-    #   "value": "letsencrypt",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.domains[0].main",
-    #   "value": "{{ homelab.domain }}",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ traefik_service_name }}-https.tls.domains[0].sans",
-    #   "value": "*.{{ homelab.domain }}",
-    # }
-    # - "traefik.http.routers.traefik-secure.service=api@internal"
     - {
       "key": "traefik.http.routers.{{ traefik_service_name }}.service",
       "value": "api@internal",
