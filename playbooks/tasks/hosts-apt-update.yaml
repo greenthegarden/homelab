@@ -5,7 +5,7 @@
     that:
       - ansible_pkg_mgr is defined
       - ansible_pkg_mgr == 'apt'
-    fail_msg: "This playbook is only for systems using the apt package manager."
+    fail_msg: "These tasks are only for systems using the apt package manager."
 
 - name: hosts-apt-update | Update packages with apt
   ansible.builtin.apt:
