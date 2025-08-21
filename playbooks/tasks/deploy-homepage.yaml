@@ -36,7 +36,6 @@
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    # - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ homepage_service_name }}.entrypoints",
       "value": "websecure",
@@ -45,18 +44,6 @@
       "key": "traefik.http.routers.{{ homepage_service_name }}.rule",
       "value": "Host(`{{ homepage_fqdn }}`)",
     }
-    # - {
-    #   "key": "traefik.http.routers.{{ homepage_service_name }}.service",
-    #   "value": "{{ homepage_service_name }}",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ homepage_service_name }}.tls",
-    #   "value": "true",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ homepage_service_name }}.tls.certresolver",
-    #   "value": "letsencrypt",
-    # }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
