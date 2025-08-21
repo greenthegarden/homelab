@@ -46,7 +46,7 @@
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
       - "--certificatesResolvers.letsencrypt.acme.dnschallenge.provider={{ acme.provider }}"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
-      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.propagation.delayBeforeChecks=300s"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.propagation.delayBeforeChecks=3000s"
 
       # CA server to use.
       # Uncomment the line to use Let's Encrypt's staging server,
