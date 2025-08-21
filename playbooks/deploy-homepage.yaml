@@ -6,7 +6,7 @@
   vars:
 
     # Homepage facts
-    homepage_image: ghcr.io/gethomepage/homepage:v1.4.5
+    homepage_image: ghcr.io/gethomepage/homepage:v1.4.6
     homepage_service_name: homepage
     homepage_service_port: 3000
 

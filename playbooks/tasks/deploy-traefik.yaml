@@ -211,7 +211,7 @@
       timeout: 5s
       retries: 3
       start_period: 5s
-    labels: "{{ traefik_container_labels }}"
+    labels: "{{ traefik_container_labels | default(omit) }}"
     networks: "{{ traefik_networks }}"
     published_ports: "{{ traefik_ports }}"
     recreate: true # Recreate to ensure any configuration changes are used

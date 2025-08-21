@@ -98,11 +98,11 @@
 
 - name: deploy-vaultwarden | Deploy Vaultwarden
   community.docker.docker_container:
-    name: "{{ vaultwarden_service_name | default('vaultwarden') }}"
+    name: "{{ vaultwarden_service_name }}"
     image: "{{ vaultwarden_image }}"
     detach: true
     env_file: "{{ vaultwarden_config_dir }}/vaultwarden.env"
-    labels: "{{ vaultwarden_container_labels }}"
+    labels: "{{ vaultwarden_container_labels | default(omit) }}"
     networks_cli_compatible: true
     networks: "{{ vaultwarden_networks }}"
     restart: true
