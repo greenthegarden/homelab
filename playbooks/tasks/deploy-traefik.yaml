@@ -128,7 +128,7 @@
   ansible.builtin.set_fact:
     traefik_container_labels: "{{ traefik_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
-    # Traefik configuration labels
+    # Traefik configuration labels to override default static configuration
     # ---------------------------------------------------------------
     # - "traefik.enable=true"
     - { "key": "traefik.enable", "value": "true" }
