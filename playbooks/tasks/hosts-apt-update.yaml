@@ -1,11 +1,16 @@
 ---
 
+- name: hosts-apt-update | Check package manager is apt
+  ansible.builtin.assert:
+    that:
+      - ansible_pkg_mgr is defined
+      - ansible_pkg_mgr == 'apt'
+    fail_msg: "This playbook is only for systems using the apt package manager."
+
 - name: hosts-apt-update | Update packages with apt
-  when: ansible_pkg_mgr == 'apt'
   ansible.builtin.apt:
     update_cache: true
 
 - name: hosts-apt-update | Upgrade packages with apt
-  when: ansible_pkg_mgr == 'apt'
   ansible.builtin.apt:
     upgrade: dist
