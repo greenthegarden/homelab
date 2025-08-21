@@ -250,6 +250,8 @@ TODO: Add details about setting up domain and DNS entries (Cloudflare, Letsencry
 
 TODO: Include ways of testing DNS records, and what the outputs mean. For example,
 
+Follow instructions to [onboard a domain with Cloudflare](https://developers.cloudflare.com/fundamentals/manage-domains/add-site/)
+
 ```bash
 nslookup <domain>
 dig <domain>
@@ -260,7 +262,7 @@ Check TXT Record Creation
 Manually verify that _acme-challenge.greenthegarden.com exists:
 
 ```bash
-dig TXT _acme-challenge.greenthegarden.com
+dig TXT _acme-challenge.greenthegarden.com @1.1.1.1
 ```
 
 If it returns NXDOMAIN, the record hasn’t been created or propagated.
