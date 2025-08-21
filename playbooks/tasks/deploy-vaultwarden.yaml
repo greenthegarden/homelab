@@ -101,7 +101,6 @@
     labels: "{{ vaultwarden_container_labels }}"
     networks_cli_compatible: true
     networks: "{{ vaultwarden_networks }}"
-    # published_ports: "{{ vaultwarden_ports }}"
     restart: true
     restart_policy: unless-stopped
     volumes: "{{ vaultwarden_volumes }}"
