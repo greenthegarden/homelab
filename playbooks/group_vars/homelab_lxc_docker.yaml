@@ -47,7 +47,7 @@ traefik_image: traefik:3.5.0
 traefik_service_name: traefik
 traefik_service_port: 80
 traefik_service_port_http: 80
-traefik_service_port_secure: 443
+traefik_service_port_https: 443
 traefik_provider: docker
 traefik_volume_letsencrypt_name: letsencrypt
 

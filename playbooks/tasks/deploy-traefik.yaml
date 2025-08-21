@@ -14,7 +14,7 @@
     traefik_image: "{{ traefik_image | default('traefik:latest') }}"
     traefik_service_name: "{{ traefik_service_name | default('traefik') }}"
     traefik_service_port_http: "{{ traefik_service_port_http | default(80) }}"
-    traefik_service_port_secure: "{{ traefik_service_port_https | default(443) }}"
+    traefik_service_port_https: "{{ traefik_service_port_https | default(443) }}"
     traefik_provider: "{{ traefik_provider | default('docker') }}"
     traefik_volume_letsencrypt_name: "{{ traefik_volume_letsencrypt_name | default('letsencrypt') }}"
 
