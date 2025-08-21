@@ -77,8 +77,8 @@
       ## Set up the TLS configuration for the websecure entrypoint
       - "--entryPoints.websecure.http.tls=true" # <== Enabling TLS for the websecure entrypoint
       - "--entryPoints.websecure.http.tls.certResolver=letsencrypt" # <== Using the Let's Encrypt resolver for TLS certificates
-      - "--entryPoints.websecure.http.tls.domains[0].main={{ homelab.lan_domain }}" # <== Main domain for TLS
-      - "--entryPoints.websecure.http.tls.domains[0].sans=*.{{ homelab.lan_domain }}" # <== Subject Alternative Names for TLS
+      - "--entryPoints.websecure.http.tls.domains[0].main={{ ansible_hostname }}.{{ homelab.lan_domain }}" # <== Main domain for TLS
+      - "--entryPoints.websecure.http.tls.domains[0].sans=*.{{ ansible_hostname }}.{{ homelab.lan_domain }}" # <== Subject Alternative Names for TLS
       ##
       - "--serversTransport.insecureSkipVerify=true"
 
