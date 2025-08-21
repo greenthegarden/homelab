@@ -27,8 +27,12 @@
     semaphore_networks:
       - name: "{{ web_network_name | default('web') }}"
     semaphore_ports:
-      - "{{ semaphore_service_port | default(3000) }}:3000"
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ semaphore_service_port }}:3000"
     semaphore_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - "{{ semaphore_volume_data_name }}:/var/lib/semaphore"
       - "{{ semaphore_volume_config_name }}:/etc/semaphore"
       - "{{ semaphore_volume_tmp_name }}:/tmp/semaphore"
@@ -39,9 +43,9 @@
   ansible.builtin.set_fact:
     semaphore_container_labels: "{{ semaphore_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ semaphore_service_name }}.entrypoints",
       "value": "websecure",
@@ -54,26 +58,29 @@
       "key": "traefik.http.routers.{{ semaphore_service_name }}.rule",
       "value": "Host(`{{ semaphore_fqdn }}`)",
     }
-    - {
-      "key": "traefik.http.routers.{{ semaphore_service_name }}.service",
-      "value": "{{ semaphore_service_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ semaphore_service_name }}.tls",
-      "value": "true",
-    }
-    - {
-      "key": "traefik.http.services.{{ semaphore_service_name }}.loadBalancer.server.port",
-      "value": "{{ semaphore_service_port }}",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ semaphore_service_name }}.service",
+    #   "value": "{{ semaphore_service_name }}",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ semaphore_service_name }}.tls",
+    #   "value": "true",
+    # }
+    # - {
+    #   "key": "traefik.http.services.{{ semaphore_service_name }}.loadBalancer.server.port",
+    #   "value": "{{ semaphore_service_port }}",
+    # }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/semaphoreui/semaphore/releases/tag/v${major}.${minor}.${patch}",
     }
+    # ---------------------------------------------------------------
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "System" }
     - { "key": "homepage.name", "value": "Semaphore" }
@@ -146,7 +153,7 @@
           SEMAPHORE_ADMIN_NAME: "{{ semaphore.admin_name | default('dummy') }}"
           SEMAPHORE_ADMIN_EMAIL: "{{ semaphore.admin_email | default('dummy') }}"
           SEMAPHORE_MAX_TASKS_PER_TEMPLATE: "{{ 10 | quote | default(omit) }}"
-        labels: "{{ (semaphore_container_labels | default({})) | default(omit) }}"
+        labels: "{{ semaphore_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ semaphore_networks }}"
         restart: true

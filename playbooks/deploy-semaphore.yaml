@@ -6,7 +6,7 @@
   vars:
 
     # Semaphore facts
-    semaphore_image: semaphoreui/semaphore:v2.16.17
+    semaphore_image: semaphoreui/semaphore:v2.16.18
     semaphore_service_name: semaphore
     semaphore_service_port: 3000
     semaphore_volume_data_name: semaphore_data
