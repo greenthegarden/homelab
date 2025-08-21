@@ -40,7 +40,7 @@
 
       ## Certificate Settings (Let's Encrypt) -  https://docs.traefik.io/https/acme/#configuration-examples ##
       ## ---------------------------------------------------------------
-      - "--certificatesResolvers.letsencrypt.acme.emailAddresses={{ acme.email }}"
+      # - "--certificatesResolvers.letsencrypt.acme.emailAddresses={{ acme.email }}"
       - "--certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
 
       - "--certificatesresolvers.letsencrypt.acme.dnsChallenge=true"
