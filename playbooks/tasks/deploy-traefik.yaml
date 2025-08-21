@@ -14,7 +14,7 @@
     traefik_image: "{{ traefik_image | default('traefik:latest') }}"
     traefik_service_name: "{{ traefik_service_name | default('traefik') }}"
     traefik_service_port_http: "{{ traefik_service_port_http | default(80) }}"
-    traefik_service_port_secure: "{{ traefik_service_port_secure | default(443) }}"
+    traefik_service_port_secure: "{{ traefik_service_port_https | default(443) }}"
     traefik_provider: "{{ traefik_provider | default('docker') }}"
     traefik_volume_letsencrypt_name: "{{ traefik_volume_letsencrypt_name | default('letsencrypt') }}"
 
@@ -112,14 +112,16 @@
       - name: "{{ web_network_name | default('web') }}" # <== Placing traefik on the network named web, to access containers on this network
 
     traefik_ports:
+      # Published ports to expose outside the container
+      # host port:container port
       # use high ports inside the container so
       # we don't need to be root to bind the ports
       - "{{ traefik_service_port_http }}:10080"
-      - "{{ traefik_service_port_secure }}:10443"
+      - "{{ traefik_service_port_https }}:10443"
 
     traefik_volumes:
-      # - /var/run/docker.sock:/var/run/docker.sock:ro
-      # - /root/.env:./env-file:ro
+      # Local paths to mount into the container
+      # local path:container path
       - /root/letsencrypt:/letsencrypt:rw
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -192,6 +194,7 @@
     source: pull
 
 - name: deploy-traefik | Deploy Traefik with Docker as provider
+  when: traefik_provider == "docker"
   community.docker.docker_container:
     name: "{{ traefik_service_name }}"
     image: "{{ traefik_image }}"
@@ -219,7 +222,6 @@
     state: started
     volumes: "{{ traefik_volumes }}"
   register: traefik_container_state
-  when: traefik_provider == "docker"
 # - name: deploy-traefik | Wait for Traefik to accept connections
 #   ansible.builtin.wait_for:
 #     host: "{{ traefik_fqdn }}"
