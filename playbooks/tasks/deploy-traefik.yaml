@@ -40,7 +40,7 @@
 
       ## Certificate Settings (Let's Encrypt) -  https://docs.traefik.io/https/acme/#configuration-examples ##
       ## ---------------------------------------------------------------
-      # - "--certificatesResolvers.letsencrypt.acme.emailAddresses={{ acme.email }}"
+      - "--certificatesResolvers.letsencrypt.acme.email={{ acme.email }}"
       - "--certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
 
       - "--certificatesresolvers.letsencrypt.acme.dnsChallenge=true"
@@ -54,7 +54,7 @@
       #
       # Optional
       # Default: "https://acme-v02.api.letsencrypt.org/directory"
-      - "--certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
+      # - "--certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
 
       ## Docker Provider Settings - https://docs.traefik.io/providers/docker/#provider-configuration ##
       ## https://medium.com/@containeroo/traefik-2-0-paranoid-about-mounting-var-run-docker-sock-22da9cb3e78c
