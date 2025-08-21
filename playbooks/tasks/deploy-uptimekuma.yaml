@@ -47,14 +47,6 @@
       "key": "traefik.http.routers.{{ uptimekuma_service_name }}.rule",
       "value": "Host(`{{ uptimekuma_fqdn }}`)",
     }
-    # - {
-    #   "key": "traefik.http.routers.{{ uptimekuma_service_name }}.tls",
-    #   "value": "true",
-    # }
-    # - {
-    #   "key": "traefik.http.services.{{ uptimekuma_service_name }}.loadBalancer.server.port",
-    #   "value": "{{ uptimekuma_service_port }}",
-    # }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-alpine+$$' }
