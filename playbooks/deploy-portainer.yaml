@@ -10,7 +10,7 @@
     # TODO: Ensure variables set here are used in group_vars
     portainer_image: portainer/portainer-ce:2.33.0-alpine
     portainer_service_name: portainer
-    portainer_service_port: 9000
+    portainer_service_port: 9000 # <= specified in https://docs.portainer.io/advanced/reverse-proxy/traefik
     portainer_volume_name: portainer
 
   tasks:
