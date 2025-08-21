@@ -123,7 +123,6 @@
         labels: "{{ (uptimekuma_container_labels | default({})) | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ uptimekuma_networks }}"
-        ports: "{{ uptimekuma_ports }}"
         restart: true
         restart_policy: unless-stopped
         state: started
