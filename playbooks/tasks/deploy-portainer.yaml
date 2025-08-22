@@ -26,6 +26,8 @@
       - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
       - name: "{{ web_network_name | default('web') }}"
     portainer_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - "{{ portainer_volume_name }}:/data"
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /etc/localtime:/etc/localtime:ro
@@ -85,7 +87,7 @@
     detach: true
     env:
       DOCKER_HOST: tcp://docker-socket-proxy:2375
-    labels: "{{ portainer_container_labels }}"
+    labels: "{{ portainer_container_labels | default(omit) }}"
     networks_cli_compatible: true
     networks: "{{ portainer_networks }}"
     restart: true
