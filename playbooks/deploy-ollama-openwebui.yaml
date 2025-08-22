@@ -12,7 +12,7 @@
     ollama_volume_name: ollama
 
     # Open WebUI facts
-    open_webui_image: ghcr.io/open-webui/open-webui:0.6.22  # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
+    open_webui_image: ghcr.io/open-webui/open-webui:0.6.24  # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
     open_webui_service_name: open-webui
     open_webui_service_port: 8080
     open_webui_volume_name: open-webui

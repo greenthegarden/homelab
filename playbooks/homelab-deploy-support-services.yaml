@@ -1,7 +1,7 @@
 ---
 - name: Install and configure Docker and base containers
 
-  hosts: frigate # homelab_lxc_docker
+  hosts: homelab_lxc_docker
 
   vars:
 
