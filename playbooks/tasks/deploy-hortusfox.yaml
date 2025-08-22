@@ -11,7 +11,7 @@
   ansible.builtin.set_fact:
     hortusfox_image: "{{ hortusfox_image | default('ghcr.io/danielbrendel/hortusfox-web:latest') }}"
     hortusfox_service_name: "{{ hortusfox_service_name | default('hortusfox') }}"
-    hortusfox_service_port: "{{ hortusfox_service_port | default(8080) }}"
+    hortusfox_service_port: "{{ hortusfox_service_port | default(80) }}"
     hortusfox_db_backup_volume_name: "{{ hortusfox_db_backup_volume_name | default('hortusfox_db_backup') }}"
     hortusfox_config_dir: /root/hortusfox
 
@@ -24,8 +24,12 @@
     hortusfox_networks:
       - name: "{{ web_network_name | default('web') }}"
     hortusfox_ports:
-      - "{{ hortusfox_service_port | default(8080) }}:8080"
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ hortusfox_service_port }}:80"
     hortusfox_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - "{{ hortusfox_config_dir }}/config:/app/config"
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -34,9 +38,9 @@
   ansible.builtin.set_fact:
     hortusfox_container_labels: "{{ hortusfox_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ hortusfox_service_name }}.entrypoints",
       "value": "websecure",
@@ -45,24 +49,26 @@
       "key": "traefik.http.routers.{{ hortusfox_service_name }}.rule",
       "value": "Host(`{{ hortusfox_fqdn }}`)",
     }
-    - {
-      "key": "traefik.http.routers.{{ hortusfox_service_name }}.service",
-      "value": "{{ hortusfox_service_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ hortusfox_service_name }}.tls",
-      "value": "true",
-    }
-    - {
-      "key": "traefik.http.services.{{ hortusfox_service_name }}.loadbalancer.server.port",
-      "value": "80",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ hortusfox_service_name }}.service",
+    #   "value": "{{ hortusfox_service_name }}",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ hortusfox_service_name }}.tls",
+    #   "value": "true",
+    # }
+    # - {
+    #   "key": "traefik.http.services.{{ hortusfox_service_name }}.loadbalancer.server.port",
+    #   "value": "80",
+    # }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/danielbrendel/hortusfox-web/releases/tag/v${major}.${minor}.${patch}",
     }
+    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "HortusFox" }

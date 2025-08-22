@@ -3,7 +3,7 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
-####### Plant-it SECTION
+####### PLANT-IT SECTION
 
 # https://docs.plant-it.org/0.9.0/server-installation/#quickstart
 
@@ -27,9 +27,13 @@
     plant_it_networks:
       - name: "{{ web_network_name | default('web') }}"
     plant_it_ports:
+      # Published ports to expose outside the container
+      # host port:container port
       - "{{ plant_it_service_port_ui }}:3000"
       - "{{ plant_it_service_port_api }}:8080"
     plant_it_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - "{{ plant_it_upload_volume_name }}/upload-dir"
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -38,9 +42,10 @@
   ansible.builtin.set_fact:
     plant_it_container_labels: "{{ plant_it_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels - app
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    # - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ plant_it_service_name }}.entrypoints",
       "value": "websecure",
@@ -49,18 +54,19 @@
       "key": "traefik.http.routers.{{ plant_it_service_name }}.rule",
       "value": "Host(`{{ plant_it_fqdn }}`)",
     }
-    - {
-      "key": "traefik.http.routers.{{ plant_it_service_name }}.service",
-      "value": "{{ plant_it_service_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ plant_it_service_name }}.tls",
-      "value": "true",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ plant_it_service_name }}.service",
+    #   "value": "{{ plant_it_service_name }}",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ plant_it_service_name }}.tls",
+    #   "value": "true",
+    # }
     - {
       "key": "traefik.http.services.{{ plant_it_service_name }}.loadbalancer.server.port",
       "value": "{{ plant_it_service_port_ui | quote }}",
     }
+    # ---------------------------------------------------------------
     # Traefik labels - api
     - {
       "key": "traefik.http.routers.{{ plant_it_service_name }}-api.entrypoints",
@@ -74,20 +80,22 @@
       "key": "traefik.http.routers.{{ plant_it_service_name }}-api.service",
       "value": "{{ plant_it_service_name }}-api",
     }
-    - {
-      "key": "traefik.http.routers.{{ plant_it_service_name }}-api.tls",
-      "value": "true",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ plant_it_service_name }}-api.tls",
+    #   "value": "true",
+    # }
     - {
       "key": "traefik.http.services.{{ plant_it_service_name }}-api.loadbalancer.server.port",
       "value": "{{ plant_it_service_port_api | quote }}",
     }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/MDeLuise/plant-it/releases/tag/v${major}.${minor}.${patch}",
     }
+    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Plant-it" }

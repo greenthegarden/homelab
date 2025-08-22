@@ -43,12 +43,12 @@ services:
       DB_PASSWORD: {{ hortusfox.db_password | default('dummy') }}
       DB_CHARSET: "utf8mb4"
     hostname: app
-    labels: {{ (hortusfox_container_labels | default({})) | default(omit) }}
+    labels: {{ hortusfox_container_labels | default(omit) }}
     networks:
       - hortusfox
       - web
-    ports:
-      - "8090:80"
+#    ports:
+#      - "8090:80"
     volumes:
       - app_images:/var/www/html/public/img
       - app_logs:/var/www/html/app/logs

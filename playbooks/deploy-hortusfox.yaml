@@ -10,7 +10,7 @@
     # TODO: Ensure variables set here are used in the docker-compose file
     hortusfox_image: ghcr.io/danielbrendel/hortusfox-web:v5.2
     hortusfox_service_name: hortusfox
-    hortusfox_service_port: 8090
+    hortusfox_service_port: 80
     hortusfox_db_backup_volume_name: hortusfox_db_backup
 
 

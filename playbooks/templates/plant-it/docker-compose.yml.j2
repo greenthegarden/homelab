@@ -35,13 +35,13 @@ services:
     container_name: plant_it_server
     image: msdeluise/plant-it-server:latest
     env_file: plant_it.env
-    labels: {{ (plant_it_container_labels | default({})) | default(omit) }}
+    labels: {{ plant_it_container_labels | default(omit) }}
     networks:
       - plant_it
       - web
-    ports:
-      - 8080:8080
-      - 3000:3000
+#    ports:
+#      - 8080:8080
+#      - 3000:3000
     restart: unless-stopped
     volumes:
       - plant_it_upload:/upload-dir

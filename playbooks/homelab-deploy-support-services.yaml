@@ -1,7 +1,7 @@
 ---
 - name: Install and configure Docker and base containers
 
-  hosts: broker # homelab_lxc_docker
+  hosts: hortusfox # homelab_lxc_docker
 
   vars:
 
