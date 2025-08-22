@@ -21,11 +21,15 @@
 
 - name: deploy-whatsupdocker | Set What's up Docker? service facts
   ansible.builtin.set_fact:
-    whatsupdocker_ports:
-      - "{{ whatsupdocker_service_port | default(3000) }}:3000"
     whatsupdocker_networks:
       - name: "{{ web_network_name | default('web') }}"
+    whatsupdocker_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ whatsupdocker_service_port }}:3000"
     whatsupdocker_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - /var/run/docker.sock:/var/run/docker.sock
       - "{{ whatsupdocker_volume_name }}:/store"
       - /etc/localtime:/etc/localtime:ro
@@ -35,9 +39,9 @@
   ansible.builtin.set_fact:
     whatsupdocker_container_labels: "{{ whatsupdocker_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.entrypoints",
       "value": "websecure",
@@ -46,20 +50,22 @@
       "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.rule",
       "value": "Host(`{{ whatsupdocker_fqdn }}`)",
     }
-    - {
-      "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.service",
-      "value": "{{ whatsupdocker_service_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.tls",
-      "value": "true",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.service",
+    #   "value": "{{ whatsupdocker_service_name }}",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.tls",
+    #   "value": "true",
+    # }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/getwud/wud/releases/tag/${major}.${minor}.${patch}",
     }
+    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "System" }
     - { "key": "homepage.name", "value": "What's Up Docker" }
@@ -109,18 +115,14 @@
       WUD_TRIGGER_MQTT_MOSQUITTO_HASS_ENABLED: "true"
       WUD_WATCHER_LOCAL_SOCKET: "/var/run/docker.sock"
       WUD_WATCHER_ANSIBLE_HOST: "ansible.{{ lan_dns_domain }}"
-      # WUD_WATCHER_AUTHENTIK_HOST: "authentik.{{ lan_dns_domain }}"
       WUD_WATCHER_BROKER_HOST: "broker.{{ lan_dns_domain }}"
       WUD_WATCHER_DOZZLE_HOST: "dozzle.{{ lan_dns_domain }}"
       WUD_WATCHER_FIREFLYIII_HOST: "fireflyiii.{{ lan_dns_domain }}"
       WUD_WATCHER_FRIGATE_HOST: "frigate.{{ lan_dns_domain }}"
-      # WUD_WATCHER_GRAFANA_HOST: "grafana.{{ lan_dns_domain }}"
       WUD_WATCHER_GROCY_HOST: "grocy.{{ lan_dns_domain }}"
       WUD_WATCHER_HOMEBOX_HOST: "homebox.{{ lan_dns_domain }}"
       WUD_WATCHER_HOMEPAGE_HOST: "homepage.{{ lan_dns_domain }}"
       WUD_WATCHER_HORTUSFOX_HOST: "hortusfox.{{ lan_dns_domain }}"
-      # WUD_WATCHER_INFLUXDB_HOST: "influxdb.{{ lan_dns_domain }}"
-      # WUD_WATCHER_JOURNAL_HOST: "journal.{{ lan_dns_domain }}"
       WUD_WATCHER_OLLAMA_HOST: "ollama.{{ lan_dns_domain }}"
       WUD_WATCHER_PORTAINER_HOST: "portainer.{{ lan_dns_domain }}"
       WUD_WATCHER_UPTIMEKUMA_HOST: "uptimekuma.{{ lan_dns_domain }}"
@@ -144,7 +146,7 @@
     #   timeout: 30s
     #   retries: 3
     #   start_period: 30s
-    labels: "{{ whatsupdocker_container_labels }}"
+    labels: "{{ whatsupdocker_container_labels | default(omit) }}"
     networks_cli_compatible: true
     networks: "{{ whatsupdocker_networks }}"
     restart: true

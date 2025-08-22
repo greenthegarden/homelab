@@ -25,8 +25,12 @@
     uptimekuma_networks:
       - name: "{{ web_network_name | default('web') }}"
     uptimekuma_ports:
-      - "{{ uptimekuma_service_port | default(3001) }}:3001"
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ uptimekuma_service_port }}:3001"
     uptimekuma_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - "{{ uptimekuma_volume_name }}:/app/data"
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
