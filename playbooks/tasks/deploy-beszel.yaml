@@ -24,8 +24,12 @@
       - name: "{{ monitoring_network_name | default('monitoring') }}"
       - name: "{{ web_network_name | default('web') }}"
     beszel_ports:
+      # Published ports to expose outside the container
+      # host port:container port
       - "{{ beszel_service_port }}:8090"
     beszel_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - ./beszel_data:/beszel_data:rw
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -34,9 +38,9 @@
   ansible.builtin.set_fact:
     beszel_container_labels: "{{ beszel_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ beszel_service_name }}.entrypoints",
       "value": "websecure",
@@ -45,24 +49,26 @@
       "key": "traefik.http.routers.{{ beszel_service_name }}.rule",
       "value": "Host(`{{ beszel_fqdn }}`)",
     }
-    - {
-      "key": "traefik.http.routers.{{ beszel_service_name }}.service",
-      "value": "{{ beszel_service_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ beszel_service_name }}.tls",
-      "value": "true",
-    }
-    - {
-      "key": "traefik.http.services.{{ beszel_service_name }}.loadbalancer.server.port",
-      "value": "{{ beszel_service_port | quote }}",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ beszel_service_name }}.service",
+    #   "value": "{{ beszel_service_name }}",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ beszel_service_name }}.tls",
+    #   "value": "true",
+    # }
+    # - {
+    #   "key": "traefik.http.services.{{ beszel_service_name }}.loadbalancer.server.port",
+    #   "value": "{{ beszel_service_port | quote }}",
+    # }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/henrygd/beszel/releases/tag/v${major}.${minor}.${patch}",
     }
+    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Monitoring" }
     - { "key": "homepage.name", "value": "Beszel" }
@@ -85,7 +91,7 @@
     name: "{{ beszel_service_name }}"
     image: "{{ beszel_image }}"
     detach: true
-    labels: "{{ (beszel_container_labels | default({})) | default(omit) }}"
+    labels: "{{ beszel_container_labels | default(omit) }}"
     networks_cli_compatible: true
     networks: "{{ beszel_networks }}"
     restart: true

@@ -83,7 +83,6 @@
     - { "key": "homepage.widget.password", "value": "{{ homebox.password }}" }
     - { "key": "homepage.widget.fields", "value": "['items', 'locations', 'totalValue']" }
 
-
 - name: deploy-homebox | Create Homebox volume
   community.docker.docker_volume:
     name: "{{ homebox_volume_name }}"

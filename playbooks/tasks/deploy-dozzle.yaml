@@ -24,8 +24,12 @@
       - name: "{{ monitoring_network_name | default('monitoring') }}"
       - name: "{{ web_network_name | default('web') }}"
     dozzle_ports:
+      # Published ports to expose outside the container
+      # host port:container port
       - "{{ dozzle_service_port }}:8080"
     dozzle_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
@@ -33,9 +37,9 @@
   ansible.builtin.set_fact:
     dozzle_container_labels: "{{ dozzle_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ dozzle_service_name }}.entrypoints",
       "value": "websecure",
@@ -44,24 +48,26 @@
       "key": "traefik.http.routers.{{ dozzle_service_name }}.rule",
       "value": "Host(`{{ dozzle_fqdn }}`)",
     }
-    - {
-      "key": "traefik.http.routers.{{ dozzle_service_name }}.service",
-      "value": "{{ dozzle_service_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ dozzle_service_name }}.tls",
-      "value": "true",
-    }
-    - {
-      "key": "traefik.http.services.{{ dozzle_service_name }}.loadbalancer.server.port",
-      "value": "{{ dozzle_service_port | quote }}",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ dozzle_service_name }}.service",
+    #   "value": "{{ dozzle_service_name }}",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ dozzle_service_name }}.tls",
+    #   "value": "true",
+    # }
+    # - {
+    #   "key": "traefik.http.services.{{ dozzle_service_name }}.loadbalancer.server.port",
+    #   "value": "{{ dozzle_service_port | quote }}",
+    # }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/amir20/dozzle/releases/tag/v${major}.${minor}.${patch}",
     }
+    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Monitoring" }
     - { "key": "homepage.name", "value": "Dozzle" }
@@ -86,14 +92,14 @@
     detach: true
     env:
       DOZZLE_ENABLE_ACTIONS: "true"
-      DOZZLE_REMOTE_AGENT: dozzle-agent:7007,ansible.localdomain:7007,broker.localdomain:7007,fireflyiii.localdomain:7007,frigate.localdomain:7007,homebox.localdomain:7007,homepage.localdomain:7007,influxdb.localdomain:7007,portainer.localdomain:7007,uptimekuma.localdomain:7007,vaultwarden.localdomain:7007,whatsupdocker.localdomain:7007
+      DOZZLE_REMOTE_AGENT: dozzle.localdomain:7007,ansible.localdomain:7007,broker.localdomain:7007,fireflyiii.localdomain:7007,frigate.localdomain:7007,homebox.localdomain:7007,homepage.localdomain:7007,portainer.localdomain:7007,uptimekuma.localdomain:7007,vaultwarden.localdomain:7007,whatsupdocker.localdomain:7007
     healthcheck:
       test: ["CMD", "/dozzle", "healthcheck"]
       interval: 3s
       retries: 5
       start_period: 30s
       timeout: 30s
-    labels: "{{ (dozzle_container_labels | default({})) | default(omit) }}"
+    labels: "{{ dozzle_container_labels | default(omit) }}"
     networks_cli_compatible: true
     networks: "{{ dozzle_networks }}"
     restart: true
