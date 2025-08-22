@@ -20,8 +20,12 @@
     homebox_networks:
       - name: "{{ web_network_name | default('web') }}"
     homebox_ports:
-      - "{{ homebox_service_port | default(7745) }}:7745"
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ homebox_service_port }}:7745"
     homebox_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - "{{ homebox_volume_name }}:/data"
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -30,9 +34,9 @@
   ansible.builtin.set_fact:
     homebox_container_labels: "{{ homebox_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ homebox_service_name }}.entrypoints",
       "value": "websecure",
@@ -41,22 +45,25 @@
       "key": "traefik.http.routers.{{ homebox_service_name }}.rule",
       "value": "Host(`{{ homebox_fqdn }}`)",
     }
-    - {
-      "key": "traefik.http.routers.{{ homebox_service_name }}.service",
-      "value": "{{ homebox_service_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ homebox_service_name }}.tls",
-      "value": "true",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ homebox_service_name }}.service",
+    #   "value": "{{ homebox_service_name }}",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ homebox_service_name }}.tls",
+    #   "value": "true",
+    # }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/sysadminsmedia/homebox/releases/tag/v${major}.${minor}.${patch}",
     }
+    # ---------------------------------------------------------------
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Homebox" }
@@ -120,7 +127,7 @@
           HBOX_LOG_FORMAT: "json"
           HBOX_WEB_MAX_UPLOAD_SIZE: "10"
           TZ: "{{ homelab.timezone | default(omit) }}"
-        labels: "{{ (homebox_container_labels | default({})) | default(omit) }}"
+        labels: "{{ homebox_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ homebox_networks }}"
         restart: true
