@@ -3,6 +3,8 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+####### GOTIFY SECTION
+
 # https://hub.docker.com/r/gotify/gotify
 # https://gotify.net/docs/traefik
 # https://github.com/1RandomDev/homeassistant-gotify
@@ -23,8 +25,12 @@
     gotify_networks:
       - name: "{{ web_network_name | default('web') }}"
     gotify_ports:
+      # Published ports to expose outside the container
+      # host port:container port
       - "{{ gotify_service_port }}:80"
     gotify_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
@@ -32,9 +38,9 @@
   ansible.builtin.set_fact:
     gotify_container_labels: "{{ gotify_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ gotify_service_name }}.entrypoints",
       "value": "websecure",
@@ -43,24 +49,26 @@
       "key": "traefik.http.routers.{{ gotify_service_name }}.rule",
       "value": "Host(`{{ gotify_fqdn }}`)",
     }
-    - {
-      "key": "traefik.http.routers.{{ gotify_service_name }}.service",
-      "value": "{{ gotify_service_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ gotify_service_name }}.tls",
-      "value": "true",
-    }
-    - {
-      "key": "traefik.http.services.{{ gotify_service_name }}.loadbalancer.server.port",
-      "value": "{{ gotify_service_port_api | quote }}",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ gotify_service_name }}.service",
+    #   "value": "{{ gotify_service_name }}",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ gotify_service_name }}.tls",
+    #   "value": "true",
+    # }
+    # - {
+    #   "key": "traefik.http.services.{{ gotify_service_name }}.loadbalancer.server.port",
+    #   "value": "{{ gotify_service_port_api | quote }}",
+    # }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/gotify/gotify/releases/tag/v${major}.${minor}.${patch}",
     }
+    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Monitoring" }
     - { "key": "homepage.name", "value": "Messaging" }
@@ -79,7 +87,7 @@
     - gotify_state.exists
     - (gotify_image | split(':') | last) != (gotify_state.container.Config.Image | split(':') | last)
   block:
-    - name: deploy-gotify | Stop and remove existing GOTIFY container
+    - name: deploy-gotify | Stop and remove existing Gotify container
       community.docker.docker_container:
         name: "{{ gotify_service_name }}"
         state: absent
@@ -102,17 +110,16 @@
         name: "{{ gotify_service_name }}"
         image: "{{ gotify_image }}"
         detach: true
-        labels: "{{ gotify_container_labels }}"
+        labels: "{{ gotify_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ gotify_networks }}"
-        published_ports: "{{ gotify_ports }}"
         restart: true
         restart_policy: unless-stopped
         state: started
         volumes: "{{ gotify_volumes }}"
       register: gotify_container_state
 
-    - name: deploy-gotify | Wait for GOTIFY to accept connections
+    - name: deploy-gotify | Wait for Gotify to accept connections
       ansible.builtin.wait_for:
         host: "{{ gotify_fqdn }}"
         port: 80

@@ -3,6 +3,8 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+####### EMQX SECTION
+
 # https://hub.docker.com/r/emqx/emqx
 # https://github.com/iotblue/emqx-docker
 # https://www.emqx.com/en/try?product=broker (EMQX Open Source)
@@ -62,13 +64,17 @@
       - name: "{{ broker_network_name | default('broker') }}"
       - name: "{{ web_network_name | default('web') }}"
     emqx_ports:
+      # Published ports to expose outside the container
+      # host port:container port
       # - "{{ emqx_service_port_api | default(18083) }}:18083"
-      - "{{ emqx_service_port_mqtt | default(1883) }}:1883"
+      - "{{ emqx_service_port_mqtt }}:1883"
       - 8083:8083 # websocket
       # - 4369:4369
       # - 5369:5369
       # - 6000-6100:6000-6100
     emqx_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - "{{ emqx_data_volume_name }}:/opt/emqx/data"
       - "{{ emqx_log_volume_name }}:/opt/emqx/log"
       - /etc/localtime:/etc/localtime:ro
@@ -78,9 +84,9 @@
   ansible.builtin.set_fact:
     emqx_container_labels: "{{ emqx_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ emqx_service_name }}.entrypoints",
       "value": "websecure",
@@ -89,24 +95,26 @@
       "key": "traefik.http.routers.{{ emqx_service_name }}.rule",
       "value": "Host(`{{ emqx_fqdn }}`)",
     }
-    - {
-      "key": "traefik.http.routers.{{ emqx_service_name }}.service",
-      "value": "{{ emqx_service_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ emqx_service_name }}.tls",
-      "value": "true",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ emqx_service_name }}.service",
+    #   "value": "{{ emqx_service_name }}",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ emqx_service_name }}.tls",
+    #   "value": "true",
+    # }
     - {
       "key": "traefik.http.services.{{ emqx_service_name }}.loadbalancer.server.port",
       "value": "{{ emqx_service_port_api | quote }}",
     }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/emqx/emqx/releases/tag/v${major}.${minor}.${patch}",
     }
+    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Monitoring" }
     - { "key": "homepage.name", "value": "Broker" }
@@ -151,12 +159,12 @@
         env:
           EMQX_ALLOW_ANONYMOUS: "true"
           EMQX_DASHBOARD__DEFAULT_PASSWORD: "{{ emqx.admin_password | default('dummy') }}"
-          EMQX_LISTENER__TCP__EXTERNAL: "{{ emqx_service_port_mqtt | default(1883) | quote }}"
+          EMQX_LISTENER__TCP__EXTERNAL: "{{ emqx_service_port_mqtt | quote }}"
           EMQX_LOADED_PLUGINS: "emqx_recon,emqx_retainer,emqx_management,emqx_dashboard,emqx_prometheus"
-          EMQX_NAME: "{{ emqx_service_name | default('emqx') }}"
+          EMQX_NAME: "{{ emqx_service_name }}"
           EMQX_HOST: "{{ emqx_fqdn }}"
           WAIT_FOR_ERLANG: "60"
-        labels: "{{ emqx_container_labels }}"
+        labels: "{{ emqx_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ emqx_networks }}"
         published_ports: "{{ emqx_ports }}"
