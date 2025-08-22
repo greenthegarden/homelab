@@ -32,12 +32,16 @@
     frigate_networks:
       - name: "{{ web_network_name | default('web') }}"
     frigate_ports:
-      - "{{ frigate_service_port }}:8971"
+      # Published ports to expose outside the container
+      # host port:container port
+      # - "{{ frigate_service_port }}:8971"
       - "{{ frigate_service_port_http }}:5000"
       - "{{ frigate_service_port_rtsp }}:8554"
       - "{{ frigate_service_port_webrtc }}:8555/tcp"
       - "{{ frigate_service_port_webrtc }}:8555/udp"
     frigate_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - "{{ frigate_config_dir }}:/config"
       - "{{ frigate_mount_point }}:/media/frigate"
       - /etc/localtime:/etc/localtime:ro
@@ -47,9 +51,9 @@
   ansible.builtin.set_fact:
     frigate_container_labels: "{{ frigate_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ frigate_service_name }}.entrypoints",
       "value": "websecure",
@@ -58,24 +62,28 @@
       "key": "traefik.http.routers.{{ frigate_service_name }}.rule",
       "value": "Host(`{{ frigate_fqdn }}`)",
     }
-    - {
-      "key": "traefik.http.routers.{{ frigate_service_name }}.service",
-      "value": "{{ frigate_service_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ frigate_service_name }}.tls",
-      "value": "true",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ frigate_service_name }}.service",
+    #   "value": "{{ frigate_service_name }}",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ frigate_service_name }}.tls",
+    #   "value": "true",
+    # }
     - {
       "key": "traefik.http.services.{{ frigate_service_name }}.loadbalancer.server.port",
       "value": "{{ frigate_service_port }}",
     }
+
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/blakeblackshear/frigate/releases/tag/v${major}.${minor}.${patch}",
     }
+
+    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Family" }
     - { "key": "homepage.name", "value": "Frigate" }
@@ -121,7 +129,7 @@
     detach: true
     env:
       FRIGATE_RTSP_PASSWORD: "{{ frigate.rtsp_password | default('dummy') }}"
-    labels: "{{ frigate_container_labels }}"
+    labels: "{{ frigate_container_labels | default(omit) }}"
     mounts: "{{ frigate_mounts }}"
     networks_cli_compatible: true
     networks: "{{ frigate_networks }}"
