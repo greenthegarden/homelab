@@ -28,6 +28,8 @@
     fireflyiii_ports:
       - "{{ fireflyiii_service_port }}:8080"
     fireflyiii_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - "/root/fireflyiii/config:/app/config"
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -36,9 +38,9 @@
   ansible.builtin.set_fact:
     fireflyiii_container_labels: "{{ fireflyiii_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ fireflyiii_service_name }}.entrypoints",
       "value": "websecure",
@@ -47,26 +49,29 @@
       "key": "traefik.http.routers.{{ fireflyiii_service_name }}.rule",
       "value": "Host(`{{ fireflyiii_fqdn }}`)",
     }
-    - {
-      "key": "traefik.http.routers.{{ fireflyiii_service_name }}.service",
-      "value": "{{ fireflyiii_service_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ fireflyiii_service_name }}.tls",
-      "value": "true",
-    }
-    - {
-      "key": "traefik.http.services.{{ fireflyiii_service_name }}.loadbalancer.server.port",
-      "value": "8080",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ fireflyiii_service_name }}.service",
+    #   "value": "{{ fireflyiii_service_name }}",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ fireflyiii_service_name }}.tls",
+    #   "value": "true",
+    # }
+    # - {
+    #   "key": "traefik.http.services.{{ fireflyiii_service_name }}.loadbalancer.server.port",
+    #   "value": "8080",
+    # }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/getfireflyiii/fireflyiii/releases/tag/v${major}.${minor}.${patch}",
     }
+    # ---------------------------------------------------------------
     # Docker Volume Back labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Firefly III" }

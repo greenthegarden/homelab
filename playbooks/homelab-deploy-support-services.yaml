@@ -1,7 +1,7 @@
 ---
 - name: Install and configure Docker and base containers
 
-  hosts: vaultwarden # homelab_lxc_docker # vaultwarden
+  hosts: fireflyiii # homelab_lxc_docker
 
   vars:
 

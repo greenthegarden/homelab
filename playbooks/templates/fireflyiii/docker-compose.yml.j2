@@ -20,7 +20,7 @@ services:
       MYSQL_DATABASE: {{ firefly.db_database | default('firefly') }}
       MYSQL_USER: {{ firefly.db_user | default('firefly') }}
       MYSQL_PASSWORD: {{ firefly.db_user | default('dummy') }}
-    labels: {{ (fireflyiii_db_container_labels | default({})) | default(omit) }}
+    labels: {{ fireflyiii_db_container_labels | default(omit) }}
     networks:
       - firefly_iii
     restart: always
@@ -32,12 +32,12 @@ services:
     container_name: firefly_iii_core
     image: fireflyiii/core:version-6.3.2
     env_file: fireflyiii.env
-    labels: {{ (fireflyiii_container_labels | default({})) | default(omit) }}
+    labels: {{ fireflyiii_container_labels | default(omit) }}
     networks:
       - firefly_iii
       - web
-    ports:
-      - 8090:8080
+    # ports:
+    #   - 8090:8080
     restart: unless-stopped
     volumes:
       - firefly_iii_upload:/var/www/html/storage/upload
