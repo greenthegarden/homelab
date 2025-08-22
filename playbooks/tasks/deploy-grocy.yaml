@@ -25,9 +25,13 @@
     grocy_networks:
       - name: "{{ web_network_name | default('web') }}"
     grocy_ports:
-      - "{{ grocy_service_port | default(9283) }}:9283"
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ grocy_service_port }}:9283"
     grocy_user: { uid: 1000, gid: 1000 }
     grocy_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - "{{ grocy_volume_name }}:/config"
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -36,9 +40,9 @@
   ansible.builtin.set_fact:
     grocy_container_labels: "{{ grocy_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ grocy_service_name }}.entrypoints",
       "value": "websecure",
@@ -47,22 +51,25 @@
       "key": "traefik.http.routers.{{ grocy_service_name }}.rule",
       "value": "Host(`{{ grocy_fqdn }}`)",
     }
-    - {
-      "key": "traefik.http.routers.{{ grocy_service_name }}.service",
-      "value": "{{ grocy_service_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ grocy_service_name }}.tls",
-      "value": "true",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ grocy_service_name }}.service",
+    #   "value": "{{ grocy_service_name }}",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ grocy_service_name }}.tls",
+    #   "value": "true",
+    # }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/grocy/grocy/releases/tag/v${major}.${minor}.${patch}",
     }
+    # ---------------------------------------------------------------
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Grocy" }
@@ -124,7 +131,7 @@
           PUID: "{{ grocy_user.uid | default(1000) | quote }}"
           PGID: "{{ grocy_user.gid | default(1000) | quote }}"
           TZ: "{{ homelab.timezone | default(omit) }}"
-        labels: "{{ (grocy_container_labels | default({})) | default(omit) }}"
+        labels: "{{ grocy_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ grocy_networks }}"
         restart: true
