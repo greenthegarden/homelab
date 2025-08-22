@@ -224,7 +224,6 @@ The current iteration of the Homelab hosts the following applications:
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/homepage.png" height="25" width="auto" alt="Homepage"> [Homepage] - A modern, fully static, fast, secure fully proxied, highly customizable application dashboard. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/hortusfox.png" height="25" width="auto" alt="Hortusfox"> [Hortusfox] - A free and open-sourced self-hosted plant manager system. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/influxdb.svg" height="25" width="auto" alt="InfluxDB"> [InfluxDB] - A time-series database. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
-- 📓 [Journal] - A simple self-hosted journaling app.
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/portainer.svg" height="25" width="auto" alt="Portainer"> [Portainer] - A universal container management platform. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/semaphore.svg" height="25" width="auto" alt="Semaphore"> [Semaphore] - User friendly web interface for executing Ansible playbooks, Terraform, OpenTofu code and Bash scripts. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
 - <img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/uptime-kuma.svg" height="25" width="auto" alt="Uptime Kuma"> [Uptime Kuma][uptimekuma] - An easy-to-use self-hosted monitoring tool. <!-- markdownlint-disable MD033 --> <!-- markdownlint-disable MD013 -->
@@ -713,7 +712,6 @@ The configuration for markdownlint is defined in [.markdownlint.yaml](.markdownl
 [homepage]: https://gethomepage.dev/
 [hortusfox]: https://www.hortusfox.com/
 [influxdb]: https://www.influxdata.com/
-[journal]: https://github.com/inoda/journal
 [linuxcontainers]: https://linuxcontainers.org/
 [markdownguide]: https://www.markdownguide.org/
 [markdownlint]: https://github.com/DavidAnson/markdownlint-cli2
