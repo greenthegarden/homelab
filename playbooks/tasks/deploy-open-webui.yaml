@@ -4,6 +4,8 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+####### OPEN WEBUI SECTION
+
 - name: deploy-open-webui | Set Open WebUI facts
   ansible.builtin.set_fact:
     open_webui_image: "{{ open_webui_image | default('ghcr.io/open-webui/open-webui:0.6.11') }}"
@@ -20,8 +22,12 @@
     open_webui_networks:
       - name: "{{ web_network_name | default('web') }}"
     open_webui_ports:
-      - "{{ open_webui_service_port | default(8080) }}:8080"
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ open_webui_service_port }}:8080"
     open_webui_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - "{{ open_webui_volume_name }}:/app/backend/data"
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -30,9 +36,9 @@
   ansible.builtin.set_fact:
     open_webui_container_labels: "{{ open_webui_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ open_webui_service_name }}.entrypoints",
       "value": "websecure",
@@ -41,26 +47,29 @@
       "key": "traefik.http.routers.{{ open_webui_service_name }}.rule",
       "value": "Host(`{{ open_webui_fqdn }}`)",
     }
-    - {
-      "key": "traefik.http.routers.{{ open_webui_service_name }}.service",
-      "value": "{{ open_webui_service_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ open_webui_service_name }}.tls",
-      "value": "true",
-    }
-    - {
-      "key": "traefik.http.services.{{ open_webui_service_name }}.loadBalancer.server.port",
-      "value": "{{ open_webui_service_port }}",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ open_webui_service_name }}.service",
+    #   "value": "{{ open_webui_service_name }}",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ open_webui_service_name }}.tls",
+    #   "value": "true",
+    # }
+    # - {
+    #   "key": "traefik.http.services.{{ open_webui_service_name }}.loadBalancer.server.port",
+    #   "value": "{{ open_webui_service_port }}",
+    # }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/open-webui/open-webui/releases/tag/v${major}.${minor}.${patch}",
     }
+    # ---------------------------------------------------------------
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Open WebUI" }
@@ -119,7 +128,7 @@
           SEARXNG_QUERY_URL: "http://searxng:8080/search?q=<query>"
         etc_hosts:
           host.docker.internal: host-gateway
-        labels: "{{ (open_webui_container_labels | default({})) | default(omit) }}"
+        labels: "{{ open_webui_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ open_webui_networks }}"
         restart: true

@@ -4,6 +4,8 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+####### HOMEBOX SECTION
+
 - name: deploy-homebox | Set Homebox facts
   ansible.builtin.set_fact:
     homebox_image: "{{ homebox_image | default('ghcr.io/hay-kot/homebox:latest') }}"

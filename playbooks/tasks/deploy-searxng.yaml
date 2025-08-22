@@ -4,6 +4,8 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+####### SEARXNG SECTION
+
 - name: deploy-searxng | Set SearXNG facts
   ansible.builtin.set_fact:
     searxng_image: "{{ searxng_image | default('searxng/searxng:latest') }}"
@@ -20,8 +22,12 @@
     searxng_networks:
       - name: "{{ web_network_name | default('web') }}"
     searxng_ports:
-      - "{{ searxng_service_port | default(8080) }}:8080"
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ searxng_service_port }}:8080"
     searxng_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - "{{ searxng_volume_name }}:/etc/searxng:rw"
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -30,9 +36,9 @@
   ansible.builtin.set_fact:
     searxng_container_labels: "{{ searxng_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ searxng_service_name }}.entrypoints",
       "value": "websecure",
@@ -41,26 +47,29 @@
       "key": "traefik.http.routers.{{ searxng_service_name }}.rule",
       "value": "Host(`{{ searxng_fqdn }}`)",
     }
-    - {
-      "key": "traefik.http.routers.{{ searxng_service_name }}.service",
-      "value": "{{ searxng_service_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ searxng_service_name }}.tls",
-      "value": "true",
-    }
-    - {
-      "key": "traefik.http.services.{{ searxng_service_name }}.loadBalancer.server.port",
-      "value": "{{ searxng_service_port }}",
-    }
+    # - {
+    #   "key": "traefik.http.routers.{{ searxng_service_name }}.service",
+    #   "value": "{{ searxng_service_name }}",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ searxng_service_name }}.tls",
+    #   "value": "true",
+    # }
+    # - {
+    #   "key": "traefik.http.services.{{ searxng_service_name }}.loadBalancer.server.port",
+    #   "value": "{{ searxng_service_port }}",
+    # }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/searxng/searxng/releases/tag/v${major}.${minor}.${patch}",
     }
+    # ---------------------------------------------------------------
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "SearXNG" }
@@ -109,7 +118,7 @@
         name: "{{ searxng_service_name }}"
         image: "{{ searxng_image }}"
         detach: true
-        labels: "{{ (searxng_container_labels | default({})) | default(omit) }}"
+        labels: "{{ searxng_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ searxng_networks }}"
         restart: true
