@@ -492,6 +492,22 @@ All secrets, such as passwords, tokens and personal identifiers, are maintained 
  and not exposed in plain text. In addition, tools are run by pre-commit, to ensure the encrypted files are in an encrypted state before committing to source code,
  and all files are scanned for passwords and tokens.
 
+To encrypt and decrypt files use the following commands.
+
+```bash
+# Create a file
+ansible-vault create --vault-password-file vault.pass foo.yml
+
+# Edit a file
+ansible-vault edit --vault-password-file vault.pass foo.yml
+
+# Derypt a file
+ansible-vault decrypt --vault-password-file vault.pass foo.yml
+
+# Encrypt a file
+ansible-vault encrypt --vault-password-file vault.pass foo.yml
+```
+
 [ansible-vault]: https://docs.ansible.com/ansible/latest/cli/ansible-vault.html
 
 ## Backup Strategy

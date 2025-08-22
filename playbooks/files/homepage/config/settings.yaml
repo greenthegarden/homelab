@@ -122,3 +122,8 @@ layout:
       style: row
       columns: 2
       initiallyCollapsed: true
+  - Firefly III Tax Reports:
+      tab: Finance
+      style: row
+      columns: 2
+      initiallyCollapsed: true
