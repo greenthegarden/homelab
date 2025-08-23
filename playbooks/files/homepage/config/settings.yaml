@@ -4,6 +4,9 @@
 
 title: CutlerVuFamily Homelab
 
+description: |
+  A collection of links to the various services and applications used by the CutlerVu family.
+
 # background:
 #   image: https://images.unsplash.com/photo-1502790671504-542ad42d5189?auto=format&fit=crop&w=2560&q=80
 #   blur: sm # sm, "", md, xl... see https://tailwindcss.com/docs/backdrop-blur
@@ -24,6 +27,7 @@ layout:
       tab: Main
       style: row
       columns: 2
+      header: false
       iconsOnly: true
       initiallyCollapsed: false
   - Nextcloud Apps:
@@ -61,17 +65,20 @@ layout:
       columns: 3
   - Applications:
       tab: Secondary
+      hearder: false
       initiallyCollapsed: false
       style: row
       columns: 2
   - System:
       tab: Secondary
-      initiallyCollapsed: false
+      hearder: false
+      initiallyCollapsed: true
       style: row
       columns: 3
   - Monitoring:
       tab: Secondary
-      initiallyCollapsed: false
+      hearder: false
+      initiallyCollapsed: true
       style: row
       columns: 3
   - Cameras:
