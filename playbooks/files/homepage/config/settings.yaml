@@ -96,43 +96,52 @@ layout:
       tab: Finance
       style: row
       columns: 3
+      header: false
   - Firefly III Accounts:
       tab: Finance
       style: row
       columns: 2
-      initiallyCollapsed: true
+      header: false
+      initiallyCollapsed: false
   - Firefly III Reports:
       tab: Finance
       style: row
       columns: 2
-      initiallyCollapsed: true
+      header: false
+      initiallyCollapsed: false
   - Firefly III Income Reports:
       tab: Finance
       style: row
       columns: 2
-      initiallyCollapsed: true
+      header: false
+      initiallyCollapsed: false
   - Firefly III Expense Reports:
       tab: Finance
       style: row
       columns: 2
+      header: false
       initiallyCollapsed: false
   - Firefly III Category Reports:
       tab: Finance
       style: row
       columns: 2
-      initiallyCollapsed: true
+      header: false
+      initiallyCollapsed: false
   - Firefly III Person Reports:
       tab: Finance
       style: row
       columns: 2
-      initiallyCollapsed: true
+      header: false
+      initiallyCollapsed: false
   - Firefly III Audit Reports:
       tab: Finance
       style: row
       columns: 2
-      initiallyCollapsed: true
+      header: false
+      initiallyCollapsed: false
   - Firefly III Tax Reports:
       tab: Finance
       style: row
       columns: 2
-      initiallyCollapsed: true
+      header: false
+      initiallyCollapsed: false
