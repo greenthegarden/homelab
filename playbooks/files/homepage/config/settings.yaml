@@ -23,6 +23,7 @@ useEqualHeights: true
 groupsInitiallyCollapsed: false
 
 layout:
+# Main Tab links
   - Family:
       tab: Main
       style: row
@@ -34,7 +35,7 @@ layout:
       tab: Main
       style: row
       columns: 2
-# Website Tab links
+# Websites Tab links
   - Services:
       tab: Websites
       style: row
@@ -63,32 +64,33 @@ layout:
       tab: Websites
       style: row
       columns: 3
+  - Cameras:
+      tab: Websites
+  - Sensors:
+      tab: Websites
+  - Development:
+      tab: Websites
+  - Storage:
+      tab: Websites
+# Applications Tab link
   - Applications:
-      tab: Secondary
+      tab: Applications
       hearder: false
       initiallyCollapsed: false
       style: row
       columns: 2
   - System:
-      tab: Secondary
+      tab: Applications
       hearder: false
       initiallyCollapsed: true
       style: row
       columns: 3
   - Monitoring:
-      tab: Secondary
+      tab: Applications
       hearder: false
       initiallyCollapsed: true
       style: row
       columns: 3
-  - Cameras:
-      tab: Secondary
-  - Sensors:
-      tab: Secondary
-  - Development:
-      tab: Secondary
-  - Storage:
-      tab: Secondary
 # Finance Tab links
   - Finance:
       tab: Finance

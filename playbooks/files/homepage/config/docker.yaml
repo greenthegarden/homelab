@@ -34,9 +34,9 @@ docker-frigate:
 #   host: grafana.localdomain
 #   port: 2375
 
-# docker-grocy:
-#   host: grocy.localdomain
-#   port: 2375
+docker-grocy:
+  host: grocy.localdomain
+  port: 2375
 
 docker-homebox:
   host: homebox.localdomain
@@ -50,17 +50,9 @@ docker-hortusfox:
 #   host: influxdb.localdomain
 #   port: 2375
 
-# docker-journal:
-#   host: journal.localdomain
-#   port: 2375
-
 docker-ollama:
   host: ollama.localdomain
   port: 2375
-
-# docker-plantit:
-#   host: plant-it.localdomain
-#   port: 2375
 
 docker-portainer:
   host: portainer.localdomain
