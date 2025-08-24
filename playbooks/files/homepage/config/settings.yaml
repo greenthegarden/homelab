@@ -51,13 +51,13 @@ layout:
       columns: 2
   - System:
       tab: Applications
-      header: false
+      header: true
       initiallyCollapsed: true
       style: row
       columns: 3
   - Monitoring:
       tab: Applications
-      header: false
+      header: true
       initiallyCollapsed: true
       style: row
       columns: 3
