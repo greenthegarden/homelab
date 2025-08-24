@@ -35,6 +35,41 @@ layout:
       tab: Main
       style: row
       columns: 2
+# Applications Tab link
+  - Applications:
+      tab: Applications
+      hearder: false
+      initiallyCollapsed: false
+      style: row
+      columns: 2
+  - System:
+      tab: Applications
+      hearder: false
+      initiallyCollapsed: true
+      style: row
+      columns: 3
+  - Monitoring:
+      tab: Applications
+      hearder: false
+      initiallyCollapsed: true
+      style: row
+      columns: 3
+# Devices Tab links
+  - Devices:
+      tab: Devices
+      style: row
+      columns: 2
+      header: false
+  - Sensors:
+      tab: Devices
+    #   style: row
+    #   columns: 2
+    #   header: false
+  - Cameras:
+      tab: Devices
+    #   style: row
+    #   columns: 2
+    #   header: false
 # Websites Tab links
   - Services:
       tab: Websites
@@ -64,33 +99,10 @@ layout:
       tab: Websites
       style: row
       columns: 3
-  - Cameras:
-      tab: Websites
-  - Sensors:
-      tab: Websites
   - Development:
       tab: Websites
   - Storage:
       tab: Websites
-# Applications Tab link
-  - Applications:
-      tab: Applications
-      hearder: false
-      initiallyCollapsed: false
-      style: row
-      columns: 2
-  - System:
-      tab: Applications
-      hearder: false
-      initiallyCollapsed: true
-      style: row
-      columns: 3
-  - Monitoring:
-      tab: Applications
-      hearder: false
-      initiallyCollapsed: true
-      style: row
-      columns: 3
 # Finance Tab links
   - Finance:
       tab: Finance

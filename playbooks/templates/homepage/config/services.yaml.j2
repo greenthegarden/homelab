@@ -3,13 +3,59 @@
 # https://gethomepage.dev/configs/services/
 # https://gethomepage.dev/latest/widgets/
 
-- Applications:
+- Devices:
 
-    - Emoncms:
-        href: http://emonpi
-        description: Open-source energy visualisation
-        icon: mdi-power-socket-au
-        siteMonitor: http://emonpi.localdomain
+    - DNS:
+        href: {{ adguard.url }}
+        description: Domain name server and management
+        icon: adguard-home.png
+        siteMonitor: {{ adguard.url }}
+        widget:
+          type: adguard
+          url: {{ adguard.url }}
+          username: {{ adguard.username }}
+          password: {{ adguard.password }}
+
+    - Network Gateway:
+        href: {{ unifi_console.url }}
+        description: Unifi Console
+        icon: ubiquiti-unifi.png
+        siteMonitor: {{ unifi_console.url }}
+        widget:
+          type: unifi
+          url: {{ unifi_console.url }}
+          username: {{ unifi_console.username }}
+          password: {{ unifi_console.password }}
+
+    - Home Server:
+        href: {{ proxmox.url }}
+        description: Homelab server
+        icon: proxmox.png
+        siteMonitor: {{ proxmox.url }}
+        widget:
+          type: proxmox
+          url: {{ proxmox.url }}
+          username: {{ proxmox.username }}
+          password: {{ proxmox.password }}
+          fields: ["vms", "lxc", "resources.cpu", "resources.mem"]
+
+    - Network Storage:
+        href: {{ truenas.url }}
+        description: TrueNAS SCALE
+        icon: truenas.png
+        siteMonitor: {{ truenas.url }}
+        widget:
+            type: truenas
+            url: {{ truenas.url }}
+            key: {{ homepage.truenas_api_key }}
+            enablePools: true # optional, defaults to false
+            nasType: scale # defaults to scale, must be set to 'core' if using enablePools with TrueNAS Core
+
+    - Printer:
+        href: {{ printer.url }}
+        description: Brother MFC-L2703DW
+        icon: brother.png
+        siteMonitor: {{ printer.url }}:80
 
 - Cameras:
 
@@ -69,62 +115,14 @@
         description: Airthings Cloud
         icon: mdi-home-thermometer-outline
 
+    - Energy Monitor :
+        href: http://emonpi
+        description: Open-source energy visualisation
+        icon: mdi-power-socket-au
+        siteMonitor: http://emonpi.localdomain
+
     - RoomSense IQ:
         href: http://192.168.20.112
         description: RoomSense IQ
         icon: mdi-account-check
         siteMonitor: http://192.168.20.112
-
-- System:
-
-    - AdGuard:
-        href: {{ adguard.url }}
-        description: Domain management
-        icon: adguard-home.png
-        siteMonitor: {{ adguard.url }}
-        widget:
-          type: adguard
-          url: {{ adguard.url }}
-          username: {{ adguard.username }}
-          password: {{ adguard.password }}
-
-    - Network Gateway:
-        href: {{ unifi_console.url }}
-        description: Unifi Console
-        icon: ubiquiti-unifi.png
-        siteMonitor: {{ unifi_console.url }}
-        widget:
-          type: unifi
-          url: {{ unifi_console.url }}
-          username: {{ unifi_console.username }}
-          password: {{ unifi_console.password }}
-
-    - Printer:
-        href: {{ printer.url }}
-        description: Brother MFC-L2703DW
-        icon: brother.png
-        siteMonitor: {{ printer.url }}:80
-
-    - Proxmox:
-        href: {{ proxmox.url }}
-        description: Homelab server
-        icon: proxmox.png
-        siteMonitor: {{ proxmox.url }}
-        widget:
-          type: proxmox
-          url: {{ proxmox.url }}
-          username: {{ proxmox.username }}
-          password: {{ proxmox.password }}
-          fields: ["vms", "lxc", "resources.cpu", "resources.mem"]
-
-    - TrueNAS:
-        href: {{ truenas.url }}
-        description: TrueNAS SCALE
-        icon: truenas.png
-        siteMonitor: {{ truenas.url }}
-        widget:
-            type: truenas
-            url: {{ truenas.url }}
-            key: {{ homepage.truenas_api_key }}
-            enablePools: true # optional, defaults to false
-            nasType: scale # defaults to scale, must be set to 'core' if using enablePools with TrueNAS Core
