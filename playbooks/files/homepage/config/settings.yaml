@@ -24,6 +24,13 @@ groupsInitiallyCollapsed: false
 
 layout:
 # Main Tab links
+  - Home Applications:
+      tab: Main
+      style: row
+      columns: 2
+      header: false
+      iconsOnly: true
+      initiallyCollapsed: false
   - Family:
       tab: Main
       style: row
