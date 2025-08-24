@@ -71,7 +71,8 @@
         icon: mdi-cctv
         siteMonitor: http://camera-fronthall.localdomain
 
-- Home Applications:
+# - Home Applications:
+- Nextcloud:
 
     - Nextcloud:
         href: {{ nextcloud.url }}
@@ -84,6 +85,8 @@
           username: {{ homepage.nextcloud_username }}
           password: {{ homepage.nextcloud_password }}
           fields: ["cpuload", "memoryusage", "freespace", "activeusers"]
+
+- Home Assistant:
 
     - Home Assistant:
         href: {{ home_assistant.url }}

@@ -24,13 +24,47 @@ groupsInitiallyCollapsed: false
 
 layout:
 # Main Tab links
-  - Home Applications:
+  - Nextcloud:
       tab: Main
       style: row
-      columns: 2
+      columns: 1
       header: false
       iconsOnly: true
       initiallyCollapsed: false
+  - Nextcloud Apps:
+      tab: Main
+      style: row
+      columns: 3
+      header: false
+      iconsOnly: true
+  - Home Assistant:
+      tab: Main
+      style: row
+      columns: 1
+      header: false
+      iconsOnly: true
+      initiallyCollapsed: false
+  - Home Assistant Home Dashboard:
+      tab: Main
+      style: row
+      columns: 1
+      header: false
+      iconsOnly: true
+      initiallyCollapsed: false
+  - Home Assistant Dashboards:
+      tab: Main
+      style: row
+      columns: 3
+      header: false
+      iconsOnly: true
+      initiallyCollapsed: false
+#   - Home Applications:
+#       tab: Main
+#       style: row
+#       columns: 2
+#       header: false
+#       iconsOnly: true
+#       initiallyCollapsed: false
   - Family:
       tab: Main
       style: row
@@ -38,10 +72,6 @@ layout:
       header: false
       iconsOnly: true
       initiallyCollapsed: false
-  - Nextcloud Apps:
-      tab: Main
-      style: row
-      columns: 2
 # Applications Tab link
   - Applications:
       tab: Applications
