@@ -45,19 +45,19 @@ layout:
 # Applications Tab link
   - Applications:
       tab: Applications
-      hearder: false
+      header: false
       initiallyCollapsed: false
       style: row
       columns: 2
   - System:
       tab: Applications
-      hearder: false
+      header: false
       initiallyCollapsed: true
       style: row
       columns: 3
   - Monitoring:
       tab: Applications
-      hearder: false
+      header: false
       initiallyCollapsed: true
       style: row
       columns: 3

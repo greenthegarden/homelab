@@ -53,14 +53,14 @@
       "key": "wud.link.template",
       "value": "https://github.com/gethomepage/homepage/releases/tag/v${major}.${minor}.${patch}",
     }
-    # ---------------------------------------------------------------
-    # Homepage labels
-    - { "key": "homepage.group", "value": "Monitoring" }
-    - { "key": "homepage.name", "value": "Homepage" }
-    - { "key": "homepage.description", "value": "This page" }
-    - { "key": "homepage.icon", "value": "homepage.png" }
-    - { "key": "homepage.href", "value": "https://{{ homepage_fqdn }}/" }
-    - { "key": "homepage.siteMonitor", "value": "https://{{ homepage_fqdn }}/" }
+    # # ---------------------------------------------------------------
+    # # Homepage labels
+    # - { "key": "homepage.group", "value": "Monitoring" }
+    # - { "key": "homepage.name", "value": "Homepage" }
+    # - { "key": "homepage.description", "value": "This page" }
+    # - { "key": "homepage.icon", "value": "homepage.png" }
+    # - { "key": "homepage.href", "value": "https://{{ homepage_fqdn }}/" }
+    # - { "key": "homepage.siteMonitor", "value": "https://{{ homepage_fqdn }}/" }
 
 - name: deploy-homepage | Create Homepage configuration directory
   ansible.builtin.file:

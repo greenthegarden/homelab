@@ -116,7 +116,7 @@
     }
     # ---------------------------------------------------------------
     # Homepage labels
-    - { "key": "homepage.group", "value": "Monitoring" }
+    - { "key": "homepage.group", "value": "System" }
     - { "key": "homepage.name", "value": "Broker" }
     - { "key": "homepage.description", "value": "MQTT Broker" }
     - { "key": "homepage.icon", "value": "emqx.png" }

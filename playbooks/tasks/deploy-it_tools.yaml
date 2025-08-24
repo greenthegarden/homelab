@@ -51,7 +51,7 @@
     }
     # ---------------------------------------------------------------
     # Homepage labels
-    - { "key": "homepage.group", "value": "Monitoring" }
+    - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "It-tools" }
     - {
       "key": "homepage.description",
