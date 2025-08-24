@@ -500,7 +500,7 @@ ansible-vault create --vault-password-file vault.pass foo.yml
 # Edit a file
 ansible-vault edit --vault-password-file vault.pass foo.yml
 
-# Derypt a file
+# Decrypt a file
 ansible-vault decrypt --vault-password-file vault.pass foo.yml
 
 # Encrypt a file

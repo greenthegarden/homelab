@@ -13,19 +13,6 @@
     hortusfox_service_port: 80
     hortusfox_db_backup_volume_name: hortusfox_db_backup
 
-
-    # Plant-it facts
-    # Ensure values are also set in templates/plant-it/docker-compose.yaml.j2
-    # TODO: Ensure variables set here are used in the docker-compose file
-    # Note use following address to access Plant-it:
-    # https://plant-it-api.hortusfox.homelab.greenthegarden.com
-    plant_it_image: msdeluise/plant-it-server:0.10.0
-    plant_it_service_name: plant-it
-    plant_it_service_port_ui: 3000
-    plant_it_service_port_api: 8080
-    plant_it_upload_volume_name: plant_it_upload
-    plant_it_db_backup_volume_name: plant_it_db_backup
-
   tasks:
 
     - name: Load homelab vars
@@ -43,15 +30,3 @@
         docker_volume_backup_volume_to_backup:
           - "{{ hortusfox_db_backup_volume_name }}:/backup/hortusfox_db-backup:ro"
         docker_volume_backup_backup_label: "{{ hortusfox_service_name }}-db"
-
-    - name: Deploy a containerised instance of Plant-it
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-plant_it.yaml
-
-    # - name: Deploy a containerised instance of Docker Volume Backup
-    #   ansible.builtin.include_tasks:
-    #     file: tasks/deploy-docker-volume-backup.yaml
-    #   vars:
-    #     docker_volume_backup_volume_to_backup:
-    #       - "{{ plant_it_db_backup_volume_name }}:/backup/plant_it_db-backup:ro"
-    #     docker_volume_backup_backup_label: "{{ plant_it_service_name }}-db"
