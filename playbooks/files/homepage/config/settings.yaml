@@ -29,14 +29,15 @@ layout:
       style: row
       columns: 1
       header: false
-      iconsOnly: true
+      iconsOnly: false
       initiallyCollapsed: false
   - Nextcloud Apps:
       tab: Main
       style: row
       columns: 3
       header: false
-      iconsOnly: true
+      iconsOnly: false
+      initiallyCollapsed: false
   - Home Assistant:
       tab: Main
       style: row
@@ -49,14 +50,14 @@ layout:
       style: row
       columns: 1
       header: false
-      iconsOnly: true
+      iconsOnly: false
       initiallyCollapsed: false
   - Home Assistant Dashboards:
       tab: Main
       style: row
       columns: 3
       header: false
-      iconsOnly: true
+      iconsOnly: false
       initiallyCollapsed: false
 #   - Home Applications:
 #       tab: Main
