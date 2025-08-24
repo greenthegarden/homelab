@@ -54,13 +54,13 @@ layout:
       header: true
       initiallyCollapsed: true
       style: row
-      columns: 3
+      columns: 2
   - Monitoring:
       tab: Applications
       header: true
       initiallyCollapsed: true
       style: row
-      columns: 3
+      columns: 2
 # Devices Tab links
   - Devices:
       tab: Devices
