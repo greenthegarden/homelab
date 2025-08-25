@@ -127,9 +127,10 @@ Server Specifications
 | Component | Details                                                                                    |
 | --------- | ------------------------------------------------------------------------------------------ |
 | CPU       | Intel Core i5-1235U 2P-8E-12H 3.3-4.4GHz / 15-55 W TDP / 10 nm (Intel 7)                   |
-| GPU       | Intel Xe / 80 EU / 1200 MHz                                                                |
-| RAM       | 64GB DDR4 3200MHz max which is fullyu utilised by 2x Crucial 32GB SODIMM modules           |
-| Storage   | 500GB M.2 2280 NVMe plus 2TB SATA 3 2.5″ SSD                                               |
+| GPU       | Intel Iris Xe / 80 EU / 1200 MHz                                                           |
+| RAM       | 64GB DDR4 3200MHz max which is fully utilised by 2x Crucial 32GB SODIMM modules            |
+| Storage   | 500GB M.2 2280 NVMe                                                                        |
+|           | 2TB SATA 3 2.5″ SSD                                                                        |
 | Network   | 1x Gigabit Ethernet (Realtek)                                                              |
 | Ports     | 1x USB 3.1 Type-C (data) / 2x USB 3.0 / 2x USB 2.0 / 2x HDMI 2.1 / Audio Jack / BIOS Reset |
 
@@ -172,7 +173,7 @@ ADD DETAILS!!
 
 The storage service is running [TrueNAS Scale Community Edition][storsoft] as the storage solution.
 
-TrueNAS Scale ElectricEel-24.10.2 was installed directly on to the ZimBlade.
+TrueNAS Scale ElectricEel-24.10.2 was installed directly on to the ZimaBlade.
 
 The initial configuration of TrueNAS was based on details described in [6 Crucial Settings to Enable on TrueNAS SCALE][truenassettings].
 
@@ -187,21 +188,21 @@ The following resource details are used for LXC Linux Containers:
 
 Low resource services, those which are largely stateless:
 
-| Resource  | Value                                                  |
-| --------- | -------------------------------------------------------- |
-| Memory    | 1.00 GiB (1024 MiB)                  |
-| Swap      | 1.00 GiB (1024 MiB)                              |
-| Cores     | 1                  |
-| Disk size | 16GB |
+| Resource  | Value               |
+| --------- | ------------------- |
+| Memory    | 1.00 GiB (1024 MiB) |
+| Swap      | 1.00 GiB (1024 MiB) |
+| Cores     | 1                   |
+| Disk size | 16GB                |
 
 Medium resource services, those which host datastores of some type:
 
-| Resource  | Value                                                  |
-| --------- | -------------------------------------------------------- |
-| Memory    | 2.00 GiB (1024 MiB)                  |
-| Swap      | 2.00 GiB (1024 MiB)                              |
-| Cores     | 2                  |
-| Disk size | 24GB |
+| Resource  | Value               |
+| --------- | ------------------- |
+| Memory    | 2.00 GiB (1024 MiB) |
+| Swap      | 2.00 GiB (1024 MiB) |
+| Cores     | 2                   |
+| Disk size | 24GB                |
 
 Each application is hosted in a single LXC Linux Container, using an architecture as shown in the following diagram.
 
