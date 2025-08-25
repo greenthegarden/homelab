@@ -154,7 +154,7 @@ Server Specifications
 | Power     | 45 W USB Type-C power adapter                            |
 | Thermal   | 6 W TDP with passive cooling                             |
 
-For storage, two Seagate Barracuda Green 2TB SATA hard drives are used.
+For storage, two 4TB Western Digital Red Plus 3.5" NAS hard drives are used.
 
 ## Software
 
