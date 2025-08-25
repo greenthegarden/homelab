@@ -8,7 +8,9 @@
 - [Hardware](#hardware)
   - [Network Hardware](#network-hardware)
   - [Compute Server Hardware](#compute-server-hardware)
+    - [Compute Server Specifications](#compute-server-specifications)
   - [Storage Server Hardware](#storage-server-hardware)
+    - [Storage Server Specifications](#storage-server-specifications)
 - [Software](#software)
   - [Compute Server Software](#compute-server-software)
   - [Storage Server Software](#storage-server-software)
@@ -120,9 +122,9 @@ Given the importance of the time service, it is deployed as a [Docker container]
 
 A [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC][compserv] was selected as the Homelab compute server.
 
-The system uses an i5-1235U processor, which with 10 cores, provides a good amount of parallel processing in a relatviely efficient, compact, unit.
+The system uses an i5-1235U processor which, with 10 cores, provides a good amount of parallel processing in a relatively efficient, compact, unit.
 
-Server Specifications
+#### Compute Server Specifications
 
 | Component | Details                                                                                    |
 | --------- | ------------------------------------------------------------------------------------------ |
@@ -138,7 +140,7 @@ Server Specifications
 
 A [ZimaBlade 7700 NAS kit][storserv], which uses a quad-core version of the ZimaBlade single-board x86 computer, is used as the storage server.
 
-Server Specifications
+#### Storage Server Specifications
 
 | Component | Details                                                  |
 | --------- | -------------------------------------------------------- |
