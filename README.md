@@ -156,7 +156,7 @@ A [ZimaBlade 7700 NAS kit][storserv], which uses a quad-core version of the Zima
 | Power     | 45 W USB Type-C power adapter                            |
 | Thermal   | 6 W TDP with passive cooling                             |
 
-For storage, two 4TB Western Digital Red Plus 3.5" NAS hard drives are used.
+For storage, two [4TB Western Digital Red Plus 3.5" NAS hard drives](https://www.westerndigital.com/en-au/products/internal-drives/wd-red-plus-sata-3-5-hdd?sku=WD40EFPX) are used.
 
 ## Software
 
