@@ -45,13 +45,13 @@ layout:
       header: false
       iconsOnly: true
       initiallyCollapsed: false
-  - Home Assistant Home Dashboard:
-      tab: Main
-      style: row
-      columns: 1
-      header: false
-      iconsOnly: false
-      initiallyCollapsed: false
+#   - Home Assistant Home Dashboard:
+#       tab: Main
+#       style: row
+#       columns: 1
+#       header: false
+#       iconsOnly: false
+#       initiallyCollapsed: false
   - Home Assistant Dashboards:
       tab: Main
       style: row
