@@ -30,7 +30,7 @@ node_exporter_service_name: node-exporter
 node_exporter_service_port: 9100
 node_exporter_service_protocol: http
 # Portainer Agent facts
-portainer_agent_image: portainer/agent:2.33.0-alpine
+portainer_agent_image: portainer/agent:2.33.1-alpine
 portainer_agent_service_name: portainer_agent
 portainer_agent_service_port: 9001
 # Prometheus facts
