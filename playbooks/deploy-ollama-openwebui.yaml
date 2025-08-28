@@ -6,13 +6,13 @@
   vars:
 
     # Ollama facts
-    ollama_image: ollama/ollama:0.11.7 # renovate: datasource=docker depName=ollama/ollama
+    ollama_image: ollama/ollama:0.11.8 # renovate: datasource=docker depName=ollama/ollama
     ollama_service_name: ollama
     ollama_service_port: 11434
     ollama_volume_name: ollama
 
     # Open WebUI facts
-    open_webui_image: ghcr.io/open-webui/open-webui:0.6.25  # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
+    open_webui_image: ghcr.io/open-webui/open-webui:0.6.26  # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
     open_webui_service_name: open-webui
     open_webui_service_port: 8080
     open_webui_volume_name: open-webui
