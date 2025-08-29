@@ -47,6 +47,10 @@
       "value": "Host(`{{ tinyauth_fqdn }}`)",
     }
     - {
+      "key": "traefik.http.services.{{ tinyauth_service_name }}.loadbalancer.server.port",
+      "value": "{{ tinyauth_service_port }}",
+    }
+    - {
       "key": "traefik.http.middlewares.{{ tinyauth_service_name }}forwardauth.address",
       "value": "http://tinyauth:3000/api/auth/traefik",
     }
@@ -73,7 +77,7 @@
       APP_URL: "https://{{ tinyauth_fqdn }}"
       USERS: "{{ tinyauth.username }}:{{ tinyauth.password_hash }}"
       # USERS: "{{ tinyauth.username }}:{{ tinyauth.password_hash | default(tinyauth.password | password_hash('bcrypt')) }}"
-    labels: "{{ tinyauth_container_labels }}"
+    labels: "{{ tinyauth_container_labels | default(omit) }}"
     networks_cli_compatible: true
     networks: "{{ tinyauth_networks }}"
     recreate: true
