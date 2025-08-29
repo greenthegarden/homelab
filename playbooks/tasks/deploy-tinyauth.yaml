@@ -39,12 +39,12 @@
     - { "key": "traefik.enable", "value": "true" }
     # - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
-      "key": "traefik.http.routers.{{ tinyauth_service_name }}-http.rule",
+      "key": "traefik.http.routers.{{ tinyauth_service_name }}.rule",
       "value": "Host(`{{ tinyauth_fqdn }}`)",
     }
     - {
       "key": "traefik.http.middlewares.{{ tinyauth_service_name }}forwardauth.address",
-      "value": "tinyauth:3000/api/auth/traefik",
+      "value": "http://tinyauth:3000/api/auth/traefik",
     }
     # ---------------------------------------------------------------
     # What's up Docker? labels

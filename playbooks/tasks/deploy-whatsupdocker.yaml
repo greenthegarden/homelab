@@ -112,7 +112,7 @@
       WUD_WATCHER_LOCAL_SOCKET: "/var/run/docker.sock"
       WUD_WATCHER_ANSIBLE_HOST: "ansible.{{ lan_dns_domain }}"
       WUD_WATCHER_BROKER_HOST: "broker.{{ lan_dns_domain }}"
-      WUD_WATCHER_DOZZLE_HOST: "dozzle.{{ lan_dns_domain }}"
+      WUD_WATCHER_DOZZLE_HOST: "lxc-dozzle-node-1.{{ lan_dns_domain }}"
       WUD_WATCHER_FIREFLYIII_HOST: "fireflyiii.{{ lan_dns_domain }}"
       WUD_WATCHER_FRIGATE_HOST: "frigate.{{ lan_dns_domain }}"
       WUD_WATCHER_GROCY_HOST: "grocy.{{ lan_dns_domain }}"
