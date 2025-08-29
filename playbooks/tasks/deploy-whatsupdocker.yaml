@@ -50,10 +50,10 @@
       "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.rule",
       "value": "Host(`{{ whatsupdocker_fqdn }}`)",
     }
-    # - {
-    #   "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.middlewares",
-    #   "value": "tinyauth",
-    # }
+    - {
+      "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.middlewares",
+      "value": "tinyauth",
+    }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
