@@ -50,10 +50,10 @@
     #   "key": "traefik.http.services.{{ tinyauth_service_name }}.loadbalancer.server.port",
     #   "value": "{{ tinyauth_service_port }}",
     # }
-    # - {
-    #   "key": "traefik.http.middlewares.{{ tinyauth_service_name }}forwardauth.address",
-    #   "value": "http://tinyauth:3000/api/auth/traefik",
-    # }
+    - {
+      "key": "traefik.http.middlewares.{{ tinyauth_service_name }}.forwardauth.address",
+      "value": "http://tinyauth:3000/api/auth/traefik",
+    }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
