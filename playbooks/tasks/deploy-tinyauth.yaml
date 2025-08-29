@@ -39,6 +39,10 @@
     - { "key": "traefik.enable", "value": "true" }
     # - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
+      "key": "traefik.http.routers.{{ tinyauth_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
       "key": "traefik.http.routers.{{ tinyauth_service_name }}.rule",
       "value": "Host(`{{ tinyauth_fqdn }}`)",
     }
