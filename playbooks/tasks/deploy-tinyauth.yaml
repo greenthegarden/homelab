@@ -21,8 +21,12 @@
       - name: "{{ monitoring_network_name | default('monitoring') }}"
       - name: "{{ web_network_name | default('web') }}"
     tinyauth_ports:
+      # Published ports to expose outside the container
+      # host port:container port
       - "{{ tinyauth_service_port }}:3000"
     tinyauth_volumes:
+      # Local paths to mount into the container
+      # local path:container path
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
@@ -30,17 +34,19 @@
   ansible.builtin.set_fact:
     tinyauth_container_labels: "{{ tinyauth_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
+    # - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ tinyauth_service_name }}-http.rule",
       "value": "Host(`{{ tinyauth_fqdn }}`)",
     }
     - {
       "key": "traefik.http.middlewares.{{ tinyauth_service_name }}forwardauth.address",
-      "value": "http://{{ tinyauth_fqdn }}:3000/api/auth/traefik",
+      "value": "tinyauth:3000/api/auth/traefik",
     }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
@@ -55,13 +61,13 @@
 
 - name: deploy-tinyauth | Deploy Tinyauth
   community.docker.docker_container:
-    name: "{{ tinyauth_service_name | default('tinyauth') }}"
+    name: "{{ tinyauth_service_name }}"
     image: "{{ tinyauth_image }}"
     detach: true
     env:
       SECRET: "{{ tinyauth.secret }}"
       APP_URL: "https://{{ tinyauth_fqdn }}"
-      USERS: "{{ tinyauth.user }}"
+      USERS: "{{ tinyauth.username }}:{{ tinyauth.password_hash | default(tinyauth.password | password_hash('bcrypt')) }}"
     labels: "{{ tinyauth_container_labels }}"
     networks_cli_compatible: true
     networks: "{{ tinyauth_networks }}"
