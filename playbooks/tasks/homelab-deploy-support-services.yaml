@@ -4,21 +4,21 @@
   ansible.builtin.include_vars:
     file: vars/homelab_env.yaml
 
-- name: homelab-deploy-support-services | Configure Homelab Docker base
-  ansible.builtin.include_tasks:
-    file: tasks/homelab-configure-docker-base.yaml
+# - name: homelab-deploy-support-services | Configure Homelab Docker base
+#   ansible.builtin.include_tasks:
+#     file: tasks/homelab-configure-docker-base.yaml
 
-- name: homelab-deploy-support-services | Deploy a containerised instance of Docker Socket Proxy
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-docker-socket-proxy.yaml
+# - name: homelab-deploy-support-services | Deploy a containerised instance of Docker Socket Proxy
+#   ansible.builtin.include_tasks:
+#     file: tasks/deploy-docker-socket-proxy.yaml
 
-- name: homelab-deploy-support-services | Deploy a containerised instance of Portainer Agent
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-portainer-agent.yaml
+# - name: homelab-deploy-support-services | Deploy a containerised instance of Portainer Agent
+#   ansible.builtin.include_tasks:
+#     file: tasks/deploy-portainer-agent.yaml
 
-- name: homelab-deploy-support-services | Deploy a containerised instance of Dozzle Agent
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-dozzle-agent.yaml
+# - name: homelab-deploy-support-services | Deploy a containerised instance of Dozzle Agent
+#   ansible.builtin.include_tasks:
+#     file: tasks/deploy-dozzle-agent.yaml
 
 - name: homelab-deploy-support-services | Deploy a containerised instance of Traefik
   ansible.builtin.include_tasks:
