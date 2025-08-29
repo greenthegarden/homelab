@@ -67,7 +67,8 @@
     env:
       SECRET: "{{ tinyauth.secret }}"
       APP_URL: "https://{{ tinyauth_fqdn }}"
-      USERS: "{{ tinyauth.username }}:{{ tinyauth.password_hash | default(tinyauth.password | password_hash('bcrypt')) }}"
+      USERS: "{{ tinyauth.username }}:{{ tinyauth.password_hash }}"
+      # USERS: "{{ tinyauth.username }}:{{ tinyauth.password_hash | default(tinyauth.password | password_hash('bcrypt')) }}"
     labels: "{{ tinyauth_container_labels }}"
     networks_cli_compatible: true
     networks: "{{ tinyauth_networks }}"
