@@ -34,7 +34,7 @@ portainer_agent_image: portainer/agent:2.33.1-alpine
 portainer_agent_service_name: portainer_agent
 portainer_agent_service_port: 9001
 # Prometheus facts
-prometheus_image: prom/prometheus:v3.4.1
+prometheus_image: prom/prometheus:v3.5.0
 prometheus_service_name: prometheus
 prometheus_service_port: 9090
 prometheus_volume_name: prometheus
