@@ -37,7 +37,6 @@
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    # - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ tinyauth_service_name }}.entrypoints",
       "value": "websecure",
@@ -46,10 +45,6 @@
       "key": "traefik.http.routers.{{ tinyauth_service_name }}.rule",
       "value": "Host(`{{ tinyauth_fqdn }}`)",
     }
-    # - {
-    #   "key": "traefik.http.services.{{ tinyauth_service_name }}.loadbalancer.server.port",
-    #   "value": "{{ tinyauth_service_port }}",
-    # }
     - {
       "key": "traefik.http.middlewares.{{ tinyauth_service_name }}.forwardauth.address",
       "value": "http://tinyauth:3000/api/auth/traefik",
