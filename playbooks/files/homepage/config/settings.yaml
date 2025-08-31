@@ -139,7 +139,7 @@ layout:
       columns: 3
   - Development:
       tab: Websites
-  - Storage:
+  - Cloud Storage:
       tab: Websites
 # Finance Tab links
   - Finance:
