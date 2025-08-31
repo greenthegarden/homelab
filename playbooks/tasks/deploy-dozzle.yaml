@@ -48,18 +48,6 @@
       "key": "traefik.http.routers.{{ dozzle_service_name }}.rule",
       "value": "Host(`{{ dozzle_fqdn }}`)",
     }
-    # - {
-    #   "key": "traefik.http.routers.{{ dozzle_service_name }}.service",
-    #   "value": "{{ dozzle_service_name }}",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ dozzle_service_name }}.tls",
-    #   "value": "true",
-    # }
-    # - {
-    #   "key": "traefik.http.services.{{ dozzle_service_name }}.loadbalancer.server.port",
-    #   "value": "{{ dozzle_service_port | quote }}",
-    # }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
@@ -92,7 +80,7 @@
     detach: true
     env:
       DOZZLE_ENABLE_ACTIONS: "true"
-      DOZZLE_REMOTE_AGENT: dozzle.localdomain:7007,ansible.localdomain:7007,broker.localdomain:7007,fireflyiii.localdomain:7007,frigate.localdomain:7007,homebox.localdomain:7007,homepage.localdomain:7007,portainer.localdomain:7007,uptimekuma.localdomain:7007,vaultwarden.localdomain:7007,whatsupdocker.localdomain:7007
+      DOZZLE_REMOTE_AGENT: dozzle.localdomain:7007,ansible.localdomain:7007,broker.localdomain:7007,fireflyiii.localdomain:7007,frigate.localdomain:7007,grocy.localdomain:7007,homebox.localdomain:7007,homepage.localdomain:7007,hortusfox.localdomain:7007,ollama.localdomain:7007,portainer.localdomain:7007,uptimekuma.localdomain:7007,vaultwarden.localdomain:7007,whatsupdocker.localdomain:7007
     healthcheck:
       test: ["CMD", "/dozzle", "healthcheck"]
       interval: 3s
