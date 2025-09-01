@@ -31,3 +31,4 @@
         docker_volume_backup_volume_to_backup:
           - "{{ fireflyiii_db_backup_volume_name }}:/backup/fireflyiii_db-backup:ro"
         docker_volume_backup_backup_label: "{{ fireflyiii_service_name }}-db"
+        docker_volume_backup_backup_retention_days: 7

@@ -30,3 +30,4 @@
         docker_volume_backup_volume_to_backup:
           - "{{ hortusfox_db_backup_volume_name }}:/backup/hortusfox_db-backup:ro"
         docker_volume_backup_backup_label: "{{ hortusfox_service_name }}-db"
+        docker_volume_backup_backup_retention_days: 7

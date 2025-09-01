@@ -28,3 +28,4 @@
         docker_volume_backup_volume_to_backup:
           - "{{ homebox_volume_name }}:/backup/homebox-backup:ro"
         docker_volume_backup_backup_label: "{{ homebox_service_name }}"
+        docker_volume_backup_backup_retention_days: 7

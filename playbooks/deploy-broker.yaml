@@ -35,3 +35,4 @@
         docker_volume_backup_volume_to_backup:
           - "{{ emqx_data_volume_name }}:/backup/emqx-backup:ro"
         docker_volume_backup_backup_label: "{{ emqx_service_name }}"
+        docker_volume_backup_backup_retention_days: 3
