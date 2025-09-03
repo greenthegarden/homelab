@@ -1,11 +1,11 @@
 {
-    "ansible.python.interpreterPath": "/bin/python3",
-    "editor.formatOnSave": true, // Used to autoformat on save
-    "files.associations": {
-        "*.env.j2": "env",
-        "*.nomad": "hcl",
-        "*.yml.j2": "yaml",
-        "*.yaml.j2": "yaml"
-    },
-    "workbench.colorTheme": "Default Dark Modern",
+  "ansible.python.interpreterPath": "/bin/python3",
+  "editor.formatOnSave": true, // Used to autoformat on save
+  "files.associations": {
+    "*.yaml.j2": "yaml",
+    "*.yml.j2": "yaml",
+    "*.env.j2": "dotenv",
+    "*.nomad": "hcl"
+  },
+  "workbench.colorTheme": "GitHub Dark"
 }
