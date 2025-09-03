@@ -13,6 +13,7 @@
   register: host_docker_info
   ignore_errors: true
 
+# TODO: only install if not present
 - name: homelab-configure-docker-base | Install Docker
   when: host_docker_info.can_talk_to_docker is defined
   ansible.builtin.import_role:

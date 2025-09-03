@@ -1,5 +1,6 @@
 ---
 
+# TODO: Check using docker-socket-proxy
 - name: hosts-dependency-check-docker-version | Get host Docker status
   community.docker.docker_host_info:
   register: host_docker_info
