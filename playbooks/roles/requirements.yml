@@ -3,7 +3,7 @@ roles:
   - name: geerlingguy.docker
     scm: git
     src: git+https://github.com/geerlingguy/ansible-role-docker
-    version: 7.5.1
+    version: 7.5.2
 
   - name: geerlingguy.pip
     scm: git
