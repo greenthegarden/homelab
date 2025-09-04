@@ -127,7 +127,7 @@
           HBOX_LOG_LEVEL: "info"
           HBOX_LOG_FORMAT: "json"
           HBOX_WEB_MAX_UPLOAD_SIZE: "10"
-          TZ: "{{ homelab.timezone | default(omit) }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ homebox_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ homebox_networks }}"

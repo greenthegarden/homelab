@@ -115,7 +115,7 @@
         image: "{{ uptimekuma_image }}"
         detach: true
         env:
-          TZ: "{{ homelab.timezone | default(omit) }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ (uptimekuma_container_labels | default({})) | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ uptimekuma_networks }}"

@@ -101,7 +101,7 @@
     image: "{{ whatsupdocker_image }}"
     detach: true
     env:
-      TZ: "{{ homelab.timezone | default(omit) }}"
+      TZ: "{{ homelab.timezone | default('UTC') }}"
       WUD_TRIGGER_DOCKER_UPDATE_DRYRUN: "true"
       WUD_TRIGGER_DOCKER_UPDATE_PRUNE: "true"
       WUD_TRIGGER_DOCKER_UPDATE_THRESHOLD: "minor"

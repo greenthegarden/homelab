@@ -31,7 +31,7 @@
     image: "{{ chrony_image }}"
     detach: true
     env:
-      TZ: "{{ ansible_env.TZ | default('UTC') }}"
+      TZ: "{{ homelab.timezone | default('UTC') }}"
     networks_cli_compatible: true
     published_ports: "{{ chrony_ports }}"
     restart: true

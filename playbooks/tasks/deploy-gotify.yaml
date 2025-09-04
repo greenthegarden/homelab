@@ -15,6 +15,7 @@
     gotify_image_tag: "{{ gotify_image_tag | default('latest') }}"
     gotify_service_name: "{{ gotify_service_name | default('gotify') }}"
     gotify_service_port: "{{ gotify_service_port | default(80) }}"
+    gotify_data_volume_name: "{{ gotify_data_volume_name | default('data') }}"
 
 - name: deploy-gotify | Set Gotify aggregated facts
   ansible.builtin.set_fact:
@@ -31,6 +32,7 @@
     gotify_volumes:
       # Local paths to mount into the container
       # local path:container path
+      - "{{ gotify_data_volume_name }}:/gotify/data"
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
@@ -77,6 +79,13 @@
     - { "key": "homepage.href", "value": "https://{{ gotify_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ gotify_fqdn }}/" }
 
+- name: deploy-gotify | Create Gotify volumes # noqa: syntax-check[unknown-module]
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ gotify_data_volume_name }}"
+
 - name: deploy-gotify | Check if Gotify is running
   community.docker.docker_container_info:
     name: "{{ gotify_service_name }}"
@@ -110,6 +119,8 @@
         name: "{{ gotify_service_name }}"
         image: "{{ gotify_image }}"
         detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ gotify_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ gotify_networks }}"

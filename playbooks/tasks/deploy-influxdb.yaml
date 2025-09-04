@@ -121,7 +121,7 @@
           #   # DOCKER_INFLUXDB_INIT_BUCKET: "{{ influxdb.init_bucket | default('homelab') }}"
           #   # DOCKER_INFLUXDB_INIT_RETENTION: "{{ influxdb_init_retention }}"
           #   # DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: "{{ influxdb.init_admin_token | default('dummy') }}"
-          TZ: "{{ ansible_date_time.tz }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ influxdb_container_labels }}"
         networks_cli_compatible: true
         networks: "{{ influxdb_networks }}"

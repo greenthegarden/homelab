@@ -123,6 +123,14 @@
     - { "key": "homepage.href", "value": "https://{{ emqx_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ emqx_fqdn }}/" }
 
+- name: deploy-emqx | Create EMQX volumes # noqa: syntax-check[unknown-module]
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ emqx_data_volume_name }}"
+    - "{{ emqx_log_volume_name }}"
+
 - name: deploy-emqx | Check if EMQX is running
   community.docker.docker_container_info:
     name: "{{ emqx_service_name }}"

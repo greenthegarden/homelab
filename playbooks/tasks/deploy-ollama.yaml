@@ -110,7 +110,7 @@
         image: "{{ ollama_image }}"
         detach: true
         env:
-          TZ: "{{ ansible_env.TZ | default('UTC') }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ ollama_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ ollama_networks }}"
