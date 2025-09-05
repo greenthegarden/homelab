@@ -16,7 +16,7 @@
     tududi_service_name: "{{ tududi_service_name | default('tududi') }}"
     tududi_service_port: "{{ tududi_service_port | default(3002) }}"
     tududi_data_volume_name: "{{ tududi_data_volume_name | default('tududi_data') }}"
-    tududi_uploads_volume_name: "{{ tududi_data_volume_name | default('tududi_uploads') }}"
+    tududi_uploads_volume_name: "{{ tududi_uploads_volume_name | default('tududi_uploads') }}"
 
 
 - name: deploy-tududi | Set Tududi aggregated facts
