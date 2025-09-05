@@ -15,7 +15,7 @@
     fireflyiii_db_backup_volume_name: fireflyiii_db_backup
 
     # Grist facts
-    grist_image: gristlabs/grist:v1.7.3
+    grist_image: gristlabs/grist:1.7.3
     grist_service_name: grist
     grist_service_port: 8484
     grist_data_volume_name: grist_data
