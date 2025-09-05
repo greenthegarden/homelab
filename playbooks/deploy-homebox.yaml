@@ -11,6 +11,13 @@
     homebox_service_port: 7745
     homebox_volume_name: homebox
 
+    # Homebox facts
+    tudini_image: chrisvel/tududi:8.0
+    tudini_service_name: tududi
+    tudini_service_port: 3002
+    tududi_data_volume_name: tududi_data
+    tududi_uploads_volume_name: tududi_uploads
+
   tasks:
 
     - name: Load homelab vars
@@ -29,3 +36,7 @@
           - "{{ homebox_volume_name }}:/backup/homebox-backup:ro"
         docker_volume_backup_backup_label: "{{ homebox_service_name }}"
         docker_volume_backup_backup_retention_days: 7
+
+    - name: Deploy a containerised instance of Tudidi
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-tududi.yaml
