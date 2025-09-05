@@ -108,8 +108,8 @@
         detach: true
         env:
           GRIST_APP_URL: "https://{{ grist_fqdn }}/"
-          GRIST_SESSION_SECRET: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
-          GRIST_DEFAULT_EMAIL: "{{ grist_admin_email | default('admin@' + grist_fqdn) }}"
+          GRIST_SESSION_SECRET: "{{ grist.admin_password | default('dummy') }}"
+          GRIST_DEFAULT_EMAIL: "{{ grist.admin_email | default('admin@' + grist_fqdn) }}"
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ grist_container_labels | default(omit) }}"
         networks_cli_compatible: true
