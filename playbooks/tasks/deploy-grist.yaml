@@ -1,0 +1,133 @@
+---
+
+- name: deploy-grist | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### GRIST SECTION
+
+# https://support.getgrist.com/self-managed/#what-is-self-hosted-grist
+
+- name: deploy-grist | Set Grist facts
+  ansible.builtin.set_fact:
+    grist_image: "{{ grist_image | default('gristlabs/grist:latest') }}"
+    grist_image_tag: "{{ grist_image_tag | default('latest') }}"
+    grist_service_name: "{{ grist_service_name | default('grist') }}"
+    grist_service_port: "{{ grist_service_port | default(8484) }}"
+    grist_data_volume_name: "{{ grist_data_volume_name | default('grist_data') }}"
+
+- name: deploy-grist | Set Grist aggregated facts
+  ansible.builtin.set_fact:
+    grist_fqdn: "{{ grist_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: deploy-grist | Set Grist service facts
+  ansible.builtin.set_fact:
+    grist_networks:
+      - name: "{{ web_network_name | default('web') }}"
+    grist_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ grist_service_port }}:8484"
+    grist_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ grist_data_volume_name }}:/persist"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-grist | Create Grist container labels
+  ansible.builtin.set_fact:
+    grist_container_labels: "{{ grist_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ grist_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ grist_service_name }}.rule",
+      "value": "Host(`{{ grist_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/gristlabs/grist-core/releases/tag/v${major}.${minor}.${patch}",
+    }
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Grist" }
+    - { "key": "homepage.description", "value": "Grist is a software product to organize, analyze, and share data." }
+    - { "key": "homepage.icon", "value": "grist.png" }
+    - { "key": "homepage.href", "value": "https://{{ grist_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ grist_fqdn }}/" }
+
+- name: deploy-grist | Create Grist volumes # noqa: syntax-check[unknown-module]
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ grist_data_volume_name }}"
+
+- name: deploy-grist | Check if Grist is running
+  community.docker.docker_container_info:
+    name: "{{ grist_service_name }}"
+  register: grist_state
+
+- name: deploy-grist | Remove Grist container if changing version
+  when:
+    - grist_state.exists
+    - (grist_image | split(':') | last) != (grist_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-grist | Stop and remove existing Grist container
+      community.docker.docker_container:
+        name: "{{ grist_service_name }}"
+        state: absent
+
+    - name: deploy-grist | Set update Grist
+      ansible.builtin.set_fact:
+        grist_update: true
+
+- name: deploy-grist | Deploy Grist if not running
+  when:
+    - not grist_state.exists or (grist_update | default(false))
+  block:
+    - name: deploy-grist | Pull Grist image
+      community.docker.docker_image:
+        name: "{{ grist_image }}"
+        source: pull
+
+    - name: deploy-grist | Deploy Grist
+      community.docker.docker_container:
+        name: "{{ grist_service_name }}"
+        image: "{{ grist_image }}"
+        detach: true
+        env:
+          GRIST_APP_URL: "https://{{ grist_fqdn }}/"
+          GRIST_SESSION_SECRET: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+          GRIST_DEFAULT_EMAIL: "{{ grist_admin_email | default('admin@' + grist_fqdn) }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ grist_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ grist_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ grist_volumes }}"
+      register: grist_container_state
+
+    - name: deploy-grist | Wait for Grist to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ grist_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: grist_running
+      until: grist_running is success
+      retries: 10
