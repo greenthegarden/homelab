@@ -11,6 +11,11 @@
     grocy_service_port: 9283
     grocy_volume_name: grocy
 
+    focalboard_image: mattermost/focalboard:edge
+    focalboard_service_name: focalboard
+    focalboard_service_port: 80
+    focalboard_data_volume_name: focalboard_data
+
   tasks:
 
     - name: Load homelab vars
@@ -29,3 +34,7 @@
           - "{{ grocy_volume_name }}:/backup/grocy-backup:ro"
         docker_volume_backup_backup_label: "{{ grocy_service_name }}"
         docker_volume_backup_backup_retention_days: 7
+
+    - name: Deploy a containerised instance of Focalboard
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-focalboard.yaml

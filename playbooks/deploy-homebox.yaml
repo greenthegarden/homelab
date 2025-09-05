@@ -12,7 +12,7 @@
     homebox_volume_name: homebox
 
     # Homebox facts
-    tududi_image: chrisvel/tududi:8.0
+    tududi_image: chrisvel/tududi:0.80
     tududi_service_name: tududi
     tududi_service_port: 3002
     tududi_data_volume_name: tududi_data

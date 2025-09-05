@@ -15,7 +15,7 @@
     focalboard_image_tag: "{{ focalboard_image_tag | default('latest') }}"
     focalboard_service_name: "{{ focalboard_service_name | default('focalboard') }}"
     focalboard_service_port: "{{ focalboard_service_port | default(80) }}"
-    focalboard_data_volume_name: "{{ focalboard_data_volume_name | default('data') }}"
+    focalboard_data_volume_name: "{{ focalboard_data_volume_name | default('focalboard_data') }}"
 
 - name: deploy-focalboard | Set Focalboard aggregated facts
   ansible.builtin.set_fact:
@@ -51,18 +51,6 @@
       "key": "traefik.http.routers.{{ focalboard_service_name }}.rule",
       "value": "Host(`{{ focalboard_fqdn }}`)",
     }
-    # - {
-    #   "key": "traefik.http.routers.{{ focalboard_service_name }}.service",
-    #   "value": "{{ focalboard_service_name }}",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ focalboard_service_name }}.tls",
-    #   "value": "true",
-    # }
-    # - {
-    #   "key": "traefik.http.services.{{ focalboard_service_name }}.loadbalancer.server.port",
-    #   "value": "{{ focalboard_service_port_api | quote }}",
-    # }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
