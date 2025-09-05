@@ -1,0 +1,139 @@
+---
+- name: deploy-tududi | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### TUDUDI SECTION
+
+# https://tududi.com/
+# https://www.tududi.com/download/personal-edition/docker/
+# https://github.com/mattermost-community/tududi
+
+- name: deploy-tududi | Set Tududi facts
+  ansible.builtin.set_fact:
+    tududi_image: "{{ tududi_image | default('chrisvel/tududi:latest') }}"
+    tududi_image_tag: "{{ tududi_image_tag | default('latest') }}"
+    tududi_service_name: "{{ tududi_service_name | default('tududi') }}"
+    tududi_service_port: "{{ tududi_service_port | default(3002) }}"
+    tududi_data_volume_name: "{{ tududi_data_volume_name | default('tududi_data') }}"
+    tududi_uploads_volume_name: "{{ tududi_data_volume_name | default('tududi_uploads') }}"
+
+
+- name: deploy-tududi | Set Tududi aggregated facts
+  ansible.builtin.set_fact:
+    tududi_fqdn: "{{ tududi_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: deploy-tududi | Set Tududi service facts
+  ansible.builtin.set_fact:
+    tududi_networks:
+      - name: "{{ web_network_name | default('web') }}"
+    tududi_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ tududi_service_port }}:3002"
+    tududi_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ tududi_data_volume_name }}:/app/backend/db"
+      - "{{ tududi_uploads_volume_name }}:/app/backend/uploads"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-tududi | Create Tududi container labels
+  ansible.builtin.set_fact:
+    tududi_container_labels: "{{ tududi_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ tududi_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ tududi_service_name }}.rule",
+      "value": "Host(`{{ tududi_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/chrisvel/tududi/releases/tag/v${major}.${minor}.${patch}",
+    }
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Tududi" }
+    - { "key": "homepage.description", "value": " Self-hosted task management tool " }
+    - { "key": "homepage.icon", "value": "tududi.png" }
+    - { "key": "homepage.href", "value": "https://{{ tududi_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ tududi_fqdn }}/" }
+
+- name: deploy-tududi | Create Tududi volumes # noqa: syntax-check[unknown-module]
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ tududi_data_volume_name }}"
+    - "{{ tududi_uploads_volume_name }}"
+
+- name: deploy-tududi | Check if Tududi is running
+  community.docker.docker_container_info:
+    name: "{{ tududi_service_name }}"
+  register: tududi_state
+
+- name: deploy-tududi | Remove Tududi container if changing version
+  when:
+    - tududi_state.exists
+    - (tududi_image | split(':') | last) != (tududi_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-tududi | Stop and remove existing Tududi container
+      community.docker.docker_container:
+        name: "{{ tududi_service_name }}"
+        state: absent
+
+    - name: deploy-tududi | Set update Tududi
+      ansible.builtin.set_fact:
+        tududi_update: true
+
+- name: deploy-tududi | Deploy Tududi if not running
+  when:
+    - not tududi_state.exists or (tududi_update | default(false))
+  block:
+    - name: deploy-tududi | Pull Tududi image
+      community.docker.docker_image:
+        name: "{{ tududi_image }}"
+        source: pull
+
+    - name: deploy-tududi | Deploy Tududi
+      community.docker.docker_container:
+        name: "{{ tududi_service_name }}"
+        image: "{{ tududi_image }}"
+        detach: true
+        env:
+          TUDUDI_USER_EMAIL: "{{ tududi.admin_email | default('admin@' + tududi_fqdn) }}"
+          TUDUDI_USER_PASSWORD: "{{ tududi.admin_password | default('dummy') }}"
+          TUDUDI_SESSION_SECRET: "{{ tududi.session_secret | default('dummy') }}"
+          TUDUDI_ALLOWED_ORIGINS: "http://{{ tududi_fqdn }},https://{{ tududi_fqdn }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ tududi_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ tududi_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ tududi_volumes }}"
+      register: tududi_container_state
+
+    - name: deploy-tududi | Wait for Tududi to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ tududi_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: tududi_running
+      until: tududi_running is success
+      retries: 10
