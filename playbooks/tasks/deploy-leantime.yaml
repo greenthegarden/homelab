@@ -16,7 +16,7 @@
     leantime_service_name: "{{ leantime_service_name | default('leantime') }}"
     leantime_service_port: "{{ leantime_service_port | default(80) }}"
     leantime_network_name: "{{ leantime_network_name | default('leantime') }}"
-    # leantime_data_volume_name: "{{ leantime_data_volume_name | default('leantime_data') }}"
+    leantime_data_volume_name: "{{ leantime_data_volume_name | default('leantime') }}"
 
 - name: deploy-leantime | Set Leantime aggregated facts
   ansible.builtin.set_fact:
