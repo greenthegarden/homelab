@@ -72,9 +72,9 @@
     }
     # ---------------------------------------------------------------
     # Homepage labels
-    - { "key": "homepage.group", "value": "Monitoring" }
-    - { "key": "homepage.name", "value": "Messaging" }
-    - { "key": "homepage.description", "value": "Gotify" }
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Gotify" }
+    - { "key": "homepage.description", "value": "A simple server for sending and receiving messages" }
     - { "key": "homepage.icon", "value": "gotify.png" }
     - { "key": "homepage.href", "value": "https://{{ gotify_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ gotify_fqdn }}/" }
