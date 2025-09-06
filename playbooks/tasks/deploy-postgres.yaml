@@ -1,0 +1,124 @@
+---
+- name: deploy-postgres | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### POSTGRES SECTION
+
+# http://www.postgres.com/
+# https://github.com/postgres/postgres-server
+# https://hub.docker.com/_/postgres
+
+- name: deploy-postgres | Set Postgres facts
+  ansible.builtin.set_fact:
+    postgres_image: "{{ postgres_image | default('postgres:latest') }}"
+    postgres_image_tag: "{{ postgres_image_tag | default('latest') }}"
+    postgres_service_name: "{{ postgres_service_name | default('postgres') }}"
+    postgres_service_port: "{{ postgres_service_port | default(5432) }}"
+    postgres_data_volume_name: "{{ postgres_data_volume_name | default('postgres') }}"
+
+- name: deploy-postgres | Set Postgres aggregated facts
+  ansible.builtin.set_fact:
+    postgres_fqdn: "{{ postgres_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: deploy-postgres | Set Postgres service facts
+  ansible.builtin.set_fact:
+    postgres_networks:
+      - name: "{{ postgres_network_name | default('postgres') }}"
+    postgres_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ postgres_service_port }}:5432"
+    postgres_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ postgres_data_volume_name }}:/var/lib/postgresql/data"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-postgres | Create Postgres container labels
+  ansible.builtin.set_fact:
+    postgres_container_labels: "{{ postgres_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/postgres/postgres/releases/tag/REL_${major}_${minor}",
+    }
+
+# Create required Docker networks
+- name: deploy-postgres | Create Postgres networks # noqa: syntax-check[unknown-module]
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ postgres_networks }}"
+
+# Create required Docker volumes
+- name: deploy-postgres | Create Postgres volumes # noqa: syntax-check[unknown-module]
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ postgres_data_volume_name }}"
+
+- name: deploy-postgres | Check if Postgres is running
+  community.docker.docker_container_info:
+    name: "{{ postgres_service_name }}"
+  register: postgres_state
+
+- name: deploy-postgres | Remove Postgres container if changing version
+  when:
+    - postgres_state.exists
+    - (postgres_image | split(':') | last) != (postgres_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-postgres | Stop and remove existing Postgres container
+      community.docker.docker_container:
+        name: "{{ postgres_service_name }}"
+        state: absent
+
+    - name: deploy-postgres | Set update Postgres
+      ansible.builtin.set_fact:
+        postgres_update: true
+
+- name: deploy-postgres | Deploy Postgres if not running
+  when:
+    - not postgres_state.exists or (postgres_update | default(false))
+  block:
+    - name: deploy-postgres | Pull Postgres image
+      community.docker.docker_image:
+        name: "{{ postgres_image }}"
+        source: pull
+
+    - name: deploy-postgres | Deploy Postgres
+      community.docker.docker_container:
+        name: "{{ postgres_service_name }}"
+        image: "{{ postgres_image }}"
+        command: "{{ postgres_args | default(omit) }}"
+        detach: true
+        env:
+          POSTGRES_DB: "{{ postgres_database | default(omit) }}"
+          POSTGRES_USER: "{{ postgres_user | default(omit) }}"
+          POSTGRES_PASSWORD: "{{ postgres_password | default(omit) }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ postgres_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ postgres_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ postgres_volumes }}"
+      register: postgres_container_state
+
+    - name: deploy-postgres | Wait for Postgres to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ postgres_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: postgres_running
+      until: postgres_running is success
+      retries: 10

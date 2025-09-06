@@ -1,0 +1,172 @@
+---
+- name: deploy-docmost | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### DOCMOST SECTION
+
+# https://docmost.com/
+# https://github.com/docmost/docmost
+# https://hub.docker.com/r/docmost/docmost
+
+- name: deploy-docmost | Set Docmost facts
+  ansible.builtin.set_fact:
+    docmost_image: "{{ docmost_image | default('docmost/docmost:latest') }}"
+    docmost_image_tag: "{{ docmost_image_tag | default('latest') }}"
+    docmost_service_name: "{{ docmost_service_name | default('docmost') }}"
+    docmost_service_port: "{{ docmost_service_port | default(3000) }}"
+    docmost_data_volume_name: "{{ docmost_data_volume_name | default('docmost') }}"
+
+- name: deploy-docmost | Set Docmost aggregated facts
+  ansible.builtin.set_fact:
+    docmost_fqdn: "{{ docmost_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: deploy-docmost | Set Docmost service facts
+  ansible.builtin.set_fact:
+    docmost_networks:
+      - name: "{{ docmost_network_name | default('docmost') }}"
+      - name: "{{ web_network_name | default('web') }}"
+    docmost_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ docmost_service_port }}:3000"
+    docmost_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ docmost_data_volume_name }}:/app/data/storage"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-docmost | Create Docmost container labels
+  ansible.builtin.set_fact:
+    docmost_container_labels: "{{ docmost_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ docmost_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ docmost_service_name }}.rule",
+      "value": "Host(`{{ docmost_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/docmost/docmost/releases/tag/v${major}.${minor}.${patch}",
+    }
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Docmost" }
+    - { "key": "homepage.description", "value": "Open source project management system" }
+    - { "key": "homepage.icon", "value": "docmost.png" }
+    - { "key": "homepage.href", "value": "https://{{ docmost_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ docmost_fqdn }}/" }
+
+# Create required Docker networks
+- name: deploy-docmost | Create Docmost networks # noqa: syntax-check[unknown-module]
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ docmost_networks }}"
+
+# Depply redis for Docmost
+- name: deploy-docmost | Deploy Redis for Docmost
+  when: docmost_redis_create | default(true)
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-redis.yaml
+  vars:
+    redis_image: redis:7.2-alpine
+    redis_network_name: "{{ docmost_network_name }}"
+    redis_data_volume_name: "{{ docmost_data_volume_name }}-redis"
+    redis_args:
+      - "--save ''"
+      - "--appendonly no"
+      - "--maxmemory 256mb"
+      - "--maxmemory-policy allkeys-lru"
+
+# Create Postgres database for Docmost
+- name: deploy-docmost | Deploy Postgres database
+  when: docmost_postgres_database_create | default(true)
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-postgres.yaml
+  vars:
+    postgres_image: postgres:16-alpine
+    postgres_network_name: "{{ docmost_network_name }}"
+    postgres_data_volume_name: "{{ docmost_data_volume_name }}-postgres"
+    postgres_database: "{{ docmost.postgres_database | default('docmost') }}"
+    postgres_user: "{{ docmost.postgres_user | default('docmost') }}"
+    postgres_password: "{{ docmost.postgres_password | default('dummy') }}"
+
+# Create required Docker volumes
+- name: deploy-docmost | Create Docmost volumes # noqa: syntax-check[unknown-module]
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ docmost_data_volume_name }}"
+
+- name: deploy-docmost | Check if Docmost is running
+  community.docker.docker_container_info:
+    name: "{{ docmost_service_name }}"
+  register: docmost_state
+
+- name: deploy-docmost | Remove Docmost container if changing version
+  when:
+    - docmost_state.exists
+    - (docmost_image | split(':') | last) != (docmost_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-docmost | Stop and remove existing Docmost container
+      community.docker.docker_container:
+        name: "{{ docmost_service_name }}"
+        state: absent
+
+    - name: deploy-docmost | Set update Docmost
+      ansible.builtin.set_fact:
+        docmost_update: true
+
+- name: deploy-docmost | Deploy Docmost if not running
+  when:
+    - not docmost_state.exists or (docmost_update | default(false))
+  block:
+    - name: deploy-docmost | Pull Docmost image
+      community.docker.docker_image:
+        name: "{{ docmost_image }}"
+        source: pull
+
+    - name: deploy-docmost | Deploy Docmost
+      community.docker.docker_container:
+        name: "{{ docmost_service_name }}"
+        image: "{{ docmost_image }}"
+        detach: true
+        env:
+          APP_URL: "https://{{ docmost_fqdn }}"
+          APP_SECRET: "{{ docmost.app_secret | default('dummy') }}"
+          DATABASE_URL: "postgresql://{{ postgres_user }}:{{ postgres_password }}@postgres:5432/{{ postgres_database }}?schema=public"
+          REDIS_URL: "redis://redis:6379"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ docmost_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ docmost_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ docmost_volumes }}"
+      register: docmost_container_state
+
+    - name: deploy-docmost | Wait for Docmost to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ docmost_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: docmost_running
+      until: docmost_running is success
+      retries: 10

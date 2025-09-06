@@ -95,6 +95,7 @@
       community.docker.docker_container:
         name: "{{ redis_service_name }}"
         image: "{{ redis_image }}"
+        command: "{{ redis_args | default(omit) }}"
         detach: true
         env:
           TZ: "{{ homelab.timezone | default('UTC') }}"
