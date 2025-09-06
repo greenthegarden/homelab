@@ -5,9 +5,8 @@
 
   vars:
 
-    # Homepage facts
-    homepage_image: docmost/docmost:0.23.0
-    homepage_service_name: docmost
+    # Docmost facts
+    docmost_image: docmost/docmost:0.23.0
 
   tasks:
 

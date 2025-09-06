@@ -15,6 +15,7 @@
     leantime_image_tag: "{{ leantime_image_tag | default('latest') }}"
     leantime_service_name: "{{ leantime_service_name | default('leantime') }}"
     leantime_service_port: "{{ leantime_service_port | default(80) }}"
+    leantime_network_name: "{{ leantime_network_name | default('leantime') }}"
     # leantime_data_volume_name: "{{ leantime_data_volume_name | default('leantime_data') }}"
 
 - name: deploy-leantime | Set Leantime aggregated facts
@@ -24,7 +25,7 @@
 - name: deploy-leantime | Set Leantime service facts
   ansible.builtin.set_fact:
     leantime_networks:
-      - name: "{{ leantime_network_name | default('leantime') }}"
+      - name: "{{ leantime_network_name }}"
       - name: "{{ web_network_name | default('web') }}"
     leantime_ports:
       # Published ports to expose outside the container

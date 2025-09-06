@@ -15,6 +15,7 @@
     docmost_image_tag: "{{ docmost_image_tag | default('latest') }}"
     docmost_service_name: "{{ docmost_service_name | default('docmost') }}"
     docmost_service_port: "{{ docmost_service_port | default(3000) }}"
+    docmost_network_name: "{{ docmost_network_name | default('docmost') }}"
     docmost_data_volume_name: "{{ docmost_data_volume_name | default('docmost') }}"
 
 - name: deploy-docmost | Set Docmost aggregated facts
@@ -24,7 +25,7 @@
 - name: deploy-docmost | Set Docmost service facts
   ansible.builtin.set_fact:
     docmost_networks:
-      - name: "{{ docmost_network_name | default('docmost') }}"
+      - name: "{{ docmost_network_name }}"
       - name: "{{ web_network_name | default('web') }}"
     docmost_ports:
       # Published ports to expose outside the container
