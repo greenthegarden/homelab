@@ -121,6 +121,7 @@
       WUD_WATCHER_HORTUSFOX_HOST: "hortusfox.{{ lan_dns_domain }}"
       WUD_WATCHER_OLLAMA_HOST: "ollama.{{ lan_dns_domain }}"
       WUD_WATCHER_PORTAINER_HOST: "portainer.{{ lan_dns_domain }}"
+      WUD_WATCHER_PRODUCTIVITY_HOST: "productivity.{{ lan_dns_domain }}"
       WUD_WATCHER_UPTIMEKUMA_HOST: "uptimekuma.{{ lan_dns_domain }}"
       WUD_WATCHER_VAULTWARDEN_HOST: "vaultwarden.{{ lan_dns_domain }}"
       # # Authentik integration

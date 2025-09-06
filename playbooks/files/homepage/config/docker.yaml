@@ -58,6 +58,10 @@ docker-portainer:
   host: portainer.localdomain
   port: 2375
 
+docker-productivity:
+  host: productivity.localdomain
+  port: 2375
+
 docker-uptimekuma:
   host: uptimekuma.localdomain
   port: 2375
