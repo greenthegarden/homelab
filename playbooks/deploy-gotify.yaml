@@ -7,9 +7,6 @@
 
     # Gotify facts
     gotify_image: gotify/server:2.6.3 # renovate: datasource=docker depName=gotify/server
-    gotify_service_name: gotify
-    gotify_service_port: 80 # Default HTTP port for Gotify
-    gotify_data_volume_name: data
 
   tasks:
 

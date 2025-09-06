@@ -15,7 +15,7 @@
     gotify_image_tag: "{{ gotify_image_tag | default('latest') }}"
     gotify_service_name: "{{ gotify_service_name | default('gotify') }}"
     gotify_service_port: "{{ gotify_service_port | default(80) }}"
-    gotify_data_volume_name: "{{ gotify_data_volume_name | default('data') }}"
+    gotify_data_volume_name: "{{ gotify_data_volume_name | default('gotify') }}"
 
 - name: deploy-gotify | Set Gotify aggregated facts
   ansible.builtin.set_fact:
@@ -51,18 +51,6 @@
       "key": "traefik.http.routers.{{ gotify_service_name }}.rule",
       "value": "Host(`{{ gotify_fqdn }}`)",
     }
-    # - {
-    #   "key": "traefik.http.routers.{{ gotify_service_name }}.service",
-    #   "value": "{{ gotify_service_name }}",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ gotify_service_name }}.tls",
-    #   "value": "true",
-    # }
-    # - {
-    #   "key": "traefik.http.services.{{ gotify_service_name }}.loadbalancer.server.port",
-    #   "value": "{{ gotify_service_port_api | quote }}",
-    # }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
