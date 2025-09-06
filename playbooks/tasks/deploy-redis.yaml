@@ -15,6 +15,7 @@
     redis_image_tag: "{{ redis_image_tag | default('latest') }}"
     redis_service_name: "{{ redis_service_name | default('redis') }}"
     redis_service_port: "{{ redis_service_port | default(6379) }}"
+    redis_network_name: "{{ redis_network_name | default('redis') }}"
     redis_data_volume_name: "{{ redis_data_volume_name | default('redis') }}"
 
 - name: deploy-redis | Set Redis aggregated facts
@@ -24,7 +25,7 @@
 - name: deploy-redis | Set Redis service facts
   ansible.builtin.set_fact:
     redis_networks:
-      - name: "{{ redis_network_name | default('redis') }}"
+      - name: "{{ redis_network_name }}"
     redis_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -56,7 +57,7 @@
   loop: "{{ redis_networks }}"
 
 # Create required Docker volumes
-- name: deploy-redis | Create MySQL volumes # noqa: syntax-check[unknown-module]
+- name: deploy-redis | Create Redis volumes # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
