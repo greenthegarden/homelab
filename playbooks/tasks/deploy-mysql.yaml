@@ -15,6 +15,7 @@
     mysql_image_tag: "{{ mysql_image_tag | default('latest') }}"
     mysql_service_name: "{{ mysql_service_name | default('mysql') }}"
     mysql_service_port: "{{ mysql_service_port | default(3306) }}"
+    mysql_network_name: "{{ mysql_network_name | default('mysql') }}"
     mysql_data_volume_name: "{{ mysql_data_volume_name | default('mysql') }}"
 
 - name: deploy-mysql | Set MySQL aggregated facts
@@ -24,7 +25,7 @@
 - name: deploy-mysql | Set MySQL service facts
   ansible.builtin.set_fact:
     mysql_networks:
-      - name: "{{ mysql_network_name | default('mysql') }}"
+      - name: "{{ mysql_network_name }}"
     mysql_ports:
       # Published ports to expose outside the container
       # host port:container port
