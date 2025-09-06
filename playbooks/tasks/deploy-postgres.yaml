@@ -110,15 +110,3 @@
         state: started
         volumes: "{{ postgres_volumes }}"
       register: postgres_container_state
-
-    - name: deploy-postgres | Wait for Postgres to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ postgres_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: postgres_running
-      until: postgres_running is success
-      retries: 10

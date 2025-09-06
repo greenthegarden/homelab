@@ -108,15 +108,3 @@
         state: started
         volumes: "{{ redis_volumes }}"
       register: redis_container_state
-
-    - name: deploy-redis | Wait for Redis to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ redis_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: redis_running
-      until: redis_running is success
-      retries: 10
