@@ -1,0 +1,22 @@
+---
+- name: Deploy Broker
+
+  hosts: broker
+
+  vars:
+
+    # Gotify facts
+    gotify_image: gotify/server:2.6.3 # renovate: datasource=docker depName=gotify/server
+    gotify_service_name: gotify
+    gotify_service_port: 80 # Default HTTP port for Gotify
+    gotify_data_volume_name: data
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Gotify
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-gotify.yaml

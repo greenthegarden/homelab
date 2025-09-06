@@ -13,12 +13,6 @@
     emqx_data_volume_name: data
     emqx_log_volume_name: log
 
-    # Gotify facts
-    gotify_image: gotify/server:2.6.3 # renovate: datasource=docker depName=gotify/server
-    gotify_service_name: gotify
-    gotify_service_port: 80 # Default HTTP port for Gotify
-    gotify_data_volume_name: data
-
   tasks:
 
     - name: Load homelab vars
@@ -28,10 +22,6 @@
     - name: Deploy a containerised instance of EMQX
       ansible.builtin.include_tasks:
         file: tasks/deploy-emqx.yaml
-
-    - name: Deploy a containerised instance of Gotify
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-gotify.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
       ansible.builtin.include_tasks:
