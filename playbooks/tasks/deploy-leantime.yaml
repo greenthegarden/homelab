@@ -84,6 +84,7 @@
   vars:
     mysql_image: mysql:5.7
     mysql_network_name: "{{ leantime_network_name }}"
+    mysql_data_volume_name: "{{ leantime_data_volume_name }}-mysql"
     mysql_database_name: "{{ leantime.mysql_database_name | default('leantime') }}"
     mysql_user_name: "{{ leantime.mysql_user_name | default('leantime') }}"
     mysql_user_password: "{{ leantime.mysql_user_password | default('dummy') }}"

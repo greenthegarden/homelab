@@ -112,15 +112,3 @@
         state: started
         volumes: "{{ mysql_volumes }}"
       register: mysql_container_state
-
-    - name: deploy-mysql | Wait for MySQL to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ mysql_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: mysql_running
-      until: mysql_running is success
-      retries: 10
