@@ -17,12 +17,6 @@
     open_webui_service_port: 8080
     open_webui_volume_name: open-webui
 
-    # SearXNG facts
-    searxng_image: searxng/searxng:2025.9.3-f91c998  # renovate: datasource=docker depName=searxng/searxng
-    searxng_service_name: searxng
-    searxng_service_port: 8080
-    searxng_volume_name: searxng
-
   tasks:
 
     - name: Load homelab vars
@@ -32,10 +26,6 @@
     - name: Deploy a containerised instance of Ollama
       ansible.builtin.include_tasks:
         file: tasks/deploy-ollama.yaml
-
-    - name: Deploy a containerised instance of SearXNG
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-searxng.yaml
 
     - name: Deploy a containerised instance of Open WebUI
       ansible.builtin.include_tasks:
