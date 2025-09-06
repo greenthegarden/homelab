@@ -1,0 +1,125 @@
+---
+- name: deploy-mysql | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### MYSQL SECTION
+
+# http://www.mysql.com/
+# https://github.com/mysql/mysql-server
+# https://hub.docker.com/_/mysql
+
+- name: deploy-mysql | Set MySQL facts
+  ansible.builtin.set_fact:
+    mysql_image: "{{ mysql_image | default('mysql:latest') }}"
+    mysql_image_tag: "{{ mysql_image_tag | default('latest') }}"
+    mysql_service_name: "{{ mysql_service_name | default('mysql') }}"
+    mysql_service_port: "{{ mysql_service_port | default(3306) }}"
+    mysql_data_volume_name: "{{ mysql_data_volume_name | default('mysql') }}"
+
+- name: deploy-mysql | Set MySQL aggregated facts
+  ansible.builtin.set_fact:
+    mysql_fqdn: "{{ mysql_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: deploy-mysql | Set MySQL service facts
+  ansible.builtin.set_fact:
+    mysql_networks:
+      - name: "{{ mysql_network_name | default('mysql') }}"
+    mysql_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ mysql_service_port }}:3306"
+    mysql_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ mysql_data_volume_name }}:/mysql/data"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-mysql | Create MySQL container labels
+  ansible.builtin.set_fact:
+    mysql_container_labels: "{{ mysql_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/mysql/mysql/releases/tag/mysql-${major}.${minor}.${patch}",
+    }
+
+# Create required Docker networks
+- name: deploy-mysql | Create MySQL networks # noqa: syntax-check[unknown-module]
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ mysql_networks }}"
+
+# Create required Docker volumes
+- name: deploy-mysql | Create MySQL volumes # noqa: syntax-check[unknown-module]
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ mysql_data_volume_name }}"
+
+- name: deploy-mysql | Check if MySQL is running
+  community.docker.docker_container_info:
+    name: "{{ mysql_service_name }}"
+  register: mysql_state
+
+- name: deploy-mysql | Remove MySQL container if changing version
+  when:
+    - mysql_state.exists
+    - (mysql_image | split(':') | last) != (mysql_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-mysql | Stop and remove existing MySQL container
+      community.docker.docker_container:
+        name: "{{ mysql_service_name }}"
+        state: absent
+
+    - name: deploy-mysql | Set update MySQL
+      ansible.builtin.set_fact:
+        mysql_update: true
+
+- name: deploy-mysql | Deploy MySQL if not running
+  when:
+    - not mysql_state.exists or (mysql_update | default(false))
+  block:
+    - name: deploy-mysql | Pull MySQL image
+      community.docker.docker_image:
+        name: "{{ mysql_image }}"
+        source: pull
+
+    - name: deploy-mysql | Deploy MySQL
+      community.docker.docker_container:
+        name: "{{ mysql_service_name }}"
+        image: "{{ mysql_image }}"
+        command: "{{ mysql_args | default(omit) }}"
+        detach: true
+        env:
+          MYSQL_ROOT_PASSWORD: "{{ mysql_root_password | default(omit) }}"
+          MYSQL_DATABASE: "{{ mysql_database_name | default(omit) }}"
+          MYSQL_USER: "{{ mysql_user_name | default(omit) }}"
+          MYSQL_PASSWORD: "{{ mysql_user_password | default(omit) }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ mysql_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ mysql_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ mysql_volumes }}"
+      register: mysql_container_state
+
+    - name: deploy-mysql | Wait for MySQL to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ mysql_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: mysql_running
+      until: mysql_running is success
+      retries: 10

@@ -1,0 +1,120 @@
+---
+- name: deploy-redis | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### REDIS SECTION
+
+# https://redis.io/
+# https://github.com/redis/redis
+# https://hub.docker.com/r/redis/redis
+
+- name: deploy-redis | Set Redis facts
+  ansible.builtin.set_fact:
+    redis_image: "{{ redis_image | default('redis:latest') }}"
+    redis_image_tag: "{{ redis_image_tag | default('latest') }}"
+    redis_service_name: "{{ redis_service_name | default('redis') }}"
+    redis_service_port: "{{ redis_service_port | default(6379) }}"
+    redis_data_volume_name: "{{ redis_data_volume_name | default('redis') }}"
+
+- name: deploy-redis | Set Redis aggregated facts
+  ansible.builtin.set_fact:
+    redis_fqdn: "{{ redis_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: deploy-redis | Set Redis service facts
+  ansible.builtin.set_fact:
+    redis_networks:
+      - name: "{{ redis_network_name | default('redis') }}"
+    redis_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ redis_service_port }}:6379"
+    redis_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ redis_data_volume_name }}:/data"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-redis | Create Redis container labels
+  ansible.builtin.set_fact:
+    redis_container_labels: "{{ redis_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/redis/redis/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+# Create required Docker networks
+- name: deploy-redis | Create Redis networks # noqa: syntax-check[unknown-module]
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ data_network_name }}"
+
+# Create required Docker volumes
+- name: deploy-redis | Create MySQL volumes # noqa: syntax-check[unknown-module]
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ redis_data_volume_name }}"
+
+- name: deploy-redis | Check if Redis is running
+  community.docker.docker_container_info:
+    name: "{{ redis_service_name }}"
+  register: redis_state
+
+- name: deploy-redis | Remove Redis container if changing version
+  when:
+    - redis_state.exists
+    - (redis_image | split(':') | last) != (redis_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-redis | Stop and remove existing Redis container
+      community.docker.docker_container:
+        name: "{{ redis_service_name }}"
+        state: absent
+
+    - name: deploy-redis | Set update Redis
+      ansible.builtin.set_fact:
+        redis_update: true
+
+- name: deploy-redis | Deploy Redis if not running
+  when:
+    - not redis_state.exists or (redis_update | default(false))
+  block:
+    - name: deploy-redis | Pull Redis image
+      community.docker.docker_image:
+        name: "{{ redis_image }}"
+        source: pull
+
+    - name: deploy-redis | Deploy Redis
+      community.docker.docker_container:
+        name: "{{ redis_service_name }}"
+        image: "{{ redis_image }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ redis_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ redis_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ redis_volumes }}"
+      register: redis_container_state
+
+    - name: deploy-redis | Wait for Redis to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ redis_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: redis_running
+      until: redis_running is success
+      retries: 10

@@ -1,0 +1,155 @@
+---
+- name: deploy-leantime | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### LEANTIME SECTION
+
+# https://leantime.io/
+# https://github.com/Leantime/leantime
+# https://hub.docker.com/r/leantime/leantime
+
+- name: deploy-leantime | Set Leantime facts
+  ansible.builtin.set_fact:
+    leantime_image: "{{ leantime_image | default('leantime/leantime:latest') }}"
+    leantime_image_tag: "{{ leantime_image_tag | default('latest') }}"
+    leantime_service_name: "{{ leantime_service_name | default('leantime') }}"
+    leantime_service_port: "{{ leantime_service_port | default(80) }}"
+    # leantime_data_volume_name: "{{ leantime_data_volume_name | default('leantime_data') }}"
+
+- name: deploy-leantime | Set Leantime aggregated facts
+  ansible.builtin.set_fact:
+    leantime_fqdn: "{{ leantime_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: deploy-leantime | Set Leantime service facts
+  ansible.builtin.set_fact:
+    leantime_networks:
+      - name: "{{ leantime_network_name | default('leantime') }}"
+      - name: "{{ web_network_name | default('web') }}"
+    leantime_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ leantime_service_port }}:80"
+    leantime_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ leantime_data_volume_name }}:/leantime/data"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-leantime | Create Leantime container labels
+  ansible.builtin.set_fact:
+    leantime_container_labels: "{{ leantime_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ leantime_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ leantime_service_name }}.rule",
+      "value": "Host(`{{ leantime_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/leantime/leantime/releases/tag/v${major}.${minor}.${patch}",
+    }
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Leantime" }
+    - { "key": "homepage.description", "value": "Open source project management system" }
+    - { "key": "homepage.icon", "value": "leantime.png" }
+    - { "key": "homepage.href", "value": "https://{{ leantime_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ leantime_fqdn }}/" }
+
+# Create required Docker networks
+- name: deploy-leantime | Create Leantime networks # noqa: syntax-check[unknown-module]
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ leantime_networks }}"
+
+# Create MySQL database for Leantime
+- name: deploy-leantime | Deploy MySQL database
+  when: leantime_mysql_database_create | default(true)
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-mysql.yaml
+  vars:
+    mysql_image: mysql:5.7
+    mysql_network_name: "{{ leantime_network_name }}"
+    mysql_database_name: "{{ leantime.mysql_database_name | default('leantime') }}"
+    mysql_user_name: "{{ leantime.mysql_user_name | default('leantime') }}"
+    mysql_user_password: "{{ leantime.mysql_user_password | default('dummy') }}"
+    mysql_args:
+      - "--character-set-server=utf8"
+      - "--collation-server=utf8_unicode_ci"
+
+# Create required Docker volumes
+- name: deploy-leantime | Create Leantime volumes # noqa: syntax-check[unknown-module]
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ leantime_data_volume_name }}"
+
+- name: deploy-leantime | Check if Leantime is running
+  community.docker.docker_container_info:
+    name: "{{ leantime_service_name }}"
+  register: leantime_state
+
+- name: deploy-leantime | Remove Leantime container if changing version
+  when:
+    - leantime_state.exists
+    - (leantime_image | split(':') | last) != (leantime_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-leantime | Stop and remove existing Leantime container
+      community.docker.docker_container:
+        name: "{{ leantime_service_name }}"
+        state: absent
+
+    - name: deploy-leantime | Set update Leantime
+      ansible.builtin.set_fact:
+        leantime_update: true
+
+- name: deploy-leantime | Deploy Leantime if not running
+  when:
+    - not leantime_state.exists or (leantime_update | default(false))
+  block:
+    - name: deploy-leantime | Pull Leantime image
+      community.docker.docker_image:
+        name: "{{ leantime_image }}"
+        source: pull
+
+    - name: deploy-leantime | Deploy Leantime
+      community.docker.docker_container:
+        name: "{{ leantime_service_name }}"
+        image: "{{ leantime_image }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ leantime_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ leantime_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ leantime_volumes }}"
+      register: leantime_container_state
+
+    - name: deploy-leantime | Wait for Leantime to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ leantime_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: leantime_running
+      until: leantime_running is success
+      retries: 10
