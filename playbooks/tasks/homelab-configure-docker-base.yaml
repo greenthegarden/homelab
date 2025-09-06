@@ -15,7 +15,8 @@
 
 # TODO: only install if not present
 - name: homelab-configure-docker-base | Install Docker
-  when: host_docker_info.can_talk_to_docker is defined
+  when: (host_docker_info.can_talk_to_docker is defined and not host_docker_info.can_talk_to_docker) or
+        (host_docker_info is failed)
   ansible.builtin.import_role:
     name: geerlingguy.docker
   vars:
