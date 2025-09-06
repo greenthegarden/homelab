@@ -1,0 +1,47 @@
+---
+- name: Deploy IT Tooling Stack
+
+  # This playbook deploys a containerised instance of Dozzle, Beszel, and IT Tools
+  # It is intended to be run on the 'dozzle' host group defined in the Ansible inventory
+  # The playbook includes tasks to deploy each service, pulling the necessary Docker images
+  # and configuring them with appropriate labels, ports, and volumes.
+  # The playbook also includes a task to load homelab variables from a YAML file
+  # to ensure that the services are configured correctly for the homelab environment.
+  # The playbook is designed to be idempotent, meaning it can be run multiple times without causing issues
+  # if the services are already deployed or if the configuration has not changed
+  # It is recommended to run this playbook on a host with Docker installed and configured
+  # to ensure that the services can be deployed successfully.
+  # The playbook is structured to allow for easy modification and extension in the future
+  # if additional services need to be added or if the configuration of existing services needs to change
+  # The playbook is also designed to be compatible with the Ansible Galaxy role structure
+  # allowing for easy integration with other roles and playbooks in the homelab environment.
+  # The playbook is intended to be run as part of a larger homelab deployment
+  # and is not intended to be run in isolation.
+  # It is recommended to run this playbook as part of a larger homelab deployment
+  # that includes other services such as Traefik, Portainer, and Uptime Kuma
+  # to ensure that the services can be accessed and managed effectively.
+  # The playbook is designed to be run on a host with sufficient resources
+  # to support the deployment of multiple containerised services
+  # and is intended to be run on a host with a stable network connection
+  # to ensure that the services can be accessed and managed effectively.
+  # The playbook is designed to be run on a host with a modern version of Docker
+  # installed and configured, as it relies on Docker to deploy the services.
+
+  hosts: dozzle
+
+  vars:
+
+    # Beszel facts
+    beszel_image: henrygd/beszel:0.12.6 # renovate: datasource=docker depName=ahenrygd/beszel
+    beszel_service_name: beszel
+    beszel_service_port: 8090
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Beszel
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-beszel.yaml
