@@ -148,7 +148,7 @@
         env:
           APP_URL: "https://{{ docmost_fqdn }}"
           APP_SECRET: "{{ docmost.app_secret | default('dummy') }}"
-          DATABASE_URL: "postgresql://{{ postgres_user }}:{{ postgres_password }}@postgres:5432/{{ postgres_database }}?schema=public"
+          DATABASE_URL: "postgresql://{{ docmost.postgres_user }}:{{ docmost.postgres_password }}@postgres:5432/{{ docmost.postgres_database }}?schema=public"
           REDIS_URL: "redis://redis:6379"
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ docmost_container_labels | default(omit) }}"
