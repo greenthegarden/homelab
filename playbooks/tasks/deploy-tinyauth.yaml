@@ -13,7 +13,7 @@
 
 - name: deploy-tinyauth | Set Tinyauth aggregated facts
   ansible.builtin.set_fact:
-    tinyauth_fqdn: "{{ tinyauth_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    tinyauth_fqdn: "{{ tinyauth_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-tinyauth | Set Tinyauth service facts
   ansible.builtin.set_fact:

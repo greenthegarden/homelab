@@ -20,7 +20,7 @@
 
 - name: deploy-mysql | Set MySQL aggregated facts
   ansible.builtin.set_fact:
-    mysql_fqdn: "{{ mysql_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    mysql_fqdn: "{{ mysql_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-mysql | Set MySQL service facts
   ansible.builtin.set_fact:

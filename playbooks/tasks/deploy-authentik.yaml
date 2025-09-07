@@ -13,7 +13,7 @@
 
 - name: deploy-authentik | Set Authentik aggregated facts
   ansible.builtin.set_fact:
-    authentik_fqdn: "{{ authentik_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    authentik_fqdn: "{{ authentik_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-authentik | Set Authentik API facts
   ansible.builtin.set_fact:

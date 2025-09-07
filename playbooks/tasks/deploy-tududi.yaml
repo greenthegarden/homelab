@@ -21,7 +21,7 @@
 
 - name: deploy-tududi | Set Tududi aggregated facts
   ansible.builtin.set_fact:
-    tududi_fqdn: "{{ tududi_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    tududi_fqdn: "{{ tududi_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-tududi | Set Tududi service facts
   ansible.builtin.set_fact:

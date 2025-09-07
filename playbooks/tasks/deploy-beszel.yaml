@@ -16,7 +16,7 @@
 
 - name: deploy-beszel | Set Beszel aggregated facts
   ansible.builtin.set_fact:
-    beszel_fqdn: "{{ beszel_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    beszel_fqdn: "{{ beszel_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-beszel | Set Beszel service facts
   ansible.builtin.set_fact:

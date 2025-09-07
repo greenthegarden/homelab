@@ -20,7 +20,7 @@
 
 - name: deploy-semaphore | Set Semaphore aggregated facts
   ansible.builtin.set_fact:
-    semaphore_fqdn: "{{ semaphore_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    semaphore_fqdn: "{{ semaphore_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-semaphore | Set Semaphore service facts
   ansible.builtin.set_fact:

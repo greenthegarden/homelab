@@ -19,7 +19,7 @@
 
 - name: deploy-focalboard | Set Focalboard aggregated facts
   ansible.builtin.set_fact:
-    focalboard_fqdn: "{{ focalboard_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    focalboard_fqdn: "{{ focalboard_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-focalboard | Set Focalboard service facts
   ansible.builtin.set_fact:

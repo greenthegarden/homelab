@@ -18,7 +18,7 @@
 
 - name: deploy-duplicati | Set Duplicati aggregated facts
   ansible.builtin.set_fact:
-    duplicati_fqdn: "{{ duplicati_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    duplicati_fqdn: "{{ duplicati_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-duplicati | Set Duplicati service facts
   ansible.builtin.set_fact:

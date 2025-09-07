@@ -27,7 +27,7 @@
 
     - name: deploy-docker-volume-backup | Set Docker Volume Backup aggregated facts
       ansible.builtin.set_fact:
-        docker_volume_backup_fqdn: "{{ docker_volume_backup_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+        docker_volume_backup_fqdn: "{{ docker_volume_backup_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
     - name: deploy-docker-volume-backup | Set Docker Volume Backup service facts
       ansible.builtin.set_fact:

@@ -19,7 +19,7 @@
 
 - name: deploy-influxdb | Set InfluxDB aggregated facts
   ansible.builtin.set_fact:
-    influxdb_fqdn: "{{ influxdb_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    influxdb_fqdn: "{{ influxdb_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-influxdb | Set InfluxDB service facts
   ansible.builtin.set_fact:

@@ -17,7 +17,7 @@
 
 - name: deploy-whatsupdocker | Set What's up Docker? aggregated facts
   ansible.builtin.set_fact:
-    whatsupdocker_fqdn: "{{ whatsupdocker_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    whatsupdocker_fqdn: "{{ whatsupdocker_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-whatsupdocker | Set What's up Docker? service facts
   ansible.builtin.set_fact:

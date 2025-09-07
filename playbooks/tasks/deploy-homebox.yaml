@@ -15,7 +15,7 @@
 
 - name: deploy-homebox | Set Homebox aggregated facts
   ansible.builtin.set_fact:
-    homebox_fqdn: "{{ homebox_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    homebox_fqdn: "{{ homebox_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-homebox | Set Homebox service facts
   ansible.builtin.set_fact:

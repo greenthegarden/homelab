@@ -42,13 +42,13 @@ scrape_configs:
         - '{__name__=~"job:.*"}'
     static_configs:
       - targets:
-          - "prometheus.broker.localdomain"
-          - "prometheus.frigate.localdomain"
-          - "prometheus.homepage.localdomain"
-          # - "prometheus.influxdb.localdomain"
-          - "prometheus.portainer.localdomain"
-          - "prometheus.uptimekuma.localdomain"
-          - "prometheus.vaultwarden.localdomain"
-          - "prometheus.whatsupdocker.localdomain"
+          - "prometheus.broker.{{ lan_domain }}"
+          - "prometheus.frigate.{{ lan_domain }}"
+          - "prometheus.homepage.{{ lan_domain }}"
+          # - "prometheus.influxdb.{{ lan_domain }}"
+          - "prometheus.portainer.{{ lan_domain }}"
+          - "prometheus.uptimekuma.{{ lan_domain }}"
+          - "prometheus.vaultwarden.{{ lan_domain }}"
+          - "prometheus.whatsupdocker.{{ lan_domain }}"
     tls_config:
       insecure_skip_verify: true

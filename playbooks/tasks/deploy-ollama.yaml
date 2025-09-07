@@ -16,7 +16,7 @@
 
 - name: deploy-ollama | Set Ollama aggregated facts
   ansible.builtin.set_fact:
-    ollama_fqdn: "{{ ollama_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    ollama_fqdn: "{{ ollama_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-ollama | Set Ollama service facts
   ansible.builtin.set_fact:

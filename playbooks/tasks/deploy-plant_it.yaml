@@ -19,8 +19,8 @@
 
 - name: deploy-plant_it | Set Plant-it aggregated facts
   ansible.builtin.set_fact:
-    plant_it_fqdn: "{{ plant_it_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
-    plant_it_api_fqdn: "{{ plant_it_service_name }}-api.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    plant_it_fqdn: "{{ plant_it_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    plant_it_api_fqdn: "{{ plant_it_service_name }}-api.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-plant_it | Set Plant-it service facts
   ansible.builtin.set_fact:

@@ -15,7 +15,7 @@
 
 - name: deploy-open-webui | Set Open WebUI aggregated facts
   ansible.builtin.set_fact:
-    open_webui_fqdn: "{{ open_webui_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    open_webui_fqdn: "{{ open_webui_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-open-webui | Set Open WebUI service facts
   ansible.builtin.set_fact:

@@ -15,7 +15,7 @@
 
 - name: deploy-it_tools | Set It-tools aggregated facts
   ansible.builtin.set_fact:
-    it_tools_fqdn: "{{ it_tools_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    it_tools_fqdn: "{{ it_tools_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-it_tools | Set It-tools service facts
   ansible.builtin.set_fact:

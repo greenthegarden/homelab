@@ -27,7 +27,7 @@
 
 - name: deploy-leantime | Set Leantime aggregated facts
   ansible.builtin.set_fact:
-    leantime_fqdn: "{{ leantime_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    leantime_fqdn: "{{ leantime_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-leantime | Set Leantime service facts
   ansible.builtin.set_fact:

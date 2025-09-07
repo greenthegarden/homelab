@@ -60,16 +60,16 @@
 - Cameras:
 
     - Porch:
-        href: http://camera-doorbell.localdomain
+        href: http://camera-doorbell.{{ lan_domain }}
         description: Reolink Video Doorbell PoE
         icon: mdi-doorbell-video
-        siteMonitor: http://camera-doorbell.localdomain
+        siteMonitor: http://camera-doorbell.{{ lan_domain }}
 
     - Front Hall:
-        href: http://camera-fronthall.localdomain
+        href: http://camera-fronthall.{{ lan_domain }}
         description: Reolink RLC-520A
         icon: mdi-cctv
-        siteMonitor: http://camera-fronthall.localdomain
+        siteMonitor: http://camera-fronthall.{{ lan_domain }}
 
 # - Home Applications:
 - Nextcloud:
@@ -122,7 +122,7 @@
         href: http://emonpi
         description: Open-source energy visualisation
         icon: mdi-power-socket-au
-        siteMonitor: http://emonpi.localdomain
+        siteMonitor: http://emonpi.{{ lan_domain }}
 
     - RoomSense IQ:
         href: http://192.168.20.112

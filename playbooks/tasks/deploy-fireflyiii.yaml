@@ -19,7 +19,7 @@
 - name: deploy-fireflyiii | Set Firefly III aggregated facts
   ansible.builtin.set_fact:
     fireflyiii_image: "{{ fireflyiii_image_name }}:{{ fireflyiii_image_tag }}"
-    fireflyiii_fqdn: "{{ fireflyiii_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    fireflyiii_fqdn: "{{ fireflyiii_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-fireflyiii | Set Firefly III service facts
   ansible.builtin.set_fact:

@@ -16,7 +16,7 @@
 
 - name: deploy-prometheus | Set Prometheus aggregated facts
   ansible.builtin.set_fact:
-    prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-prometheus | Set Prometheus service facts
   ansible.builtin.set_fact:

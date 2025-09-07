@@ -18,7 +18,7 @@
 
 - name: deploy-apprise | Set Apprise aggregated facts
   ansible.builtin.set_fact:
-    apprise_fqdn: "{{ apprise_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    apprise_fqdn: "{{ apprise_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-apprise | Set Apprise service facts
   ansible.builtin.set_fact:

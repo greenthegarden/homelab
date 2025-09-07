@@ -19,7 +19,7 @@
 
 - name: deploy-postgres | Set Postgres aggregated facts
   ansible.builtin.set_fact:
-    postgres_fqdn: "{{ postgres_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    postgres_fqdn: "{{ postgres_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-postgres | Set Postgres service facts
   ansible.builtin.set_fact:

@@ -21,7 +21,7 @@
 
 - name: deploy-frigate | Set Frigate aggregated facts
   ansible.builtin.set_fact:
-    frigate_fqdn: "{{ frigate_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    frigate_fqdn: "{{ frigate_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-frigate | Set Frigate service facts
   ansible.builtin.set_fact:

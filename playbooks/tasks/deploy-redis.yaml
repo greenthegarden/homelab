@@ -20,7 +20,7 @@
 
 - name: deploy-redis | Set Redis aggregated facts
   ansible.builtin.set_fact:
-    redis_fqdn: "{{ redis_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    redis_fqdn: "{{ redis_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-redis | Set Redis service facts
   ansible.builtin.set_fact:

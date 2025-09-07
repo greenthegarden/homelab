@@ -12,7 +12,7 @@
 
 - name: deploy-node-exporter | Set Node Exporter aggregated facts
   ansible.builtin.set_fact:
-    node_exporter_fqdn: "{{ node_exporter_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    node_exporter_fqdn: "{{ node_exporter_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-node-exporter | Set Node Exporter service facts
   ansible.builtin.set_fact:

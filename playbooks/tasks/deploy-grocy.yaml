@@ -18,7 +18,7 @@
 
 - name: deploy-grocy | Set Grocy aggregated facts
   ansible.builtin.set_fact:
-    grocy_fqdn: "{{ grocy_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    grocy_fqdn: "{{ grocy_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-grocy | Set Grocy service facts
   ansible.builtin.set_fact:

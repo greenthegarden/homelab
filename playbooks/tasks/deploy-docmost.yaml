@@ -20,7 +20,7 @@
 
 - name: deploy-docmost | Set Docmost aggregated facts
   ansible.builtin.set_fact:
-    docmost_fqdn: "{{ docmost_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    docmost_fqdn: "{{ docmost_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-docmost | Set Docmost service facts
   ansible.builtin.set_fact:

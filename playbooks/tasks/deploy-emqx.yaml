@@ -22,7 +22,7 @@
 
 - name: deploy-emqx | Set EMQX aggregated facts
   ansible.builtin.set_fact:
-    emqx_fqdn: "{{ emqx_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    emqx_fqdn: "{{ emqx_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-emqx | Get status of Prometheus Docker container
   community.docker.docker_container_info:
@@ -35,7 +35,7 @@
   block:
     - name: deploy-emqx | Set Prometheus aggregated facts
       ansible.builtin.set_fact:
-        prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+        prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
     - name: deploy-emqx | Create Prometheus configuration directory
       ansible.builtin.file:

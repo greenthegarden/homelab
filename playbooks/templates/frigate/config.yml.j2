@@ -1,7 +1,7 @@
 ---
 mqtt:
   enabled: true
-  host: emqx.broker.localdomain
+  host: emqx.broker.{{ lan_domain }}
   port: 1883
   user: {{ frigate.mqtt_username }}
   password: {{ frigate.mqtt_password }}
@@ -38,7 +38,7 @@ go2rtc:
     # Reolink Video Doorbell PoE
     doorbell:
       - ffmpeg:{{ cameras.doorbell.url }}/flv?port=1935&app=bcs&stream=channel0_main.bcs&user={{ frigate.cameras.doorbell.username }}&password={{ frigate.cameras.doorbell.password }}#video=copy#audio=copy#audio=opus
-      - rtsp://camera-doorbell.localdomain/Preview_01_sub
+      - rtsp://camera-doorbell.{{ lan_domain }}/Preview_01_sub
     doorbell_sub:
       - ffmpeg:{{ cameras.doorbell.url }}/flv?port=1935&app=bcs&stream=channel0_ext.bcs&user={{ frigate.cameras.doorbell.username }}&password={{ frigate.cameras.doorbell.password }}
 

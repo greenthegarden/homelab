@@ -18,7 +18,7 @@
 
 - name: deploy-grist | Set Grist aggregated facts
   ansible.builtin.set_fact:
-    grist_fqdn: "{{ grist_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+    grist_fqdn: "{{ grist_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-grist | Set Grist service facts
   ansible.builtin.set_fact:
