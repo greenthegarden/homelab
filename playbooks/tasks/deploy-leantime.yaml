@@ -17,6 +17,10 @@
     leantime_service_port: "{{ leantime_service_port | default(80) }}"
     leantime_network_name: "{{ leantime_network_name | default('leantime') }}"
     leantime_data_volume_name: "{{ leantime_data_volume_name | default('leantime') }}"
+    leantime_volume_public_userfiles: "{{ leantime_data_volume_name }}-public_userfiles"
+    leantime_volume_userfiles: "{{ leantime_data_volume_name }}-userfiles"
+    leantime_volume_plugins: "{{ leantime_data_volume_name }}-plugins"
+    leantime_volume_logs: "{{ leantime_data_volume_name }}-logs"
 
 - name: deploy-leantime | Set Leantime aggregated facts
   ansible.builtin.set_fact:
@@ -34,7 +38,10 @@
     leantime_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ leantime_data_volume_name }}:/leantime/data"
+      - "{{ leantime_volume_public_userfiles }}:/var/www/html/public/userfiles"
+      - "{{ leantime_volume_userfiles }}:/var/www/html/userfiles"
+      - "{{ leantime_volume_plugins }}:/var/www/html/app/Plugins"
+      - "{{ leantime_volume_logs }}:/var/www/html/storage/logs"
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
 
@@ -82,15 +89,15 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-mysql.yaml
   vars:
-    mysql_image: mysql:5.7
+    mysql_image: mysql:8.4
     mysql_network_name: "{{ leantime_network_name }}"
     mysql_data_volume_name: "{{ leantime_data_volume_name }}-mysql"
     mysql_database_name: "{{ leantime.mysql_database_name | default('leantime') }}"
     mysql_user_name: "{{ leantime.mysql_user_name | default('leantime') }}"
     mysql_user_password: "{{ leantime.mysql_user_password | default('dummy') }}"
     mysql_args:
-      - "--character-set-server=utf8"
-      - "--collation-server=utf8_unicode_ci"
+      - "--character-set-server=UTF8MB4"
+      - "--collation-server=UTF8MB4_unicode_ci"
 
 # Create required Docker volumes
 - name: deploy-leantime | Create Leantime volumes # noqa: syntax-check[unknown-module]
@@ -98,7 +105,10 @@
     name: "{{ item }}"
     state: present
   loop:
-    - "{{ leantime_data_volume_name }}"
+    - "{{ leantime_volume_public_userfiles }}"
+    - "{{ leantime_volume_userfiles }}"
+    - "{{ leantime_volume_plugins }}"
+    - "{{ leantime_volume_logs }}"
 
 - name: deploy-leantime | Check if Leantime is running
   community.docker.docker_container_info:
@@ -132,6 +142,10 @@
       community.docker.docker_container:
         name: "{{ leantime_service_name }}"
         image: "{{ leantime_image }}"
+        capabilities:
+          - CAP_CHOWN
+          - CAP_SETGID
+          - CAP_SETUID
         detach: true
         env:
           TZ: "{{ homelab.timezone | default('UTC') }}"
@@ -140,6 +154,8 @@
         networks: "{{ leantime_networks }}"
         restart: true
         restart_policy: unless-stopped
+        security_opts:
+          - "no-new-privileges:true"
         state: started
         volumes: "{{ leantime_volumes }}"
       register: leantime_container_state

@@ -104,6 +104,12 @@
           MYSQL_USER: "{{ mysql_user_name | default(omit) }}"
           MYSQL_PASSWORD: "{{ mysql_user_password | default(omit) }}"
           TZ: "{{ homelab.timezone | default('UTC') }}"
+        healthcheck:
+          test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+          interval: 30s
+          timeout: 10s
+          retries: 3
+          start_period: 5s
         labels: "{{ mysql_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ mysql_networks }}"
