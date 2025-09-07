@@ -16,11 +16,11 @@
     leantime_service_name: "{{ leantime_service_name | default('leantime') }}"
     leantime_service_port: "{{ leantime_service_port | default(80) }}"
     leantime_network_name: "{{ leantime_network_name | default('leantime') }}"
-    leantime_data_volume_name: "{{ leantime_data_volume_name | default('leantime') }}"
-    leantime_volume_public_userfiles: "{{ leantime_data_volume_name }}-public_userfiles"
-    leantime_volume_userfiles: "{{ leantime_data_volume_name }}-userfiles"
-    leantime_volume_plugins: "{{ leantime_data_volume_name }}-plugins"
-    leantime_volume_logs: "{{ leantime_data_volume_name }}-logs"
+    leantime_volume_data: "{{ leantime_volume_data | default('leantime') }}"
+    leantime_volume_public_userfiles: "{{ leantime_volume_data }}-public_userfiles"
+    leantime_volume_userfiles: "{{ leantime_volume_data }}-userfiles"
+    leantime_volume_plugins: "{{ leantime_volume_data }}-plugins"
+    leantime_volume_logs: "{{ leantime_volume_data }}-logs"
 
 - name: deploy-leantime | Set Leantime aggregated facts
   ansible.builtin.set_fact:
@@ -91,7 +91,7 @@
   vars:
     mysql_image: mysql:8.4
     mysql_network_name: "{{ leantime_network_name }}"
-    mysql_data_volume_name: "{{ leantime_data_volume_name }}-mysql"
+    mysql_data_volume_name: "{{ leantime_volume_data }}-mysql"
     mysql_database_name: "{{ leantime.mysql_database_name | default('leantime') }}"
     mysql_user_name: "{{ leantime.mysql_user_name | default('leantime') }}"
     mysql_user_password: "{{ leantime.mysql_user_password | default('dummy') }}"
