@@ -17,6 +17,9 @@
     leantime_service_port: "{{ leantime_service_port | default(80) }}"
     leantime_network_name: "{{ leantime_network_name | default('leantime') }}"
     leantime_volume_data: "{{ leantime_volume_data | default('leantime') }}"
+
+- name: deploy-leantime | Set Leantime volume facts
+  ansible.builtin.set_fact:
     leantime_volume_public_userfiles: "{{ leantime_volume_data }}-public_userfiles"
     leantime_volume_userfiles: "{{ leantime_volume_data }}-userfiles"
     leantime_volume_plugins: "{{ leantime_volume_data }}-plugins"
