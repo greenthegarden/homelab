@@ -1,0 +1,19 @@
+---
+- name: Deploy Apprise
+
+  hosts: broker
+
+  vars:
+
+    # Apprise facts
+    apprise_image: caronc/apprise:1.2.1 # renovate: datasource=docker depName=caronc/apprise
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Apprise
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-apprise.yaml

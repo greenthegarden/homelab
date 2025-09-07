@@ -1,0 +1,130 @@
+---
+- name: deploy-apprise | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### APPRISE SECTION
+
+# https://github.com/caronc/apprise
+# https://hub.docker.com/r/caronc/apprise
+
+- name: deploy-apprise | Set Apprise facts
+  ansible.builtin.set_fact:
+    apprise_image: "{{ apprise_image | default('caronc/apprise:latest') }}"
+    apprise_image_tag: "{{ apprise_image_tag | default('latest') }}"
+    apprise_service_name: "{{ apprise_service_name | default('apprise') }}"
+    apprise_service_port: "{{ apprise_service_port | default(8000) }}"
+    apprise_data_volume_name: "{{ apprise_data_volume_name | default('apprise') }}"
+
+- name: deploy-apprise | Set Apprise aggregated facts
+  ansible.builtin.set_fact:
+    apprise_fqdn: "{{ apprise_service_name }}.{{ ansible_hostname }}.{{ homelab.lan_domain | default('localdomain') }}"
+
+- name: deploy-apprise | Set Apprise service facts
+  ansible.builtin.set_fact:
+    apprise_networks:
+      - name: "{{ web_network_name | default('web') }}"
+    apprise_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ apprise_service_port }}:8000"
+    apprise_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ apprise_data_volume_name }}:/config"
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-apprise | Create Apprise container labels
+  ansible.builtin.set_fact:
+    apprise_container_labels: "{{ apprise_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ apprise_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ apprise_service_name }}.rule",
+      "value": "Host(`{{ apprise_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/apprise/apprise/releases/tag/v${major}.${minor}.${patch}",
+    }
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Apprise" }
+    - { "key": "homepage.description", "value": "Send a notification to almost all of the most popular notification services" }
+    - { "key": "homepage.icon", "value": "apprise.png" }
+    - { "key": "homepage.href", "value": "https://{{ apprise_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ apprise_fqdn }}/" }
+
+- name: deploy-apprise | Create Apprise volumes # noqa: syntax-check[unknown-module]
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ apprise_data_volume_name }}"
+
+- name: deploy-apprise | Check if Apprise is running
+  community.docker.docker_container_info:
+    name: "{{ apprise_service_name }}"
+  register: apprise_state
+
+- name: deploy-apprise | Remove Apprise container if changing version
+  when:
+    - apprise_state.exists
+    - (apprise_image | split(':') | last) != (apprise_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-apprise | Stop and remove existing Apprise container
+      community.docker.docker_container:
+        name: "{{ apprise_service_name }}"
+        state: absent
+
+    - name: deploy-apprise | Set update Apprise
+      ansible.builtin.set_fact:
+        apprise_update: true
+
+- name: deploy-apprise | Deploy Apprise if not running
+  when:
+    - not apprise_state.exists or (apprise_update | default(false))
+  block:
+    - name: deploy-apprise | Pull Apprise image
+      community.docker.docker_image:
+        name: "{{ apprise_image }}"
+        source: pull
+
+    - name: deploy-apprise | Deploy Apprise
+      community.docker.docker_container:
+        name: "{{ apprise_service_name }}"
+        image: "{{ apprise_image }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ apprise_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ apprise_networks }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ apprise_volumes }}"
+      register: apprise_container_state
+
+    - name: deploy-apprise | Wait for Apprise to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ apprise_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: apprise_running
+      until: apprise_running is success
+      retries: 10
