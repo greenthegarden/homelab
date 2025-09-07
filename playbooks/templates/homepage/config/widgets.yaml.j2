@@ -22,9 +22,9 @@
 
 - search:
     provider: custom
-    url: https://searxng.ollama.homelab.greenthegarden.com/search?q=
+    url: {{ searxng.url) }}/search?q=
     target: _blank
-    suggestionUrl: https://searxng.ollama.homelab.greenthegarden.com/autocomplete?type=list&q= # Optional
+    suggestionUrl: {{ searxng.url) }}/autocomplete?type=list&q= # Optional
     showSearchSuggestions: true # Optional
 
 - openmeteo:
