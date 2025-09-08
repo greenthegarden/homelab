@@ -5,7 +5,9 @@
   "ansible": {"managerFilePatterns": ["/(^|/)playbooks/[^/]+\\.ya?ml$/"]},
   "packageRules": [
     {
-      "matchDatasources": ["docker"]
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["getwud/wud", "vaultwarden/server"],
+      "groupName": "all docker packages"
     }
   ]
 }
