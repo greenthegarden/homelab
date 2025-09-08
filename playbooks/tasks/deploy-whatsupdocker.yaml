@@ -83,7 +83,8 @@
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
-  loop: "{{ whatsupdocker_volumes }}"
+  loop:
+    - "{{ whatsupdocker_volume_name }}"
 
 - name: deploy-whatsupdocker | Pull What's up Docker? image
   community.docker.docker_image:

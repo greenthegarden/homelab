@@ -105,7 +105,11 @@
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
-  loop: "{{ leantime_volumes }}"
+  loop:
+    - "{{ leantime_volume_public_userfiles }}"
+    - "{{ leantime_volume_userfiles }}"
+    - "{{ leantime_volume_plugins }}"
+    - "{{ leantime_volume_logs }}"
 
 - name: deploy-leantime | Check if Leantime is running
   community.docker.docker_container_info:
