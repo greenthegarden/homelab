@@ -1,5 +1,5 @@
 ---
-- name: deploy-docker-volume-backup | Only run is volume to backup has been defined
+- name: deploy-docker-volume-backup | Only run if volume to backup has been defined
   when: docker_volume_backup_volume_to_backup is defined
   block:
     - name: deploy-docker-volume-backup | Ensure modern version of Docker is available on host

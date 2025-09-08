@@ -11,10 +11,12 @@
 - name: deploy-uptimekuma | Set Uptime Kuma facts
   ansible.builtin.set_fact:
     uptimekuma_image: "{{ uptimekuma_image | default('louislam/uptime-kuma:latest') }}"
-    uptimekuma_image_tag: "{{ uptimekuma_image_tag | default('latest') }}"
     uptimekuma_service_name: "{{ uptimekuma_service_name | default('uptimekuma') }}"
     uptimekuma_service_port: "{{ uptimekuma_service_port | default(3001) }}"
-    uptimekuma_volume_name: "{{ uptimekuma_volume_name | default('uptimekuma') }}"
+
+- name: deploy-uptimekuma | Set  Uptime Kuma volume facts
+  ansible.builtin.set_fact:
+    uptimekuma_volume_data_name: "{{ uptimekuma_service_port }}-data"
 
 - name: deploy-uptimekuma | Set Uptime Kuma aggregated facts
   ansible.builtin.set_fact:
@@ -31,10 +33,7 @@
     uptimekuma_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ uptimekuma_volume_name }}:/app/data"
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      - "{{ uptimekuma_volume_data_name }}:/app/data"
 
 - name: deploy-uptimekuma | Create Uptime Kuma container labels
   ansible.builtin.set_fact:
@@ -76,10 +75,13 @@
     - { "key": "homepage.widget.url", "value": "https://{{ uptimekuma_fqdn }}" }
     - { "key": "homepage.widget.slug", "value": "homelab" }
 
+# Create required Docker volumes
 - name: deploy-uptimekuma | Create Uptime Kuma volume
   community.docker.docker_volume:
-    name: "{{ uptimekuma_volume_name }}"
+    name: "{{ item }}"
     state: present
+  loop:
+    - "{{ uptimekuma_volume_data_name }}"
 
 - name: deploy-uptimekuma | Check if Uptime Kuma is running
   community.docker.docker_container_info:
@@ -122,7 +124,7 @@
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ uptimekuma_volumes }}"
+        volumes: "{{ default_host_volumes + uptimekuma_volumes }}"
       register: uptimekuma_container_state
 
     - name: deploy-uptimekuma | Wait for Uptime Kuma to accept connections

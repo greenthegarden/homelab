@@ -17,8 +17,6 @@
   ansible.builtin.set_fact:
     docker_socket_proxy_networks:
       - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-      # TODO: Think this should not be on web network
-      # - name: "{{ web_network_name | default('web') }}"
     docker_socket_proxy_ports:
       - "{{ docker_socket_proxy_service_port }}:2375"
 

@@ -16,7 +16,7 @@
 
 - name: deploy-whatsupdocker | Set What's up Docker? volume facts
   ansible.builtin.set_fact:
-    whatsupdocker_volume_store: "{{ whatsupdocker_service_name }}-store"
+    whatsupdocker_volume_store_name: "{{ whatsupdocker_service_name }}-store"
 
 - name: deploy-whatsupdocker | Set What's up Docker? aggregated facts
   ansible.builtin.set_fact:
@@ -34,7 +34,7 @@
     whatsupdocker_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ whatsupdocker_volume_store }}:/store"
+      - "{{ whatsupdocker_volume_store_name }}:/store"
 
 - name: deploy-whatsupdocker | Create What's up Docker? container labels
   ansible.builtin.set_fact:
@@ -88,7 +88,7 @@
     name: "{{ item }}"
     state: present
   loop:
-    - "{{ whatsupdocker_volume_store }}"
+    - "{{ whatsupdocker_volume_store_name }}"
 
 - name: deploy-whatsupdocker | Pull What's up Docker? image
   community.docker.docker_image:
