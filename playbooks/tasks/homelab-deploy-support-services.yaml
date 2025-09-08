@@ -8,41 +8,49 @@
   ansible.builtin.include_tasks:
     file: tasks/homelab-configure-docker-base.yaml
 
+- name: homelab-deploy-support-services | Set Homelab network facts
+  ansible.builtin.set_fact:
+    docker_socket_proxy_network_name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+    docker_socket_proxy_network_interal: "{{ docker_socket_proxy_network_interal | default(false) }}"
+    docker_socket_proxy_rw_network_name: "{{ docker_socket_proxy_rw_network_name | default('docker-socket-proxy-rw') }}"
+    docker_socket_proxy_rw_network_interal: "{{ docker_socket_proxy_rw_network_interal | default(true) }}"
+    monitoring_network_name: "{{ monitoring_network_name | default('monitoring') }}"
+    monitoring_network_internal: "{{ monitoring_network_internal | default(true) }}"
+    web_network_name: "{{ web_network_name | default('web') }}"
+    web_network_internal: "{{ web_network_internal | default(false) }}"
+
 - name: homelab-deploy-support-services | Create Homelab Docker networks  # noqa: syntax-check[unknown-module]
   community.docker.docker_network:
     name: "{{ item.name }}"
     driver: "{{ item.driver }}"
     internal: "{{ item.internal }}"
   loop:
-    - name: "{{ docker_socket_proxy_ro_network_name | default('docker-socket-proxy-ro') }}"
+    - name: "{{ docker_socket_proxy_network_name }}"
       driver: bridge
-      internal: "{{ docker_socket_proxy_ro_network_interal | default(false) }}"
-    - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+      internal: "{{ docker_socket_proxy_network_interal }}"
+    - name: "{{ docker_socket_proxy_rw_network_name }}"
       driver: bridge
-      internal: "{{ docker_socket_proxy_network_interal | default(true) }}"
-    - name: "{{ monitoring_network_name | default('monitoring') }}"
+      internal: "{{ docker_socket_proxy_rw_network_interal }}"
+    - name: "{{ monitoring_network_name }}"
       driver: bridge
-      internal: "{{ monitoring_network_internal | default(true) }}"
-    - name: "{{ web_network_name | default('web') }}"
+      internal: "{{ monitoring_network_internal }}"
+    - name: "{{ web_network_name }}"
       driver: bridge
-      internal: "{{ web_network_internal | default(false) }}"
+      internal: "{{ web_network_internal }}"
 
 # Used by Homepage and What's up Docker? to monitor services
 - name: homelab-deploy-support-services | Deploy a containerised read-only instance of Docker Socket Proxy
   ansible.builtin.include_tasks:
     file: tasks/deploy-docker-socket-proxy.yaml
-  vars:
-    docker_socket_proxy_service_name: "docker-socket-proxy-ro"
-    docker_socket_proxy_network_name: "{{ docker_socket_proxy_ro_network_name }}"
-    configure_for_docker_volume_backup: false
 
 # Used by Traefik, Portainer Agent, and  Docker Volume Backup to manage services
 - name: homelab-deploy-support-services | Deploy a containerised read-write instance of Docker Socket Proxy
   ansible.builtin.include_tasks:
     file: tasks/deploy-docker-socket-proxy.yaml
   vars:
+    docker_socket_proxy_service_name: "docker-socket-proxy-rw"
     docker_socket_proxy_service_port: 2376
-    docker_socket_proxy_network_name: "{{ docker_socket_proxy_network_name }}"
+    docker_socket_proxy_network_name: "{{ docker_socket_proxy_rw_network_name }}"
     configure_for_docker_volume_backup: true
 
 - name: homelab-deploy-support-services | Deploy a containerised instance of Portainer Agent
