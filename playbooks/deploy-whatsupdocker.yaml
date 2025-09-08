@@ -6,6 +6,7 @@
   vars:
 
     # What's up Docker? facts
+    # renovate: datasource=docker depName=getwud/wud
     whatsupdocker_image: getwud/wud:8.1.1
 
   tasks:

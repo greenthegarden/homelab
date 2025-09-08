@@ -13,8 +13,11 @@
     vaultwarden_image: "{{ vaultwarden_image | default('vaultwarden/server:latest') }}"
     vaultwarden_service_name: "{{ vaultwarden_service_name | default('vaultwarden') }}"
     vaultwarden_service_port: "{{ vaultwarden_service_port | default(8080) }}"
-    vaultwarden_volume_name: "{{ vaultwarden_volume_name | default('vaultwarden') }}"
-    vaultwarden_config_dir: /root/vaultwarden
+
+- name: deploy-vaultwarden | Set Vaultwarden volume facts
+  ansible.builtin.set_fact:
+    vaultwarden_volume_data_name: "{{ vaultwarden_service_name }}-data"
+    vaultwarden_config_dir: "/root/{{ vaultwarden_service_name }}-config"
 
 - name: deploy-vaultwarden | Set Vaultwarden aggregated facts
   ansible.builtin.set_fact:
@@ -31,9 +34,7 @@
     vaultwarden_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ vaultwarden_volume_name }}:/data"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      - "{{ vaultwarden_volume_data_name }}:/data"
 
 - name: deploy-vaultwarden | Create Vaultwarden container labels
   ansible.builtin.set_fact:
@@ -88,8 +89,10 @@
 
 - name: deploy-vaultwarden | Create Vaultwarden volume # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
-    name: "{{ vaultwarden_volume_name }}"
+    name: "{{ item }}"
     state: present
+  loop:
+    - "{{ vaultwarden_volume_data_name }}"
 
 - name: deploy-vaultwarden | Pull Vaultwarden image
   community.docker.docker_image:
@@ -107,7 +110,7 @@
     networks: "{{ vaultwarden_networks }}"
     restart: true
     restart_policy: unless-stopped
-    volumes: "{{ vaultwarden_volumes }}"
+    volumes: "{{ default_host_volumes + vaultwarden_volumes }}"
   register: vaultwarden_container_state
 
 - name: deploy-vaultwarden | Wait for Vaultwarden to accept connections
@@ -119,5 +122,5 @@
     state: started
     timeout: 30
   register: vaultwarden_running
-  until: vaultwarden_running is success
   retries: 10
+  until: vaultwarden_running is success

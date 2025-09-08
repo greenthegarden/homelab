@@ -14,9 +14,9 @@
     uptimekuma_service_name: "{{ uptimekuma_service_name | default('uptimekuma') }}"
     uptimekuma_service_port: "{{ uptimekuma_service_port | default(3001) }}"
 
-- name: deploy-uptimekuma | Set  Uptime Kuma volume facts
+- name: deploy-uptimekuma | Set Uptime Kuma volume facts
   ansible.builtin.set_fact:
-    uptimekuma_volume_data_name: "{{ uptimekuma_service_port }}-data"
+    uptimekuma_volume_data_name: "{{ uptimekuma_service_name }}-data"
 
 - name: deploy-uptimekuma | Set Uptime Kuma aggregated facts
   ansible.builtin.set_fact:

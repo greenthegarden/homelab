@@ -6,6 +6,7 @@
   vars:
 
     # Uptime Kuma facts
+    # renovate: datasource=docker depName=louislam/uptime-kuma
     uptimekuma_image: louislam/uptime-kuma:1.23.16-alpine
 
   tasks:
