@@ -3,11 +3,13 @@
   "extends": ["config:best-practices"],
   "timezone": "Australia/Adelaide",
   "ansible": {"managerFilePatterns": ["/(^|/)playbooks/[^/]+\\.ya?ml$/"]},
-  "packageRules": [
-    {
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["getwud/wud", "vaultwarden/server"],
-      "groupName": "all docker packages"
-    }
+  "regexManagers": [
+	{
+	  "fileMatch": ["/(^|/)playbooks/[^/]+\\.ya?ml$/"],
+	  "matchStrings": [
+  		"renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s.*_version: '(?<currentValue>.*)'\\s"
+	  ],
+	  "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
+	}
   ]
 }

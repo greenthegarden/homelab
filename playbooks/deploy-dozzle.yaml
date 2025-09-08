@@ -34,19 +34,10 @@
     # Dozzle facts
     # Ensure values are also set in group_vars/homelab_lxc_docker.yaml.
     # TODO: Ensure variables set here are used in group_vars
-    dozzle_image: amir20/dozzle:v8.13.12 # renovate: datasource=docker depName=amir20/dozzle
+    # renovate: datasource=docker depName=amir20/dozzle
+    dozzle_image: amir20/dozzle:v8.13.12
     dozzle_service_name: dozzle
     dozzle_service_port: 8080
-
-    # Beszel facts
-    beszel_image: henrygd/beszel:0.12.6 # renovate: datasource=docker depName=ahenrygd/beszel
-    beszel_service_name: beszel
-    beszel_service_port: 8090
-
-    # Beszel facts
-    it_tools_image: corentinth/it-tools:2024.10.22-7ca5933 # renovate: datasource=docker depName=corentinth/it-tools
-    it_tools_service_name: it-tools
-    it_tools_service_port: 80
 
   tasks:
 
@@ -57,14 +48,6 @@
     - name: Deploy a containerised instance of Dozzle
       ansible.builtin.include_tasks:
         file: tasks/deploy-dozzle.yaml
-
-    - name: Deploy a containerised instance of Beszel
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-beszel.yaml
-
-    - name: Deploy a containerised instance of IT Tools
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-it_tools.yaml
 
 # ---
 # - name: Deploy Dozzle Agenst

@@ -6,7 +6,8 @@
   vars:
 
     # Apprise facts
-    apprise_image: caronc/apprise:1.2.1 # renovate: datasource=docker depName=caronc/apprise
+    # renovate: datasource=docker depName= caronc/apprise
+    apprise_image: caronc/apprise:1.2.1
 
   tasks:
 
