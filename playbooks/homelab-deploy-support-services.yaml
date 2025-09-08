@@ -10,9 +10,7 @@
 
     # Base containerised service details
     # Docker Socket Proxy service facts
-    docker_socket_proxy_image: ghcr.io/tecnativa/docker-socket-proxy:edge
-    docker_socket_proxy_service_name: docker-socket-proxy
-    docker_socket_proxy_service_port: 2375
+    docker_socket_proxy_image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.1
     # Node Exporter service facts
     # Defined in playbooks/group_vars/homelab_lxc
     # Portainer Agent service facts
@@ -23,8 +21,6 @@
     # Defined in playbooks/group_vars/homelab_lxc
     # Watchtower service facts
     watchtower_image: containrrr/watchtower:1.7.1
-    watchtower_service_name: watchtower
-    watchtower_service_port: 8080
 
   tasks:
 

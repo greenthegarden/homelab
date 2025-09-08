@@ -5,7 +5,7 @@
 
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy facts
   ansible.builtin.set_fact:
-    docker_socket_proxy_image: "{{ docker_socket_proxy_image | default('ghcr.io/tecnativa/docker-socket-proxy:edge') }}"
+    docker_socket_proxy_image: "{{ docker_socket_proxy_image | default('ghcr.io/tecnativa/docker-socket-proxy:latest') }}"
     docker_socket_proxy_service_name: "{{ docker_socket_proxy_service_name | default('docker-socket-proxy') }}"
     docker_socket_proxy_service_port: "{{ docker_socket_proxy_service_port | default(2375) }}"
 
@@ -17,13 +17,10 @@
   ansible.builtin.set_fact:
     docker_socket_proxy_networks:
       - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-      - name: "{{ web_network_name | default('web') }}"
+      # TODO: Think this should not be on web network
+      # - name: "{{ web_network_name | default('web') }}"
     docker_socket_proxy_ports:
       - "{{ docker_socket_proxy_service_port }}:2375"
-    docker_socket_proxy_volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
 
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy configuration facts
   ansible.builtin.set_fact:
@@ -90,7 +87,7 @@
     security_opts:
       - no-new-privileges=true
     state: started
-    volumes: "{{ docker_socket_proxy_volumes }}"
+    volumes: "{{ default_host_volumes + docker_host_volume }}"
   register: docker_socket_proxy_container_state
 
 - name: deploy-docker-socket-proxy | Wait for Docker Socket Proxy to accept connections

@@ -14,7 +14,6 @@
     portainer_agent_ports:
       - "{{ portainer_agent_service_port }}:9001"
     portainer_agent_volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/volumes:/var/lib/docker/volumes
       - /:/host
 
@@ -52,7 +51,7 @@
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ portainer_agent_volumes }}"
+    volumes: "{{ portainer_agent_volumes + docker_host_volume }}"
   register: portainer_agent_container_state
 # - name: deploy-portainer-agent | Wait for Portainer Agent to accept connections
 #   ansible.builtin.wait_for:

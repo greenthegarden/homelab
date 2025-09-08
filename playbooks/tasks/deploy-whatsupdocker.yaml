@@ -25,6 +25,7 @@
 - name: deploy-whatsupdocker | Set What's up Docker? service facts
   ansible.builtin.set_fact:
     whatsupdocker_networks:
+      - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
       - name: "{{ web_network_name | default('web') }}"
     whatsupdocker_ports:
       # Published ports to expose outside the container
