@@ -20,7 +20,7 @@
       # TODO: Think this should not be on web network
       # - name: "{{ web_network_name | default('web') }}"
     docker_socket_proxy_ports:
-      - "127.0.0.1:{{ docker_socket_proxy_service_port }}:2375"
+      - "{{ docker_socket_proxy_service_port }}:2375"
 
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy configuration facts
   ansible.builtin.set_fact:

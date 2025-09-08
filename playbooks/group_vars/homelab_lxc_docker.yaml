@@ -7,7 +7,7 @@
 # Docker Socket Proxy is used to connect services to the Docker API via the
 # docker-socket-proxy service
 docker_socket_proxy_network_name: docker-socket-proxy
-docker_socket_proxy_network_interal: true
+docker_socket_proxy_network_interal: false
 # Monitoring is an internal network that is not exposed outside the host
 monitoring_network_name: monitoring
 monitoring_network_internal: true
