@@ -53,3 +53,14 @@ traefik_volume_letsencrypt_name: letsencrypt
 
 # Global definition of backup directory on hosts
 local_backups_dir: /root/backups
+
+default_host_volumes:
+  # Local paths to mount into the container
+  # local path:container path
+  - /etc/localtime:/etc/localtime:ro
+  - /etc/timezone:/etc/timezone:ro
+
+docker_host_volume:
+  # Local paths to mount into the container
+  # local path:container path
+  - /var/run/docker.sock:/var/run/docker.sock

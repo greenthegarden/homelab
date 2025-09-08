@@ -30,10 +30,7 @@
     whatsupdocker_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - /var/run/docker.sock:/var/run/docker.sock
       - "{{ whatsupdocker_volume_name }}:/store"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
 
 - name: deploy-whatsupdocker | Create What's up Docker? container labels
   ansible.builtin.set_fact:
@@ -81,10 +78,12 @@
       "value": "https://{{ whatsupdocker_fqdn }}",
     }
 
-- name: deploy-whatsupdocker | Create volume for What's up Docker?
+# Create required Docker volumes
+- name: deploy-whatsupdocker | Create What's up Docker? volumes
   community.docker.docker_volume:
-    name: "{{ whatsupdocker_volume_name }}"
+    name: "{{ item }}"
     state: present
+  loop: "{{ whatsupdocker_volumes }}"
 
 - name: deploy-whatsupdocker | Pull What's up Docker? image
   community.docker.docker_image:
@@ -149,7 +148,7 @@
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ whatsupdocker_volumes }}"
+    volumes: "{{ whatsupdocker_volumes + default_host_volumes + docker_host_volume }}"
   register: whatsupdocker_container_state
 
 - name: deploy-whatsupdocker | Wait for What's up Docker? to accept connections
