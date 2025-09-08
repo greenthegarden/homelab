@@ -1,7 +1,7 @@
 ---
 - name: Install and configure Docker and base containers
 
-  hosts: uptimekuma # homelab_lxc_docker
+  hosts: vaultwarden # homelab_lxc_docker
 
   vars:
 
