@@ -22,5 +22,21 @@
 	  "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}",
 	  "datasourceTemplate": "docker"
 	}
+  ],
+  "packageRules": [
+    {
+      "matchDatasources": ["docker"],
+      "enabled": true,
+      "commitMessageTopic": "container image {{depName}}",
+      "commitMessageExtra": "to {{#if isSingleVersion}}v{{{newVersion}}}{{else}}{{{newValue}}}{{/if}}",
+      "matchUpdateTypes": ["major", "minor", "patch"]
+    },
+    {
+      "matchDatasources": ["docker"],
+      "semanticCommitScope": "images",
+      "commitMessageTopic": "{{depName}}",
+      "commitMessageExtra": "to {{{newValue}}}",
+      "separateMinorPatch": true
+    }
   ]
 }
