@@ -65,7 +65,7 @@
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/open-webui/open-webui/releases/tag/v${major}.${minor}.${patch}",
+      "value": "https://github.com/ollama/ollama/releases/tag/v${major}.${minor}.${patch}",
     }
     # ---------------------------------------------------------------
     # Docker Volume Backup labels
