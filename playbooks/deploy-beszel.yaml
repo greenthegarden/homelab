@@ -32,7 +32,7 @@
   vars:
 
     # Beszel facts
-    # renovate: datasource=docker depName= henrygd/beszel
+    # renovate: datasource=docker depName=henrygd/beszel
     beszel_image: henrygd/beszel:0.12.6
     beszel_service_name: beszel
     beszel_service_port: 8090

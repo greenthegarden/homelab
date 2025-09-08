@@ -1,15 +1,26 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:best-practices"],
+  "extends": [
+	"mergeConfidence:all-badges",
+	"config:best-practices"
+  ],
   "timezone": "Australia/Adelaide",
-  "ansible": {"managerFilePatterns": ["/(^|/)playbooks/[^/]+\\.ya?ml$/"]},
-  "regexManagers": [
+  "ansible": {
+	"managerFilePatterns": [
+		"/(^|/)playbooks/[^/]+\\.ya?ml$/"
+	]
+  },
+  "customManagers": [
 	{
-	  "fileMatch": ["/(^|/)playbooks/[^/]+\\.ya?ml$/"],
+	  "customType": "regex",
+	  "managerFilePatterns": [
+		"/(^|/)playbooks/[^/]+\\.ya?ml$/"
+	  ],
 	  "matchStrings": [
   		"renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s.*_version: '(?<currentValue>.*)'\\s"
 	  ],
-	  "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
+	  "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}",
+	  "datasourceTemplate": "docker"
 	}
   ]
 }
