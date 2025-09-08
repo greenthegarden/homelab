@@ -113,7 +113,9 @@
       WUD_TRIGGER_MQTT_MOSQUITTO_USER: "{{ whatsupdocker.broker_username }}"
       WUD_TRIGGER_MQTT_MOSQUITTO_PASSWORD: "{{ whatsupdocker.broker_password }}"
       WUD_TRIGGER_MQTT_MOSQUITTO_HASS_ENABLED: "true"
-      WUD_WATCHER_LOCAL_SOCKET: "/var/run/docker.sock"
+      # Local host to watch
+      WUD_WATCHER_LOCAL_HOST: "docker-socket-proxy"
+      # Remote hosts to watch
       WUD_WATCHER_ANSIBLE_HOST: "ansible.{{ lan_domain }}"
       WUD_WATCHER_BROKER_HOST: "broker.{{ lan_domain }}"
       WUD_WATCHER_DOZZLE_HOST: "lxc-dozzle-node-1.{{ lan_domain }}"
@@ -153,7 +155,7 @@
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ whatsupdocker_volumes + default_host_volumes + docker_host_volume }}"
+    volumes: "{{ default_host_volumes + whatsupdocker_volumes }}"
   register: whatsupdocker_container_state
 
 - name: deploy-whatsupdocker | Wait for What's up Docker? to accept connections
