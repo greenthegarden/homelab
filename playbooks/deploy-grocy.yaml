@@ -6,15 +6,11 @@
   vars:
 
     # Grocy facts
+    # renovate: datasource=docker depName=linuxserver/grocy
     grocy_image: linuxserver/grocy:4.4.2 # 4.5.0
     grocy_service_name: grocy
     grocy_service_port: 9283
     grocy_volume_name: grocy
-
-    focalboard_image: mattermost/focalboard:edge
-    focalboard_service_name: focalboard
-    focalboard_service_port: 80
-    focalboard_data_volume_name: focalboard_data
 
   tasks:
 
@@ -34,7 +30,3 @@
           - "{{ grocy_volume_name }}:/backup/grocy-backup:ro"
         docker_volume_backup_backup_label: "{{ grocy_service_name }}"
         docker_volume_backup_backup_retention_days: 7
-
-    - name: Deploy a containerised instance of Focalboard
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-focalboard.yaml
