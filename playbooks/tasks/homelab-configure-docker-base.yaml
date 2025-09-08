@@ -23,19 +23,3 @@
     docker_install_compose: false
     docker_users:
       - root
-
-- name: homelab-configure-docker-base | Create Homelab Docker networks  # noqa: syntax-check[unknown-module]
-  community.docker.docker_network:
-    name: "{{ item.name }}"
-    driver: "{{ item.driver }}"
-    internal: "{{ item.internal }}"
-  loop:
-    - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-      driver: bridge
-      internal: "{{ docker_socket_proxy_network_interal | default(true) }}"
-    - name: "{{ monitoring_network_name | default('monitoring') }}"
-      driver: bridge
-      internal: "{{ monitoring_network_internal | default(true) }}"
-    - name: "{{ web_network_name | default('web') }}"
-      driver: bridge
-      internal: "{{ web_network_internal | default(false) }}"

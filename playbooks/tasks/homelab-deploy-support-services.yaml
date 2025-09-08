@@ -8,6 +8,25 @@
   ansible.builtin.include_tasks:
     file: tasks/homelab-configure-docker-base.yaml
 
+- name: homelab-deploy-support-services | Create Homelab Docker networks  # noqa: syntax-check[unknown-module]
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver }}"
+    internal: "{{ item.internal }}"
+  loop:
+    - name: "{{ docker_socket_proxy_ro_network_name | default('docker-socket-proxy-ro') }}"
+      driver: bridge
+      internal: "{{ docker_socket_proxy_ro_network_interal | default(false) }}"
+    - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+      driver: bridge
+      internal: "{{ docker_socket_proxy_network_interal | default(true) }}"
+    - name: "{{ monitoring_network_name | default('monitoring') }}"
+      driver: bridge
+      internal: "{{ monitoring_network_internal | default(true) }}"
+    - name: "{{ web_network_name | default('web') }}"
+      driver: bridge
+      internal: "{{ web_network_internal | default(false) }}"
+
 # Used by Homepage and What's up Docker? to monitor services
 - name: homelab-deploy-support-services | Deploy a containerised read-only instance of Docker Socket Proxy
   ansible.builtin.include_tasks:
