@@ -92,5 +92,5 @@
         security_opts:
           - no-new-privileges=true
         state: started
-        volumes: "{{ docker_volume_backup_volumes + default_host_volumes + docker_host_volume }}"
+        volumes: "{{ docker_volume_backup_volumes + default_host_volumes }}"
       register: docker_volume_backup_container_state
