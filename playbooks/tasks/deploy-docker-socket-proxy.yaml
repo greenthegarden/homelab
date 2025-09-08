@@ -18,7 +18,7 @@
     docker_socket_proxy_networks:
       - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
     docker_socket_proxy_ports:
-      - "{{ docker_socket_proxy_service_port }}:{{ docker_socket_proxy_service_port }}"
+      - "{{ docker_socket_proxy_service_port }}:2375/tcp"
 
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy configuration facts
   ansible.builtin.set_fact:
