@@ -14,12 +14,6 @@
     fireflyiii_service_port: 8080
     fireflyiii_db_backup_volume_name: fireflyiii_db_backup
 
-    # Grist facts
-    grist_image: gristlabs/grist:1.7.3
-    grist_service_name: grist
-    grist_service_port: 8484
-    grist_data_volume_name: grist_data
-
   tasks:
 
     - name: Load homelab vars
@@ -38,7 +32,3 @@
           - "{{ fireflyiii_db_backup_volume_name }}:/backup/fireflyiii_db-backup:ro"
         docker_volume_backup_backup_label: "{{ fireflyiii_service_name }}-db"
         docker_volume_backup_backup_retention_days: 7
-
-    - name: Deploy a containerised instance of Grist
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-grist.yaml

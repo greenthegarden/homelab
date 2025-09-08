@@ -16,8 +16,8 @@
 
 - name: deploy-vaultwarden | Set Vaultwarden volume facts
   ansible.builtin.set_fact:
-    vaultwarden_volume_data_name: "{{ vaultwarden_service_name }}-data"
-    vaultwarden_config_dir: "/root/{{ vaultwarden_service_name }}-config"
+    vaultwarden_volume_data_name: "{{ vaultwarden_service_name }}" # -data
+    vaultwarden_config_dir: "/root/{{ vaultwarden_service_name }}" # -config
 
 - name: deploy-vaultwarden | Set Vaultwarden aggregated facts
   ansible.builtin.set_fact:

@@ -12,12 +12,13 @@
 - name: deploy-tududi | Set Tududi facts
   ansible.builtin.set_fact:
     tududi_image: "{{ tududi_image | default('chrisvel/tududi:latest') }}"
-    tududi_image_tag: "{{ tududi_image_tag | default('latest') }}"
     tududi_service_name: "{{ tududi_service_name | default('tududi') }}"
     tududi_service_port: "{{ tududi_service_port | default(3002) }}"
-    tududi_data_volume_name: "{{ tududi_data_volume_name | default('tududi_data') }}"
-    tududi_uploads_volume_name: "{{ tududi_uploads_volume_name | default('tududi_uploads') }}"
 
+- name: deploy-tududi | Set Tududi volume facts
+  ansible.builtin.set_fact:
+    tududi_volume_data_name: "{{ tududi_service_name }}-data"
+    tududi_volume_uploads_name: "{{ tududi_service_name }}-uploads"
 
 - name: deploy-tududi | Set Tududi aggregated facts
   ansible.builtin.set_fact:
@@ -34,10 +35,8 @@
     tududi_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ tududi_data_volume_name }}:/app/backend/db"
-      - "{{ tududi_uploads_volume_name }}:/app/backend/uploads"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      - "{{ tududi_volume_data_name }}:/app/backend/db"
+      - "{{ tududi_volume_uploads_name }}:/app/backend/uploads"
 
 - name: deploy-tududi | Create Tududi container labels
   ansible.builtin.set_fact:
@@ -75,8 +74,8 @@
     name: "{{ item }}"
     state: present
   loop:
-    - "{{ tududi_data_volume_name }}"
-    - "{{ tududi_uploads_volume_name }}"
+    - "{{ tududi_volume_data_name }}"
+    - "{{ tududi_volume_uploads_name }}"
 
 - name: deploy-tududi | Check if Tududi is running
   community.docker.docker_container_info:
@@ -123,7 +122,7 @@
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ tududi_volumes }}"
+        volumes: "{{ default_host_volumes + tududi_volumes }}"
       register: tududi_container_state
 
     - name: deploy-tududi | Wait for Tududi to accept connections

@@ -16,7 +16,7 @@
 
 - name: deploy-uptimekuma | Set Uptime Kuma volume facts
   ansible.builtin.set_fact:
-    uptimekuma_volume_data_name: "{{ uptimekuma_service_name }}-data"
+    uptimekuma_volume_data_name: "{{ uptimekuma_service_name }}" # -data
 
 - name: deploy-uptimekuma | Set Uptime Kuma aggregated facts
   ansible.builtin.set_fact:
