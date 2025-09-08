@@ -13,11 +13,10 @@
     whatsupdocker_image: "{{ whatsupdocker_image | default('getwud/wud:latest') }}"
     whatsupdocker_service_name: "{{ whatsupdocker_service_name | default('whats-up-docker') }}"
     whatsupdocker_service_port: "{{ whatsupdocker_service_port | default(3000) }}"
-    whatsupdocker_volume_name: "{{ whatsupdocker_volume_name | default('whats-up-docker') }}"
 
 - name: deploy-whatsupdocker | Set What's up Docker? volume facts
   ansible.builtin.set_fact:
-    whatsupdocker_volume_store: "{{ whatsupdocker_volume_name }}-store"
+    whatsupdocker_volume_store: "{{ whatsupdocker_service_name }}-store"
 
 - name: deploy-whatsupdocker | Set What's up Docker? aggregated facts
   ansible.builtin.set_fact:
