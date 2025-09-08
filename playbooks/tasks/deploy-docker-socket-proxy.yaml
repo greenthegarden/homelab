@@ -95,7 +95,7 @@
       ['Networks']\
       ['docker-socket-proxy']\
       ['IPAddress'] }}"
-    port: "{{ docker_socket_proxy_service_port | default(2375) }}"
+    port: "{{ docker_socket_proxy_service_port }}"
     connect_timeout: 1
     delay: 10
     state: started

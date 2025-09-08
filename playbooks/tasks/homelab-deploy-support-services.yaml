@@ -8,9 +8,23 @@
   ansible.builtin.include_tasks:
     file: tasks/homelab-configure-docker-base.yaml
 
-- name: homelab-deploy-support-services | Deploy a containerised instance of Docker Socket Proxy
+# Used by Homepage and What's up Docker? to monitor services
+- name: homelab-deploy-support-services | Deploy a containerised read-only instance of Docker Socket Proxy
   ansible.builtin.include_tasks:
     file: tasks/deploy-docker-socket-proxy.yaml
+  vars:
+    docker_socket_proxy_service_name: "docker-socket-proxy-ro"
+    docker_socket_proxy_network_name: "{{ docker_socket_proxy_ro_network_name }}"
+    configure_for_docker_volume_backup: false
+
+# Used by Traefik, Portainer Agent, and  Docker Volume Backup to manage services
+- name: homelab-deploy-support-services | Deploy a containerised read-write instance of Docker Socket Proxy
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-docker-socket-proxy.yaml
+  vars:
+    docker_socket_proxy_service_port: 2376
+    docker_socket_proxy_network_name: "{{ docker_socket_proxy_network_name }}"
+    configure_for_docker_volume_backup: true
 
 - name: homelab-deploy-support-services | Deploy a containerised instance of Portainer Agent
   ansible.builtin.include_tasks:

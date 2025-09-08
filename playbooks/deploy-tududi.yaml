@@ -1,0 +1,29 @@
+---
+- name: Deploy Homebox
+
+  hosts: homebox
+
+  vars:
+
+    # Tududi facts
+    # renovate: datasource=docker depName=chrisvel/tududi
+    tududi_image: chrisvel/tududi:0.80
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Tududi
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-tududi.yaml
+
+    # - name: Deploy a containerised instance of Docker Volume Backup
+    #   ansible.builtin.include_tasks:
+    #     file: tasks/deploy-docker-volume-backup.yaml
+    #   vars:
+    #     docker_volume_backup_volume_to_backup:
+    #       - "{{ homebox_volume_name }}:/backup/homebox-backup:ro"
+    #     docker_volume_backup_backup_label: "{{ homebox_service_name }}"
+    #     docker_volume_backup_backup_retention_days: 7

@@ -6,8 +6,12 @@
 # Docker Networks
 # Docker Socket Proxy is used to connect services to the Docker API via the
 # docker-socket-proxy service
+# Read-Only access to the Docker Socket Proxy
+docker_socket_proxy_ro_network_name: docker-socket-proxy
+docker_socket_proxy_ro_network_interal: false
+# Read-Write access to the Docker Socket Proxy
 docker_socket_proxy_network_name: docker-socket-proxy
-docker_socket_proxy_network_interal: false
+docker_socket_proxy_network_interal: true
 # Monitoring is an internal network that is not exposed outside the host
 monitoring_network_name: monitoring
 monitoring_network_internal: true
