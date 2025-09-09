@@ -4,6 +4,7 @@
 # These don't have to be explicitly imported by vars_files: they are autopopulated.
 
 # Docker Networks
+# Note bridge networks are external by default unless internal: true is set
 # Docker Socket Proxy is used to connect services to the Docker API via the
 # docker-socket-proxy service
 # Read-Only access to the Docker Socket Proxy

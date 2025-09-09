@@ -221,9 +221,10 @@
   register: traefik_container_state
 
 - name: deploy-traefik | Wait for Traefik to accept connections
+  when: false # Temporarily disable as no DNS entry for Traefik on all hosts
   ansible.builtin.wait_for:
     host: "{{ traefik_fqdn }}"
-    port: "{{ traefik_service_port | default(80) }}"
+    port: "{{ traefik_service_port }}"
     connect_timeout: 1
     delay: 10
     state: started
