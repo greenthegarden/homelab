@@ -40,33 +40,39 @@
 
 # Use the following agents to monitor Docker services via host docker socket
 
+# Portainer used to provide a web UI to manage Docker services
 - name: homelab-deploy-support-services | Deploy a containerised instance of Portainer Agent
   ansible.builtin.include_tasks:
     file: tasks/deploy-portainer-agent.yaml
 
+# Dozzle used to provide a web UI to view Docker logs
 - name: homelab-deploy-support-services | Deploy a containerised instance of Dozzle Agent
   ansible.builtin.include_tasks:
     file: tasks/deploy-dozzle-agent.yaml
 
-# Use a docker socket proxy to manage access to monitor remote Docker services
+# Docker Socker Proxy used to restrict access to required Docker APIs to monitor remote Docker services
 # Used by Traefik, Homepage and What's up Docker?
 - name: homelab-deploy-support-services | Deploy a containerised read-only instance of Docker Socket Proxy
   ansible.builtin.include_tasks:
     file: tasks/deploy-docker-socket-proxy.yaml
 
+# Traefik used as a reverse proxy to manage access to web services with SSL via Let's Encrypt
 - name: homelab-deploy-support-services | Deploy a containerised instance of Traefik
   ansible.builtin.include_tasks:
     file: tasks/deploy-traefik.yaml
 
+# Tinyauth used to provide basic authentication for web services
 - name: homelab-deploy-support-services | Deploy a containerised instance of Tinyauth
   ansible.builtin.include_tasks:
     file: tasks/deploy-tinyauth.yaml
 
+# Node Exporter used to monitor server and docker metrics
 - name: homelab-deploy-support-services | Deploy a containerised instance of Node Exporter
   when: false  # Disable for now as not needed with Dozzle
   ansible.builtin.include_tasks:
     file: tasks/deploy-node-exporter.yaml
 
+# Prometheus used to monitor server and docker metrics
 - name: homelab-deploy-support-services | Deploy a containerised instance of Prometheus
   when: false  # Disable for now as not needed with Dozzle
   ansible.builtin.include_tasks:

@@ -18,7 +18,7 @@
 
 - name: deploy-portainer | Set Poratiner volume facts
   ansible.builtin.set_fact:
-    portainer_volume_data_name: "{{ portainer_service_name }}-data"
+    portainer_volume_data_name: "{{ portainer_service_name }}" # -data"
 
 - name: deploy-portainer | Set Portainer aggregated facts
   ansible.builtin.set_fact:
