@@ -221,14 +221,15 @@
     state: started
     volumes: "{{ traefik_volumes }}"
   register: traefik_container_state
-# - name: deploy-traefik | Wait for Traefik to accept connections
-#   ansible.builtin.wait_for:
-#     host: "{{ traefik_fqdn }}"
-#     port: "{{ traefik_service_port | default(80) }}"
-#     connect_timeout: 1
-#     delay: 10
-#     state: started
-#     timeout: 30
-#   register: traefik_running
-#   until: traefik_running is success
-#   retries: 10
+
+- name: deploy-traefik | Wait for Traefik to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ traefik_fqdn }}"
+    port: "{{ traefik_service_port | default(80) }}"
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: traefik_running
+  retries: 10
+  until: traefik_running is success

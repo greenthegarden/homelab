@@ -89,7 +89,7 @@
   register: docker_socket_proxy_container_state
 
 - name: deploy-docker-socket-proxy | Wait for Docker Socket Proxy to accept connections
-  when: false # Disabled as it seems to cause issues on some systems
+  when: not use_docker_socket_proxy_rw
   ansible.builtin.wait_for:
     host: "{{ docker_socket_proxy_container_state['container']\
       ['NetworkSettings']\
