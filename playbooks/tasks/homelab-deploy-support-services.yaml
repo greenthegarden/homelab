@@ -53,18 +53,16 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-tinyauth.yaml
 
-# Used by Portainer Agent, and  Docker Volume Backup to manage services
-- name: homelab-deploy-support-services | Deploy a containerised read-write instance of Docker Socket Proxy
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-docker-socket-proxy.yaml
-  vars:
-    use_docker_socket_proxy_rw: true
+# # Used by Portainer Agent, and Docker Volume Backup to manage services
+# - name: homelab-deploy-support-services | Deploy a containerised read-write instance of Docker Socket Proxy
+#   ansible.builtin.include_tasks:
+#     file: tasks/deploy-docker-socket-proxy.yaml
+#   vars:
+#     use_docker_socket_proxy_rw: true
 
 - name: homelab-deploy-support-services | Deploy a containerised instance of Portainer Agent
   ansible.builtin.include_tasks:
     file: tasks/deploy-portainer-agent.yaml
-  vars:
-    docker_socket_proxy_network_name: "{{ docker_socket_proxy_rw_network_name }}"
 
 - name: homelab-deploy-support-services | Deploy a containerised instance of Dozzle Agent
   ansible.builtin.include_tasks:
