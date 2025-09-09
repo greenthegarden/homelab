@@ -38,7 +38,7 @@
       driver: bridge
       internal: "{{ web_network_internal }}"
 
-# Use agents to monitor Docker services via docker socket
+# Use the following agents to monitor Docker services via host docker socket
 
 - name: homelab-deploy-support-services | Deploy a containerised instance of Portainer Agent
   ansible.builtin.include_tasks:
@@ -48,8 +48,8 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-dozzle-agent.yaml
 
-# Use a reverse proxy to manage access to monitor remote services
-# Used by Traefik, Homepage and What's up Docker? to monitor services
+# Use a docker socket proxy to manage access to monitor remote Docker services
+# Used by Traefik, Homepage and What's up Docker?
 - name: homelab-deploy-support-services | Deploy a containerised read-only instance of Docker Socket Proxy
   ansible.builtin.include_tasks:
     file: tasks/deploy-docker-socket-proxy.yaml
