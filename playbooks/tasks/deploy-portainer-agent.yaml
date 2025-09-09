@@ -10,7 +10,7 @@
 - name: deploy-portainer-agent | Set Portainer Agent facts
   ansible.builtin.set_fact:
     portainer_agent_image: "{{ portainer_agent_image | default('portainer/agent:latest') }}"
-    portainer_agent_service_name: "{{ portainer_agent_service_name | default('portainer_agent') }}"
+    portainer_agent_service_name: "{{ portainer_agent_service_name | default('portainer-agent') }}"
     portainer_agent_service_port: "{{ portainer_agent_service_port | default(9001) }}"
 
 - name: deploy-portainer-agent | Set Portainer Agent service facts

@@ -16,7 +16,7 @@
     portainer_service_port: "{{ portainer_service_port | default(9443) }}"
     portainer_volume_name: "{{ portainer_volume_name | default('portainer') }}"
 
-- name: deploy-portainer | Set Poratiner volume facts
+- name: deploy-portainer | Set Portainer volume facts
   ansible.builtin.set_fact:
     portainer_volume_data_name: "{{ portainer_service_name }}-data"
 
@@ -90,8 +90,8 @@
     name: "{{ portainer_service_name }}"
     image: "{{ portainer_image }}"
     detach: true
-    env:
-      DOCKER_HOST: tcp://docker-socket-proxy:2375
+    # env:
+    #   DOCKER_HOST: tcp://docker-socket-proxy:2375
     labels: "{{ portainer_container_labels | default(omit) }}"
     networks_cli_compatible: true
     networks: "{{ portainer_networks | default(omit) }}"

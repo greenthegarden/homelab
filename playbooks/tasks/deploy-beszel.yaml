@@ -12,7 +12,10 @@
     beszel_image: "{{ beszel_image | default('henrygd/beszel:latest') }}"
     beszel_service_name: "{{ beszel_service_name | default('beszel') }}"
     beszel_service_port: "{{ beszel_service_port | default(8090) }}"
-    beszel_config_dir: /root/beszel
+
+- name: deploy-beszel | Set Beszel volume facts
+  ansible.builtin.set_fact:
+    beszel_volume_data_name: "{{ beszel_service_name }}-data"
 
 - name: deploy-beszel | Set Beszel aggregated facts
   ansible.builtin.set_fact:
@@ -30,7 +33,7 @@
     beszel_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - ./beszel_data:/beszel_data:rw
+      - "{{ beszel_volume_data_name }}:/beszel_data"
 
 - name: deploy-beszel | Create Beszel container labels
   ansible.builtin.set_fact:
