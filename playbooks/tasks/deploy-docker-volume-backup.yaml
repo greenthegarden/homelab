@@ -6,10 +6,17 @@
       ansible.builtin.include_tasks:
         file: tasks/hosts-dependency-check-docker-version.yaml
 
-    - name: deploy-docker-volume-backup | Ensure Docker Socket Proxy is deployed and configured
+    # - name: deploy-docker-volume-backup | Ensure Docker Socket Proxy is deployed and configured
+    #   ansible.builtin.include_tasks:
+    #     file: tasks/deploy-docker-socket-proxy.yaml
+    #   vars:
+    #     configure_for_docker_volume_backup: true
+
+    - name: deploy-docker-volume-backup | Deploy a containerised read-write instance of Docker Socket Proxy
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-socket-proxy.yaml
       vars:
+        use_docker_socket_proxy_rw: true
         configure_for_docker_volume_backup: true
 
     # https://offen.github.io/docker-volume-backup/
@@ -33,8 +40,6 @@
       ansible.builtin.set_fact:
         docker_volume_backup_networks:
           - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-          # TODO: Think this should not be on web network
-          # - name: "{{ web_network_name | default('web') }}"
         docker_volume_backup_volumes:
           - "{{ local_backups_dir }}:/archive"
 

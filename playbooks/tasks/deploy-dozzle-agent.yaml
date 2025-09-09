@@ -15,16 +15,10 @@
 
 - name: deploy-dozzle-agent | Set Dozzle Agent service facts
   ansible.builtin.set_fact:
-    # dozzle_agent_networks:
-    #   - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-    #   - name: "{{ montitoring_network_name | default('monitoring') }}"
-    #   - name: "{{ web_network_name | default('web') }}"
+    dozzle_agent_networks: []
     dozzle_agent_ports:
       - "{{ dozzle_agent_service_port }}:7007"
-    dozzle_agent_volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+    dozzle_agent_volumes: []
 
 - name: deploy-dozzle-agent | Create Dozzle Agent container labels
   ansible.builtin.set_fact:
@@ -55,12 +49,12 @@
       retries: 5
       start_period: 5s
       start_interval: 5s
-    labels: "{{ (dozzle_agent_container_labels | default({})) | default(omit) }}"
-    # networks_cli_compatible: true
-    # networks: "{{ dozzle_agent_networks }}"
-    published_ports: "{{ dozzle_agent_ports }}"
+    labels: "{{ dozzle_agent_container_labels | default(omit) }}"
+    networks_cli_compatible: true
+    networks: "{{ dozzle_agent_networks | default(omit) }}"
+    published_ports: "{{ dozzle_agent_ports | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ dozzle_agent_volumes }}"
+    volumes: "{{ default_host_volumes + docker_host_volume }}"
   register: dozzle_agent_container_state

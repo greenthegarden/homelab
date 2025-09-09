@@ -7,5 +7,5 @@
     "*.env.j2": "dotenv",
     "*.nomad": "hcl"
   },
-  "workbench.colorTheme": "GitHub Dark"
+  "workbench.colorTheme": "Visual Studio Dark"
 }

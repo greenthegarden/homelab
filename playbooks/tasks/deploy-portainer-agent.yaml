@@ -13,9 +13,7 @@
   ansible.builtin.set_fact:
     portainer_agent_ports:
       - "{{ portainer_agent_service_port }}:9001"
-    portainer_agent_volumes:
-      - /var/lib/docker/volumes:/var/lib/docker/volumes
-      - /:/host
+    portainer_agent_volumes: []
 
 - name: deploy-portainer-agent | Create Portainer Agent container labels
   ansible.builtin.set_fact:
@@ -46,21 +44,22 @@
     name: "{{ portainer_agent_service_name }}"
     image: "{{ portainer_agent_image }}"
     detach: true
-    labels: "{{ portainer_agent_container_labels }}"
-    published_ports: "{{ portainer_agent_ports }}"
+    labels: "{{ portainer_agent_container_labels | default(omit) }}"
+    published_ports: "{{ portainer_agent_ports | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ portainer_agent_volumes + docker_host_volume }}"
+    volumes: "{{ docker_host_volume + portainer_agent_volumes | default(omit) }}"
   register: portainer_agent_container_state
-# - name: deploy-portainer-agent | Wait for Portainer Agent to accept connections
-#   ansible.builtin.wait_for:
-#     host: "{{ portainer_agent_fqdn }}"
-#     port: "{{ portainer_agent_service_port }}"
-#     connect_timeout: 1
-#     delay: 10
-#     state: started
-#     timeout: 30
-#   register: portainer_agent_running
-#   retries: 10
-#   until: portainer_agent_running is success
+
+- name: deploy-portainer-agent | Wait for Portainer Agent to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ portainer_agent_fqdn }}"
+    port: "{{ portainer_agent_service_port }}"
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: portainer_agent_running
+  retries: 10
+  until: portainer_agent_running is success

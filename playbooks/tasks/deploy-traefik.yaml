@@ -16,7 +16,7 @@
     traefik_service_port_http: "{{ traefik_service_port_http | default(80) }}"
     traefik_service_port_https: "{{ traefik_service_port_https | default(443) }}"
     traefik_provider: "{{ traefik_provider | default('docker') }}"
-    traefik_volume_letsencrypt_name: "{{ traefik_volume_letsencrypt_name | default('letsencrypt') }}"
+    traefik_letsencrypt_dir: /root/letsencrypt
 
 - name: deploy-traefik | Set Traefik aggregated facts
   ansible.builtin.set_fact:
@@ -121,9 +121,7 @@
     traefik_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - /root/letsencrypt:/letsencrypt:rw
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      - "{{ traefik_letsencrypt_dir }}:/letsencrypt:rw"
 
 - name: deploy-traefik | Create Traefik container labels
   ansible.builtin.set_fact:
@@ -175,14 +173,14 @@
 
 - name: deploy-traefik | Create acme directory
   ansible.builtin.file:
-    path: /root/letsencrypt
+    path: "{{ traefik_letsencrypt_dir }}"
     mode: "644"
     state: directory
   register: acme_directory_creation
 
 - name: deploy-traefik | Create acme configuration file
   ansible.builtin.file:
-    path: /root/letsencrypt/acme.json
+    path: "{{ traefik_letsencrypt_dir }}/acme.json"
     state: touch
     mode: "600"
   register: acme_configuration_creation
@@ -211,24 +209,25 @@
       retries: 3
       start_period: 5s
     labels: "{{ traefik_container_labels | default(omit) }}"
-    networks: "{{ traefik_networks }}"
-    published_ports: "{{ traefik_ports }}"
+    networks: "{{ traefik_networks | default(omit) }}"
+    published_ports: "{{ traefik_ports | default(omit) }}"
     recreate: true # Recreate to ensure any configuration changes are used
     restart: true
     restart_policy: unless-stopped
     security_opts:
       - "no-new-privileges:true"
     state: started
-    volumes: "{{ traefik_volumes }}"
+    volumes: "{{ default_host_volumes + traefik_volumes | default(omit) }}"
   register: traefik_container_state
-# - name: deploy-traefik | Wait for Traefik to accept connections
-#   ansible.builtin.wait_for:
-#     host: "{{ traefik_fqdn }}"
-#     port: "{{ traefik_service_port | default(80) }}"
-#     connect_timeout: 1
-#     delay: 10
-#     state: started
-#     timeout: 30
-#   register: traefik_running
-#   until: traefik_running is success
-#   retries: 10
+
+- name: deploy-traefik | Wait for Traefik to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ traefik_fqdn }}"
+    port: "{{ traefik_service_port | default(80) }}"
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: traefik_running
+  retries: 10
+  until: traefik_running is success
