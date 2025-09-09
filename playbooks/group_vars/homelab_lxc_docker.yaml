@@ -41,7 +41,7 @@ prometheus_image: prom/prometheus:v3.5.0
 # Tinyauth facts
 tinyauth_image: ghcr.io/steveiliop56/tinyauth:v3.6.2
 # Traefik facts
-traefik_image: traefik:3.5.1
+traefik_image: traefik:3.5.2
 
 
 # Global definition of backup directory on hosts
