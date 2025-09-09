@@ -42,6 +42,8 @@
 - name: homelab-deploy-support-services | Deploy a containerised read-only instance of Docker Socket Proxy
   ansible.builtin.include_tasks:
     file: tasks/deploy-docker-socket-proxy.yaml
+  vars:
+    use_docker_socket_proxy_rw: false
 
 # Used by Portainer Agent, and  Docker Volume Backup to manage services
 - name: homelab-deploy-support-services | Deploy a containerised read-write instance of Docker Socket Proxy
