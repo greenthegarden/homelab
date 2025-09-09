@@ -35,8 +35,6 @@
 - name: deploy-dozzle-agent | Create Dozzle network  # noqa: syntax-check[unknown-module]
   community.docker.docker_network:
     name: "{{ dozzle_network_name }}"
-    driver: "bridge"
-    internal: false
 
 - name: deploy-dozzle-agent | Pull Dozzle Agent image
   community.docker.docker_image:

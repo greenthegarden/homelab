@@ -40,8 +40,6 @@
 - name: deploy-beszel-agent | Create Beszel network  # noqa: syntax-check[unknown-module]
   community.docker.docker_network:
     name: "{{ beszel_network_name }}"
-    driver: "bridge"
-    internal: false
 
 - name: deploy-beszel-agent | Create Beszel Agent configuration directory
   ansible.builtin.file:

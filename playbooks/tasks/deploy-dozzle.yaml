@@ -68,8 +68,6 @@
 - name: deploy-dozzle | Create Dozzle network  # noqa: syntax-check[unknown-module]
   community.docker.docker_network:
     name: "{{ dozzle_network_name }}"
-    driver: "bridge"
-    internal: false
 
 - name: deploy-dozzle | Pull Dozzle image
   community.docker.docker_image:

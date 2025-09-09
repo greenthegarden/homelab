@@ -35,8 +35,6 @@
 - name: deploy-portainer-agent | Create Portainer network  # noqa: syntax-check[unknown-module]
   community.docker.docker_network:
     name: "{{ portainer_network_name }}"
-    driver: "bridge"
-    internal: false
 
 - name: deploy-portainer-agent | Pull Portainer Agent image
   community.docker.docker_image:
