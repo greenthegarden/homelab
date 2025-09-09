@@ -3,6 +3,10 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+- name: deploy-docker-socket-proxy | Set default for use_docker_socket_proxy_rw
+  ansible.builtin.set_fact:
+    use_docker_socket_proxy_rw: "{{ use_docker_socket_proxy_rw | default(false) }}"
+
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy facts
   ansible.builtin.set_fact:
     docker_socket_proxy_image: "{{ docker_socket_proxy_image | default('ghcr.io/tecnativa/docker-socket-proxy:latest') }}"
