@@ -6,7 +6,7 @@
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy facts
   ansible.builtin.set_fact:
     docker_socket_proxy_image: "{{ docker_socket_proxy_image | default('ghcr.io/tecnativa/docker-socket-proxy:latest') }}"
-    docker_socket_proxy_service_name: "{{ docker_socket_proxy_service_name | default('docker-socket-proxy') }}"
+    docker_socket_proxy_service_name: "{{ docker_socket_proxy_service_name | default('docker-socket-proxy') }}{{ -rw if use_docker_socket_proxy_rw }}"
     docker_socket_proxy_service_port: "{{ docker_socket_proxy_service_port | default(2375) }}"
 
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy aggregated facts
@@ -76,9 +76,9 @@
       SYSTEM: "0"
       TASKS: "1" # Allow access to viewing tasks (Portainer, Docker Volume Backup)
       VOLUMES: "1" # Allow access to viewing volumes (Portainer)
-    labels: "{{ docker_socket_proxy_container_labels }}"
+    labels: "{{ docker_socket_proxy_container_labels | default(omit) }}"
     networks: "{{ docker_socket_proxy_networks }}"
-    published_ports: "{{ docker_socket_proxy_ports }}"
+    published_ports: "{{ docker_socket_proxy_ports if use_docker_socket_proxy_rw else omit }}"
     recreate: true # Recreate to ensure env changes are used
     restart: true
     restart_policy: unless-stopped

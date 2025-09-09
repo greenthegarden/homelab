@@ -48,10 +48,11 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-docker-socket-proxy.yaml
   vars:
-    docker_socket_proxy_service_name: "docker-socket-proxy-rw"
-    docker_socket_proxy_service_port: 2376
-    docker_socket_proxy_network_name: "{{ docker_socket_proxy_rw_network_name }}"
-    configure_for_docker_volume_backup: true
+    use_docker_socket_proxy_rw: true
+    # docker_socket_proxy_service_name: docker-socket-proxy-rw
+    # docker_socket_proxy_service_port: 2376
+    # docker_socket_proxy_network_name: docker-socket-proxy-rw
+    # configure_for_docker_volume_backup: true
 
 - name: homelab-deploy-support-services | Deploy a containerised instance of Portainer Agent
   ansible.builtin.include_tasks:
@@ -66,8 +67,6 @@
 - name: homelab-deploy-support-services | Deploy a containerised instance of Traefik
   ansible.builtin.include_tasks:
     file: tasks/deploy-traefik.yaml
-  vars:
-    docker_socket_proxy_network_name: "{{ docker_socket_proxy_network_name }}"
 
 - name: homelab-deploy-support-services | Deploy a containerised instance of Tinyauth
   ansible.builtin.include_tasks:
