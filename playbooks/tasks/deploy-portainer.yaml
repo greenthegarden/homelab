@@ -18,7 +18,7 @@
 
 - name: deploy-portainer | Set Poratiner volume facts
   ansible.builtin.set_fact:
-    portainer_volume_data_name: "{{ portainer_service_name }}" # -data"
+    portainer_volume_data_name: "{{ portainer_service_name }}-data"
 
 - name: deploy-portainer | Set Portainer aggregated facts
   ansible.builtin.set_fact:
@@ -27,7 +27,7 @@
 - name: deploy-portainer | Set Portainer service facts
   ansible.builtin.set_fact:
     portainer_networks:
-      - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+      - name: "{{ portainer_network_name | default('portainer') }}"
       - name: "{{ web_network_name | default('web') }}"
     portainer_volumes:
       # Local paths to mount into the container

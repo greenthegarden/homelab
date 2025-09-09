@@ -1,42 +1,39 @@
 ---
 
+# This playbook deploys support services for the homelab environment and are intended to be run on all Homelab LXC based servers.
+
+# The services include:
+# - Portainer Agent
+# - Dozzle Agent
+# - Docker Socket Proxy
+# - Traefik
+# - Tinyauth
+# - Node Exporter
+# - Prometheus
+
+# Load environment variables applicable to the homelab environment
 - name: homelab-deploy-support-services | Load homelab vars
   ansible.builtin.include_vars:
     file: vars/homelab_env.yaml
 
+# Ensure docker is installed and configured on the host
 - name: homelab-deploy-support-services | Configure Homelab Docker base
   ansible.builtin.include_tasks:
     file: tasks/homelab-configure-docker-base.yaml
 
+# Define required Docker external networks for the homelab environment
 - name: homelab-deploy-support-services | Set Homelab network facts
   ansible.builtin.set_fact:
     docker_socket_proxy_network_name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-    docker_socket_proxy_network_interal: "{{ docker_socket_proxy_network_interal | default(false) }}"
-    docker_socket_proxy_rw_network_name: "{{ docker_socket_proxy_rw_network_name | default('docker-socket-proxy-rw') }}"
-    docker_socket_proxy_rw_network_interal: "{{ docker_socket_proxy_rw_network_interal | default(true) }}"
-    monitoring_network_name: "{{ monitoring_network_name | default('monitoring') }}"
-    monitoring_network_internal: "{{ monitoring_network_internal | default(true) }}"
     web_network_name: "{{ web_network_name | default('web') }}"
-    web_network_internal: "{{ web_network_internal | default(false) }}"
 
+# Create required Docker external networks for the homelab environment
 - name: homelab-deploy-support-services | Create Homelab Docker networks  # noqa: syntax-check[unknown-module]
   community.docker.docker_network:
     name: "{{ item.name }}"
-    driver: "{{ item.driver }}"
-    internal: "{{ item.internal }}"
   loop:
     - name: "{{ docker_socket_proxy_network_name }}"
-      driver: bridge
-      internal: "{{ docker_socket_proxy_network_interal }}"
-    - name: "{{ docker_socket_proxy_rw_network_name }}"
-      driver: bridge
-      internal: "{{ docker_socket_proxy_rw_network_interal }}"
-    - name: "{{ monitoring_network_name }}"
-      driver: bridge
-      internal: "{{ monitoring_network_internal }}"
     - name: "{{ web_network_name }}"
-      driver: bridge
-      internal: "{{ web_network_internal }}"
 
 # Use the following agents to monitor Docker services via host docker socket
 
