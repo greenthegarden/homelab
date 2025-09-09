@@ -7,9 +7,11 @@
 # Docker Socket Proxy is used to connect services to the Docker API via the
 # docker-socket-proxy service
 # Read-Only access to the Docker Socket Proxy
+# Used by most services (Traefik, Homepage and Uptime Kuma)
 docker_socket_proxy_network_name: docker-socket-proxy
 docker_socket_proxy_network_interal: false
 # Read-Write access to the Docker Socket Proxy
+# Used by services that need to stop/start containers (Portainer Agent, Docker Volume Backup)
 docker_socket_proxy_rw_network_name: docker-socket-proxy-rw
 docker_socket_proxy_rw_network_interal: true
 # Monitoring is an internal network that is not exposed outside the host
