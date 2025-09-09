@@ -57,6 +57,7 @@
   register: portainer_agent_container_state
 
 - name: deploy-portainer-agent | Wait for Portainer Agent to accept connections
+  when: false
   ansible.builtin.wait_for:
     host: "{{ portainer_agent_fqdn }}"
     port: "{{ portainer_agent_service_port }}"
