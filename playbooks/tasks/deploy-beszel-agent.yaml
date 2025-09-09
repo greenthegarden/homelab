@@ -17,15 +17,14 @@
 - name: deploy-beszel-agent | Set Beszel Agent service facts
   ansible.builtin.set_fact:
     beszel_agent_networks:
-      - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
-      - name: "{{ web_network_name | default('web') }}"
+      - name: "{{ beszel_network_name | default('beszel') }}"
     beszel_agent_ports:
       - "{{ beszel_agent_service_port }}:45876"
     beszel_agent_volumes:
       - ./beszel_socket:/beszel_socket
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      # - /var/run/docker.sock:/var/run/docker.sock
+      # - /etc/localtime:/etc/localtime:ro
+      # - /etc/timezone:/etc/timezone:ro
 
 - name: deploy-beszel-agent | Create Beszel Agent container labels
   ansible.builtin.set_fact:
@@ -37,6 +36,12 @@
       "key": "wud.link.template",
       "value": "https://github.com/henrygd/beszel/releases/tag/v${major}.${minor}.${patch}",
     }
+
+- name: deploy-beszel-agent | Create Beszel network  # noqa: syntax-check[unknown-module]
+  community.docker.docker_network:
+    name: "{{ beszel_network_name }}"
+    driver: "bridge"
+    internal: false
 
 - name: deploy-beszel-agent | Create Beszel Agent configuration directory
   ansible.builtin.file:
@@ -66,14 +71,14 @@
     env_file: "{{ beszel_agent_config_dir }}/beszel-agent.env"
     env:
       LISTEN: 45876
-    labels: "{{ (beszel_agent_container_labels | default({})) | default(omit) }}"
+    labels: "{{ beszel_agent_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ beszel_agent_networks }}"
-    published_ports: "{{ beszel_agent_ports }}"
+    networks: "{{ beszel_agent_networks | default(omit) }}"
+    published_ports: "{{ beszel_agent_ports | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ beszel_agent_volumes }}"
+    volumes: "{{ default_host_volumes + docker_host_volume + beszel_agent_volumes | default(omit) }}"
   register: beszel_agent_container_state
 
 # services:

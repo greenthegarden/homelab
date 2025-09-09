@@ -3,18 +3,20 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+####### PORTAINER AGENT SECTION
+
+# https://docs.portainer.io/admin/environments/add/docker/agent
+
 - name: deploy-portainer-agent | Set Portainer Agent facts
   ansible.builtin.set_fact:
     portainer_agent_image: "{{ portainer_agent_image | default('portainer/agent:latest') }}"
     portainer_agent_service_name: "{{ portainer_agent_service_name | default('portainer_agent') }}"
     portainer_agent_service_port: "{{ portainer_agent_service_port | default(9001) }}"
 
-- name: deploy-portainer-agent | Set Portainer Agent aggregated facts
-  ansible.builtin.set_fact:
-    portainer_agent_fqdn: "{{ portainer_agent_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
-
 - name: deploy-portainer-agent | Set Portainer Agent service facts
   ansible.builtin.set_fact:
+    portainer_agent_networks:
+      - name: "{{ portainer_network_name | default('portainer') }}"
     portainer_agent_ports:
       - "{{ portainer_agent_service_port }}:9001"
     portainer_agent_volumes: []
@@ -30,18 +32,16 @@
       "value": "https://github.com/portainer/agent/releases/tag/${major}.${minor}.${patch}",
     }
 
+- name: deploy-portainer-agent | Create Portainer network  # noqa: syntax-check[unknown-module]
+  community.docker.docker_network:
+    name: "{{ portainer_network_name }}"
+    driver: "bridge"
+    internal: false
+
 - name: deploy-portainer-agent | Pull Portainer Agent image
   community.docker.docker_image:
     name: "{{ portainer_agent_image }}"
     source: pull
-
-# docker run -d \
-#   -p 9001:9001 \
-#   --name portainer_agent \
-#   --restart=always \
-#   -v /var/run/docker.sock:/var/run/docker.sock \
-#   -v /var/lib/docker/volumes:/var/lib/docker/volumes \
-#   portainer/agent:2.18.3
 
 - name: deploy-portainer-agent | Deploy Portainer Agent
   community.docker.docker_container:
@@ -49,15 +49,17 @@
     image: "{{ portainer_agent_image }}"
     detach: true
     labels: "{{ portainer_agent_container_labels | default(omit) }}"
+    networks_cli_compatible: true
+    networks: "{{ portainer_networks | default(omit) }}"
     published_ports: "{{ portainer_agent_ports | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ docker_host_volume + portainer_agent_volumes | default(omit) }}"
+    volumes: "{{ default_host_volumes + docker_host_volume + portainer_agent_volumes | default(omit) }}"
   register: portainer_agent_container_state
 
 - name: deploy-portainer-agent | Wait for Portainer Agent to accept connections
-  when: false
+  when: false # Temporarily disable as no DNS entry for agent
   ansible.builtin.wait_for:
     host: "{{ portainer_agent_fqdn }}"
     port: "{{ portainer_agent_service_port }}"

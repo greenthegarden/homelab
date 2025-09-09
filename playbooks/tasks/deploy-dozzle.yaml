@@ -21,17 +21,15 @@
 - name: deploy-dozzle | Set Dozzle service facts
   ansible.builtin.set_fact:
     dozzle_networks:
-      - name: "{{ monitoring_network_name | default('monitoring') }}"
+      - name: "{{ dozzle_network_name | default('dozzle') }}"
       - name: "{{ web_network_name | default('web') }}"
     dozzle_ports:
       # Published ports to expose outside the container
       # host port:container port
       - "{{ dozzle_service_port }}:8080"
-    dozzle_volumes:
+    dozzle_volumes: []
       # Local paths to mount into the container
       # local path:container path
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
 
 - name: deploy-dozzle | Create Dozzle container labels
   ansible.builtin.set_fact:
@@ -67,6 +65,12 @@
     - { "key": "homepage.href", "value": "https://{{ dozzle_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ dozzle_fqdn }}/" }
 
+- name: deploy-dozzle | Create Dozzle network  # noqa: syntax-check[unknown-module]
+  community.docker.docker_network:
+    name: "{{ dozzle_network_name }}"
+    driver: "bridge"
+    internal: false
+
 - name: deploy-dozzle | Pull Dozzle image
   community.docker.docker_image:
     name: "{{ dozzle_image }}"
@@ -89,11 +93,11 @@
       timeout: 30s
     labels: "{{ dozzle_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ dozzle_networks }}"
+    networks: "{{ dozzle_networks | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ dozzle_volumes }}"
+    volumes: "{{ default_host_volumes + dozzle_volumes | default(omit) }}"
   register: dozzle_container_state
 
 - name: deploy-dozzle | Wait for Dozzle to accept connections

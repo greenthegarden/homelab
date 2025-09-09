@@ -15,7 +15,8 @@
 
 - name: deploy-dozzle-agent | Set Dozzle Agent service facts
   ansible.builtin.set_fact:
-    dozzle_agent_networks: []
+    dozzle_agent_networks:
+      - name: "{{ dozzle_network_name | default('dozzle') }}"
     dozzle_agent_ports:
       - "{{ dozzle_agent_service_port }}:7007"
     dozzle_agent_volumes: []
@@ -30,6 +31,12 @@
       "key": "wud.link.template",
       "value": "https://github.com/amir20/dozzle/releases/tag/v${major}.${minor}.${patch}",
     }
+
+- name: deploy-dozzle-agent | Create Dozzle network  # noqa: syntax-check[unknown-module]
+  community.docker.docker_network:
+    name: "{{ dozzle_network_name }}"
+    driver: "bridge"
+    internal: false
 
 - name: deploy-dozzle-agent | Pull Dozzle Agent image
   community.docker.docker_image:
@@ -56,5 +63,5 @@
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ default_host_volumes + docker_host_volume }}"
+    volumes: "{{ default_host_volumes + docker_host_volume + dozzle_agent_volumes | default(omit) }}"
   register: dozzle_agent_container_state

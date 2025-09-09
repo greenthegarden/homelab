@@ -16,6 +16,10 @@
     portainer_service_port: "{{ portainer_service_port | default(9443) }}"
     portainer_volume_name: "{{ portainer_volume_name | default('portainer') }}"
 
+- name: deploy-portainer | Set Poratiner volume facts
+  ansible.builtin.set_fact:
+    portainer_volume_data_name: "{{ portainer_service_name }}-data"
+
 - name: deploy-portainer | Set Portainer aggregated facts
   ansible.builtin.set_fact:
     portainer_fqdn: "{{ portainer_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
@@ -28,10 +32,7 @@
     portainer_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ portainer_volume_name }}:/data"
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      - "{{ portainer_volume_data_name }}:/data"
 
 - name: deploy-portainer | Create Portainer container labels
   ansible.builtin.set_fact:
@@ -71,9 +72,15 @@
     - { "key": "homepage.href", "value": "https://{{ portainer_fqdn }}" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ portainer_fqdn }}" }
 
+- name: deploy-portainer | Create Portainer network  # noqa: syntax-check[unknown-module]
+  community.docker.docker_network:
+    name: "{{ portainer_network_name }}"
+    driver: "bridge"
+    internal: false
+
 - name: deploy-portainer | Create volume for Portainer # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
-    name: "{{ portainer_volume_name }}"
+    name: "{{ portainer_volume_data_name }}"
 
 - name: deploy-portainer | Pull Portainer image
   community.docker.docker_image:
@@ -89,11 +96,11 @@
       DOCKER_HOST: tcp://docker-socket-proxy:2375
     labels: "{{ portainer_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ portainer_networks }}"
+    networks: "{{ portainer_networks | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ portainer_volumes }}"
+    volumes: "{{ default_host_volumes + portainer_volumes | default(omit) }}"
   register: portainer_container_state
 
 - name: deploy-portainer | Wait for Portainer to accept connections
