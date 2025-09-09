@@ -8,9 +8,37 @@
   ansible.builtin.include_tasks:
     file: tasks/homelab-configure-docker-base.yaml
 
-- name: homelab-deploy-support-services | Deploy a containerised instance of Docker Socket Proxy
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-docker-socket-proxy.yaml
+- name: homelab-deploy-support-services | Set Homelab network facts
+  ansible.builtin.set_fact:
+    docker_socket_proxy_network_name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+    docker_socket_proxy_network_interal: "{{ docker_socket_proxy_network_interal | default(false) }}"
+    docker_socket_proxy_rw_network_name: "{{ docker_socket_proxy_rw_network_name | default('docker-socket-proxy-rw') }}"
+    docker_socket_proxy_rw_network_interal: "{{ docker_socket_proxy_rw_network_interal | default(true) }}"
+    monitoring_network_name: "{{ monitoring_network_name | default('monitoring') }}"
+    monitoring_network_internal: "{{ monitoring_network_internal | default(true) }}"
+    web_network_name: "{{ web_network_name | default('web') }}"
+    web_network_internal: "{{ web_network_internal | default(false) }}"
+
+- name: homelab-deploy-support-services | Create Homelab Docker networks  # noqa: syntax-check[unknown-module]
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver }}"
+    internal: "{{ item.internal }}"
+  loop:
+    - name: "{{ docker_socket_proxy_network_name }}"
+      driver: bridge
+      internal: "{{ docker_socket_proxy_network_interal }}"
+    - name: "{{ docker_socket_proxy_rw_network_name }}"
+      driver: bridge
+      internal: "{{ docker_socket_proxy_rw_network_interal }}"
+    - name: "{{ monitoring_network_name }}"
+      driver: bridge
+      internal: "{{ monitoring_network_internal }}"
+    - name: "{{ web_network_name }}"
+      driver: bridge
+      internal: "{{ web_network_internal }}"
+
+# Use agents to monitor Docker services via docker socket
 
 - name: homelab-deploy-support-services | Deploy a containerised instance of Portainer Agent
   ansible.builtin.include_tasks:
@@ -20,6 +48,12 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-dozzle-agent.yaml
 
+# Use a reverse proxy to manage access to monitor remote services
+# Used by Traefik, Homepage and What's up Docker? to monitor services
+- name: homelab-deploy-support-services | Deploy a containerised read-only instance of Docker Socket Proxy
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-docker-socket-proxy.yaml
+
 - name: homelab-deploy-support-services | Deploy a containerised instance of Traefik
   ansible.builtin.include_tasks:
     file: tasks/deploy-traefik.yaml
@@ -28,10 +62,12 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-tinyauth.yaml
 
-# - name: homelab-deploy-support-services | Deploy a containerised instance of Node Exporter
-#   ansible.builtin.include_tasks:
-#     file: tasks/deploy-node-exporter.yaml
+- name: homelab-deploy-support-services | Deploy a containerised instance of Node Exporter
+  when: false  # Disable for now as not needed with Dozzle
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-node-exporter.yaml
 
-# - name: homelab-deploy-support-services | Deploy a containerised instance of Prometheus
-#   ansible.builtin.include_tasks:
-#     file: tasks/deploy-prometheus.yaml
+- name: homelab-deploy-support-services | Deploy a containerised instance of Prometheus
+  when: false  # Disable for now as not needed with Dozzle
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-prometheus.yaml
