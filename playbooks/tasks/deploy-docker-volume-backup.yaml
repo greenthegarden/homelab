@@ -23,7 +23,7 @@
 
     - name: deploy-docker-volume-backup | Set Global facts
       ansible.builtin.set_fact:
-        local_backups_dir: "{{ local_backups_dir | default('/tmp/backups') }}"
+        docker_volume_backup_local_backups_dir: "{{ docker_volume_backup_local_backups_dir | default('/tmp/backups') }}"
 
     - name: deploy-docker-volume-backup | Set Docker Volume Backup facts
       ansible.builtin.set_fact:
@@ -41,7 +41,7 @@
         docker_volume_backup_networks:
           - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
         docker_volume_backup_volumes:
-          - "{{ local_backups_dir }}:/archive"
+          - "{{ docker_volume_backup_local_backups_dir }}:/archive"
 
     - name: deploy-docker-volume-backup | Add volume to backup to Docker Volume Backup volumes
       ansible.builtin.set_fact:
@@ -60,7 +60,7 @@
 
     - name: deploy-docker-volume-backup | Create Docker Volume Backup local archive directory
       ansible.builtin.file:
-        path: "{{ local_backups_dir }}"
+        path: "{{ docker_volume_backup_local_backups_dir }}"
         mode: "0644"
         state: directory
       register: local_archive_directory_creation
