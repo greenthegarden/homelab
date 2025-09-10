@@ -48,7 +48,7 @@
     detach: true
     labels: "{{ portainer_agent_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ portainer_networks | default(omit) }}"
+    networks: "{{ portainer_agent_networks | default(omit) }}"
     published_ports: "{{ portainer_agent_ports | default(omit) }}"
     restart: true
     restart_policy: unless-stopped

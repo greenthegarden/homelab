@@ -98,7 +98,7 @@
     host: "{{ docker_socket_proxy_container_state['container']\
       ['NetworkSettings']\
       ['Networks']\
-      [docker_socket_proxy_service_name]\
+      [docker_monitoring_network_name]\
       ['IPAddress'] }}"
     port: "{{ docker_socket_proxy_service_port }}"
     connect_timeout: 1
