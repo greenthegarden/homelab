@@ -685,6 +685,12 @@ The following services are used to monitor security of the system.
 
 Wazuh is installed across all the hosts via Ansible using a [forked version of the official Wazuh playbook][github-wazuh].
 
+TODO: Explore OWASP docs
+
+[OWASP Cheat Sheet for Docker](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html)
+
+[github-owasp-cheatsheetseries]: https://github.com/OWASP/CheatSheetSeries
+
 [github-wazuh]: https://github.com/greenthegarden/wazuh-ansible
 
 ## Documentation
