@@ -18,7 +18,7 @@
 - name: deploy-tinyauth | Set Tinyauth service facts
   ansible.builtin.set_fact:
     tinyauth_networks:
-      - name: "{{ docker_socket_proxy_network_name | default('docker-socket-proxy') }}"
+      - name: "{{ docker_monitoring_network_name | default('docker-socket-proxy') }}"
       - name: "{{ web_network_name | default('web') }}"
     tinyauth_ports:
       # Published ports to expose outside the container
