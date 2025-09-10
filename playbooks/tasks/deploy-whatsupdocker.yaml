@@ -16,7 +16,7 @@
 
 - name: deploy-whatsupdocker | Set What's up Docker? volume facts
   ansible.builtin.set_fact:
-    whatsupdocker_volume_store_name: "{{ whatsupdocker_service_name }}-store"
+    whatsupdocker_volume_name: "{{ whatsupdocker_volume_name | default(whatsupdocker_service_name) }}"
 
 - name: deploy-whatsupdocker | Set What's up Docker? aggregated facts
   ansible.builtin.set_fact:
@@ -34,7 +34,17 @@
     whatsupdocker_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ whatsupdocker_volume_store_name }}:/store"
+      - "{{ whatsupdocker_volume_name }}:/store"
+
+- name: deploy-whatsupdocker | Log What's up Docker? configuration
+  ansible.builtin.debug:
+    msg:
+      - "What's up Docker? image: {{ whatsupdocker_image }}"
+      - "What's up Docker? service name: {{ whatsupdocker_service_name }}"
+      - "What's up Docker? FQDN: {{ whatsupdocker_fqdn }}"
+      - "What's up Docker? networks: {{ whatsupdocker_networks | default(omit) }}"
+      - "What's up Docker? ports: {{ whatsupdocker_ports | default(omit) }}"
+      - "What's up Docker? volumes: {{ whatsupdocker_volumes | default(omit) }}"
 
 - name: deploy-whatsupdocker | Create What's up Docker? container labels
   ansible.builtin.set_fact:
@@ -82,13 +92,21 @@
       "value": "https://{{ whatsupdocker_fqdn }}",
     }
 
+- name: deploy-whatsupdocker | Create What's up Docker? networks # noqa: syntax-check[unknown-module]
+  when: whatsupdocker_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ whatsupdocker_networks }}"
+
 # Create required Docker volumes
 - name: deploy-whatsupdocker | Create What's up Docker? volumes
+  when: whatsupdocker_volume_name is defined
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
   loop:
-    - "{{ whatsupdocker_volume_store_name }}"
+    - "{{ whatsupdocker_volume_name }}"
 
 - name: deploy-whatsupdocker | Pull What's up Docker? image
   community.docker.docker_image:
@@ -129,7 +147,7 @@
       WUD_WATCHER_PORTAINER_HOST: "portainer.{{ lan_domain }}"
       WUD_WATCHER_PRODUCTIVITY_HOST: "productivity.{{ lan_domain }}"
       WUD_WATCHER_UPTIMEKUMA_HOST: "uptimekuma.{{ lan_domain }}"
-      WUD_WATCHER_VAULTWARDEN_HOST: "vaultwarden.{{ lan_domain }}"
+      WUD_WATCHER_whatsupdocker_HOST: "whatsupdocker.{{ lan_domain }}"
       # # Authentik integration
       # WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ whatsupdocker.oauth_client_id | default('dummy') }}"
       # WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ whatsupdocker.oauth_client_secret | default('dummy') }}"
@@ -157,7 +175,7 @@
     security_opts:
       - "no-new-privileges:true"
     state: started
-    volumes: "{{ default_host_volumes + whatsupdocker_volumes }}"
+    volumes: "{{ default_host_volumes + whatsupdocker_volumes | default(omit) }}"
   register: whatsupdocker_container_state
 
 - name: deploy-whatsupdocker | Wait for What's up Docker? to accept connections

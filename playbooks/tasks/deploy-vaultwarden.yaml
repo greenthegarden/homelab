@@ -91,6 +91,7 @@
   loop: "{{ vaultwarden_networks }}"
 
 - name: deploy-vaultwarden | Create Vaultwarden volume # noqa: syntax-check[unknown-module]
+  when: vaultwarden_volume_name is defined
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
