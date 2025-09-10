@@ -26,6 +26,7 @@
         file: tasks/deploy-influxdb.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
+      when: false # Temporarily disable for testing
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
