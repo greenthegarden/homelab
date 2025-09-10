@@ -3,6 +3,12 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+####### DOCMOST SECTION
+
+# https://docmost.com/
+# https://github.com/docmost/docmost
+# https://hub.docker.com/r/docmost/docmost
+
 - name: deploy-docmost | Ensure required Docmost variables are set
   ansible.builtin.assert:
     that:
@@ -11,12 +17,6 @@
       - docmost.postgres_password is defined
       - docmost.postgres_database is defined
     fail_msg: "One or more required Docmost variables are not defined! Please define them in your inventory or group_vars/host_vars."
-
-####### DOCMOST SECTION
-
-# https://docmost.com/
-# https://github.com/docmost/docmost
-# https://hub.docker.com/r/docmost/docmost
 
 - name: deploy-docmost | Set Docmost facts
   ansible.builtin.set_fact:

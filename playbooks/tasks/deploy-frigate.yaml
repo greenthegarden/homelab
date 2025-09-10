@@ -5,19 +5,28 @@
 
 ####### FRIGATE SECTION
 
-# https://docs.frigate.video/frigate/installation
+# https://docs.frigate.video/frigate/installation#docker
+
+- name: deploy-frigate | Ensure required Frigate variables are set
+  ansible.builtin.assert:
+    that:
+      - frigate.rtsp_password is defined
+    fail_msg: "One or more required frigate variables are not defined! Please define them in your inventory or group_vars/host_vars."
 
 - name: deploy-frigate | Set Frigate facts
   ansible.builtin.set_fact:
     frigate_image: "{{ frigate_image | default('ghcr.io/blakeblackshear/frigate:stable') }}"
     frigate_service_name: "{{ frigate_service_name | default('frigate') }}"
     frigate_service_port: "{{ frigate_service_port | default(8971) }}"
-    frigate_service_port_http: "{{ frigate_service_port_http | default(5000) }}"
+    frigate_service_port_http: "{{ frigate_service_port_http | default(5000) }}" # Internal unauthenticated access.
     frigate_service_port_rtsp: "{{ frigate_service_port_rtsp | default(8554) }}"
     frigate_service_port_webrtc: "{{ frigate_service_port_webrtc | default(8555) }}"
-    frigate_volume_name: "{{ frigate_volume_name | default('frigate') }}"
     frigate_mount_point: /mnt/storage/frigate
     frigate_config_dir: "/root/frigate"
+
+- name: deploy-frigate | Set Frigate volume facts
+  ansible.builtin.set_fact:
+    frigate_volume_name: "{{ frigate_volume_name | default(frigate_service_name) }}"
 
 - name: deploy-frigate | Set Frigate aggregated facts
   ansible.builtin.set_fact:
@@ -34,8 +43,6 @@
     frigate_ports:
       # Published ports to expose outside the container
       # host port:container port
-      # - "{{ frigate_service_port }}:8971"
-      - "{{ frigate_service_port_http }}:5000"
       - "{{ frigate_service_port_rtsp }}:8554"
       - "{{ frigate_service_port_webrtc }}:8555/tcp"
       - "{{ frigate_service_port_webrtc }}:8555/udp"
@@ -44,8 +51,16 @@
       # local path:container path
       - "{{ frigate_config_dir }}:/config"
       - "{{ frigate_mount_point }}:/media/frigate"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-frigate | Log frigate configuration
+  ansible.builtin.debug:
+    msg:
+      - "Frigate image: {{ frigate_image }}"
+      - "Frigate service name: {{ frigate_service_name }}"
+      - "Frigate FQDN: {{ frigate_fqdn }}"
+      - "Frigate networks: {{ frigate_networks | default(omit) }}"
+      - "Frigate ports: {{ frigate_ports | default(omit) }}"
+      - "Frigate volumes: {{ frigate_volumes | default(omit) }}"
 
 - name: deploy-frigate | Create Frigate container labels
   ansible.builtin.set_fact:
@@ -62,17 +77,9 @@
       "key": "traefik.http.routers.{{ frigate_service_name }}.rule",
       "value": "Host(`{{ frigate_fqdn }}`)",
     }
-    # - {
-    #   "key": "traefik.http.routers.{{ frigate_service_name }}.service",
-    #   "value": "{{ frigate_service_name }}",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ frigate_service_name }}.tls",
-    #   "value": "true",
-    # }
     - {
       "key": "traefik.http.services.{{ frigate_service_name }}.loadbalancer.server.port",
-      "value": "{{ frigate_service_port }}",
+      "value": "{{ frigate_service_port_http }}",
     }
 
     # ---------------------------------------------------------------
@@ -112,6 +119,7 @@
     mode: "0644"
   register: frigate_configuration_creation
 
+# Create required Docker volumes
 - name: deploy-frigate | Create volume for Frigate
   community.docker.docker_volume:
     name: "{{ frigate_volume_name }}"
@@ -121,7 +129,6 @@
     name: "{{ frigate_image }}"
     source: pull
 
-# https://docs.frigate.video/frigate/installation#docker
 - name: deploy-frigate | Deploy Frigate
   community.docker.docker_container:
     name: "{{ frigate_service_name }}"
@@ -132,24 +139,24 @@
     labels: "{{ frigate_container_labels | default(omit) }}"
     mounts: "{{ frigate_mounts }}"
     networks_cli_compatible: true
-    networks: "{{ frigate_networks }}"
-    ports: "{{ frigate_ports }}"
+    networks: "{{ frigate_networks | default(omit) }}"
+    ports: "{{ frigate_ports | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     shm_size: 64M
     state: started
     stop_timeout: 30 # allow enough time to shut down the various services
-    volumes: "{{ frigate_volumes }}"
+    volumes: "{{ default_host_volumes + frigate_volumes | default(omit) }}"
   register: frigate_container_state
 
-# - name: deploy-frigate | Wait for Frigate to accept connections
-#   ansible.builtin.wait_for:
-#     host: "{{ frigate_fqdn }}"
-#     port: 80
-#     connect_timeout: 1
-#     delay: 10
-#     state: started
-#     timeout: 30
-#   register: frigate_running
-#   until: frigate_running is success
-#   retries: 10
+- name: deploy-frigate | Wait for Frigate to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ frigate_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: frigate_running
+  retries: 10
+  until: frigate_running is success
