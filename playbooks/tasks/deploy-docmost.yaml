@@ -58,7 +58,7 @@
       - "Docmost FQDN: {{ docmost_fqdn }}"
       - "Docmost networks: {{ docmost_networks | default(omit) }}"
       - "Docmost ports: {{ docmost_ports | default(omit) }}"
-      - "Docmost volumes: {{ docmost_volume | default(omit) }}"
+      - "Docmost volumes: {{ docmost_volumes | default(omit) }}"
 
 - name: deploy-docmost | Create Docmost container labels
   ansible.builtin.set_fact:
@@ -132,7 +132,7 @@
     name: "{{ item }}"
     state: present
   loop:
-    - "{{ docmost_data_volume_name }}"
+    - "{{ docmost_volume_name }}"
 
 - name: deploy-docmost | Check if Docmost is running
   community.docker.docker_container_info:

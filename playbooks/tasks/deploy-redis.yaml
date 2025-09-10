@@ -48,7 +48,7 @@
       - "redis FQDN: {{ redis_fqdn }}"
       - "redis networks: {{ redis_networks | default(omit) }}"
       - "redis ports: {{ redis_ports | default(omit) }}"
-      - "redis volumes: {{ redis_volume | default(omit) }}"
+      - "redis volumes: {{ redis_volumes | default(omit) }}"
 
 - name: deploy-redis | Create Redis container labels
   ansible.builtin.set_fact:
@@ -59,7 +59,7 @@
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/redis/redis/releases/tag/v${major}.${minor}.${patch}",
+      "value": "https://github.com/redis/redis/releases/tag/${major}.${minor}.${patch}",
     }
 
 # Create required Docker networks

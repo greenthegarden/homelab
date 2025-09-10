@@ -49,7 +49,7 @@
       - "postgres FQDN: {{ postgres_fqdn }}"
       - "postgres networks: {{ postgres_networks | default(omit) }}"
       - "postgres ports: {{ postgres_ports | default(omit) }}"
-      - "postgres volumes: {{ postgres_volume | default(omit) }}"
+      - "postgres volumes: {{ postgres_volumes | default(omit) }}"
 
 - name: deploy-postgres | Create Postgres container labels
   ansible.builtin.set_fact:
