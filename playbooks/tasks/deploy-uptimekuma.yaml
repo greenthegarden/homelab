@@ -25,6 +25,7 @@
 - name: deploy-uptimekuma | Set Uptime Kuma service facts
   ansible.builtin.set_fact:
     uptimekuma_networks:
+      - name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}"
       - name: "{{ web_network_name | default('web') }}"
     uptimekuma_ports:
       # Published ports to expose outside the container
@@ -120,7 +121,7 @@
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ (uptimekuma_container_labels | default({})) | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ uptimekuma_networks }}"
+        networks: "{{ uptimekuma_networks | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started

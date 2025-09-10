@@ -151,7 +151,7 @@
     #   start_period: 30s
     labels: "{{ whatsupdocker_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ whatsupdocker_networks }}"
+    networks: "{{ whatsupdocker_networks | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     state: started
