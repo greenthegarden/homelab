@@ -28,8 +28,6 @@
       # Local paths to mount into the container
       # local path:container path
       - "{{ homepage_config_dir }}/config:/app/config"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
 
 - name: deploy-homepage | Create Homepage container labels
   ansible.builtin.set_fact:
@@ -97,11 +95,11 @@
       HOMEPAGE_ALLOWED_HOSTS: "{{ homepage_fqdn }}"
     labels: "{{ homepage_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ homepage_networks }}"
+    networks: "{{ homepage_networks | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ homepage_volumes }}"
+    volumes: "{{ default_host_volumes + homepage_volumes | default(omit) }}"
   register: homepage_container_state
 
 - name: deploy-homepage | Wait for Homepage to accept connections

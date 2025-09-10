@@ -90,8 +90,6 @@
     name: "{{ portainer_service_name }}"
     image: "{{ portainer_image }}"
     detach: true
-    # env:
-    #   DOCKER_HOST: tcp://docker-socket-proxy:2375
     labels: "{{ portainer_container_labels | default(omit) }}"
     networks_cli_compatible: true
     networks: "{{ portainer_networks | default(omit) }}"
