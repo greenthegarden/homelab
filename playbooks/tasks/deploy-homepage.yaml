@@ -78,6 +78,7 @@
     dest: "{{ homepage_config_dir }}/config/{{ item }}.yaml"
     mode: "0644"
   loop:
+    - docker
     - services
     - widgets
 
