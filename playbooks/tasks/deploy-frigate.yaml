@@ -97,9 +97,9 @@
     - { "key": "homepage.description", "value": "What is outside?" }
     - { "key": "homepage.icon", "value": "frigate.png" }
     - { "key": "homepage.href", "value": "https://{{ frigate_fqdn }}/" }
-    - { "key": "homepage.siteMonitor", "value": "http://{{ frigate_fqdn }}:{{ frigate_service_port_http }}" }
+    - { "key": "homepage.siteMonitor", "value": "http://{{ frigate_fqdn }}" }
     - { "key": "homepage.widget.type", "value": "frigate" }
-    - { "key": "homepage.widget.url", "value": "http://{{ frigate_fqdn }}:{{ frigate_service_port_http }}" }
+    - { "key": "homepage.widget.url", "value": "http://{{ frigate_fqdn }}" }
     - {
       "key": "homepage.widget.fields",
       "value": "['cameras', 'uptime', 'version'].",
