@@ -15,7 +15,14 @@
     postgres_image_tag: "{{ postgres_image_tag | default('latest') }}"
     postgres_service_name: "{{ postgres_service_name | default('postgres') }}"
     postgres_service_port: "{{ postgres_service_port | default(5432) }}"
-    postgres_data_volume_name: "{{ postgres_data_volume_name | default('postgres') }}"
+
+- name: deploy-postgres | Set Postgres network facts
+  ansible.builtin.set_fact:
+    postgres_network_name: "{{ postgres_network_name | default(postgres_service_name) }}"
+
+- name: deploy-postgres | Set Postgres volume facts
+  ansible.builtin.set_fact:
+    postgres_volume_name: "{{ postgres_volume_name | default(postgres_service_name) }}"
 
 - name: deploy-postgres | Set Postgres aggregated facts
   ansible.builtin.set_fact:
@@ -31,10 +38,18 @@
       - "{{ postgres_service_port }}:5432"
     postgres_volumes:
       # Local paths to mount into the container
-      # local path:container path
-      - "{{ postgres_data_volume_name }}:/var/lib/postgresql/data"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      # local path:containerpath
+      - "{{ postgres_volume_name }}:/var/lib/postgresql/data"
+
+- name: deploy-postgres | Log Postgres configuration
+  ansible.builtin.debug:
+    msg:
+      - "postgres image: {{ postgres_image }}"
+      - "postgres service name: {{ postgres_service_name }}"
+      - "postgres FQDN: {{ postgres_fqdn }}"
+      - "postgres networks: {{ postgres_networks | default(omit) }}"
+      - "postgres ports: {{ postgres_ports | default(omit) }}"
+      - "postgres volumes: {{ postgres_volume | default(omit) }}"
 
 - name: deploy-postgres | Create Postgres container labels
   ansible.builtin.set_fact:
@@ -61,7 +76,7 @@
     name: "{{ item }}"
     state: present
   loop:
-    - "{{ postgres_data_volume_name }}"
+    - "{{ postgres_volume_name }}"
 
 - name: deploy-postgres | Check if Postgres is running
   community.docker.docker_container_info:
@@ -104,9 +119,9 @@
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ postgres_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ postgres_networks }}"
+        networks: "{{ postgres_networks | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ postgres_volumes }}"
+        volumes: "{{ default_host_volumes + postgres_volumes | default(omit) }}"
       register: postgres_container_state

@@ -3,6 +3,15 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+- name: deploy-docmost | Ensure required Docmost variables are set
+  ansible.builtin.assert:
+    that:
+      - docmost.app_secret is defined
+      - docmost.postgres_user is defined
+      - docmost.postgres_password is defined
+      - docmost.postgres_database is defined
+    fail_msg: "One or more required Docmost variables are not defined! Please define them in your inventory or group_vars/host_vars."
+
 ####### DOCMOST SECTION
 
 # https://docmost.com/
@@ -12,11 +21,16 @@
 - name: deploy-docmost | Set Docmost facts
   ansible.builtin.set_fact:
     docmost_image: "{{ docmost_image | default('docmost/docmost:latest') }}"
-    docmost_image_tag: "{{ docmost_image_tag | default('latest') }}"
     docmost_service_name: "{{ docmost_service_name | default('docmost') }}"
     docmost_service_port: "{{ docmost_service_port | default(3000) }}"
-    docmost_network_name: "{{ docmost_network_name | default('docmost') }}"
-    docmost_data_volume_name: "{{ docmost_data_volume_name | default('docmost') }}"
+
+- name: deploy-docmost | Set Docmost network facts
+  ansible.builtin.set_fact:
+    docmost_network_name: "{{ docmost_network_name | default(docmost_service_name) }}"
+
+- name: deploy-docmost | Set Docmost volume facts
+  ansible.builtin.set_fact:
+    docmost_volume_name: "{{ docmost_volume_name | default(docmost_service_name) }}"
 
 - name: deploy-docmost | Set Docmost aggregated facts
   ansible.builtin.set_fact:
@@ -34,9 +48,17 @@
     docmost_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ docmost_data_volume_name }}:/app/data/storage"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      - "{{ docmost_volume_name }}:/app/data/storage"
+
+- name: deploy-docmost | Log Docmost configuration
+  ansible.builtin.debug:
+    msg:
+      - "Docmost image: {{ docmost_image }}"
+      - "Docmost service name: {{ docmost_service_name }}"
+      - "Docmost FQDN: {{ docmost_fqdn }}"
+      - "Docmost networks: {{ docmost_networks | default(omit) }}"
+      - "Docmost ports: {{ docmost_ports | default(omit) }}"
+      - "Docmost volumes: {{ docmost_volume | default(omit) }}"
 
 - name: deploy-docmost | Create Docmost container labels
   ansible.builtin.set_fact:
@@ -76,7 +98,7 @@
     state: present
   loop: "{{ docmost_networks }}"
 
-# Depply redis for Docmost
+# Deploy redis for Docmost
 - name: deploy-docmost | Deploy Redis for Docmost
   when: docmost_redis_create | default(true)
   ansible.builtin.include_tasks:
@@ -84,7 +106,7 @@
   vars:
     redis_image: redis:7.2-alpine
     redis_network_name: "{{ docmost_network_name }}"
-    redis_data_volume_name: "{{ docmost_data_volume_name }}-redis"
+    redis_volume_name: "{{ docmost_service_name }}-redis"
     redis_args:
       - "--save ''"
       - "--appendonly no"
@@ -99,7 +121,7 @@
   vars:
     postgres_image: postgres:16-alpine
     postgres_network_name: "{{ docmost_network_name }}"
-    postgres_data_volume_name: "{{ docmost_data_volume_name }}-postgres"
+    postgres_volume_name: "{{ docmost_service_name }}-postgres"
     postgres_database: "{{ docmost.postgres_database | default('docmost') }}"
     postgres_user: "{{ docmost.postgres_user | default('docmost') }}"
     postgres_password: "{{ docmost.postgres_password | default('dummy') }}"
@@ -153,11 +175,11 @@
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ docmost_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ docmost_networks }}"
+        networks: "{{ docmost_networks | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ docmost_volumes }}"
+        volumes: "{{ default_host_volumes + docmost_volumes | default(omit) }}"
       register: docmost_container_state
 
     - name: deploy-docmost | Wait for Docmost to accept connections

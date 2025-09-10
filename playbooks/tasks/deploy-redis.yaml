@@ -12,11 +12,16 @@
 - name: deploy-redis | Set Redis facts
   ansible.builtin.set_fact:
     redis_image: "{{ redis_image | default('redis:latest') }}"
-    redis_image_tag: "{{ redis_image_tag | default('latest') }}"
     redis_service_name: "{{ redis_service_name | default('redis') }}"
     redis_service_port: "{{ redis_service_port | default(6379) }}"
-    redis_network_name: "{{ redis_network_name | default('redis') }}"
-    redis_data_volume_name: "{{ redis_data_volume_name | default('redis') }}"
+
+- name: deploy-redis | Set Redis network facts
+  ansible.builtin.set_fact:
+    redis_network_name: "{{ redis_network_name | default(redis_service_name) }}"
+
+- name: deploy-redis | Set Redis volume facts
+  ansible.builtin.set_fact:
+    redis_volume_name: "{{ redis_volume_name | default(redis_service_name) }}"
 
 - name: deploy-redis | Set Redis aggregated facts
   ansible.builtin.set_fact:
@@ -33,9 +38,17 @@
     redis_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ redis_data_volume_name }}:/data"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      - "{{ redis_volume_name }}:/data"
+
+- name: deploy-redis | Log Redis configuration
+  ansible.builtin.debug:
+    msg:
+      - "redis image: {{ redis_image }}"
+      - "redis service name: {{ redis_service_name }}"
+      - "redis FQDN: {{ redis_fqdn }}"
+      - "redis networks: {{ redis_networks | default(omit) }}"
+      - "redis ports: {{ redis_ports | default(omit) }}"
+      - "redis volumes: {{ redis_volume | default(omit) }}"
 
 - name: deploy-redis | Create Redis container labels
   ansible.builtin.set_fact:
@@ -62,7 +75,7 @@
     name: "{{ item }}"
     state: present
   loop:
-    - "{{ redis_data_volume_name }}"
+    - "{{ redis_volume_name }}"
 
 - name: deploy-redis | Check if Redis is running
   community.docker.docker_container_info:
@@ -102,9 +115,9 @@
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ redis_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ redis_networks }}"
+        networks: "{{ redis_networks | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ redis_volumes }}"
+        volumes: "{{ default_host_volumes + redis_volumes | default(omit) }}"
       register: redis_container_state
