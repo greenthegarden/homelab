@@ -93,6 +93,7 @@
 
 # Create required Docker networks
 - name: deploy-docmost | Create Docmost networks # noqa: syntax-check[unknown-module]
+  when: docmost_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
     state: present
@@ -128,6 +129,7 @@
 
 # Create required Docker volumes
 - name: deploy-docmost | Create Docmost volumes # noqa: syntax-check[unknown-module]
+  when: docmost_volume_name is defined
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
@@ -144,6 +146,7 @@
     - docmost_state.exists
     - (docmost_image | split(':') | last) != (docmost_state.container.Config.Image | split(':') | last)
   block:
+
     - name: deploy-docmost | Stop and remove existing Docmost container
       community.docker.docker_container:
         name: "{{ docmost_service_name }}"
@@ -157,6 +160,7 @@
   when:
     - not docmost_state.exists or (docmost_update | default(false))
   block:
+
     - name: deploy-docmost | Pull Docmost image
       community.docker.docker_image:
         name: "{{ docmost_image }}"

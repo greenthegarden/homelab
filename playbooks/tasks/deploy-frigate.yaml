@@ -21,12 +21,12 @@
     frigate_service_port_http: "{{ frigate_service_port_http | default(5000) }}" # Internal unauthenticated access.
     frigate_service_port_rtsp: "{{ frigate_service_port_rtsp | default(8554) }}"
     frigate_service_port_webrtc: "{{ frigate_service_port_webrtc | default(8555) }}"
-    frigate_mount_point: /mnt/storage/frigate
-    frigate_config_dir: "/root/frigate"
 
 - name: deploy-frigate | Set Frigate volume facts
   ansible.builtin.set_fact:
     frigate_volume_name: "{{ frigate_volume_name | default(frigate_service_name) }}"
+    frigate_mount_point: /mnt/storage/frigate
+    frigate_config_dir: "/root/frigate"
 
 - name: deploy-frigate | Set Frigate aggregated facts
   ansible.builtin.set_fact:
@@ -119,8 +119,10 @@
     mode: "0644"
   register: frigate_configuration_creation
 
+
 # Create required Docker volumes
 - name: deploy-frigate | Create volume for Frigate
+  when: frigate_volume_name is defined
   community.docker.docker_volume:
     name: "{{ frigate_volume_name }}"
 

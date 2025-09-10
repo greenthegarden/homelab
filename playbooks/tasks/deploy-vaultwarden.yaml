@@ -16,8 +16,8 @@
 
 - name: deploy-vaultwarden | Set Vaultwarden volume facts
   ansible.builtin.set_fact:
-    vaultwarden_volume_data_name: "{{ vaultwarden_service_name }}" # -data
-    vaultwarden_config_dir: "/root/{{ vaultwarden_service_name }}" # -config
+    vaultwarden_volume_name: "{{ vaultwarden_volume_name | default(vaultwarden_service_name) }}"
+    vaultwarden_config_dir: "{{ vaultwarden_config_dir | default('/root/' + vaultwarden_service_name) }}"
 
 - name: deploy-vaultwarden | Set Vaultwarden aggregated facts
   ansible.builtin.set_fact:
@@ -34,7 +34,17 @@
     vaultwarden_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ vaultwarden_volume_data_name }}:/data"
+      - "{{ vaultwarden_volume_name }}:/data"
+
+- name: deploy-vaultwarden | Log Vaultwarden configuration
+  ansible.builtin.debug:
+    msg:
+      - "Vaultwarden image: {{ vaultwarden_image }}"
+      - "Vaultwarden service name: {{ vaultwarden_service_name }}"
+      - "Vaultwarden FQDN: {{ vaultwarden_fqdn }}"
+      - "Vaultwarden networks: {{ vaultwarden_networks | default(omit) }}"
+      - "Vaultwarden ports: {{ vaultwarden_ports | default(omit) }}"
+      - "Vaultwarden volumes: {{ vaultwarden_volumes | default(omit) }}"
 
 - name: deploy-vaultwarden | Create Vaultwarden container labels
   ansible.builtin.set_fact:
@@ -73,26 +83,37 @@
       "value": "https://{{ vaultwarden_fqdn }}/",
     }
 
-- name: deploy-vaultwarden | Create Vaultwarden configuration directory
-  ansible.builtin.file:
-    path: "{{ vaultwarden_config_dir }}"
-    state: directory
-    mode: "0644"
-
-- name: deploy-vaultwarden | Create Vaultwarden configuration
-  ansible.builtin.template:
-    src: templates/vaultwarden/vaultwarden.env.j2
-    dest: "{{ vaultwarden_config_dir }}/vaultwarden.env"
-    owner: root
-    group: root
-    mode: "0644"
+- name: deploy-vaultwarden | Create Vaultwarden networks # noqa: syntax-check[unknown-module]
+  when: vaultwarden_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ vaultwarden_networks }}"
 
 - name: deploy-vaultwarden | Create Vaultwarden volume # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
   loop:
-    - "{{ vaultwarden_volume_data_name }}"
+    - "{{ vaultwarden_volume_name }}"
+
+- name: deploy-vaultwarden | Create Vaultwarden configuration
+  when: vaultwarden_config_dir is defined
+  block:
+
+    - name: deploy-vaultwarden | Create Vaultwarden configuration directory
+      ansible.builtin.file:
+        path: "{{ vaultwarden_config_dir }}"
+        state: directory
+        mode: "0644"
+
+    - name: deploy-vaultwarden | Create Vaultwarden configuration file
+      ansible.builtin.template:
+        src: templates/vaultwarden/vaultwarden.env.j2
+        dest: "{{ vaultwarden_config_dir }}/vaultwarden.env"
+        owner: root
+        group: root
+        mode: "0644"
 
 - name: deploy-vaultwarden | Pull Vaultwarden image
   community.docker.docker_image:
