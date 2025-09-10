@@ -16,7 +16,7 @@
 
 - name: deploy-uptimekuma | Set Uptime Kuma volume facts
   ansible.builtin.set_fact:
-    uptimekuma_volume_data_name: "{{ uptimekuma_service_name }}" # -data
+    uptimekuma_volume_name: "{{ uptimekuma_volume_name | default(uptimekuma_service_name) }}"
 
 - name: deploy-uptimekuma | Set Uptime Kuma aggregated facts
   ansible.builtin.set_fact:
@@ -34,7 +34,17 @@
     uptimekuma_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ uptimekuma_volume_data_name }}:/app/data"
+      - "{{ uptimekuma_volume_name }}:/app/data"
+
+- name: deploy-uptimekuma | Log Uptime Kuma configuration
+  ansible.builtin.debug:
+    msg:
+      - "Uptime Kuma image: {{ uptimekuma_image }}"
+      - "Uptime Kuma service name: {{ uptimekuma_service_name }}"
+      - "Uptime Kuma FQDN: {{ uptimekuma_fqdn }}"
+      - "Uptime Kuma networks: {{ uptimekuma_networks | default(omit) }}"
+      - "Uptime Kuma ports: {{ uptimekuma_ports | default(omit) }}"
+      - "Uptime Kuma volumes: {{ uptimekuma_volumes | default(omit) }}"
 
 - name: deploy-uptimekuma | Create Uptime Kuma container labels
   ansible.builtin.set_fact:
@@ -76,13 +86,20 @@
     - { "key": "homepage.widget.url", "value": "https://{{ uptimekuma_fqdn }}" }
     - { "key": "homepage.widget.slug", "value": "homelab" }
 
-# Create required Docker volumes
+- name: deploy-uptimekuma | Create Uptime Kuma networks # noqa: syntax-check[unknown-module]
+  when: uptimekuma_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ uptimekuma_networks }}"
+
 - name: deploy-uptimekuma | Create Uptime Kuma volume
+  when: uptimekuma_volume_name is defined
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
   loop:
-    - "{{ uptimekuma_volume_data_name }}"
+    - "{{ uptimekuma_volume_name }}"
 
 - name: deploy-uptimekuma | Check if Uptime Kuma is running
   community.docker.docker_container_info:
@@ -94,6 +111,7 @@
     - uptimekuma_state.exists
     - uptimekuma_image_tag != uptimekuma_state.container.Config.Image | split(':') | last
   block:
+
     - name: deploy-uptimekuma | Stop and remove existing Uptime Kuma container
       community.docker.docker_container:
         name: "{{ uptimekuma_service_name }}"
@@ -107,6 +125,7 @@
   when:
     - not uptimekuma_state.exists or (uptimekuma_update | default(false))
   block:
+
     - name: deploy-uptimekuma | Pull uptimekuma image
       community.docker.docker_image:
         name: "{{ uptimekuma_image }}"
@@ -128,14 +147,14 @@
         volumes: "{{ default_host_volumes + uptimekuma_volumes }}"
       register: uptimekuma_container_state
 
-    - name: deploy-uptimekuma | Wait for Uptime Kuma to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ uptimekuma_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: uptimekuma_running
-      retries: 10
-      until: uptimekuma_running is success
+- name: deploy-uptimekuma | Wait for Uptime Kuma to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ uptimekuma_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: uptimekuma_running
+  retries: 10
+  until: uptimekuma_running is success
