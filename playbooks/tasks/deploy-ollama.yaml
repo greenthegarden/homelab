@@ -106,6 +106,8 @@
         # published_ports: "{{ ollama_ports }}" # <= TODO: check is required
         restart: true
         restart_policy: unless-stopped
+        security_opts:
+          - "no-new-privileges:true"
         state: started
         volumes: "{{ default_host_volumes + ollama_volumes | default(omit) }}"
       register: ollama_container_state

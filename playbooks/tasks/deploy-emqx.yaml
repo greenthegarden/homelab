@@ -13,12 +13,14 @@
 - name: deploy-emqx | Set EMQX facts
   ansible.builtin.set_fact:
     emqx_image: "{{ emqx_image | default('emqx/emqx:latest') }}"
-    emqx_image_tag: "{{ emqx_image_tag | default('latest') }}"
     emqx_service_name: "{{ emqx_service_name | default('emqx') }}"
     emqx_service_port_api: "{{ emqx_service_port_api | default(18083) }}"
     emqx_service_port_mqtt: "{{ emqx_service_port_mqtt | default(1883) }}"
-    emqx_data_volume_name: "{{ emqx_data_volume_name | default('data') }}"
-    emqx_log_volume_name: "{{ emqx_log_volume_name | default('log') }}"
+
+- name: deploy-emqx | Set EMQX volume facts
+  ansible.builtin.set_fact:
+    emqx_volume_data_name: "{{ emqx_service_name }}"
+    emqx_volume_logs_name: "{{ emqx_service_name }}-logs"
 
 - name: deploy-emqx | Set EMQX aggregated facts
   ansible.builtin.set_fact:
@@ -66,7 +68,7 @@
     emqx_ports:
       # Published ports to expose outside the container
       # host port:container port
-      # - "{{ emqx_service_port_api | default(18083) }}:18083"
+      # - "{{ emqx_service_port_api }}:18083"
       - "{{ emqx_service_port_mqtt }}:1883"
       - 8083:8083 # websocket
       # - 4369:4369
@@ -75,10 +77,8 @@
     emqx_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ emqx_data_volume_name }}:/opt/emqx/data"
-      - "{{ emqx_log_volume_name }}:/opt/emqx/log"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      - "{{ emqx_volume_data_name }}:/opt/emqx/data"
+      - "{{ emqx_volume_logs_name }}:/opt/emqx/log"
 
 - name: deploy-emqx | Create EMQX container labels
   ansible.builtin.set_fact:
@@ -95,14 +95,6 @@
       "key": "traefik.http.routers.{{ emqx_service_name }}.rule",
       "value": "Host(`{{ emqx_fqdn }}`)",
     }
-    # - {
-    #   "key": "traefik.http.routers.{{ emqx_service_name }}.service",
-    #   "value": "{{ emqx_service_name }}",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ emqx_service_name }}.tls",
-    #   "value": "true",
-    # }
     - {
       "key": "traefik.http.services.{{ emqx_service_name }}.loadbalancer.server.port",
       "value": "{{ emqx_service_port_api | quote }}",
@@ -128,8 +120,8 @@
     name: "{{ item }}"
     state: present
   loop:
-    - "{{ emqx_data_volume_name }}"
-    - "{{ emqx_log_volume_name }}"
+    - "{{ emqx_volume_data_name }}"
+    - "{{ emqx_volume_logs_name }}"
 
 - name: deploy-emqx | Check if EMQX is running
   community.docker.docker_container_info:
@@ -174,12 +166,14 @@
           WAIT_FOR_ERLANG: "60"
         labels: "{{ emqx_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ emqx_networks }}"
-        published_ports: "{{ emqx_ports }}"
+        networks: "{{ emqx_networks | default(omit) }}"
+        published_ports: "{{ emqx_ports | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
+        security_opts:
+          - "no-new-privileges:true"
         state: started
-        volumes: "{{ emqx_volumes }}"
+        volumes: "{{ default_host_volumes + emqx_volumes | default(omit) }}"
       register: emqx_container_state
 
     - name: deploy-emqx | Wait for EMQX to accept connections

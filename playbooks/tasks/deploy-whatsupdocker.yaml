@@ -154,6 +154,8 @@
     networks: "{{ whatsupdocker_networks | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
+    security_opts:
+      - "no-new-privileges:true"
     state: started
     volumes: "{{ default_host_volumes + whatsupdocker_volumes }}"
   register: whatsupdocker_container_state

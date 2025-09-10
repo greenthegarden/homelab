@@ -7,12 +7,7 @@
 
     # EMQX facts
     # renovate: datasource=docker depName=emqx/emqx
-    emqx_service_name: emqx
     emqx_image: emqx/emqx:5.10.0
-    emqx_service_port_api: 18083
-    emqx_service_port_mqtt: 1883
-    emqx_data_volume_name: data
-    emqx_log_volume_name: log
 
   tasks:
 
