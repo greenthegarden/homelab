@@ -106,7 +106,7 @@
       # - "--metrics.prometheus.addEntryPointsLabels=true"
 
     traefik_networks:
-      - name: "{{ docker_monitoring_network_name | default('docker-socket-proxy') }}"
+      - name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}"
       # - name: "{{ monitoring_network_name | default('monitoring') }}" # not needed without prometheus
       - name: "{{ web_network_name | default('web') }}" # <== Placing traefik on the network named web, to access containers on this network
 

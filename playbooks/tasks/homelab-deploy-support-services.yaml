@@ -24,7 +24,7 @@
 # Define required Docker external networks for the homelab environment
 - name: homelab-deploy-support-services | Set Homelab network facts
   ansible.builtin.set_fact:
-    docker_monitoring_network_name: "{{ docker_monitoring_network_name | default('docker-socket-proxy') }}"
+    docker_monitoring_network_name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}"
     web_network_name: "{{ web_network_name | default('web') }}"
 
 # Create required Docker external networks for the homelab environment

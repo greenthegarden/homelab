@@ -39,7 +39,7 @@
     - name: deploy-docker-volume-backup | Set Docker Volume Backup service facts
       ansible.builtin.set_fact:
         docker_volume_backup_networks:
-          - name: "{{ docker_monitoring_network_name | default('docker-socket-proxy') }}"
+          - name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}"
         docker_volume_backup_volumes:
           - "{{ docker_volume_backup_local_backups_dir }}:/archive"
 
