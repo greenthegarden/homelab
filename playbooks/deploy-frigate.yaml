@@ -8,15 +8,6 @@
     # Frigate facts
     # renovate: datasource=docker depName=ghcr.io/blakeblackshear/frigate
     frigate_image: ghcr.io/blakeblackshear/frigate:0.16.1
-    frigate_service_name: frigate
-    frigate_service_port: 8971
-    frigate_service_port_http: 5000
-    frigate_service_port_rtsp: 8554
-    frigate_service_port_webrtc: 8555
-    frigate_volume_name: frigate
-    # Create storage in Proxmox
-    # frigate_mount_disk_size: 512
-    frigate_mount_point: /mnt/storage/frigate
 
   tasks:
 
