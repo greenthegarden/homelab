@@ -11,7 +11,10 @@
     open_webui_image: "{{ open_webui_image | default('ghcr.io/open-webui/open-webui:latest') }}"
     open_webui_service_name: "{{ open_webui_service_name | default('open-webui') }}"
     open_webui_service_port: "{{ open_webui_service_port | default(8080) }}"
-    open_webui_volume_name: "{{ open_webui_volume_name | default('open-webui') }}"
+
+- name: deploy-open-webui | Set Open WebUI volume facts
+  ansible.builtin.set_fact:
+    open_webui_volume_name: "{{ open_webui_service_name }}"
 
 - name: deploy-open-webui | Set Open WebUI aggregated facts
   ansible.builtin.set_fact:
@@ -29,8 +32,6 @@
       # Local paths to mount into the container
       # local path:container path
       - "{{ open_webui_volume_name }}:/app/backend/data"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
 
 - name: deploy-open-webui | Create Open WebUI container labels
   ansible.builtin.set_fact:
@@ -47,18 +48,6 @@
       "key": "traefik.http.routers.{{ open_webui_service_name }}.rule",
       "value": "Host(`{{ open_webui_fqdn }}`)",
     }
-    # - {
-    #   "key": "traefik.http.routers.{{ open_webui_service_name }}.service",
-    #   "value": "{{ open_webui_service_name }}",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ open_webui_service_name }}.tls",
-    #   "value": "true",
-    # }
-    # - {
-    #   "key": "traefik.http.services.{{ open_webui_service_name }}.loadBalancer.server.port",
-    #   "value": "{{ open_webui_service_port }}",
-    # }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
@@ -130,21 +119,21 @@
           host.docker.internal: host-gateway
         labels: "{{ open_webui_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ open_webui_networks }}"
+        networks: "{{ open_webui_networks | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ open_webui_volumes }}"
+        volumes: "{{ default_host_volumes + open_webui_volumes | default(omit) }}"
       register: open_webui_container_state
 
-    # - name: deploy-open-webui | Wait for Open WebUI to accept connections
-    #   ansible.builtin.wait_for:
-    #     host: "{{ open_webui_fqdn }}"
-    #     port: 80
-    #     connect_timeout: 1
-    #     delay: 10
-    #     state: started
-    #     timeout: 30
-    #   register: open_webui_running
-    #   until: open_webui_running is success
-    #   retries: 10
+    - name: deploy-open-webui | Wait for Open WebUI to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ open_webui_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: open_webui_running
+      retries: 10
+      until: open_webui_running is success

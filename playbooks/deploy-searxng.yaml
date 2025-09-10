@@ -1,15 +1,13 @@
 ---
-- name: Deploy Ollama
+- name: Deploy SearXNG
 
   hosts: ollama
 
   vars:
 
     # SearXNG facts
-    searxng_image: searxng/searxng:2025.9.5-e7501ea  # renovate: datasource=docker depName=searxng/searxng
-    searxng_service_name: searxng
-    searxng_service_port: 8080
-    searxng_volume_name: searxng
+    # renovate: datasource=docker depName=searxng/searxng
+    searxng_image: searxng/searxng:2025.9.5-e7501ea
 
   tasks:
 

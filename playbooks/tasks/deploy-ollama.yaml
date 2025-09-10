@@ -12,7 +12,10 @@
     ollama_image: "{{ ollama_image | default('ollama/ollama:latest') }}"
     ollama_service_name: "{{ ollama_service_name | default('ollama') }}"
     ollama_service_port: "{{ ollama_service_port | default(11434) }}"
-    ollama_volume_name: "{{ ollama_volume_name | default('ollama') }}"
+
+- name: deploy-ollama | Set Ollama volume facts
+  ansible.builtin.set_fact:
+    ollama_volume_name: "{{ ollama_service_name }}"
 
 - name: deploy-ollama | Set Ollama aggregated facts
   ansible.builtin.set_fact:
@@ -30,8 +33,6 @@
       # Local paths to mount into the container
       # local path:container path
       - "{{ ollama_volume_name }}:/root/.ollama"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
 
 - name: deploy-ollama | Create Ollama container labels
   ansible.builtin.set_fact:
@@ -48,18 +49,6 @@
       "key": "traefik.http.routers.{{ ollama_service_name }}.rule",
       "value": "Host(`{{ ollama_fqdn }}`)",
     }
-    # - {
-    #   "key": "traefik.http.routers.{{ ollama_service_name }}.service",
-    #   "value": "{{ ollama_service_name }}",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ ollama_service_name }}.tls",
-    #   "value": "true",
-    # }
-    # - {
-    #   "key": "traefik.http.services.{{ ollama_service_name }}.loadBalancer.server.port",
-    #   "value": "{{ ollama_service_port }}",
-    # }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
@@ -113,10 +102,22 @@
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ ollama_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ ollama_networks }}"
-        published_ports: "{{ ollama_ports }}" # <= TODO: check is required
+        networks: "{{ ollama_networks | default(omit) }}"
+        # published_ports: "{{ ollama_ports }}" # <= TODO: check is required
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ ollama_volumes }}"
+        volumes: "{{ default_host_volumes + ollama_volumes | default(omit) }}"
       register: ollama_container_state
+
+- name: deploy-ollama | Wait for Ollama to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ ollama_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: whatsupdocker_running
+  retries: 10
+  until: whatsupdocker_running is success

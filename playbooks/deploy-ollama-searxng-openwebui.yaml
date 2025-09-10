@@ -9,6 +9,10 @@
     # renovate: datasource=docker depName=ollama/ollama
     ollama_image: ollama/ollama:0.11.10
 
+    # SearXNG facts
+    # renovate: datasource=docker depName=searxng/searxng
+    searxng_image: searxng/searxng:2025.9.5-e7501ea
+
     # Open WebUI facts
     # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
     open_webui_image: ghcr.io/open-webui/open-webui:0.6.27
@@ -23,6 +27,13 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-ollama.yaml
 
+    - name: Deploy a containerised instance of SearXNG
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-searxng.yaml
+
+    # Open WebUI is configured to use Ollama as its backend LLM provider
+    # and SearXNG as its search engine provider.
+    # Expects Ollama and SearXNG to be running on the same host.
     - name: Deploy a containerised instance of Open WebUI
       ansible.builtin.include_tasks:
         file: tasks/deploy-open-webui.yaml

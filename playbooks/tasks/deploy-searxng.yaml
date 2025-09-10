@@ -11,7 +11,10 @@
     searxng_image: "{{ searxng_image | default('searxng/searxng:latest') }}"
     searxng_service_name: "{{ searxng_service_name | default('searxng') }}"
     searxng_service_port: "{{ searxng_service_port | default(8080) }}"
-    searxng_volume_name: "{{ searxng_volume_name | default('searxng') }}"
+
+- name: deploy-searxng | Set SearXNG volume facts
+  ansible.builtin.set_fact:
+    searxng_volume_name: "{{ searxng_service_name }}"
 
 - name: deploy-searxng | Set SearXNG aggregated facts
   ansible.builtin.set_fact:
@@ -28,9 +31,7 @@
     searxng_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ searxng_volume_name }}:/etc/searxng:rw"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      - "{{ searxng_volume_name }}:/etc/searxng"
 
 - name: deploy-searxng | Create SearXNG container labels
   ansible.builtin.set_fact:
@@ -47,18 +48,6 @@
       "key": "traefik.http.routers.{{ searxng_service_name }}.rule",
       "value": "Host(`{{ searxng_fqdn }}`)",
     }
-    # - {
-    #   "key": "traefik.http.routers.{{ searxng_service_name }}.service",
-    #   "value": "{{ searxng_service_name }}",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ searxng_service_name }}.tls",
-    #   "value": "true",
-    # }
-    # - {
-    #   "key": "traefik.http.services.{{ searxng_service_name }}.loadBalancer.server.port",
-    #   "value": "{{ searxng_service_port }}",
-    # }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
@@ -120,21 +109,21 @@
         detach: true
         labels: "{{ searxng_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ searxng_networks }}"
+        networks: "{{ searxng_networks | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ searxng_volumes }}"
+        volumes: "{{ default_host_volumes + searxng_volumes | default(omit) }}"
       register: searxng_container_state
 
-    # - name: deploy-searxng | Wait for SearXNG to accept connections
-    #   ansible.builtin.wait_for:
-    #     host: "{{ searxng_fqdn }}"
-    #     port: 80
-    #     connect_timeout: 1
-    #     delay: 10
-    #     state: started
-    #     timeout: 30
-    #   register: searxng_running
-    #   until: searxng_running is success
-    #   retries: 10
+    - name: deploy-searxng | Wait for SearXNG to accept connections
+      ansible.builtin.wait_for:
+        host: "{{ searxng_fqdn }}"
+        port: 80
+        connect_timeout: 1
+        delay: 10
+        state: started
+        timeout: 30
+      register: searxng_running
+      retries: 10
+      until: searxng_running is success
