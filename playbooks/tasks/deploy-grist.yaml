@@ -18,9 +18,12 @@
 - name: deploy-grist | Set Grist facts
   ansible.builtin.set_fact:
     grist_image: "{{ grist_image | default('gristlabs/grist:latest') }}"
-    grist_image_tag: "{{ grist_image_tag | default('latest') }}"
     grist_service_name: "{{ grist_service_name | default('grist') }}"
     grist_service_port: "{{ grist_service_port | default(8484) }}"
+
+- name: deploy-grist | Set Grist network facts
+  ansible.builtin.set_fact:
+    grist_network_name: "{{ grist_network_name | default(grist_service_name) }}"
 
 - name: deploy-grist | Set Grist volume facts
   ansible.builtin.set_fact:
@@ -33,7 +36,7 @@
 - name: deploy-grist | Set Grist service facts
   ansible.builtin.set_fact:
     grist_networks:
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ web_network_name | default('web') }}" }
     grist_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -84,24 +87,22 @@
     - { "key": "homepage.href", "value": "https://{{ grist_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ grist_fqdn }}/" }
 
-- name: deploy-grist | Create Grist networks # noqa: syntax-check[unknown-module]
+- name: deploy-grist | Create Grist networks
   when: grist_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
     state: present
   loop: "{{ grist_networks }}"
 
-- name: deploy-grist | Create Grist volumes # noqa: syntax-check[unknown-module]
+- name: deploy-grist | Create Grist volumes
+  when: grist_volume_name is defined
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
   loop:
     - "{{ grist_volume_name }}"
-
-- name: deploy-grist | Pull Grist image
-  community.docker.docker_image:
-    name: "{{ grist_image }}"
-    source: pull
 
 - name: deploy-grist | Check if Grist is running
   community.docker.docker_container_info:

@@ -14,7 +14,14 @@
     grocy_image: "{{ grocy_image | default('linuxserver/grocy:latest') }}"
     grocy_service_name: "{{ grocy_service_name | default('grocy') }}"
     grocy_service_port: "{{ grocy_service_port | default(9283) }}"
-    grocy_volume_name: "{{ grocy_volume_name | default('grocy') }}"
+
+- name: deploy-grocy | Set Grocy network facts
+  ansible.builtin.set_fact:
+    grocy_network_name: "{{ grocy_network_name | default(grocy_service_name) }}"
+
+- name: deploy-grocy | Set Grocy volume facts
+  ansible.builtin.set_fact:
+    grocy_volume_name: "{{ grocy_volume_name | default(grocy_service_name) }}"
 
 - name: deploy-grocy | Set Grocy aggregated facts
   ansible.builtin.set_fact:
@@ -23,7 +30,7 @@
 - name: deploy-grocy | Set Grocy service facts
   ansible.builtin.set_fact:
     grocy_networks:
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ web_network_name | default('web') }}" }
     grocy_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -33,8 +40,16 @@
       # Local paths to mount into the container
       # local path:container path
       - "{{ grocy_volume_name }}:/config"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-grocy | Log Grocy configuration
+  ansible.builtin.debug:
+    msg:
+      - "Grocy image: {{ grocy_image }}"
+      - "Grocy service name: {{ grocy_service_name }}"
+      - "Grocy FQDN: {{ grocy_fqdn }}"
+      - "Grocy networks: {{ grocy_networks | default(omit) }}"
+      - "Grocy ports: {{ grocy_ports | default(omit) }}"
+      - "Grocy volumes: {{ grocy_volumes | default(omit) }}"
 
 - name: deploy-grocy | Create Grocy container labels
   ansible.builtin.set_fact:
@@ -51,14 +66,6 @@
       "key": "traefik.http.routers.{{ grocy_service_name }}.rule",
       "value": "Host(`{{ grocy_fqdn }}`)",
     }
-    # - {
-    #   "key": "traefik.http.routers.{{ grocy_service_name }}.service",
-    #   "value": "{{ grocy_service_name }}",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ grocy_service_name }}.tls",
-    #   "value": "true",
-    # }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
@@ -78,10 +85,22 @@
     - { "key": "homepage.href", "value": "https://{{ grocy_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ grocy_fqdn }}/" }
 
-- name: deploy-grocy | Create Grocy volume # noqa: syntax-check[unknown-module]
-  community.docker.docker_volume:
-    name: "{{ grocy_volume_name }}"
+- name: deploy-grocy | Create Grocy networks
+  when: grocy_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
     state: present
+  loop: "{{ grocy_networks }}"
+
+- name: deploy-grocy | Create Grocy volume
+  when: grocy_volume_name is defined
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ grocy_volume_name }}"
 
 - name: deploy-grocy | Check if Grocy is running # noqa: syntax-check[unknown-module]
   community.docker.docker_container_info:
@@ -93,6 +112,7 @@
     - grocy_state.exists
     - (grocy_image | split(':') | last) != (grocy_state.container.Config.Image | split(':') | last)
   block:
+
     - name: deploy-grocy | Stop and remove existing Grocy container
       community.docker.docker_container:
         name: "{{ grocy_service_name }}"
@@ -106,20 +126,11 @@
   when:
     - not grocy_state.exists or (grocy_update | default(false))
   block:
+
     - name: deploy-grocy | Pull Grocy image
       community.docker.docker_image:
         name: "{{ grocy_image }}"
         source: pull
-
-    # docker run -d \
-    #   --name=grocy \
-    #   -e PUID=1000 \
-    #   -e PGID=1000 \
-    #   -e TZ=Europe/London \
-    #   -p 9283:80 \
-    #   -v /path/to/data:/config \
-    #   --restart unless-stopped \
-    #   lscr.io/linuxserver/grocy:latest
 
     # initial password: user: admin, password: admin
     - name: deploy-grocy | Deploy Grocy
@@ -133,21 +144,21 @@
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ grocy_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ grocy_networks }}"
+        networks: "{{ grocy_networks | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ grocy_volumes }}"
+        volumes: "{{ default_host_volumes + grocy_volumes | default(omit) }}"
       register: grocy_container_state
 
-    - name: deploy-grocy | Wait for Grocy to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ grocy_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: grocy_running
-      retries: 10
-      until: grocy_running is success
+- name: deploy-grocy | Wait for Grocy to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ grocy_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: grocy_running
+  retries: 10
+  until: grocy_running is success
