@@ -14,7 +14,7 @@
 
 - name: deploy-searxng | Set SearXNG volume facts
   ansible.builtin.set_fact:
-    searxng_volume_name: "{{ searxng_service_name }}"
+    searxng_volume_name: "{{ searxng_volume_name | default(searxng_service_name) }}"
 
 - name: deploy-searxng | Set SearXNG aggregated facts
   ansible.builtin.set_fact:
@@ -32,6 +32,16 @@
       # Local paths to mount into the container
       # local path:container path
       - "{{ searxng_volume_name }}:/etc/searxng"
+
+- name: deploy-searxng | Log Searxng configuration
+  ansible.builtin.debug:
+    msg:
+      - "Searxng image: {{ searxng_image }}"
+      - "Searxng service name: {{ searxng_service_name }}"
+      - "Searxng FQDN: {{ searxng_fqdn }}"
+      - "Searxng networks: {{ searxng_networks | default(omit) }}"
+      - "Searxng ports: {{ searxng_ports | default(omit) }}"
+      - "Searxng volumes: {{ searxng_volumes | default(omit) }}"
 
 - name: deploy-searxng | Create SearXNG container labels
   ansible.builtin.set_fact:
@@ -70,10 +80,22 @@
       "value": "https://{{ searxng_fqdn }}/",
     }
 
-- name: deploy-searxng | Create SearXNG volume
-  community.docker.docker_volume:
-    name: "{{ searxng_volume_name }}"
+- name: deploy-searxng | Create SearXNG networks
+  when: searxng_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
     state: present
+  loop: "{{ searxng_networks }}"
+
+- name: deploy-searxng | Create SearXNG volume
+  when: searxng_volume_name is defined
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ searxng_volume_name }}"
 
 - name: deploy-searxng | Check if SearXNG is running
   community.docker.docker_container_info:
@@ -85,6 +107,7 @@
     - searxng_state.exists
     - (searxng_image | split(':') | last) != (searxng_state.container.Config.Image | split(':') | last)
   block:
+
     - name: deploy-searxng | Stop and remove existing SearXNG container
       community.docker.docker_container:
         name: "{{ searxng_service_name }}"
@@ -97,6 +120,7 @@
 - name: deploy-searxng | Deploy SearXNG if not running
   when: not searxng_state.exists or (searxng_update | default(false))
   block:
+
     - name: deploy-searxng | Pull SearXNG image
       community.docker.docker_image:
         name: "{{ searxng_image }}"
@@ -116,14 +140,14 @@
         volumes: "{{ default_host_volumes + searxng_volumes | default(omit) }}"
       register: searxng_container_state
 
-    - name: deploy-searxng | Wait for SearXNG to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ searxng_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: searxng_running
-      retries: 10
-      until: searxng_running is success
+- name: deploy-searxng | Wait for SearXNG to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ searxng_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: searxng_running
+  retries: 10
+  until: searxng_running is success

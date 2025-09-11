@@ -13,13 +13,31 @@
     portainer_agent_service_name: "{{ portainer_agent_service_name | default('portainer-agent') }}"
     portainer_agent_service_port: "{{ portainer_agent_service_port | default(9001) }}"
 
+- name: deploy-portainer-agent | Set Portainer Agent network facts
+  ansible.builtin.set_fact:
+    portainer_agent_network_name: "{{ portainer_agent_network_name | default('portainer') }}"
+
+- name: deploy-portainer-agent | Set Portainer Agent volume facts
+  ansible.builtin.set_fact:
+    portainer_agent_volume_name: "{{ portainer_agent_volume_name | default(portainer_agent_service_name) }}"
+
 - name: deploy-portainer-agent | Set Portainer Agent service facts
   ansible.builtin.set_fact:
     portainer_agent_networks:
-      - name: "{{ portainer_network_name | default('portainer') }}"
+      - { name: "{{ portainer_agent_network_name }}" }
     portainer_agent_ports:
       - "{{ portainer_agent_service_port }}:9001"
     portainer_agent_volumes: []
+
+- name: deploy-portainer-agent | Log Portainer Agent configuration
+  ansible.builtin.debug:
+    msg:
+      - "Portainer Agent image: {{ portainer_agent_image }}"
+      - "Portainer Agent service name: {{ portainer_agent_service_name }}"
+      - "Portainer Agent FQDN: {{ portainer_agent_fqdn }}"
+      - "Portainer Agent networks: {{ portainer_agent_networks | default(omit) }}"
+      - "Portainer Agentt ports: {{ portainer_agent_ports | default(omit) }}"
+      - "Portainer Agent volumes: {{ portainer_agent_volumes | default(omit) }}"
 
 - name: deploy-portainer-agent | Create Portainer Agent container labels
   ansible.builtin.set_fact:
@@ -32,9 +50,14 @@
       "value": "https://github.com/portainer/agent/releases/tag/${major}.${minor}.${patch}",
     }
 
-- name: deploy-portainer-agent | Create Portainer network  # noqa: syntax-check[unknown-module]
+- name: deploy-portainer-agent | Create Portainer Agent network  # noqa: syntax-check[unknown-module]
+  when: portainer_agent_networks is defined
   community.docker.docker_network:
-    name: "{{ portainer_network_name }}"
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ portainer_network_name }}"
 
 - name: deploy-portainer-agent | Pull Portainer Agent image
   community.docker.docker_image:

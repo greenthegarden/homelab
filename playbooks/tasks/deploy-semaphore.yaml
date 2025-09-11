@@ -3,6 +3,15 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+- name: deploy-semaphore | Ensure required Semaphore variables are set
+  ansible.builtin.assert:
+    that:
+      - semaphore.admin_username is defined
+      - semaphore.admin_password is defined
+      - semaphore.admin_name is defined
+      - semaphore.admin_email is defined
+    fail_msg: "One or more required Docmost variables are not defined! Please define them in your inventory or group_vars/host_vars."
+
 ####### SEMAPHORE SECTION
 
 # https://hub.docker.com/_/semaphore
@@ -13,10 +22,13 @@
     semaphore_image: "{{ semaphore_image | default('semaphoreui/semaphore:latest') }}"
     semaphore_service_name: "{{ semaphore_service_name | default('semaphore') }}"
     semaphore_service_port: "{{ semaphore_service_port | default(3000) }}"
-    semaphore_volume_data_name: "{{ semaphore_volume_data_name | default('semaphore_data') }}"
-    semaphore_volume_config_name: "{{ semaphore_volume_config_name | default('semaphore_config') }}"
-    semaphore_volume_tmp_name: "{{ semaphore_volume_tmp_name | default('semaphore_tmp') }}"
     semaphore_db_dialect: "{{ semaphore_db_dialect | default('sqlite') }}"
+
+- name: deploy-semaphore | Set Semaphore volume facts
+  ansible.builtin.set_fact:
+    semaphore_volume_data_name: "{{ semaphore_volume_data_name | default(semaphore_service_name + '_data') }}"
+    semaphore_volume_config_name: "{{ semaphore_volume_config_name | default(semaphore_service_name + '_config') }}"
+    semaphore_volume_tmp_name: "{{ semaphore_volume_tmp_name | default(semaphore_service_name + '_tmp') }}"
 
 - name: deploy-semaphore | Set Semaphore aggregated facts
   ansible.builtin.set_fact:
@@ -25,7 +37,7 @@
 - name: deploy-semaphore | Set Semaphore service facts
   ansible.builtin.set_fact:
     semaphore_networks:
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ web_network_name | default('web') }}" }
     semaphore_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -36,8 +48,16 @@
       - "{{ semaphore_volume_data_name }}:/var/lib/semaphore"
       - "{{ semaphore_volume_config_name }}:/etc/semaphore"
       - "{{ semaphore_volume_tmp_name }}:/tmp/semaphore"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-semaphore | Log Semaphore configuration
+  ansible.builtin.debug:
+    msg:
+      - "Semaphore image: {{ semaphore_image }}"
+      - "Semaphore service name: {{ semaphore_service_name }}"
+      - "Semaphore FQDN: {{ semaphore_fqdn }}"
+      - "Semaphore networks: {{ semaphore_networks | default(omit) }}"
+      - "Semaphore ports: {{ semaphore_ports | default(omit) }}"
+      - "Semaphore volumes: {{ semaphore_volumes | default(omit) }}"
 
 - name: deploy-semaphore | Create Semaphore container labels
   ansible.builtin.set_fact:
@@ -50,26 +70,10 @@
       "key": "traefik.http.routers.{{ semaphore_service_name }}.entrypoints",
       "value": "websecure",
     }
-    # - {
-    #   "key": "traefik.http.routers.{{ semaphore_service_name }}.middlewares",
-    #   "value": "tinyauth",
-    # }
     - {
       "key": "traefik.http.routers.{{ semaphore_service_name }}.rule",
       "value": "Host(`{{ semaphore_fqdn }}`)",
     }
-    # - {
-    #   "key": "traefik.http.routers.{{ semaphore_service_name }}.service",
-    #   "value": "{{ semaphore_service_name }}",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ semaphore_service_name }}.tls",
-    #   "value": "true",
-    # }
-    # - {
-    #   "key": "traefik.http.services.{{ semaphore_service_name }}.loadBalancer.server.port",
-    #   "value": "{{ semaphore_service_port }}",
-    # }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
@@ -92,6 +96,15 @@
       "value": "https://{{ semaphore_fqdn }}/",
     }
 
+- name: deploy-semaphore | Create Semaphore networks  # noqa: syntax-check[unknown-module]
+  when: semaphore_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ semaphore_networks }}"
+
 - name: deploy-semaphore | Create Semaphore volumes
   community.docker.docker_volume:
     name: "{{ item }}"
@@ -111,6 +124,7 @@
     - semaphore_state.exists
     - (semaphore_image | split(':') | last) != semaphore_state.container.Config.Image | split(':') | last
   block:
+
     - name: deploy-semaphore | Stop and remove existing Semaphore container
       community.docker.docker_container:
         name: "{{ semaphore_service_name }}"
@@ -124,6 +138,7 @@
   when:
     - not semaphore_state.exists or (semaphore_update | default(false))
   block:
+
     - name: deploy-semaphore | Pull Semaphore image
       community.docker.docker_image:
         name: "{{ semaphore_image }}"
@@ -155,21 +170,21 @@
           SEMAPHORE_MAX_TASKS_PER_TEMPLATE: "{{ 10 | quote | default(omit) }}"
         labels: "{{ semaphore_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ semaphore_networks }}"
+        networks: "{{ semaphore_networks | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ semaphore_volumes }}"
+        volumes: "{{ default_host_volumes + semaphore_volumes | default(omit) }}"
       register: semaphore_container_state
 
-    - name: deploy-semaphore | Wait for Semaphore to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ semaphore_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: semaphore_running
-      retries: 10
-      until: semaphore_running is success
+- name: deploy-semaphore | Wait for Semaphore to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ semaphore_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: semaphore_running
+  retries: 10
+  until: semaphore_running is success
