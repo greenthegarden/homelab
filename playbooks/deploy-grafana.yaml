@@ -6,10 +6,8 @@
   vars:
 
     # Grafana facts
+    # renovate: datasource=docker depName=grafana/grafana
     grafana_image: grafana/grafana:12.0.0
-    grafana_service_name: grafana
-    grafana_service_port: 3000
-    grafana_volume_name: grafana
 
   tasks:
 

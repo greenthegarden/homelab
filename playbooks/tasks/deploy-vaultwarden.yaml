@@ -14,6 +14,10 @@
     vaultwarden_service_name: "{{ vaultwarden_service_name | default('vaultwarden') }}"
     vaultwarden_service_port: "{{ vaultwarden_service_port | default(8080) }}"
 
+- name: deploy-vaultwarden | Set Vaultwarden network facts
+  ansible.builtin.set_fact:
+    vaultwarden_network_name: "{{ vaultwarden_network_name | default(vaultwarden_service_name) }}"
+
 - name: deploy-vaultwarden | Set Vaultwarden volume facts
   ansible.builtin.set_fact:
     vaultwarden_volume_name: "{{ vaultwarden_volume_name | default(vaultwarden_service_name) }}"
@@ -26,7 +30,7 @@
 - name: deploy-vaultwarden | Set Vaultwarden service facts
   ansible.builtin.set_fact:
     vaultwarden_networks:
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ web_network_name | default('web') }}" }
     vaultwarden_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -83,14 +87,16 @@
       "value": "https://{{ vaultwarden_fqdn }}/",
     }
 
-- name: deploy-vaultwarden | Create Vaultwarden networks # noqa: syntax-check[unknown-module]
+- name: deploy-vaultwarden | Create Vaultwarden networks
   when: vaultwarden_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
     state: present
   loop: "{{ vaultwarden_networks }}"
 
-- name: deploy-vaultwarden | Create Vaultwarden volume # noqa: syntax-check[unknown-module]
+- name: deploy-vaultwarden | Create Vaultwarden volume
   when: vaultwarden_volume_name is defined
   community.docker.docker_volume:
     name: "{{ item }}"

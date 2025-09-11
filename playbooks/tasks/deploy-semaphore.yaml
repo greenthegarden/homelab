@@ -24,6 +24,10 @@
     semaphore_service_port: "{{ semaphore_service_port | default(3000) }}"
     semaphore_db_dialect: "{{ semaphore_db_dialect | default('sqlite') }}"
 
+- name: deploy-semaphore | Set Semaphore network facts
+  ansible.builtin.set_fact:
+    semaphore_network_name: "{{ semaphore_network_name | default(semaphore_service_name) }}"
+
 - name: deploy-semaphore | Set Semaphore volume facts
   ansible.builtin.set_fact:
     semaphore_volume_data_name: "{{ semaphore_volume_data_name | default(semaphore_service_name + '_data') }}"
@@ -96,7 +100,7 @@
       "value": "https://{{ semaphore_fqdn }}/",
     }
 
-- name: deploy-semaphore | Create Semaphore networks  # noqa: syntax-check[unknown-module]
+- name: deploy-semaphore | Create Semaphore networks
   when: semaphore_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"

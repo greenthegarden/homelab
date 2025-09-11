@@ -12,6 +12,10 @@
     homebox_service_name: "{{ homebox_service_name | default('homebox') }}"
     homebox_service_port: "{{ homebox_service_port | default(7745) }}"
 
+- name: deploy-homebox | Set Homebox network facts
+  ansible.builtin.set_fact:
+    homebox_network_name: "{{ homebox_network_name | default(homebox_service_name) }}"
+
 - name: deploy-homebox | Set Homebox volume facts
   ansible.builtin.set_fact:
     homebox_volume_name: "{{ homebox_volume_name | default(homebox_service_name) }}"
@@ -23,7 +27,7 @@
 - name: deploy-homebox | Set Homebox service facts
   ansible.builtin.set_fact:
     homebox_networks:
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ web_network_name | default('web') }}" }
     homebox_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -96,18 +100,22 @@
     - { "key": "homepage.widget.password", "value": "{{ homebox.password }}" }
     - { "key": "homepage.widget.fields", "value": "['items', 'locations', 'totalValue']" }
 
-- name: deploy-homebox | Create homebox networks # noqa: syntax-check[unknown-module]
+- name: deploy-homebox | Create homebox networks
   when: homebox_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
     state: present
   loop: "{{ homebox_networks }}"
 
 - name: deploy-homebox | Create Homebox volume
   when: homebox_volume_name is defined
   community.docker.docker_volume:
-    name: "{{ homebox_volume_name }}"
+    name: "{{ item }}"
     state: present
+  loop:
+    - "{{ homebox_volume_name }}"
 
 - name: deploy-homebox | Check if Homebox is running
   community.docker.docker_container_info:
@@ -167,5 +175,5 @@
     state: started
     timeout: 30
   register: homebox_running
-  until: homebox_running is success
   retries: 10
+  until: homebox_running is success

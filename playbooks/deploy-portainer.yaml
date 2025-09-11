@@ -8,10 +8,8 @@
     # Portainer facts
     # Ensure image version is also updated in group_vars/homelab_lxc_docker.yaml.
     # TODO: Ensure variables set here are used in group_vars
+    # renovate: datasource=docker depName=portainer/portainer-ce
     portainer_image: portainer/portainer-ce:2.33.1-alpine
-    portainer_service_name: portainer
-    portainer_service_port: 9000 # <= specified in https://docs.portainer.io/advanced/reverse-proxy/traefik
-    portainer_volume_name: portainer
 
   tasks:
 

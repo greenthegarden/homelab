@@ -36,8 +36,6 @@
     # TODO: Ensure variables set here are used in group_vars
     # renovate: datasource=docker depName=amir20/dozzle
     dozzle_image: amir20/dozzle:v8.13.12
-    dozzle_service_name: dozzle
-    dozzle_service_port: 8080
 
   tasks:
 

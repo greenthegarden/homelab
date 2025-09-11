@@ -6,12 +6,8 @@
   vars:
 
     # Semaphore facts
+    # renovate: datasource=docker depName=semaphoreui/semaphore
     semaphore_image: semaphoreui/semaphore:v2.16.19
-    semaphore_service_name: semaphore
-    semaphore_service_port: 3000
-    semaphore_volume_data_name: semaphore_data
-    semaphore_volume_config_name: semaphore_config
-    semaphore_volume_tmp_name: semaphore_tmp
     semaphore_db_dialect: bolt
 
   tasks:

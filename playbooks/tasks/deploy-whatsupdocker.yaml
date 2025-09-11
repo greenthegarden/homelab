@@ -14,6 +14,10 @@
     whatsupdocker_service_name: "{{ whatsupdocker_service_name | default('whats-up-docker') }}"
     whatsupdocker_service_port: "{{ whatsupdocker_service_port | default(3000) }}"
 
+- name: deploy-whatsupdocker | Set What's up Docker? network facts
+  ansible.builtin.set_fact:
+    whatsupdocker_network_name: "{{ whatsupdocker_network_name | default(whatsupdocker_service_name) }}"
+
 - name: deploy-whatsupdocker | Set What's up Docker? volume facts
   ansible.builtin.set_fact:
     whatsupdocker_volume_name: "{{ whatsupdocker_volume_name | default(whatsupdocker_service_name) }}"
@@ -25,8 +29,8 @@
 - name: deploy-whatsupdocker | Set What's up Docker? service facts
   ansible.builtin.set_fact:
     whatsupdocker_networks:
-      - name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}"
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}" }
+      - { name: "{{ web_network_name | default('web') }}" }
     whatsupdocker_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -92,14 +96,15 @@
       "value": "https://{{ whatsupdocker_fqdn }}",
     }
 
-- name: deploy-whatsupdocker | Create What's up Docker? networks # noqa: syntax-check[unknown-module]
+- name: deploy-whatsupdocker | Create What's up Docker? networks
   when: whatsupdocker_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
     state: present
   loop: "{{ whatsupdocker_networks }}"
 
-# Create required Docker volumes
 - name: deploy-whatsupdocker | Create What's up Docker? volumes
   when: whatsupdocker_volume_name is defined
   community.docker.docker_volume:
@@ -113,10 +118,6 @@
     name: "{{ whatsupdocker_image }}"
     source: pull
 
-# docker run -d --name wud \
-#   -v "/var/run/docker.sock:/var/run/docker.sock" \
-#   -p 3000:3000 \
-#   fmartinou/whats-up-docker
 - name: deploy-whatsupdocker | Deploy What's up Docker?
   community.docker.docker_container:
     name: "{{ whatsupdocker_service_name }}"

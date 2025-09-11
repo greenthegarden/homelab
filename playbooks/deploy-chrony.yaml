@@ -6,9 +6,8 @@
   vars:
 
     # Chrony facts
+    # renovate: datasource=docker depName=dockurr/chrony
     chrony_image: dockurr/chrony:latest
-    chrony_service_name: chrony
-    chrony_service_port: 123
 
   tasks:
 

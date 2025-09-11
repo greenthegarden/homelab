@@ -14,6 +14,10 @@
     uptimekuma_service_name: "{{ uptimekuma_service_name | default('uptimekuma') }}"
     uptimekuma_service_port: "{{ uptimekuma_service_port | default(3001) }}"
 
+- name: deploy-uptimekuma | Set Uptime Kuma network facts
+  ansible.builtin.set_fact:
+    uptimekuma_network_name: "{{ uptimekuma_network_name | default(uptimekuma_service_name) }}"
+
 - name: deploy-uptimekuma | Set Uptime Kuma volume facts
   ansible.builtin.set_fact:
     uptimekuma_volume_name: "{{ uptimekuma_volume_name | default(uptimekuma_service_name) }}"
@@ -25,8 +29,8 @@
 - name: deploy-uptimekuma | Set Uptime Kuma service facts
   ansible.builtin.set_fact:
     uptimekuma_networks:
-      - name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}"
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}" }
+      - { name: "{{ web_network_name | default('web') }}" }
     uptimekuma_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -86,10 +90,12 @@
     - { "key": "homepage.widget.url", "value": "https://{{ uptimekuma_fqdn }}" }
     - { "key": "homepage.widget.slug", "value": "homelab" }
 
-- name: deploy-uptimekuma | Create Uptime Kuma networks # noqa: syntax-check[unknown-module]
+- name: deploy-uptimekuma | Create Uptime Kuma networks
   when: uptimekuma_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
     state: present
   loop: "{{ uptimekuma_networks }}"
 

@@ -14,6 +14,10 @@
     homepage_service_name: "{{ homepage_service_name | default('homepage') }}"
     homepage_service_port: "{{ homepage_service_port | default(3000) }}"
 
+- name: deploy-homepage | Set Homepage network facts
+  ansible.builtin.set_fact:
+    homepage_network_name: "{{ homepage_network_name | default(homepage_service_name) }}"
+
 - name: deploy-homepage | Set Homepage volume facts
   ansible.builtin.set_fact:
     homepage_config_dir: "{{ homepage_config_dir | default('/root/' + homepage_service_name + '/config') }}"
@@ -25,8 +29,8 @@
 - name: deploy-homepage | Set Homepage service facts
   ansible.builtin.set_fact:
     homepage_networks:
-      - name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}"
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}" }
+      - { name: "{{ web_network_name | default('web') }}" }
     homepage_volumes:
       # Local paths to mount into the container
       # local path:container path
@@ -73,10 +77,12 @@
     # - { "key": "homepage.href", "value": "https://{{ homepage_fqdn }}/" }
     # - { "key": "homepage.siteMonitor", "value": "https://{{ homepage_fqdn }}/" }
 
-- name: deploy-homepage | Create homepage networks # noqa: syntax-check[unknown-module]
+- name: deploy-homepage | Create homepage networks
   when: homepage_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
     state: present
   loop: "{{ homepage_networks }}"
 

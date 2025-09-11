@@ -6,7 +6,8 @@
   vars:
 
     # Gotify facts
-    gotify_image: gotify/server:2.6.3 # renovate: datasource=docker depName=gotify/server
+    # renovate: datasource=docker depName=gotify/server
+    gotify_image: gotify/server:2.6.3
 
   tasks:
 

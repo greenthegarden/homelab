@@ -3,6 +3,14 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+- name: deploy-tududi | Ensure required Semaphore variables are set
+  ansible.builtin.assert:
+    that:
+      - tududi.admin_email is defined
+      - tududi.admin_password is defined
+      - tududi.session_secret is defined
+    fail_msg: "One or more required Docmost variables are not defined! Please define them in your inventory or group_vars/host_vars."
+
 ####### TUDUDI SECTION
 
 # https://tududi.com/
@@ -15,10 +23,14 @@
     tududi_service_name: "{{ tududi_service_name | default('tududi') }}"
     tududi_service_port: "{{ tududi_service_port | default(3002) }}"
 
+- name: deploy-tududi | Set Tududi network facts
+  ansible.builtin.set_fact:
+    tududi_network_name: "{{ tududi_network_name | default(tududi_service_name) }}"
+
 - name: deploy-tududi | Set Tududi volume facts
   ansible.builtin.set_fact:
-    tududi_volume_data_name: "{{ tududi_service_name }}-data"
-    tududi_volume_uploads_name: "{{ tududi_service_name }}-uploads"
+    tududi_volume_data_name: "{{ tududi_volume_data_name | default(tududi_service_name + '-data') }}"
+    tududi_volume_uploads_name: "{{ tududi_volume_uploads_name | default(tududi_service_name + '-uploads') }}"
 
 - name: deploy-tududi | Set Tududi aggregated facts
   ansible.builtin.set_fact:
@@ -27,7 +39,7 @@
 - name: deploy-tududi | Set Tududi service facts
   ansible.builtin.set_fact:
     tududi_networks:
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ web_network_name | default('web') }}" }
     tududi_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -37,6 +49,16 @@
       # local path:container path
       - "{{ tududi_volume_data_name }}:/app/backend/db"
       - "{{ tududi_volume_uploads_name }}:/app/backend/uploads"
+
+- name: deploy-tududi | Log Tududi configuration
+  ansible.builtin.debug:
+    msg:
+      - "Tududi image: {{ tududi_image }}"
+      - "Tududi service name: {{ tududi_service_name }}"
+      - "Tududi FQDN: {{ tududi_fqdn }}"
+      - "Tududi networks: {{ tududi_networks | default(omit) }}"
+      - "Tududi ports: {{ tududi_ports | default(omit) }}"
+      - "Tududi volumes: {{ tududi_volumes | default(omit) }}"
 
 - name: deploy-tududi | Create Tududi container labels
   ansible.builtin.set_fact:
@@ -69,7 +91,16 @@
     - { "key": "homepage.href", "value": "https://{{ tududi_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ tududi_fqdn }}/" }
 
-- name: deploy-tududi | Create Tududi volumes # noqa: syntax-check[unknown-module]
+- name: deploy-tududi | Create Tududi networks
+  when: tududi_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ tududi_networks }}"
+
+- name: deploy-tududi | Create Tududi volumes
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
@@ -87,6 +118,7 @@
     - tududi_state.exists
     - (tududi_image | split(':') | last) != (tududi_state.container.Config.Image | split(':') | last)
   block:
+
     - name: deploy-tududi | Stop and remove existing Tududi container
       community.docker.docker_container:
         name: "{{ tududi_service_name }}"
@@ -100,6 +132,7 @@
   when:
     - not tududi_state.exists or (tududi_update | default(false))
   block:
+
     - name: deploy-tududi | Pull Tududi image
       community.docker.docker_image:
         name: "{{ tududi_image }}"
@@ -118,21 +151,21 @@
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ tududi_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ tududi_networks }}"
+        networks: "{{ tududi_networks | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ default_host_volumes + tududi_volumes }}"
+        volumes: "{{ default_host_volumes + tududi_volumes | default(omit) }}"
       register: tududi_container_state
 
-    - name: deploy-tududi | Wait for Tududi to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ tududi_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: tududi_running
-      until: tududi_running is success
-      retries: 10
+- name: deploy-tududi | Wait for Tududi to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ tududi_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: tududi_running
+  retries: 10
+  until: tududi_running is success
