@@ -19,8 +19,8 @@
 
 - name: deploy-emqx | Set EMQX volume facts
   ansible.builtin.set_fact:
-    emqx_volume_data_name: "{{ emqx_service_name }}"
-    emqx_volume_logs_name: "{{ emqx_service_name }}-logs"
+    emqx_volume_data_name: "{{ emqx_volume_data_name | default(emqx_service_name) }}"
+    emqx_volume_logs_name: "{{ emqx_volume_logs_name | default(emqx_service_name + '-logs') }}"
 
 - name: deploy-emqx | Set EMQX aggregated facts
   ansible.builtin.set_fact:
@@ -35,6 +35,7 @@
 - name: deploy-emqx | Configure Prometheus when deployed
   when: prometheus_container_status.exists
   block:
+
     - name: deploy-emqx | Set Prometheus aggregated facts
       ansible.builtin.set_fact:
         prometheus_fqdn: "{{ prometheus_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
@@ -80,6 +81,16 @@
       - "{{ emqx_volume_data_name }}:/opt/emqx/data"
       - "{{ emqx_volume_logs_name }}:/opt/emqx/log"
 
+- name: deploy-emqx | Log EMQX configuration
+  ansible.builtin.debug:
+    msg:
+      - "EMQX image: {{ emqx_image }}"
+      - "EMQX service name: {{ emqx_service_name }}"
+      - "EMQX FQDN: {{ emqx_fqdn }}"
+      - "EMQX networks: {{ emqx_networks | default(omit) }}"
+      - "EMQX ports: {{ emqx_ports | default(omit) }}"
+      - "EMQX volumes: {{ emqx_volumes | default(omit) }}"
+
 - name: deploy-emqx | Create EMQX container labels
   ansible.builtin.set_fact:
     emqx_container_labels: "{{ emqx_container_labels | default({}) | combine({item.key: item.value}) }}"
@@ -115,7 +126,15 @@
     - { "key": "homepage.href", "value": "https://{{ emqx_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ emqx_fqdn }}/" }
 
+- name: deploy-emqx | Create EMQX networks # noqa: syntax-check[unknown-module]
+  when: emqx_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ emqx_networks }}"
+
 - name: deploy-emqx | Create EMQX volumes # noqa: syntax-check[unknown-module]
+  when: emqx_volume_data_name is defined and emqx_volume_logs_name is defined
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
@@ -133,6 +152,7 @@
     - emqx_state.exists
     - (emqx_image | split(':') | last) != (emqx_state.container.Config.Image | split(':') | last)
   block:
+
     - name: deploy-emqx | Stop and remove existing EMQX container
       community.docker.docker_container:
         name: "{{ emqx_service_name }}"
@@ -146,6 +166,7 @@
   when:
     - not emqx_state.exists or (emqx_update | default(false))
   block:
+
     - name: deploy-emqx | Pull EMQX image
       community.docker.docker_image:
         name: "{{ emqx_image }}"
@@ -176,14 +197,14 @@
         volumes: "{{ default_host_volumes + emqx_volumes | default(omit) }}"
       register: emqx_container_state
 
-    - name: deploy-emqx | Wait for EMQX to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ emqx_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: emqx_running
-      until: emqx_running is success
-      retries: 10
+- name: deploy-emqx | Wait for EMQX to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ emqx_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: emqx_running
+  retries: 10
+  until: emqx_running is success
