@@ -13,6 +13,14 @@
     hortusfox_service_name: "{{ hortusfox_service_name | default('hortusfox') }}"
     hortusfox_service_port: "{{ hortusfox_service_port | default(80) }}"
     hortusfox_db_backup_volume_name: "{{ hortusfox_db_backup_volume_name | default('hortusfox_db_backup') }}"
+
+- name: deploy-hortusfox | Set Hortusfox network facts
+  ansible.builtin.set_fact:
+    hortusfox_network_name: "{{ hortusfox_network_name | default(hortusfox_service_name) }}"
+
+- name: deploy-hortusfox | Set Hortusfox volume facts
+  ansible.builtin.set_fact:
+    hortusfox_volume_name: "{{ hortusfox_volume_name | default(hortusfox_service_name) }}"
     hortusfox_config_dir: /root/hortusfox
 
 - name: deploy-hortusfox | Set Hortusfox aggregated facts
@@ -22,7 +30,8 @@
 - name: deploy-hortusfox | Set Hortusfox service facts
   ansible.builtin.set_fact:
     hortusfox_networks:
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ web_network_name | default('web') }}", internal: true }
+      - { name: "{{ web_network_name | default('web') }}" }
     hortusfox_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -31,8 +40,16 @@
       # Local paths to mount into the container
       # local path:container path
       - "{{ hortusfox_config_dir }}/config:/app/config"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-hortusfox | Log Hortusfox configuration
+  ansible.builtin.debug:
+    msg:
+      - "Hortusfox image: {{ hortusfox_image }}"
+      - "Hortusfox service name: {{ hortusfox_service_name }}"
+      - "Hortusfox FQDN: {{ hortusfox_fqdn }}"
+      - "Hortusfox networks: {{ hortusfox_networks | default(omit) }}"
+      - "Hortusfox ports: {{ hortusfox_ports | default(omit) }}"
+      - "Hortusfox volumes: {{ hortusfox_volumes | default(omit) }}"
 
 - name: deploy-hortusfox | Create Hortusfox container labels
   ansible.builtin.set_fact:
@@ -49,18 +66,6 @@
       "key": "traefik.http.routers.{{ hortusfox_service_name }}.rule",
       "value": "Host(`{{ hortusfox_fqdn }}`)",
     }
-    # - {
-    #   "key": "traefik.http.routers.{{ hortusfox_service_name }}.service",
-    #   "value": "{{ hortusfox_service_name }}",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ hortusfox_service_name }}.tls",
-    #   "value": "true",
-    # }
-    # - {
-    #   "key": "traefik.http.services.{{ hortusfox_service_name }}.loadbalancer.server.port",
-    #   "value": "80",
-    # }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }

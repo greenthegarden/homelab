@@ -3,6 +3,15 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+- name: deploy-mysql | Ensure required MySQL variables are set
+  ansible.builtin.assert:
+    that:
+      - mysql_root_password is defined
+      - mysql_database_name is defined
+      - mysql_user_name is defined
+      - mysql_user_password is defined
+    fail_msg: "One or more required Docmost variables are not defined! Please define them in your inventory or group_vars/host_vars."
+
 ####### MYSQL SECTION
 
 # http://www.mysql.com/
@@ -15,8 +24,14 @@
     mysql_image_tag: "{{ mysql_image_tag | default('latest') }}"
     mysql_service_name: "{{ mysql_service_name | default('mysql') }}"
     mysql_service_port: "{{ mysql_service_port | default(3306) }}"
-    mysql_network_name: "{{ mysql_network_name | default('mysql') }}"
-    mysql_data_volume_name: "{{ mysql_data_volume_name | default('mysql') }}"
+
+- name: deploy-mysql | Set MySQL network facts
+  ansible.builtin.set_fact:
+    mysql_network_name: "{{ mysql_network_name | default(mysql_service_name) }}"
+
+- name: deploy-mysql | Set MySQL volume facts
+  ansible.builtin.set_fact:
+    mysql_volume_name: "{{ mysql_volume_name | default(mysql_service_name) }}"
 
 - name: deploy-mysql | Set MySQL aggregated facts
   ansible.builtin.set_fact:
@@ -25,7 +40,7 @@
 - name: deploy-mysql | Set MySQL service facts
   ansible.builtin.set_fact:
     mysql_networks:
-      - name: "{{ mysql_network_name }}"
+      - { name: "{{ mysql_network_name }}" }
     mysql_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -33,9 +48,17 @@
     mysql_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ mysql_data_volume_name }}:/mysql/data"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      - "{{ mysql_volume_name }}:/mysql/data"
+
+- name: deploy-mysql | Log MySQL configuration
+  ansible.builtin.debug:
+    msg:
+      - "MySQL image: {{ mysql_image }}"
+      - "MySQL service name: {{ mysql_service_name }}"
+      - "MySQL FQDN: {{ mysql_fqdn }}"
+      - "MySQL networks: {{ mysql_networks | default(omit) }}"
+      - "MySQL ports: {{ mysql_ports | default(omit) }}"
+      - "MySQL volumes: {{ mysql_volumes | default(omit) }}"
 
 - name: deploy-mysql | Create MySQL container labels
   ansible.builtin.set_fact:
@@ -50,19 +73,23 @@
     }
 
 # Create required Docker networks
-- name: deploy-mysql | Create MySQL networks # noqa: syntax-check[unknown-module]
+- name: deploy-mysql | Create MySQL networks
+  when: mysql_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
     state: present
   loop: "{{ mysql_networks }}"
 
 # Create required Docker volumes
-- name: deploy-mysql | Create MySQL volumes # noqa: syntax-check[unknown-module]
+- name: deploy-mysql | Create MySQL volumes
+  when: mysql_volume_name is defined
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
   loop:
-    - "{{ mysql_data_volume_name }}"
+    - "{{ mysql_volume_name }}"
 
 - name: deploy-mysql | Check if MySQL is running
   community.docker.docker_container_info:
@@ -74,6 +101,7 @@
     - mysql_state.exists
     - (mysql_image | split(':') | last) != (mysql_state.container.Config.Image | split(':') | last)
   block:
+
     - name: deploy-mysql | Stop and remove existing MySQL container
       community.docker.docker_container:
         name: "{{ mysql_service_name }}"
@@ -87,6 +115,7 @@
   when:
     - not mysql_state.exists or (mysql_update | default(false))
   block:
+
     - name: deploy-mysql | Pull MySQL image
       community.docker.docker_image:
         name: "{{ mysql_image }}"
@@ -112,9 +141,9 @@
           start_period: 5s
         labels: "{{ mysql_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ mysql_networks }}"
+        networks: "{{ mysql_networks | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ mysql_volumes }}"
+        volumes: "{{ default_host_volumes + mysql_volumes | default(omit) }}"
       register: mysql_container_state

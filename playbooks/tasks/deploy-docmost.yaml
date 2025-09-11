@@ -39,8 +39,8 @@
 - name: deploy-docmost | Set Docmost service facts
   ansible.builtin.set_fact:
     docmost_networks:
-      - name: "{{ docmost_network_name }}"
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ docmost_network_name }}" }
+      - { name: "{{ web_network_name | default('web') }}" }
     docmost_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -91,14 +91,16 @@
     - { "key": "homepage.href", "value": "https://{{ docmost_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ docmost_fqdn }}/" }
 
-- name: deploy-docmost | Create Docmost networks # noqa: syntax-check[unknown-module]
+- name: deploy-docmost | Create Docmost networks
   when: docmost_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
     state: present
   loop: "{{ docmost_networks }}"
 
-- name: deploy-docmost | Create Docmost volumes # noqa: syntax-check[unknown-module]
+- name: deploy-docmost | Create Docmost volumes
   when: docmost_volume_name is defined
   community.docker.docker_volume:
     name: "{{ item }}"

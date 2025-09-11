@@ -3,6 +3,14 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+- name: deploy-postgres | Ensure required Postgres variables are set
+  ansible.builtin.assert:
+    that:
+      - postgres_database is defined
+      - postgres_user is defined
+      - postgres_password is defined
+    fail_msg: "One or more required Docmost variables are not defined! Please define them in your inventory or group_vars/host_vars."
+
 ####### POSTGRES SECTION
 
 # http://www.postgres.com/
@@ -12,7 +20,6 @@
 - name: deploy-postgres | Set Postgres facts
   ansible.builtin.set_fact:
     postgres_image: "{{ postgres_image | default('postgres:latest') }}"
-    postgres_image_tag: "{{ postgres_image_tag | default('latest') }}"
     postgres_service_name: "{{ postgres_service_name | default('postgres') }}"
     postgres_service_port: "{{ postgres_service_port | default(5432) }}"
 
@@ -31,7 +38,7 @@
 - name: deploy-postgres | Set Postgres service facts
   ansible.builtin.set_fact:
     postgres_networks:
-      - name: "{{ postgres_network_name | default('postgres') }}"
+      - { name: "{{ postgres_network_name }}" }
     postgres_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -44,12 +51,12 @@
 - name: deploy-postgres | Log Postgres configuration
   ansible.builtin.debug:
     msg:
-      - "postgres image: {{ postgres_image }}"
-      - "postgres service name: {{ postgres_service_name }}"
-      - "postgres FQDN: {{ postgres_fqdn }}"
-      - "postgres networks: {{ postgres_networks | default(omit) }}"
-      - "postgres ports: {{ postgres_ports | default(omit) }}"
-      - "postgres volumes: {{ postgres_volumes | default(omit) }}"
+      - "Postgres image: {{ postgres_image }}"
+      - "Postgres service name: {{ postgres_service_name }}"
+      - "Postgres FQDN: {{ postgres_fqdn }}"
+      - "Postgres networks: {{ postgres_networks | default(omit) }}"
+      - "Postgres ports: {{ postgres_ports | default(omit) }}"
+      - "Postgres volumes: {{ postgres_volumes | default(omit) }}"
 
 - name: deploy-postgres | Create Postgres container labels
   ansible.builtin.set_fact:
@@ -64,14 +71,18 @@
     }
 
 # Create required Docker networks
-- name: deploy-postgres | Create Postgres networks # noqa: syntax-check[unknown-module]
+- name: deploy-postgres | Create Postgres networks
+  when: postgres_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
     state: present
   loop: "{{ postgres_networks }}"
 
 # Create required Docker volumes
-- name: deploy-postgres | Create Postgres volumes # noqa: syntax-check[unknown-module]
+- name: deploy-postgres | Create Postgres volumes
+  when: postgres_volume_name is defined
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
@@ -88,6 +99,7 @@
     - postgres_state.exists
     - (postgres_image | split(':') | last) != (postgres_state.container.Config.Image | split(':') | last)
   block:
+
     - name: deploy-postgres | Stop and remove existing Postgres container
       community.docker.docker_container:
         name: "{{ postgres_service_name }}"
@@ -101,6 +113,7 @@
   when:
     - not postgres_state.exists or (postgres_update | default(false))
   block:
+
     - name: deploy-postgres | Pull Postgres image
       community.docker.docker_image:
         name: "{{ postgres_image }}"
