@@ -13,7 +13,10 @@
     homepage_image: "{{ homepage_image | default('ghcr.io/gethomepage/homepage:latest') }}"
     homepage_service_name: "{{ homepage_service_name | default('homepage') }}"
     homepage_service_port: "{{ homepage_service_port | default(3000) }}"
-    homepage_config_dir: /root/homepage
+
+- name: deploy-homepage | Set Homepage volume facts
+  ansible.builtin.set_fact:
+    homepage_config_dir: "{{ homepage_config_dir | default('/root/' + homepage_service_name + '/config') }}"
 
 - name: deploy-homepage | Set Homepage aggregated facts
   ansible.builtin.set_fact:
@@ -28,6 +31,16 @@
       # Local paths to mount into the container
       # local path:container path
       - "{{ homepage_config_dir }}/config:/app/config"
+
+- name: deploy-homepage | Log homepage configuration
+  ansible.builtin.debug:
+    msg:
+      - "homepage image: {{ homepage_image }}"
+      - "homepage service name: {{ homepage_service_name }}"
+      - "homepage FQDN: {{ homepage_fqdn }}"
+      - "homepage networks: {{ homepage_networks | default(omit) }}"
+      - "homepage ports: {{ homepage_ports | default(omit) }}"
+      - "homepage volumes: {{ homepage_volumes | default(omit) }}"
 
 - name: deploy-homepage | Create Homepage container labels
   ansible.builtin.set_fact:
@@ -60,27 +73,41 @@
     # - { "key": "homepage.href", "value": "https://{{ homepage_fqdn }}/" }
     # - { "key": "homepage.siteMonitor", "value": "https://{{ homepage_fqdn }}/" }
 
-- name: deploy-homepage | Create Homepage configuration directory
-  ansible.builtin.file:
-    path: "{{ homepage_config_dir }}"
-    state: directory
-    mode: "0644"
-
-- name: deploy-homepage | Copy Homepage static configuration
-  ansible.builtin.copy:
-    src: files/homepage
-    dest: /root/
-    mode: "0644"
+- name: deploy-homepage | Create homepage networks # noqa: syntax-check[unknown-module]
+  when: homepage_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ homepage_networks }}"
 
 - name: deploy-homepage | Create Homepage configuration
-  ansible.builtin.template:
-    src: "templates/homepage/config/{{ item }}.yaml.j2"
-    dest: "{{ homepage_config_dir }}/config/{{ item }}.yaml"
-    mode: "0644"
-  loop:
-    - docker
-    - services
-    - widgets
+  when: homepage_config_dir is defined
+  block:
+
+    - name: deploy-homepage | Create Homepage configuration directory
+      ansible.builtin.file:
+        path: "{{ homepage_config_dir }}"
+        state: directory
+        mode: "0644"
+
+    - name: deploy-homepage | Copy Homepage static configuration
+      ansible.builtin.copy:
+        src: files/homepage/config/{{ item }}.yaml
+        dest: "{{ homepage_config_dir }}/{{ item }}.yaml"
+        mode: "0644"
+      loop:
+        - bookmarks
+        - settings
+
+    - name: deploy-homepage | Create Homepage configuration
+      ansible.builtin.template:
+        src: "templates/homepage/config/{{ item }}.yaml.j2"
+        dest: "{{ homepage_config_dir }}/{{ item }}.yaml"
+        mode: "0644"
+      loop:
+        - docker
+        - services
+        - widgets
 
 - name: deploy-homepage | Pull Homepage image
   community.docker.docker_image:
@@ -112,5 +139,5 @@
     state: started
     timeout: 30
   register: homepage_running
-  until: homepage_running is success
   retries: 10
+  until: homepage_running is success

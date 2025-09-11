@@ -11,7 +11,10 @@
     homebox_image: "{{ homebox_image | default('ghcr.io/hay-kot/homebox:latest') }}"
     homebox_service_name: "{{ homebox_service_name | default('homebox') }}"
     homebox_service_port: "{{ homebox_service_port | default(7745) }}"
-    homebox_volume_name: "{{ homebox_volume_name | default('homebox') }}"
+
+- name: deploy-homebox | Set Homebox volume facts
+  ansible.builtin.set_fact:
+    homebox_volume_name: "{{ homebox_volume_name | default(homebox_service_name) }}"
 
 - name: deploy-homebox | Set Homebox aggregated facts
   ansible.builtin.set_fact:
@@ -29,8 +32,16 @@
       # Local paths to mount into the container
       # local path:container path
       - "{{ homebox_volume_name }}:/data"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+
+- name: deploy-homebox | Log Homebox configuration
+  ansible.builtin.debug:
+    msg:
+      - "Homebox image: {{ homebox_image }}"
+      - "Homebox service name: {{ homebox_service_name }}"
+      - "Homebox FQDN: {{ homebox_fqdn }}"
+      - "Homebox networks: {{ homebox_networks | default(omit) }}"
+      - "Homebox ports: {{ homebox_ports | default(omit) }}"
+      - "Homebox volumes: {{ homebox_volumes | default(omit) }}"
 
 - name: deploy-homebox | Create Homebox container labels
   ansible.builtin.set_fact:
@@ -85,7 +96,15 @@
     - { "key": "homepage.widget.password", "value": "{{ homebox.password }}" }
     - { "key": "homepage.widget.fields", "value": "['items', 'locations', 'totalValue']" }
 
+- name: deploy-homebox | Create homebox networks # noqa: syntax-check[unknown-module]
+  when: homebox_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ homebox_networks }}"
+
 - name: deploy-homebox | Create Homebox volume
+  when: homebox_volume_name is defined
   community.docker.docker_volume:
     name: "{{ homebox_volume_name }}"
     state: present
@@ -100,6 +119,7 @@
     - homebox_state.exists
     - (homebox_image  | split(':') | last) != (homebox_state.container.Config.Image | split(':') | last)
   block:
+
     - name: deploy-homebox | Stop and remove existing Homebox container
       community.docker.docker_container:
         name: "{{ homebox_service_name }}"
@@ -112,6 +132,7 @@
 - name: deploy-homebox | Deploy Homebox if not running
   when: not homebox_state.exists or (homebox_update | default(false))
   block:
+
     - name: deploy-homebox | Pull homebox image
       community.docker.docker_image:
         name: "{{ homebox_image }}"
@@ -130,21 +151,21 @@
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ homebox_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ homebox_networks }}"
+        networks: "{{ homebox_networks | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ homebox_volumes }}"
+        volumes: "{{ default_host_volumes + homebox_volumes | default(omit) }}"
       register: homebox_container_state
 
-    - name: deploy-homebox | Wait for Homebox to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ homebox_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: homebox_running
-      until: homebox_running is success
-      retries: 10
+- name: deploy-homebox | Wait for Homebox to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ homebox_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: homebox_running
+  until: homebox_running is success
+  retries: 10

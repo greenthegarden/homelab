@@ -3,12 +3,6 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
-####### DOCMOST SECTION
-
-# https://docmost.com/
-# https://github.com/docmost/docmost
-# https://hub.docker.com/r/docmost/docmost
-
 - name: deploy-docmost | Ensure required Docmost variables are set
   ansible.builtin.assert:
     that:
@@ -17,6 +11,12 @@
       - docmost.postgres_password is defined
       - docmost.postgres_database is defined
     fail_msg: "One or more required Docmost variables are not defined! Please define them in your inventory or group_vars/host_vars."
+
+####### DOCMOST SECTION
+
+# https://docmost.com/
+# https://github.com/docmost/docmost
+# https://hub.docker.com/r/docmost/docmost
 
 - name: deploy-docmost | Set Docmost facts
   ansible.builtin.set_fact:
@@ -91,7 +91,6 @@
     - { "key": "homepage.href", "value": "https://{{ docmost_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ docmost_fqdn }}/" }
 
-# Create required Docker networks
 - name: deploy-docmost | Create Docmost networks # noqa: syntax-check[unknown-module]
   when: docmost_networks is defined
   community.docker.docker_network:
@@ -99,7 +98,14 @@
     state: present
   loop: "{{ docmost_networks }}"
 
-# Deploy redis for Docmost
+- name: deploy-docmost | Create Docmost volumes # noqa: syntax-check[unknown-module]
+  when: docmost_volume_name is defined
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ docmost_volume_name }}"
+
 - name: deploy-docmost | Deploy Redis for Docmost
   when: docmost_redis_create | default(true)
   ansible.builtin.include_tasks:
@@ -114,7 +120,6 @@
       - "--maxmemory 256mb"
       - "--maxmemory-policy allkeys-lru"
 
-# Create Postgres database for Docmost
 - name: deploy-docmost | Deploy Postgres database
   when: docmost_postgres_database_create | default(true)
   ansible.builtin.include_tasks:
@@ -126,15 +131,6 @@
     postgres_database: "{{ docmost.postgres_database | default('docmost') }}"
     postgres_user: "{{ docmost.postgres_user | default('docmost') }}"
     postgres_password: "{{ docmost.postgres_password | default('dummy') }}"
-
-# Create required Docker volumes
-- name: deploy-docmost | Create Docmost volumes # noqa: syntax-check[unknown-module]
-  when: docmost_volume_name is defined
-  community.docker.docker_volume:
-    name: "{{ item }}"
-    state: present
-  loop:
-    - "{{ docmost_volume_name }}"
 
 - name: deploy-docmost | Check if Docmost is running
   community.docker.docker_container_info:

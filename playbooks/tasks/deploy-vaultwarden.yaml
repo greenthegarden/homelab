@@ -129,10 +129,10 @@
     env_file: "{{ vaultwarden_config_dir }}/vaultwarden.env"
     labels: "{{ vaultwarden_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ vaultwarden_networks }}"
+    networks: "{{ vaultwarden_networks | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
-    volumes: "{{ default_host_volumes + vaultwarden_volumes }}"
+    volumes: "{{ default_host_volumes + vaultwarden_volumes | default(omit) }}"
   register: vaultwarden_container_state
 
 - name: deploy-vaultwarden | Wait for Vaultwarden to accept connections

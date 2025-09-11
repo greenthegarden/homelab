@@ -4,6 +4,13 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+- name: deploy-grist | Ensure required Grist variables are set
+  ansible.builtin.assert:
+    that:
+      - grist.admin_password is defined
+      - grist.admin_email is defined
+    fail_msg: "One or more required grist variables are not defined! Please define them in your inventory or group_vars/host_vars."
+
 ####### GRIST SECTION
 
 # https://support.getgrist.com/self-managed/#what-is-self-hosted-grist
@@ -14,7 +21,10 @@
     grist_image_tag: "{{ grist_image_tag | default('latest') }}"
     grist_service_name: "{{ grist_service_name | default('grist') }}"
     grist_service_port: "{{ grist_service_port | default(8484) }}"
-    grist_data_volume_name: "{{ grist_data_volume_name | default('grist_data') }}"
+
+- name: deploy-grist | Set Grist volume facts
+  ansible.builtin.set_fact:
+    grist_volume_name: "{{ grist_volume_name | default(grist_service_name) }}"
 
 - name: deploy-grist | Set Grist aggregated facts
   ansible.builtin.set_fact:
@@ -31,9 +41,17 @@
     grist_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ grist_data_volume_name }}:/persist"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      - "{{ grist_volume_name }}:/persist"
+
+- name: deploy-grist | Log Grist configuration
+  ansible.builtin.debug:
+    msg:
+      - "Grist image: {{ grist_image }}"
+      - "Grist service name: {{ grist_service_name }}"
+      - "Grist FQDN: {{ grist_fqdn }}"
+      - "Grist networks: {{ grist_networks | default(omit) }}"
+      - "Grist ports: {{ grist_ports | default(omit) }}"
+      - "Grist volumes: {{ grist_volumes | default(omit) }}"
 
 - name: deploy-grist | Create Grist container labels
   ansible.builtin.set_fact:
@@ -66,12 +84,24 @@
     - { "key": "homepage.href", "value": "https://{{ grist_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ grist_fqdn }}/" }
 
+- name: deploy-grist | Create Grist networks # noqa: syntax-check[unknown-module]
+  when: grist_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ grist_networks }}"
+
 - name: deploy-grist | Create Grist volumes # noqa: syntax-check[unknown-module]
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
   loop:
-    - "{{ grist_data_volume_name }}"
+    - "{{ grist_volume_name }}"
+
+- name: deploy-grist | Pull Grist image
+  community.docker.docker_image:
+    name: "{{ grist_image }}"
+    source: pull
 
 - name: deploy-grist | Check if Grist is running
   community.docker.docker_container_info:
@@ -83,6 +113,7 @@
     - grist_state.exists
     - (grist_image | split(':') | last) != (grist_state.container.Config.Image | split(':') | last)
   block:
+
     - name: deploy-grist | Stop and remove existing Grist container
       community.docker.docker_container:
         name: "{{ grist_service_name }}"
@@ -96,6 +127,7 @@
   when:
     - not grist_state.exists or (grist_update | default(false))
   block:
+
     - name: deploy-grist | Pull Grist image
       community.docker.docker_image:
         name: "{{ grist_image }}"
@@ -113,21 +145,21 @@
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ grist_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ grist_networks }}"
+        networks: "{{ grist_networks | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ grist_volumes }}"
+        volumes: "{{ default_host_volumes + grist_volumes | default(omit) }}"
       register: grist_container_state
 
-    - name: deploy-grist | Wait for Grist to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ grist_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: grist_running
-      until: grist_running is success
-      retries: 10
+- name: deploy-grist | Wait for Grist to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ grist_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: grist_running
+  retries: 10
+  until: grist_running is success
