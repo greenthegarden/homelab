@@ -7,27 +7,39 @@
 
 # https://github.com/CorentinTh/it-tools
 
-- name: deploy-it_tools | Set It-tools facts
+- name: deploy-it_tools | Set IT-Tools facts
   ansible.builtin.set_fact:
     it_tools_image: "{{ it_tools_image | default('corentinth/it-tools:latest') }}"
     it_tools_service_name: "{{ it_tools_service_name | default('it-tools') }}"
     it_tools_service_port: "{{ it_tools_service_port | default(80) }}"
 
-- name: deploy-it_tools | Set It-tools aggregated facts
+- name: deploy-it_tools | Set IT-Tools volume facts
+  ansible.builtin.set_fact:
+    it_tools_volume_name: "{{ it_tools_volume_name | default(it_tools_service_name) }}"
+
+- name: deploy-it_tools | Set IT-Tools aggregated facts
   ansible.builtin.set_fact:
     it_tools_fqdn: "{{ it_tools_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
-- name: deploy-it_tools | Set It-tools service facts
+- name: deploy-it_tools | Set IT-Tools service facts
   ansible.builtin.set_fact:
     it_tools_networks:
-      - name: "{{ web_network_name | default('web') }}"
-    it_tools_volumes:
+      - { name: "{{ web_network_name | default('web') }}" }
+    it_tools_volumes: []
       # Local paths to mount into the container
       # local path:container path
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
 
-- name: deploy-it_tools | Create It-tools container labels
+- name: deploy-it_tools | Log IT-Tools configuration
+  ansible.builtin.debug:
+    msg:
+      - "IT-Tools image: {{ it_tools_image }}"
+      - "IT-Tools service name: {{ it_tools_service_name }}"
+      - "IT-Tools FQDN: {{ it_tools_fqdn }}"
+      - "IT-Tools networks: {{ it_tools_networks | default(omit) }}"
+      - "IT-Tools ports: {{ it_tools_ports | default(omit) }}"
+      - "IT-Tools volumes: {{ it_tools_volumes | default(omit) }}"
+
+- name: deploy-it_tools | Create IT-Tools container labels
   ansible.builtin.set_fact:
     it_tools_container_labels: "{{ it_tools_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
@@ -61,27 +73,44 @@
     - { "key": "homepage.href", "value": "https://{{ it_tools_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ it_tools_fqdn }}/" }
 
-- name: deploy-it_tools | Pull It-tools image
+- name: deploy-it_tools | Create IT-Tools networks # noqa: syntax-check[unknown-module]
+  when: it_tools_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ it_tools_networks }}"
+
+- name: deploy-it_tools | Create IT-Tools volume # noqa: syntax-check[unknown-module]
+  when: it_tools_volume_name is defined
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ it_tools_volume_name }}"
+
+- name: deploy-it_tools | Pull IT-Tools image
   community.docker.docker_image:
     name: "{{ it_tools_image }}"
     source: pull
 
 # docker run -d --name it-tools --restart unless-stopped -p 8080:80 corentinth/it-tools:latest
-- name: deploy-it_tools | Deploy It-tools
+- name: deploy-it_tools | Deploy IT-Tools
   community.docker.docker_container:
     name: "{{ it_tools_service_name }}"
     image: "{{ it_tools_image }}"
     detach: true
     labels: "{{ it_tools_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ it_tools_networks }}"
+    networks: "{{ it_tools_networks | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ it_tools_volumes }}"
+    volumes: "{{ default_host_volumes + it_tools_volumes | default(omit) }}"
   register: it_tools_container_state
 
-- name: deploy-it_tools | Wait for It-tools to accept connections
+- name: deploy-it_tools | Wait for IT-Tools to accept connections
   ansible.builtin.wait_for:
     host: "{{ it_tools_fqdn }}"
     port: 80
@@ -90,5 +119,5 @@
     state: started
     timeout: 30
   register: it_tools_running
-  until: it_tools_running is success
   retries: 10
+  until: it_tools_running is success
