@@ -184,14 +184,14 @@
         volumes: "{{ default_host_volumes + docmost_volumes | default(omit) }}"
       register: docmost_container_state
 
-    - name: deploy-docmost | Wait for Docmost to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ docmost_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: docmost_running
-      until: docmost_running is success
-      retries: 10
+- name: deploy-docmost | Wait for Docmost to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ docmost_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: docmost_running
+  retries: 10
+  until: docmost_running is success

@@ -7,15 +7,15 @@
   ansible.builtin.assert:
     that:
       - mariadb_root_password is defined
-      - mariadb_database_name is defined
-      - mariadb_user_name is defined
-      - mariadb_user_password is defined
+      - mariadb_database is defined
+      - mariadb_user is defined
+      - mariadb_password is defined
     fail_msg: "One or more required Docmost variables are not defined! Please define them in your inventory or group_vars/host_vars."
 
 ####### MARIADB SECTION
 
 # https://mariadb.org/
-# https://github.com/mariadb/mariadb
+# https://github.com/MariaDB/server
 # https://hub.docker.com/_/mariadb
 
 - name: deploy-mariadb | Set MariaDB facts
@@ -125,10 +125,10 @@
         command: "{{ mariadb_args | default(omit) }}"
         detach: true
         env:
-          MARIADB_ROOT_PASSWORD: "{{ mariadb_root_password | default(omit) }}"
-          MARIADB_DATABASE: "{{ mariadb_database_name | default(omit) }}"
-          MARIADB_USER: "{{ mariadb_user_name | default(omit) }}"
-          MARIADB_PASSWORD: "{{ mariadb_user_password | default(omit) }}"
+          MYSQL_ROOT_PASSWORD: "{{ mariadb_root_password | default('dummy') }}"
+          MYSQL_DATABASE: "{{ mariadb_database | default(mariadb_service_name) }}"
+          MYSQL_USER: "{{ mariadb_user | default(mariadb_service_name) }}"
+          MYSQL_PASSWORD: "{{ mariadb_password | default('dummy') }}"
           TZ: "{{ homelab.timezone | default('UTC') }}"
         healthcheck:
           test: ["CMD", "mariadbadmin", "ping", "-h", "localhost"]
