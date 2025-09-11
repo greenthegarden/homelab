@@ -15,6 +15,10 @@
     portainer_service_name: "{{ portainer_service_name | default('portainer') }}"
     portainer_service_port: "{{ portainer_service_port | default(9443) }}"
 
+- name: deploy-portainer | Set Portainer network facts
+  ansible.builtin.set_fact:
+    portainer_network_name: "{{ portainer_network_name | default(portainer_service_name) }}"
+
 - name: deploy-portainer | Set Portainer volume facts
   ansible.builtin.set_fact:
     portainer_volume_name: "{{ portainer_volume_name | default(portainer_service_name) }}"

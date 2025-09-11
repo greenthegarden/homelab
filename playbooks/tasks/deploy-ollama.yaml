@@ -13,9 +13,13 @@
     ollama_service_name: "{{ ollama_service_name | default('ollama') }}"
     ollama_service_port: "{{ ollama_service_port | default(11434) }}"
 
+- name: deploy-ollama | Set Ollama network facts
+  ansible.builtin.set_fact:
+    ollama_network_name: "{{ ollama_network_name | default(ollama_service_name) }}"
+
 - name: deploy-ollama | Set Ollama volume facts
   ansible.builtin.set_fact:
-    ollama_volume_name: "{{ ollama_service_name }}"
+    ollama_volume_name: "{{ ollama_volume_name | default(ollama_service_name) }}"
 
 - name: deploy-ollama | Set Ollama aggregated facts
   ansible.builtin.set_fact:
@@ -24,7 +28,8 @@
 - name: deploy-ollama | Set Ollama service facts
   ansible.builtin.set_fact:
     ollama_networks:
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ ollama_network_name }}" }
+      - { name: "{{ web_network_name | default('web') }}" }
     ollama_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -33,6 +38,16 @@
       # Local paths to mount into the container
       # local path:container path
       - "{{ ollama_volume_name }}:/root/.ollama"
+
+- name: deploy-ollama | Log Ollama configuration
+  ansible.builtin.debug:
+    msg:
+      - "Ollama image: {{ ollama_image }}"
+      - "Ollama service name: {{ ollama_service_name }}"
+      - "Ollama FQDN: {{ ollama_fqdn }}"
+      - "Ollama networks: {{ ollama_networks | default(omit) }}"
+      - "Ollama ports: {{ ollama_ports | default(omit) }}"
+      - "Ollama volumes: {{ ollama_volumes | default(omit) }}"
 
 - name: deploy-ollama | Create Ollama container labels
   ansible.builtin.set_fact:
@@ -60,10 +75,22 @@
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
 
-- name: deploy-ollama | Create Ollama volume
-  community.docker.docker_volume:
-    name: "{{ ollama_volume_name }}"
+- name: deploy-ollama | Create Ollama networks
+  when: ollama_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
     state: present
+  loop: "{{ ollama_networks }}"
+
+- name: deploy-ollama | Create Ollama volume
+  when: ollama_volume_name is defined
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ ollama_volume_name }}"
 
 - name: deploy-ollama | Check if Ollama is running
   community.docker.docker_container_info:
@@ -75,6 +102,7 @@
     - ollama_state.exists
     - (ollama_image | split(':') | last) != (ollama_state.container.Config.Image | split(':') | last)
   block:
+
     - name: deploy-ollama | Stop and remove existing Ollama container
       community.docker.docker_container:
         name: "{{ ollama_service_name }}"
@@ -87,6 +115,7 @@
 - name: deploy-ollama | Deploy Ollama if not running
   when: not ollama_state.exists or (ollama_update | default(false))
   block:
+
     - name: deploy-ollama | Pull Ollama image
       community.docker.docker_image:
         name: "{{ ollama_image }}"
@@ -103,7 +132,6 @@
         labels: "{{ ollama_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ ollama_networks | default(omit) }}"
-        # published_ports: "{{ ollama_ports }}" # <= TODO: check is required
         restart: true
         restart_policy: unless-stopped
         security_opts:

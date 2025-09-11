@@ -12,6 +12,10 @@
     searxng_service_name: "{{ searxng_service_name | default('searxng') }}"
     searxng_service_port: "{{ searxng_service_port | default(8080) }}"
 
+- name: deploy-searxng | Set SearXNG network facts
+  ansible.builtin.set_fact:
+    searxng_network_name: "{{ searxng_network_name | default(searxng_service_name) }}"
+
 - name: deploy-searxng | Set SearXNG volume facts
   ansible.builtin.set_fact:
     searxng_volume_name: "{{ searxng_volume_name | default(searxng_service_name) }}"
@@ -23,7 +27,8 @@
 - name: deploy-searxng | Set SearXNG service facts
   ansible.builtin.set_fact:
     searxng_networks:
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ searxng_network_name }}" }
+      - { name: "{{ web_network_name | default('web') }}" }
     searxng_ports:
       # Published ports to expose outside the container
       # host port:container port

@@ -12,9 +12,13 @@
     open_webui_service_name: "{{ open_webui_service_name | default('open-webui') }}"
     open_webui_service_port: "{{ open_webui_service_port | default(8080) }}"
 
+- name: deploy-open-webui | Set Open WebUI network facts
+  ansible.builtin.set_fact:
+    open_webui_network_name: "{{ open_webui_network_name | default(open_webui_service_name) }}"
+
 - name: deploy-open-webui | Set Open WebUI volume facts
   ansible.builtin.set_fact:
-    open_webui_volume_name: "{{ open_webui_service_name }}"
+    open_webui_volume_name: "{{ open_webui_volume_name | default(open_webui_service_name) }}"
 
 - name: deploy-open-webui | Set Open WebUI aggregated facts
   ansible.builtin.set_fact:
@@ -23,7 +27,8 @@
 - name: deploy-open-webui | Set Open WebUI service facts
   ansible.builtin.set_fact:
     open_webui_networks:
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ open_webui_network_name }}" }
+      - { name: "{{ web_network_name | default('web') }}" }
     open_webui_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -32,6 +37,16 @@
       # Local paths to mount into the container
       # local path:container path
       - "{{ open_webui_volume_name }}:/app/backend/data"
+
+- name: deploy-open-webui | Log Open WebUI configuration
+  ansible.builtin.debug:
+    msg:
+      - "Open WebUI image: {{ open_webui_image }}"
+      - "Open WebUI service name: {{ open_webui_service_name }}"
+      - "Open WebUI FQDN: {{ open_webui_fqdn }}"
+      - "Open WebUI networks: {{ open_webui_networks | default(omit) }}"
+      - "Open WebUI ports: {{ open_webui_ports | default(omit) }}"
+      - "Open WebUI volumes: {{ open_webui_volumes | default(omit) }}"
 
 - name: deploy-open-webui | Create Open WebUI container labels
   ansible.builtin.set_fact:
@@ -70,6 +85,15 @@
       "value": "https://{{ open_webui_fqdn }}/",
     }
 
+- name: deploy-open-webui | Create Open WebUI networks  # noqa: syntax-check[unknown-module]
+  when: open_webui_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ open_webui_networks }}"
+
 - name: deploy-open-webui | Create Open WebUI volume
   community.docker.docker_volume:
     name: "{{ open_webui_volume_name }}"
@@ -85,6 +109,7 @@
     - open_webui_state.exists
     - (open_webui_image | split(':') | last) != (open_webui_state.container.Config.Image | split(':') | last)
   block:
+
     - name: deploy-open-webui | Stop and remove existing Open-webui container
       community.docker.docker_container:
         name: "{{ open_webui_service_name }}"
@@ -97,6 +122,7 @@
 - name: deploy-open-webui | Deploy Open WebUI if not running
   when: not open_webui_state.exists or (open_webui_update | default(false))
   block:
+
     - name: deploy-open-webui | Pull Open WebUI image
       community.docker.docker_image:
         name: "{{ open_webui_image }}"
@@ -126,14 +152,14 @@
         volumes: "{{ default_host_volumes + open_webui_volumes | default(omit) }}"
       register: open_webui_container_state
 
-    - name: deploy-open-webui | Wait for Open WebUI to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ open_webui_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: open_webui_running
-      retries: 10
-      until: open_webui_running is success
+- name: deploy-open-webui | Wait for Open WebUI to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ open_webui_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: open_webui_running
+  retries: 10
+  until: open_webui_running is success
