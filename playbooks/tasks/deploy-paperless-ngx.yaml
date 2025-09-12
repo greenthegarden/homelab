@@ -12,7 +12,7 @@
 - name: deploy-paperless-ngx | Set paperless_ngx facts
   ansible.builtin.set_fact:
     paperless_ngx_image: "{{ paperless_ngx_image | default('ghcr.io/paperless-ngx/paperless-ngx:latest') }}"
-    paperless_ngx_service_name: "{{ paperless_ngx_service_name | default('paperless_ngx') }}"
+    paperless_ngx_service_name: "{{ paperless_ngx_service_name | default('paperless-ngx') }}"
     paperless_ngx_service_port: "{{ paperless_ngx_service_port | default(8000) }}"
 
 - name: deploy-paperless-ngx | Set paperless_ngx network facts
