@@ -63,7 +63,7 @@
     driver: "{{ item.driver | default('bridge') }}"
     internal: "{{ item.internal | default(false) }}"
     state: present
-  loop: "{{ portainer_network_name }}"
+  loop: "{{ portainer_agent_networks }}"
 
 - name: deploy-portainer-agent | Create volume for Portainer Agent
   when: portainer_agent_volume_name is defined and (portainer_agent_volumes | length > 0)
