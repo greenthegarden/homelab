@@ -46,6 +46,8 @@
 - name: homelab-deploy-support-services | Deploy a containerised instance of Dozzle Agent
   ansible.builtin.include_tasks:
     file: tasks/deploy-dozzle-agent.yaml
+  vars:
+    dozzle_agent_network_name: dozzle
 
 # Docker Socker Proxy used to restrict access to required Docker APIs to monitor remote Docker services
 # Used by Traefik, Homepage and What's up Docker?

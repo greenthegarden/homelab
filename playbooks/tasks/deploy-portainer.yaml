@@ -85,7 +85,7 @@
     - { "key": "homepage.href", "value": "https://{{ portainer_fqdn }}" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ portainer_fqdn }}" }
 
-- name: deploy-portainer | Create Portainer networks  # noqa: syntax-check[unknown-module]
+- name: deploy-portainer | Create Portainer networks
   when: portainer_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
@@ -94,11 +94,11 @@
     state: present
   loop: "{{ portainer_networks }}"
 
-- name: deploy-portainer | Create volume for Portainer # noqa: syntax-check[unknown-module]
+- name: deploy-portainer | Create volume for Portainer
   when: portainer_volume_name is defined
   community.docker.docker_volume:
     name: "{{ item }}"
-    state: presnet
+    state: present
   loop:
     - "{{ portainer_volume_name }}"
 

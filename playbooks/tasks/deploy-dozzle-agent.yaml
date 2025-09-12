@@ -13,13 +13,29 @@
     dozzle_agent_service_name: "{{ dozzle_agent_service_name | default('dozzle-agent') }}"
     dozzle_agent_service_port: "{{ dozzle_agent_service_port | default(7007) }}"
 
+- name: deploy-dozzle-agent | Set Dozzle Agent network facts
+  ansible.builtin.set_fact:
+    dozzle_agent_network_name: "{{ dozzle_agent_network_name | default(dozzle_agent_service_name) }}"
+
+- name: deploy-dozzle-agent | Set Dozzle Agent volume facts
+  ansible.builtin.set_fact:
+    dozzle_agent_volume_name: "{{ dozzle_agent_volume_name | default(dozzle_agent_service_name) }}"
+
+- name: deploy-dozzle-agent | Set Dozzle Agent aggregated facts
+  ansible.builtin.set_fact:
+    dozzle_agent_fqdn: "{{ dozzle_agent_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
 - name: deploy-dozzle-agent | Set Dozzle Agent service facts
   ansible.builtin.set_fact:
     dozzle_agent_networks:
-      - name: "{{ dozzle_network_name | default('dozzle') }}"
+      - { name: "{{ dozzle_agent_network_name }}" }
     dozzle_agent_ports:
+      # Published ports to expose outside the container
+      # host port:container port
       - "{{ dozzle_agent_service_port }}:7007"
     dozzle_agent_volumes: []
+      # Local paths to mount into the container
+      # local path:container path
 
 - name: deploy-dozzle-agent | Create Dozzle Agent container labels
   ansible.builtin.set_fact:
@@ -32,16 +48,28 @@
       "value": "https://github.com/amir20/dozzle/releases/tag/v${major}.${minor}.${patch}",
     }
 
-- name: deploy-dozzle-agent | Create Dozzle network  # noqa: syntax-check[unknown-module]
+- name: deploy-dozzle-agent | Create Dozzle network
+  when: dozzle_agent_networks is defined
   community.docker.docker_network:
-    name: "{{ dozzle_network_name }}"
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ dozzle_agent_networks }}"
+
+- name: deploy-dozzle-agent | Create volume for Dozzle Agent
+  when: dozzle_agent_volume_name is defined
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ dozzle_agent_volume_name }}"
 
 - name: deploy-dozzle-agent | Pull Dozzle Agent image
   community.docker.docker_image:
     name: "{{ dozzle_agent_image }}"
     source: pull
 
-# docker run -d -v /var/run/docker.sock:/var/run/docker.sock -p 8080:8080 amir20/dozzle:latest
 - name: deploy-dozzle-agent | Deploy Dozzle Agent
   community.docker.docker_container:
     name: "{{ dozzle_agent_service_name }}"

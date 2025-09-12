@@ -31,7 +31,7 @@ portainer_network_name: portainer
 # Docker Volume Backup facts
 docker_volume_backup_image: offen/docker-volume-backup:v2.44.0
 # Dozzle Agent facts
-dozzle_agent_image: amir20/dozzle:v8.13.12
+dozzle_agent_image: amir20/dozzle:v8.13.14
 # Node Exporter facts
 node_exporter_image: prom/node-exporter:v1.9.1
 # Portainer Agent facts

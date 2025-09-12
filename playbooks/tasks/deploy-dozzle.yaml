@@ -12,7 +12,14 @@
     dozzle_image: "{{ dozzle_image | default('amir20/dozzle:latest') }}"
     dozzle_service_name: "{{ dozzle_service_name | default('dozzle') }}"
     dozzle_service_port: "{{ dozzle_service_port | default(8080) }}"
-    dozzle_config_dir: /root/dozzle
+
+- name: deploy-dozzle | Set Dozzle network facts
+  ansible.builtin.set_fact:
+    dozzle_network_name: "{{ dozzle_network_name | default(dozzle_service_name) }}"
+
+- name: deploy-dozzle | Set Dozzle volume facts
+  ansible.builtin.set_fact:
+    dozzle_volume_name: "{{ dozzle_volume_name | default(dozzle_service_name) }}"
 
 - name: deploy-dozzle | Set Dozzle aggregated facts
   ansible.builtin.set_fact:
@@ -21,8 +28,8 @@
 - name: deploy-dozzle | Set Dozzle service facts
   ansible.builtin.set_fact:
     dozzle_networks:
-      - name: "{{ dozzle_network_name | default('dozzle') }}"
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ dozzle_network_name }}" }
+      - { name: "{{ web_network_name | default('web') }}" }
     dozzle_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -30,6 +37,16 @@
     dozzle_volumes: []
       # Local paths to mount into the container
       # local path:container path
+
+- name: deploy-dozzle | Log Dozzle configuration
+  ansible.builtin.debug:
+    msg:
+      - "Dozzle image: {{ dozzle_image }}"
+      - "Dozzle service name: {{ dozzle_service_name }}"
+      - "Dozzle FQDN: {{ dozzle_fqdn }}"
+      - "Dozzle networks: {{ dozzle_networks | default(omit) }}"
+      - "Dozzle ports: {{ dozzle_ports | default(omit) }}"
+      - "Dozzle volumes: {{ dozzle_volumes | default(omit) }}"
 
 - name: deploy-dozzle | Create Dozzle container labels
   ansible.builtin.set_fact:
@@ -65,24 +82,36 @@
     - { "key": "homepage.href", "value": "https://{{ dozzle_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ dozzle_fqdn }}/" }
 
-- name: deploy-dozzle | Create Dozzle network  # noqa: syntax-check[unknown-module]
+- name: deploy-dozzle | Create Dozzle network
+  when: dozzle_networks is defined
   community.docker.docker_network:
-    name: "{{ dozzle_network_name }}"
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ dozzle_networks }}"
+
+- name: deploy-dozzle | Create volume for Dozzle
+  when: dozzle_volume_name is defined
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ dozzle_volume_name }}"
 
 - name: deploy-dozzle | Pull Dozzle image
   community.docker.docker_image:
     name: "{{ dozzle_image }}"
     source: pull
 
-# docker run -d -v /var/run/docker.sock:/var/run/docker.sock -p 8080:8080 amir20/dozzle:latest
 - name: deploy-dozzle | Deploy Dozzle
   community.docker.docker_container:
     name: "{{ dozzle_service_name }}"
     image: "{{ dozzle_image }}"
     detach: true
     env:
-      DOZZLE_ENABLE_ACTIONS: "true"
-      DOZZLE_REMOTE_AGENT: dozzle.{{ lan_domain }}:7007,ansible.{{ lan_domain }}:7007,broker.{{ lan_domain }}:7007,fireflyiii.{{ lan_domain }}:7007,frigate.{{ lan_domain }}:7007,grocy.{{ lan_domain }}:7007,homebox.{{ lan_domain }}:7007,homepage.{{ lan_domain }}:7007,hortusfox.{{ lan_domain }}:7007,productivity.{{ lan_domain }}:7007,ollama.{{ lan_domain }}:7007,portainer.{{ lan_domain }}:7007,uptimekuma.{{ lan_domain }}:7007,vaultwarden.{{ lan_domain }}:7007,whatsupdocker.{{ lan_domain }}:7007
+      DOZZLE_ENABLE_ACTIONS: "{{ true | quote }}"
+      DOZZLE_REMOTE_AGENT: dozzle.{{ lan_domain }}:7007,ansible.{{ lan_domain }}:7007,broker.{{ lan_domain }}:7007,fireflyiii.{{ lan_domain }}:7007,frigate.{{ lan_domain }}:7007,grocy.{{ lan_domain }}:7007,homebox.{{ lan_domain }}:7007,homepage.{{ lan_domain }}:7007,hortusfox.{{ lan_domain }}:7007,productivity.{{ lan_domain }}:7007,ollama.{{ lan_domain }}:7007,dozzle.{{ lan_domain }}:7007,uptimekuma.{{ lan_domain }}:7007,vaultwarden.{{ lan_domain }}:7007,whatsupdocker.{{ lan_domain }}:7007
     healthcheck:
       test: ["CMD", "/dozzle", "healthcheck"]
       interval: 3s

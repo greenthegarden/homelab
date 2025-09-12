@@ -50,7 +50,7 @@
       "value": "https://github.com/portainer/agent/releases/tag/${major}.${minor}.${patch}",
     }
 
-- name: deploy-portainer-agent | Create Portainer Agent network  # noqa: syntax-check[unknown-module]
+- name: deploy-portainer-agent | Create Portainer Agent network
   when: portainer_agent_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
