@@ -95,7 +95,7 @@
   loop: "{{ portainer_networks }}"
 
 - name: deploy-portainer | Create volume for Portainer
-  when: portainer_volume_name is defined
+  when: portainer_volume_name is defined and (portainer_volumes | length > 0)
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present

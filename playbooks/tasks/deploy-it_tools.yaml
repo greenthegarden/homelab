@@ -83,7 +83,7 @@
   loop: "{{ it_tools_networks }}"
 
 - name: deploy-it_tools | Create IT-Tools volume # noqa: syntax-check[unknown-module]
-  when: it_tools_volume_name is defined
+  when: it_tools_volume_name is defined and (it_tools_volumes | length > 0)
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present

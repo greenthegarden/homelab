@@ -21,6 +21,10 @@
   ansible.builtin.set_fact:
     portainer_agent_volume_name: "{{ portainer_agent_volume_name | default(portainer_agent_service_name) }}"
 
+- name: deploy-portainer-agent | Set Portainer Agent aggregated facts
+  ansible.builtin.set_fact:
+    portainer_agent_fqdn: "{{ portainer_agent_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
 - name: deploy-portainer-agent | Set Portainer Agent service facts
   ansible.builtin.set_fact:
     portainer_agent_networks:
@@ -28,13 +32,15 @@
     portainer_agent_ports:
       - "{{ portainer_agent_service_port }}:9001"
     portainer_agent_volumes: []
+      # Local paths to mount into the container
+      # local path:container path
 
 - name: deploy-portainer-agent | Log Portainer Agent configuration
   ansible.builtin.debug:
     msg:
       - "Portainer Agent image: {{ portainer_agent_image }}"
       - "Portainer Agent service name: {{ portainer_agent_service_name }}"
-      - "Portainer Agent FQDN: {{ portainer_agent_fqdn }}"
+      - "Portainer Agent FQDN: {{ portainer_agent_fqdn | default(omit) }}"
       - "Portainer Agent networks: {{ portainer_agent_networks | default(omit) }}"
       - "Portainer Agentt ports: {{ portainer_agent_ports | default(omit) }}"
       - "Portainer Agent volumes: {{ portainer_agent_volumes | default(omit) }}"
@@ -58,6 +64,14 @@
     internal: "{{ item.internal | default(false) }}"
     state: present
   loop: "{{ portainer_network_name }}"
+
+- name: deploy-portainer-agent | Create volume for Portainer Agent
+  when: portainer_agent_volume_name is defined and (portainer_agent_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ portainer_agent_volume_name }}"
 
 - name: deploy-portainer-agent | Pull Portainer Agent image
   community.docker.docker_image:
