@@ -58,7 +58,7 @@
   loop: "{{ dozzle_agent_networks }}"
 
 - name: deploy-dozzle-agent | Create volume for Dozzle Agent
-  when: dozzle_agent_volume_name is defined
+  when: dozzle_agent_volume_name is defined and (dozzle_agent_volumes | length > 0)
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
