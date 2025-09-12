@@ -3,23 +3,23 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
-####### paperless_ngx SECTION
+####### PAPERLESS-NGX SECTION
 
-# https://paperless_ngx.com/
-# https://github.com/paperless_ngx/paperless_ngx
-# https://hub.docker.com/r/paperless_ngx/paperless_ngx
+# https://docs.paperless-ngx.com/
+# https://github.com/paperless-ngx/paperless-ngx
+# https://hub.docker.com/r/paperlessngx/paperless-ngx
 
-- name: deploy-paperless-ngx | Set paperless_ngx facts
+- name: deploy-paperless-ngx | Set Paperless-ngx facts
   ansible.builtin.set_fact:
     paperless_ngx_image: "{{ paperless_ngx_image | default('ghcr.io/paperless-ngx/paperless-ngx:latest') }}"
     paperless_ngx_service_name: "{{ paperless_ngx_service_name | default('paperless-ngx') }}"
     paperless_ngx_service_port: "{{ paperless_ngx_service_port | default(8000) }}"
 
-- name: deploy-paperless-ngx | Set paperless_ngx network facts
+- name: deploy-paperless-ngx | Set Paperless-ngx network facts
   ansible.builtin.set_fact:
     paperless_ngx_network_name: "{{ paperless_ngx_network_name | default(paperless_ngx_service_name) }}"
 
-- name: deploy-paperless-ngx | Set paperless_ngx volume facts
+- name: deploy-paperless-ngx | Set Paperless-ngx volume facts
   ansible.builtin.set_fact:
     paperless_ngx_volume_data_name: "{{ paperless_ngx_volume_name | default(paperless_ngx_service_name + '-data') }}"
     paperless_ngx_volume_media_name: "{{ paperless_ngx_volume_name | default(paperless_ngx_service_name + '-media') }}"
@@ -30,7 +30,7 @@
   ansible.builtin.set_fact:
     paperless_ngx_fqdn: "{{ paperless_ngx_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
-- name: deploy-paperless-ngx | Set paperless_ngx service facts
+- name: deploy-paperless-ngx | Set Paperless-ngx service facts
   ansible.builtin.set_fact:
     paperless_ngx_networks:
       - { name: "{{ paperless_ngx_network_name }}" }
@@ -47,7 +47,7 @@
       - "{{ paperless_ngx_export_dir }}:/usr/src/paperless/export"
       - "{{ paperless_ngx_consume_dir }}:/usr/src/paperless/consume"
 
-- name: deploy-paperless-ngx | Log paperless_ngx configuration
+- name: deploy-paperless-ngx | Log Paperless-ngx configuration
   ansible.builtin.debug:
     msg:
       - "paperless_ngx image: {{ paperless_ngx_image }}"
@@ -82,20 +82,20 @@
     # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
-    - { "key": "homepage.name", "value": "paperless_ngx" }
-    - { "key": "homepage.description", "value": "Open source project management system" }
-    - { "key": "homepage.icon", "value": "paperless_ngx.png" }
+    - { "key": "homepage.name", "value": "Paperless-ngx" }
+    - { "key": "homepage.description", "value": "Open source document management system" }
+    - { "key": "homepage.icon", "value": "paperless-ngx.png" }
     - { "key": "homepage.href", "value": "https://{{ paperless_ngx_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ paperless_ngx_fqdn }}/" }
 
-- name: deploy-paperless-ngx | Create paperless_ngx networks # noqa: syntax-check[unknown-module]
+- name: deploy-paperless-ngx | Create Paperless-ngx networks # noqa: syntax-check[unknown-module]
   when: paperless_ngx_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
     state: present
   loop: "{{ paperless_ngx_networks }}"
 
-- name: deploy-paperless-ngx | Create paperless_ngx volumes # noqa: syntax-check[unknown-module]
+- name: deploy-paperless-ngx | Create Paperless-ngx volumes # noqa: syntax-check[unknown-module]
   when: paperless_ngx_volume_data_name is defined and paperless_ngx_volume_media_name is defined
   community.docker.docker_volume:
     name: "{{ item }}"
@@ -104,11 +104,11 @@
     - "{{ paperless_ngx_volume_data_name }}"
     - "{{ paperless_ngx_volume_media_name }}"
 
-- name: deploy-paperless-ngx | Create paperless_ngx mounts
+- name: deploy-paperless-ngx | Create Paperless-ngx mounts
   when: paperless_ngx_export_dir is defined and paperless_ngx_consume_dir is defined
   block:
 
-    - name: deploy-paperless-ngx | Create paperless_ngx mount directories
+    - name: deploy-paperless-ngx | Create Paperless-ngx mount directories
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
@@ -117,7 +117,7 @@
         - "{{ paperless_ngx_export_dir }}"
         - "{{ paperless_ngx_consume_dir }}"
 
-- name: deploy-paperless-ngx | Deploy Redis for paperless_ngx
+- name: deploy-paperless-ngx | Deploy Redis for Paperless-ngx
   when: paperless_ngx_redis_create | default(true)
   ansible.builtin.include_tasks:
     file: tasks/deploy-redis.yaml
@@ -128,37 +128,37 @@
     redis_network_name: "{{ paperless_ngx_network_name }}"
     redis_volume_name: "{{ paperless_ngx_service_name }}-redis"
 
-- name: deploy-paperless-ngx | Check if paperless_ngx is running
+- name: deploy-paperless-ngx | Check if Paperless-ngx is running
   community.docker.docker_container_info:
     name: "{{ paperless_ngx_service_name }}"
   register: paperless_ngx_state
 
-- name: deploy-paperless-ngx | Remove paperless_ngx container if changing version
+- name: deploy-paperless-ngx | Remove Paperless-ngx container if changing version
   when:
     - paperless_ngx_state.exists
     - (paperless_ngx_image | split(':') | last) != (paperless_ngx_state.container.Config.Image | split(':') | last)
   block:
 
-    - name: deploy-paperless-ngx | Stop and remove existing paperless_ngx container
+    - name: deploy-paperless-ngx | Stop and remove existing Paperless-ngx container
       community.docker.docker_container:
         name: "{{ paperless_ngx_service_name }}"
         state: absent
 
-    - name: deploy-paperless-ngx | Set update paperless_ngx
+    - name: deploy-paperless-ngx | Set update Paperless-ngx
       ansible.builtin.set_fact:
         paperless_ngx_update: true
 
-- name: deploy-paperless-ngx | Deploy paperless_ngx if not running
+- name: deploy-paperless-ngx | Deploy Paperless-ngx if not running
   when:
     - not paperless_ngx_state.exists or (paperless_ngx_update | default(false))
   block:
 
-    - name: deploy-paperless-ngx | Pull paperless_ngx image
+    - name: deploy-paperless-ngx | Pull Paperless-ngx image
       community.docker.docker_image:
         name: "{{ paperless_ngx_image }}"
         source: pull
 
-    - name: deploy-paperless-ngx | Deploy paperless_ngx
+    - name: deploy-paperless-ngx | Deploy Paperless-ngx
       community.docker.docker_container:
         name: "{{ paperless_ngx_service_name }}"
         image: "{{ paperless_ngx_image }}"
@@ -200,7 +200,7 @@
         volumes: "{{ default_host_volumes + paperless_ngx_volumes | default(omit) }}"
       register: paperless_ngx_container_state
 
-- name: deploy-paperless-ngx | Wait for paperless_ngx to accept connections
+- name: deploy-paperless-ngx | Wait for Paperless-ngx to accept connections
   ansible.builtin.wait_for:
     host: "{{ paperless_ngx_fqdn }}"
     port: 80
