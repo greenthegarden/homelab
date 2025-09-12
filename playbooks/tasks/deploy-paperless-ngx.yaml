@@ -112,7 +112,7 @@
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
-        mode: "0644"
+        mode: "0666"
       loop:
         - "{{ paperless_ngx_export_dir }}"
         - "{{ paperless_ngx_consume_dir }}"
@@ -169,8 +169,8 @@
           # The UID and GID of the user used to run paperless in the container. Set this
           # to your UID and GID on the host so that you have write access to the
           # consumption directory.
-          # USERMAP_UID=1000
-          # USERMAP_GID=1000
+          # USERMAP_UID: "{{ 0 | quote }}"
+          # USERMAP_GID: "{{ 0 | quote }}"
           # See the documentation linked above for all options. A few commonly adjusted settings
           # are provided below.
           # This is required if you will be exposing Paperless-ngx on a public domain
