@@ -123,7 +123,7 @@
     file: tasks/deploy-redis.yaml
   vars:
     redis_image: docker.io/library/redis:8
-    redis_service_name: 'redis'
+    redis_service_name: "{{ paperless_ngx_service_name }}-redis"
     redis_service_port: 6379
     redis_network_name: "{{ paperless_ngx_network_name }}"
     redis_volume_name: "{{ paperless_ngx_service_name }}-redis"
