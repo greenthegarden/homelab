@@ -37,6 +37,16 @@
       # Local paths to mount into the container
       # local path:container path
 
+- name: deploy-dozzle-agent | Log Dozzle Agent configuration
+  ansible.builtin.debug:
+    msg:
+      - "Dozzle Agent image: {{ dozzle_agent_image }}"
+      - "Dozzle Agent service name: {{ dozzle_agent_service_name }}"
+      - "Dozzle Agent FQDN: {{ dozzle_agent_fqdn }}"
+      - "Dozzle Agent networks: {{ dozzle_agent_networks | default(omit) }}"
+      - "Dozzle Agent ports: {{ dozzle_agent_ports | default(omit) }}"
+      - "Dozzle Agent volumes: {{ dozzle_agent_volumes | default(omit) }}"
+
 - name: deploy-dozzle-agent | Create Dozzle Agent container labels
   ansible.builtin.set_fact:
     dozzle_agent_container_labels: "{{ dozzle_agent_container_labels | default({}) | combine({item.key: item.value}) }}"
