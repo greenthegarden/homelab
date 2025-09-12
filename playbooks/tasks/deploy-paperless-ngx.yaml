@@ -169,8 +169,8 @@
           # The UID and GID of the user used to run paperless in the container. Set this
           # to your UID and GID on the host so that you have write access to the
           # consumption directory.
-          # USERMAP_UID: "{{ 0 | quote }}"
-          # USERMAP_GID: "{{ 0 | quote }}"
+          USERMAP_UID: "{{ 0 | quote }}"
+          USERMAP_GID: "{{ 0 | quote }}"
           # See the documentation linked above for all options. A few commonly adjusted settings
           # are provided below.
           # This is required if you will be exposing Paperless-ngx on a public domain
