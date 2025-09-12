@@ -1,0 +1,213 @@
+---
+- name: deploy-paperless-ngx | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### paperless_ngx SECTION
+
+# https://paperless_ngx.com/
+# https://github.com/paperless_ngx/paperless_ngx
+# https://hub.docker.com/r/paperless_ngx/paperless_ngx
+
+- name: deploy-paperless-ngx | Set paperless_ngx facts
+  ansible.builtin.set_fact:
+    paperless_ngx_image: "{{ paperless_ngx_image | default('ghcr.io/paperless-ngx/paperless-ngx:latest') }}"
+    paperless_ngx_service_name: "{{ paperless_ngx_service_name | default('paperless_ngx') }}"
+    paperless_ngx_service_port: "{{ paperless_ngx_service_port | default(8000) }}"
+
+- name: deploy-paperless-ngx | Set paperless_ngx network facts
+  ansible.builtin.set_fact:
+    paperless_ngx_network_name: "{{ paperless_ngx_network_name | default(paperless_ngx_service_name) }}"
+
+- name: deploy-paperless-ngx | Set paperless_ngx volume facts
+  ansible.builtin.set_fact:
+    paperless_ngx_volume_data_name: "{{ paperless_ngx_volume_name | default(paperless_ngx_service_name + '-data') }}"
+    paperless_ngx_volume_media_name: "{{ paperless_ngx_volume_name | default(paperless_ngx_service_name + '-media') }}"
+    paperless_ngx_export_dir: "{{ paperless_ngx_export_dir | default('/root/' + paperless_ngx_service_name + '/export') }}"
+    paperless_ngx_consume_dir: "{{ paperless_ngx_export_dir | default('/root/' + paperless_ngx_service_name + '/consume') }}"
+
+- name: deploy-paperless-ngx | Set paperless_ngx aggregated facts
+  ansible.builtin.set_fact:
+    paperless_ngx_fqdn: "{{ paperless_ngx_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-paperless-ngx | Set paperless_ngx service facts
+  ansible.builtin.set_fact:
+    paperless_ngx_networks:
+      - { name: "{{ paperless_ngx_network_name }}" }
+      - { name: "{{ web_network_name | default('web') }}" }
+    paperless_ngx_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ paperless_ngx_service_port }}:8000"
+    paperless_ngx_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ paperless_ngx_volume_data_name }}:/usr/src/paperless/data"
+      - "{{ paperless_ngx_volume_media_name }}:/usr/src/paperless/media"
+      - "{{ paperless_ngx_export_dir }}:/usr/src/paperless/export"
+      - "{{ paperless_ngx_consume_dir }}:/usr/src/paperless/consume"
+
+- name: deploy-paperless-ngx | Log paperless_ngx configuration
+  ansible.builtin.debug:
+    msg:
+      - "paperless_ngx image: {{ paperless_ngx_image }}"
+      - "paperless_ngx service name: {{ paperless_ngx_service_name }}"
+      - "paperless_ngx FQDN: {{ paperless_ngx_fqdn }}"
+      - "paperless_ngx networks: {{ paperless_ngx_networks | default(omit) }}"
+      - "paperless_ngx ports: {{ paperless_ngx_ports | default(omit) }}"
+      - "paperless_ngx volumes: {{ paperless_ngx_volumes | default(omit) }}"
+
+- name: deploy-paperless-ngx | Create paperless_ngx container labels
+  ansible.builtin.set_fact:
+    paperless_ngx_container_labels: "{{ paperless_ngx_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ paperless_ngx_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ paperless_ngx_service_name }}.rule",
+      "value": "Host(`{{ paperless_ngx_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/paperless-ngx/paperless-ngx/releases/tag/v${major}.${minor}.${patch}",
+    }
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "paperless_ngx" }
+    - { "key": "homepage.description", "value": "Open source project management system" }
+    - { "key": "homepage.icon", "value": "paperless_ngx.png" }
+    - { "key": "homepage.href", "value": "https://{{ paperless_ngx_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ paperless_ngx_fqdn }}/" }
+
+- name: deploy-paperless-ngx | Create paperless_ngx networks # noqa: syntax-check[unknown-module]
+  when: paperless_ngx_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ paperless_ngx_networks }}"
+
+- name: deploy-paperless-ngx | Create paperless_ngx volumes # noqa: syntax-check[unknown-module]
+  when: paperless_ngx_volume_data_name is defined and paperless_ngx_volume_media_name is defined
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ paperless_ngx_volume_data_name }}"
+    - "{{ paperless_ngx_volume_media_name }}"
+
+- name: deploy-paperless-ngx | Create paperless_ngx mounts
+  when: paperless_ngx_export_dir is defined and paperless_ngx_consume_dir is defined
+  block:
+
+    - name: deploy-paperless-ngx | Create paperless_ngx mount directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0644"
+      loop:
+        - "{{ paperless_ngx_export_dir }}"
+        - "{{ paperless_ngx_consume_dir }}"
+
+- name: deploy-paperless-ngx | Deploy Redis for paperless_ngx
+  when: paperless_ngx_redis_create | default(true)
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-redis.yaml
+  vars:
+    redis_image: docker.io/library/redis:8
+    redis_service_name: 'redis'
+    redis_service_port: 6379
+    redis_network_name: "{{ paperless_ngx_network_name }}"
+    redis_volume_name: "{{ paperless_ngx_service_name }}-redis"
+
+- name: deploy-paperless-ngx | Check if paperless_ngx is running
+  community.docker.docker_container_info:
+    name: "{{ paperless_ngx_service_name }}"
+  register: paperless_ngx_state
+
+- name: deploy-paperless-ngx | Remove paperless_ngx container if changing version
+  when:
+    - paperless_ngx_state.exists
+    - (paperless_ngx_image | split(':') | last) != (paperless_ngx_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-paperless-ngx | Stop and remove existing paperless_ngx container
+      community.docker.docker_container:
+        name: "{{ paperless_ngx_service_name }}"
+        state: absent
+
+    - name: deploy-paperless-ngx | Set update paperless_ngx
+      ansible.builtin.set_fact:
+        paperless_ngx_update: true
+
+- name: deploy-paperless-ngx | Deploy paperless_ngx if not running
+  when:
+    - not paperless_ngx_state.exists or (paperless_ngx_update | default(false))
+  block:
+
+    - name: deploy-paperless-ngx | Pull paperless_ngx image
+      community.docker.docker_image:
+        name: "{{ paperless_ngx_image }}"
+        source: pull
+
+    - name: deploy-paperless-ngx | Deploy paperless_ngx
+      community.docker.docker_container:
+        name: "{{ paperless_ngx_service_name }}"
+        image: "{{ paperless_ngx_image }}"
+        detach: true
+        env:
+          PAPERLESS_REDIS: "redis://{{ redis_service_name }}:{{ redis_service_port }}"
+          # See http://docs.paperless-ngx.com/configuration/ for all available options.
+          # The UID and GID of the user used to run paperless in the container. Set this
+          # to your UID and GID on the host so that you have write access to the
+          # consumption directory.
+          # USERMAP_UID=1000
+          # USERMAP_GID=1000
+          # See the documentation linked above for all options. A few commonly adjusted settings
+          # are provided below.
+          # This is required if you will be exposing Paperless-ngx on a public domain
+          # (if doing so please consider security measures such as reverse proxy)
+          PAPERLESS_URL: "https://{{ paperless_ngx_fqdn }}"
+          # Adjust this key if you plan to make paperless available publicly. It should
+          # be a very long sequence of random characters. You don't need to remember it.
+          # PAPERLESS_SECRET_KEY=change-me
+          # Use this variable to set a timezone for the Paperless Docker containers. Defaults to UTC.
+          PAPERLESS_TIME_ZONE: "{{ homelab.timezone | default('UTC') }}"
+          # The default language to use for OCR. Set this to the language most of your
+          # documents are written in.
+          # PAPERLESS_OCR_LANGUAGE=eng
+          # Additional languages to install for text recognition, separated by a whitespace.
+          # Note that this is different from PAPERLESS_OCR_LANGUAGE (default=eng), which defines
+          # the language used for OCR.
+          # The container installs English, German, Italian, Spanish and French by default.
+          # See https://packages.debian.org/search?keywords=tesseract-ocr-&searchon=names
+          # for available languages.
+          # PAPERLESS_OCR_LANGUAGES=tur ces
+        labels: "{{ paperless_ngx_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ paperless_ngx_networks | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + paperless_ngx_volumes | default(omit) }}"
+      register: paperless_ngx_container_state
+
+- name: deploy-paperless-ngx | Wait for paperless_ngx to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ paperless_ngx_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: paperless_ngx_running
+  retries: 10
+  until: paperless_ngx_running is success
