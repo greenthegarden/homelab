@@ -1,0 +1,146 @@
+---
+- name: deploy-mariadb | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+- name: deploy-mariadb | Ensure required MariaDB variables are set
+  ansible.builtin.assert:
+    that:
+      - mariadb_root_password is defined
+      - mariadb_database is defined
+      - mariadb_user is defined
+      - mariadb_password is defined
+    fail_msg: "One or more required Docmost variables are not defined! Please define them in your inventory or group_vars/host_vars."
+
+####### MARIADB SECTION
+
+# https://mariadb.org/
+# https://github.com/MariaDB/server
+# https://hub.docker.com/_/mariadb
+
+- name: deploy-mariadb | Set MariaDB facts
+  ansible.builtin.set_fact:
+    mariadb_image: "{{ mariadb_image | default('mariadb:latest') }}"
+    mariadb_service_name: "{{ mariadb_service_name | default('mariadb') }}"
+    mariadb_service_port: "{{ mariadb_service_port | default(3306) }}"
+
+- name: deploy-mariadb | Set MariaDB network facts
+  ansible.builtin.set_fact:
+    mariadb_network_name: "{{ mariadb_network_name | default(mariadb_service_name) }}"
+
+- name: deploy-mariadb | Set MariaDB volume facts
+  ansible.builtin.set_fact:
+    mariadb_volume_name: "{{ mariadb_volume_name | default(mariadb_service_name) }}"
+
+- name: deploy-mariadb | Set MariaDB aggregated facts
+  ansible.builtin.set_fact:
+    mariadb_fqdn: "{{ mariadb_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-mariadb | Set MariaDB service facts
+  ansible.builtin.set_fact:
+    mariadb_networks:
+      - { name: "{{ mariadb_network_name }}" }
+    mariadb_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ mariadb_service_port }}:3306"
+    mariadb_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ mariadb_volume_name }}:/mariadb/data"
+
+- name: deploy-mariadb | Log MariaDB configuration
+  ansible.builtin.debug:
+    msg:
+      - "MariaDB image: {{ mariadb_image }}"
+      - "MariaDB service name: {{ mariadb_service_name }}"
+      - "MariaDB FQDN: {{ mariadb_fqdn }}"
+      - "MariaDB networks: {{ mariadb_networks | default(omit) }}"
+      - "MariaDB ports: {{ mariadb_ports | default(omit) }}"
+      - "MariaDB volumes: {{ mariadb_volumes | default(omit) }}"
+
+- name: deploy-mariadb | Create MariaDB container labels
+  ansible.builtin.set_fact:
+    mariadb_container_labels: "{{ mariadb_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/mariadb/mariadb/releases/tag/mariadb-${major}.${minor}.${patch}",
+    }
+
+- name: deploy-mariadb | Create MariaDB networks
+  when: mariadb_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ mariadb_networks }}"
+
+- name: deploy-mariadb | Create MariaDB volumes
+  when: mariadb_volume_name is defined
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ mariadb_volume_name }}"
+
+- name: deploy-mariadb | Check if MariaDB is running
+  community.docker.docker_container_info:
+    name: "{{ mariadb_service_name }}"
+  register: mariadb_state
+
+- name: deploy-mariadb | Remove MariaDB container if changing version
+  when:
+    - mariadb_state.exists
+    - (mariadb_image | split(':') | last) != (mariadb_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-mariadb | Stop and remove existing mariadb container
+      community.docker.docker_container:
+        name: "{{ mariadb_service_name }}"
+        state: absent
+
+    - name: deploy-mariadb | Set update MariaDB
+      ansible.builtin.set_fact:
+        mariadb_update: true
+
+- name: deploy-mariadb | Deploy MariaDB if not running
+  when:
+    - not mariadb_state.exists or (mariadb_update | default(false))
+  block:
+
+    - name: deploy-mariadb | Pull MariaDB image
+      community.docker.docker_image:
+        name: "{{ mariadb_image }}"
+        source: pull
+
+    - name: deploy-mariadb | Deploy MariaDB
+      community.docker.docker_container:
+        name: "{{ mariadb_service_name }}"
+        image: "{{ mariadb_image }}"
+        command: "{{ mariadb_args | default(omit) }}"
+        detach: true
+        env:
+          MYSQL_ROOT_PASSWORD: "{{ mariadb_root_password | default('dummy') }}"
+          MYSQL_DATABASE: "{{ mariadb_database | default(mariadb_service_name) }}"
+          MYSQL_USER: "{{ mariadb_user | default(mariadb_service_name) }}"
+          MYSQL_PASSWORD: "{{ mariadb_password | default('dummy') }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        healthcheck:
+          test: ["CMD", "mariadbadmin", "ping", "-h", "localhost"]
+          interval: 30s
+          timeout: 10s
+          retries: 3
+          start_period: 5s
+        labels: "{{ mariadb_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ mariadb_networks | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + mariadb_volumes | default(omit) }}"
+      register: mariadb_container_state

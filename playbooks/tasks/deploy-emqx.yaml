@@ -17,6 +17,10 @@
     emqx_service_port_api: "{{ emqx_service_port_api | default(18083) }}"
     emqx_service_port_mqtt: "{{ emqx_service_port_mqtt | default(1883) }}"
 
+- name: deploy-emqx | Set EMQX network facts
+  ansible.builtin.set_fact:
+    emqx_network_name: "{{ emqx_network_name | default(emqx_service_name) }}"
+
 - name: deploy-emqx | Set EMQX volume facts
   ansible.builtin.set_fact:
     emqx_volume_data_name: "{{ emqx_volume_data_name | default(emqx_service_name) }}"
@@ -64,8 +68,8 @@
 - name: deploy-emqx | Set EMQX service facts
   ansible.builtin.set_fact:
     emqx_networks:
-      - name: "{{ broker_network_name | default('broker') }}"
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ emqx_network_name }}" }
+      - { name: "{{ web_network_name | default('web') }}" }
     emqx_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -126,14 +130,16 @@
     - { "key": "homepage.href", "value": "https://{{ emqx_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ emqx_fqdn }}/" }
 
-- name: deploy-emqx | Create EMQX networks # noqa: syntax-check[unknown-module]
+- name: deploy-emqx | Create EMQX networks
   when: emqx_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
     state: present
   loop: "{{ emqx_networks }}"
 
-- name: deploy-emqx | Create EMQX volumes # noqa: syntax-check[unknown-module]
+- name: deploy-emqx | Create EMQX volumes
   when: emqx_volume_data_name is defined and emqx_volume_logs_name is defined
   community.docker.docker_volume:
     name: "{{ item }}"
