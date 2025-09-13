@@ -7,7 +7,7 @@
 
     # Stirling-PDF facts
     # renovate: datasource=docker depName=stirlingtools/stirling-pdf
-    stirling_pdf_image: stirlingtools/stirling-pdf:0.23.1
+    stirling_pdf_image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:1.3.2
 
   tasks:
 

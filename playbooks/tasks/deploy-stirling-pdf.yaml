@@ -11,7 +11,7 @@
 
 - name: deploy-stirling-pdf | Set Stirling-PDF facts
   ansible.builtin.set_fact:
-    stirling_pdf_image: "{{ stirling_pdf_image | default('stirling_pdf/stirling_pdf:latest') }}"
+    stirling_pdf_image: "{{ stirling_pdf_image | default('docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest') }}"
     stirling_pdf_service_name: "{{ stirling_pdf_service_name | default('stirling-pdf') }}"
     stirling_pdf_service_port: "{{ stirling_pdf_service_port | default(8080) }}"
 
@@ -103,7 +103,10 @@
     name: "{{ item }}"
     state: present
   loop:
-    - "{{ stirling_pdf_volume_name }}"
+    - "{{ stirling_pdf_volume_extraconfigs_name }}"
+    - "{{ stirling_pdf_volume_customfiles_name }}"
+    - "{{ stirling_pdf_volume_logs_name }}"
+    - "{{ stirling_pdf_volume_pipeline_name }}"
 
 - name: deploy-stirling-pdf | Check if Stirling-PDF is running
   community.docker.docker_container_info:
