@@ -6,7 +6,7 @@
   vars:
 
     # Docmost facts
-    # renovate: datasource=docker depName=edocmost/docmost
+    # renovate: datasource=docker depName=docmost/docmost
     docmost_image: docmost/docmost:0.23.1
 
   tasks:
