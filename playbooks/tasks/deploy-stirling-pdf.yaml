@@ -1,0 +1,166 @@
+---
+- name: deploy-stirling-pdf | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### STIRLING_PDF SECTION
+
+# https://www.stirlingpdf.com/
+# https://github.com/Stirling-Tools/Stirling-PDF
+# https://hub.docker.com/r/stirlingtools/stirling-pdf
+
+- name: deploy-stirling-pdf | Set Stirling-PDF facts
+  ansible.builtin.set_fact:
+    stirling_pdf_image: "{{ stirling_pdf_image | default('stirling_pdf/stirling_pdf:latest') }}"
+    stirling_pdf_service_name: "{{ stirling_pdf_service_name | default('stirling-pdf') }}"
+    stirling_pdf_service_port: "{{ stirling_pdf_service_port | default(8080) }}"
+
+- name: deploy-stirling-pdf | Set Stirling-PDF network facts
+  ansible.builtin.set_fact:
+    stirling_pdf_network_name: "{{ stirling_pdf_network_name | default(stirling_pdf_service_name) }}"
+
+- name: deploy-stirling-pdf | Set Stirling-PDF volume facts
+  ansible.builtin.set_fact:
+    stirling_pdf_volume_extraconfigs_name: "{{ stirling_pdf_volume_extraconfigs_name | default(stirling_pdf_service_name + '-extraConfigs') }}"
+    stirling_pdf_volume_customfiles_name: "{{ stirling_pdf_volume_pipeline_name | default(stirling_pdf_service_name + '-customFiles') }}"
+    stirling_pdf_volume_logs_name: "{{ stirling_pdf_volume_logs_name | default(stirling_pdf_service_name + '-logs') }}"
+    stirling_pdf_volume_pipeline_name: "{{ stirling_pdf_volume_pipeline_name | default(stirling_pdf_service_name + '-pipeline') }}"
+
+- name: deploy-stirling-pdf | Set Stirling-PDF aggregated facts
+  ansible.builtin.set_fact:
+    stirling_pdf_fqdn: "{{ stirling_pdf_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-stirling-pdf | Set Stirling-PDF service facts
+  ansible.builtin.set_fact:
+    stirling_pdf_networks:
+      - { name: "{{ stirling_pdf_network_name }}" }
+      - { name: "{{ web_network_name | default('web') }}" }
+    stirling_pdf_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ stirling_pdf_service_port }}:8080"
+    stirling_pdf_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ stirling_pdf_volume_extraconfigs_name }}:/configs"
+      - "{{ stirling_pdf_volume_customfiles_name }}:/customFiles"
+      - "{{ stirling_pdf_volume_logs_name }}:/logs"
+      - "{{ stirling_pdf_volume_pipeline_name }}:/pipeline"
+
+- name: deploy-stirling-pdf | Log Stirling-PDF configuration
+  ansible.builtin.debug:
+    msg:
+      - "Stirling_pdf image: {{ stirling_pdf_image }}"
+      - "Stirling_pdf service name: {{ stirling_pdf_service_name }}"
+      - "Stirling_pdf FQDN: {{ stirling_pdf_fqdn }}"
+      - "Stirling_pdf networks: {{ stirling_pdf_networks | default(omit) }}"
+      - "Stirling_pdf ports: {{ stirling_pdf_ports | default(omit) }}"
+      - "Stirling_pdf volumes: {{ stirling_pdf_volumes | default(omit) }}"
+
+- name: deploy-stirling-pdf | Create Stirling-PDF container labels
+  ansible.builtin.set_fact:
+    stirling_pdf_container_labels: "{{ stirling_pdf_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ stirling_pdf_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ stirling_pdf_service_name }}.rule",
+      "value": "Host(`{{ stirling_pdf_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/stirling_pdf/stirling_pdf/releases/tag/v${major}.${minor}.${patch}",
+    }
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Stirling_pdf" }
+    - { "key": "homepage.description", "value": "Open source project management system" }
+    - { "key": "homepage.icon", "value": "stirling_pdf.png" }
+    - { "key": "homepage.href", "value": "https://{{ stirling_pdf_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ stirling_pdf_fqdn }}/" }
+
+- name: deploy-stirling-pdf | Create Stirling-PDF networks
+  when: stirling_pdf_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ stirling_pdf_networks }}"
+
+- name: deploy-stirling-pdf | Create Stirling-PDF volumes
+  when: stirling_pdf_volume_name is defined
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ stirling_pdf_volume_name }}"
+
+- name: deploy-stirling-pdf | Check if Stirling-PDF is running
+  community.docker.docker_container_info:
+    name: "{{ stirling_pdf_service_name }}"
+  register: stirling_pdf_state
+
+- name: deploy-stirling-pdf | Remove Stirling-PDF container if changing version
+  when:
+    - stirling_pdf_state.exists
+    - (stirling_pdf_image | split(':') | last) != (stirling_pdf_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-stirling-pdf | Stop and remove existing Stirling-PDF container
+      community.docker.docker_container:
+        name: "{{ stirling_pdf_service_name }}"
+        state: absent
+
+    - name: deploy-stirling-pdf | Set update Stirling-PDF
+      ansible.builtin.set_fact:
+        stirling_pdf_update: true
+
+- name: deploy-stirling-pdf | Deploy Stirling-PDF if not running
+  when:
+    - not stirling_pdf_state.exists or (stirling_pdf_update | default(false))
+  block:
+
+    - name: deploy-stirling-pdf | Pull Stirling-PDF image
+      community.docker.docker_image:
+        name: "{{ stirling_pdf_image }}"
+        source: pull
+
+    - name: deploy-stirling-pdf | Deploy Stirling-PDF
+      community.docker.docker_container:
+        name: "{{ stirling_pdf_service_name }}"
+        image: "{{ stirling_pdf_image }}"
+        detach: true
+        env:
+          DISABLE_ADDITIONAL_FEATURES: "true"
+          LANGS: "en_GB"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ stirling_pdf_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ stirling_pdf_networks | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + stirling_pdf_volumes | default(omit) }}"
+      register: stirling_pdf_container_state
+
+- name: deploy-stirling-pdf | Wait for Stirling-PDF to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ stirling_pdf_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: stirling_pdf_running
+  retries: 10
+  until: stirling_pdf_running is success

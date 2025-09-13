@@ -1,0 +1,20 @@
+---
+- name: Deploy Stirling-PDF
+
+  hosts: productivity
+
+  vars:
+
+    # Stirling-PDF facts
+    # renovate: datasource=docker depName=stirlingtools/stirling-pdf
+    stirling_pdf_image: stirlingtools/stirling-pdf:0.23.1
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Stirling-PDF
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-stirling-pdf.yaml
