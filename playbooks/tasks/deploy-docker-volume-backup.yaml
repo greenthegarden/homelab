@@ -21,16 +21,19 @@
 
     # https://offen.github.io/docker-volume-backup/
 
-    - name: deploy-docker-volume-backup | Set Global facts
-      ansible.builtin.set_fact:
-        docker_volume_backup_local_backups_dir: "{{ docker_volume_backup_local_backups_dir | default('/tmp/backups') }}"
+    # - name: deploy-docker-volume-backup | Set Global facts
+    #   ansible.builtin.set_fact:
+    #     docker_volume_backup_local_backups_dir: "{{ docker_volume_backup_local_backups_dir | default('/tmp/backups') }}"
 
     - name: deploy-docker-volume-backup | Set Docker Volume Backup facts
       ansible.builtin.set_fact:
         docker_volume_backup_image: "{{ docker_volume_backup_image | default('offen/docker-volume-backup:latest') }}"
         docker_volume_backup_service_name: "{{ docker_volume_backup_service_name | default('docker-volume-backup') }}"
-        docker_volume_backup_config_dir: /root/docker-volume-backup
         docker_volume_backup_backup_label: "{{ docker_volume_backup_backup_label | default('') }}"
+
+    - name: deploy-docker-volume-backup | Set Docker Volume Backup network facts
+      ansible.builtin.set_fact:
+        docker_volume_backup_network_name: "{{ docker_volume_backup_network_name | default(docker_volume_backup_service_name) }}"
 
     - name: deploy-docker-volume-backup | Set Docker Volume Backup aggregated facts
       ansible.builtin.set_fact:
@@ -39,13 +42,26 @@
     - name: deploy-docker-volume-backup | Set Docker Volume Backup service facts
       ansible.builtin.set_fact:
         docker_volume_backup_networks:
-          - name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}"
+          - { name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}" }
+        docker_volume_backup_mounts:
+          docker_volume_backup_config_dir: "{{ docker_volume_backup_config_dir | default('/root/' + docker_volume_backup_service_name) }}"
+          docker_volume_backup_local_backups_dir: "{{ docker_volume_backup_local_backups_dir | default('/tmp/backups') }}"
         docker_volume_backup_volumes:
           - "{{ docker_volume_backup_local_backups_dir }}:/archive"
 
     - name: deploy-docker-volume-backup | Add volume to backup to Docker Volume Backup volumes
       ansible.builtin.set_fact:
         docker_volume_backup_volumes: "{{ docker_volume_backup_volumes + docker_volume_backup_volume_to_backup }}"
+
+    - name: deploy-docker-volume-backup | Log Docker Volume Backup configuration
+      ansible.builtin.debug:
+        msg:
+          - "Docker Volume Backup image: {{ homepage_image }}"
+          - "Docker Volume Backup service name: {{ homepage_service_name }}"
+          - "Docker Volume Backup FQDN: {{ homepage_fqdn }}"
+          - "Docker Volume Backup networks: {{ homepage_networks | default(omit) }}"
+          - "Docker Volume Backup ports: {{ homepage_ports | default(omit) }}"
+          - "Docker Volume Backup volumes: {{ homepage_volumes | default(omit) }}"
 
     - name: deploy-docker-volume-backup | Create Docker Volume Backup container labels
       ansible.builtin.set_fact:
@@ -58,26 +74,30 @@
           "value": "https://github.com/offen/docker-volume-backup/releases/tag/v${major}.${minor}.${patch}",
         }
 
-    - name: deploy-docker-volume-backup | Create Docker Volume Backup local archive directory
-      ansible.builtin.file:
-        path: "{{ docker_volume_backup_local_backups_dir }}"
-        mode: "0644"
-        state: directory
-      register: local_archive_directory_creation
+    - name: deploy-docker-volume-backup | Create Docker Volume Backup mount directories and configuration
+      when: docker_volume_backup_local_backups_dir is defined and docker_volume_backup_config_dir is defined
+      block:
 
-    - name: deploy-docker-volume-backup | Create Docker Volume Backup configuration directory
-      ansible.builtin.file:
-        path: "{{ docker_volume_backup_config_dir }}"
-        mode: "0644"
-        state: directory
-      register: docker_volume_backup_configuration_creation
+        - name: deploy-docker-volume-backup | Create Docker Volume Backup local archive directory
+          ansible.builtin.file:
+            path: "{{ docker_volume_backup_local_backups_dir }}"
+            mode: "0644"
+            state: directory
+          register: local_archive_directory_creation
 
-    - name: deploy-docker-volume-backup | Create Docker Volume Backup configuration
-      ansible.builtin.template:
-        src: templates/docker-volume-backup/docker-volume-backup.env.j2
-        dest: "{{ docker_volume_backup_config_dir }}/docker-volume-backup.env"
-        mode: "0644"
-      register: docker_volume_backup_configuration_creation
+        - name: deploy-docker-volume-backup | Create Docker Volume Backup configuration directory
+          ansible.builtin.file:
+            path: "{{ docker_volume_backup_config_dir }}"
+            mode: "0644"
+            state: directory
+          register: docker_volume_backup_configuration_creation
+
+        - name: deploy-docker-volume-backup | Create Docker Volume Backup configuration
+          ansible.builtin.template:
+            src: templates/docker-volume-backup/docker-volume-backup.env.j2
+            dest: "{{ docker_volume_backup_config_dir }}/docker-volume-backup.env"
+            mode: "0644"
+          register: docker_volume_backup_configuration_creation
 
     - name: deploy-docker-volume-backup | Pull Docker Volume Backup image
       community.docker.docker_image:
@@ -89,13 +109,13 @@
         name: "{{ docker_volume_backup_service_name }}"
         image: "{{ docker_volume_backup_image }}"
         env_file: "{{ docker_volume_backup_config_dir }}/docker-volume-backup.env"
-        labels: "{{ docker_volume_backup_container_labels }}"
-        networks: "{{ docker_volume_backup_networks }}"
+        labels: "{{ docker_volume_backup_container_labels | default(omit) }}"
+        networks: "{{ docker_volume_backup_networks | default(omit) }}"
         recreate: true # Recreate to ensure env changes are used
         restart: true
         restart_policy: always
         security_opts:
           - no-new-privileges=true
         state: started
-        volumes: "{{ docker_volume_backup_volumes + default_host_volumes }}"
+        volumes: "{{ default_host_volumes + docker_volume_backup_volumes | default(omit) }}"
       register: docker_volume_backup_container_state

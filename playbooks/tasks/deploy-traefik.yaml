@@ -3,6 +3,8 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+####### TRAEFIK SECTION
+
 # https://stackoverflow.com/questions/58554731/traefik-v2-0-metrics-with-prometheus
 # https://doc.traefik.io/traefik/reference/static-configuration/env/
 # https://medium.com/@joshuaavalon/setup-traefik-v2-step-by-step-fae44ed8f76d
@@ -16,7 +18,14 @@
     traefik_service_port_http: "{{ traefik_service_port_http | default(80) }}"
     traefik_service_port_https: "{{ traefik_service_port_https | default(443) }}"
     traefik_provider: "{{ traefik_provider | default('docker') }}"
-    traefik_letsencrypt_dir: /root/letsencrypt
+
+- name: deploy-traefik | Set Traefik network facts
+  ansible.builtin.set_fact:
+    traefik_network_name: "{{ traefik_network_name | default(traefik_service_name) }}"
+
+- name: deploy-traefik | Set Traefik volume facts
+  ansible.builtin.set_fact:
+    traefik_letsencrypt_dir: "{{ traefik_letsencrypt_dir | default('/root/' + 'letsencrypt') }}"
 
 - name: deploy-traefik | Set Traefik aggregated facts
   ansible.builtin.set_fact:
@@ -123,6 +132,17 @@
       # local path:container path
       - "{{ traefik_letsencrypt_dir }}:/letsencrypt:rw"
 
+- name: deploy-traefik | Log Traefik configuration
+  ansible.builtin.debug:
+    msg:
+      - "Traefik image: {{ traefik_image }}"
+      - "Traefik service name: {{ traefik_service_name }}"
+      - "Traefik FQDN: {{ traefik_fqdn }}"
+      - "Traefik command: {{ traefik_command | default(omit) }}"
+      - "Traefik networks: {{ traefik_networks | default(omit) }}"
+      - "Traefik ports: {{ traefik_ports | default(omit) }}"
+      - "Traefik volumes: {{ traefik_volumes | default(omit) }}"
+
 - name: deploy-traefik | Create Traefik container labels
   ansible.builtin.set_fact:
     traefik_container_labels: "{{ traefik_container_labels | default({}) | combine({item.key: item.value}) }}"
@@ -171,19 +191,23 @@
       "value": "https://github.com/traefik/traefik/releases/tag/v${major}.${minor}.${patch}",
     }
 
-- name: deploy-traefik | Create acme directory
-  ansible.builtin.file:
-    path: "{{ traefik_letsencrypt_dir }}"
-    mode: "644"
-    state: directory
-  register: acme_directory_creation
+- name: deploy-traefik | Create acme configuration
+  when: traefik_letsencrypt_dir is defined
+  block:
 
-- name: deploy-traefik | Create acme configuration file
-  ansible.builtin.file:
-    path: "{{ traefik_letsencrypt_dir }}/acme.json"
-    state: touch
-    mode: "600"
-  register: acme_configuration_creation
+    - name: deploy-traefik | Create acme configuration directory
+      ansible.builtin.file:
+        path: "{{ traefik_letsencrypt_dir }}"
+        mode: "644"
+        state: directory
+      register: acme_directory_creation
+
+    - name: deploy-traefik | Create acme configuration file
+      ansible.builtin.file:
+        path: "{{ traefik_letsencrypt_dir }}/acme.json"
+        state: touch
+        mode: "600"
+      register: acme_configuration_creation
 
 - name: deploy-traefik | Pull image
   community.docker.docker_image:

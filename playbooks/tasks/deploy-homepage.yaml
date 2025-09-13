@@ -36,15 +36,15 @@
       # local path:container path
       - "{{ homepage_config_dir }}:/app/config"
 
-- name: deploy-homepage | Log homepage configuration
+- name: deploy-homepage | Log Homepage configuration
   ansible.builtin.debug:
     msg:
-      - "homepage image: {{ homepage_image }}"
-      - "homepage service name: {{ homepage_service_name }}"
-      - "homepage FQDN: {{ homepage_fqdn }}"
-      - "homepage networks: {{ homepage_networks | default(omit) }}"
-      - "homepage ports: {{ homepage_ports | default(omit) }}"
-      - "homepage volumes: {{ homepage_volumes | default(omit) }}"
+      - "Homepage image: {{ homepage_image }}"
+      - "Homepage service name: {{ homepage_service_name }}"
+      - "Homepage FQDN: {{ homepage_fqdn }}"
+      - "Homepage networks: {{ homepage_networks | default(omit) }}"
+      - "Homepage ports: {{ homepage_ports | default(omit) }}"
+      - "Homepage volumes: {{ homepage_volumes | default(omit) }}"
 
 - name: deploy-homepage | Create Homepage container labels
   ansible.builtin.set_fact:
