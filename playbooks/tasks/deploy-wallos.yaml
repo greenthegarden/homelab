@@ -1,0 +1,136 @@
+---
+- name: deploy-wallos | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### WALLOS SECTION
+
+# https://wallos.dev/guide/getting-started
+
+- name: deploy-wallos | Set wallos facts
+  ansible.builtin.set_fact:
+    wallos_image: "{{ wallos_image | default('bellamy/wallos:latest') }}"
+    wallos_service_name: "{{ wallos_service_name | default('wallos') }}"
+    wallos_service_port: "{{ wallos_service_port | default(8282) }}"
+
+- name: deploy-wallos | Set wallos network facts
+  ansible.builtin.set_fact:
+    wallos_network_name: "{{ wallos_network_name | default(wallos_service_name) }}"
+
+- name: deploy-wallos | Set wallos volume facts
+  ansible.builtin.set_fact:
+    wallos_volume_data_name: "{{ wallos_volume_data_name | default(wallos_service_name + '-data') }}"
+    wallos_volume_logos_name: "{{ wallos_volume_logos_name | default(wallos_service_name + '-logos') }}"
+
+- name: deploy-wallos | Set wallos aggregated facts
+  ansible.builtin.set_fact:
+    wallos_fqdn: "{{ wallos_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-wallos | Set wallos service facts
+  ansible.builtin.set_fact:
+    wallos_networks:
+      - { name: "{{ web_network_name | default('web') }}" }
+    wallos_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ wallos_service_port }}:80"
+    wallos_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ wallos_volume_data_name }}:/var/www/html/db"
+      - "{{ wallos_volume_logos_name }}:/var/www/html/images/uploads/logos"
+
+- name: deploy-wallos | Log wallos configuration
+  ansible.builtin.debug:
+    msg:
+      - "wallos image: {{ wallos_image }}"
+      - "wallos service name: {{ wallos_service_name }}"
+      - "wallos FQDN: {{ wallos_fqdn }}"
+      - "wallos networks: {{ wallos_networks | default(omit) }}"
+      - "wallos ports: {{ wallos_ports | default(omit) }}"
+      - "wallos volumes: {{ wallos_volumes | default(omit) }}"
+
+- name: deploy-wallos | Create wallos container labels
+  ansible.builtin.set_fact:
+    wallos_container_labels: "{{ wallos_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ wallos_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ wallos_service_name }}.rule",
+      "value": "Host(`{{ wallos_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/ellite/Wallos/releases/tag/v${major}.${minor}.${patch}",
+    }
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Wallos" }
+    - {
+      "key": "homepage.description",
+      "value": "Subscriptions management",
+    }
+    - { "key": "homepage.icon", "value": "wallos.png" }
+    - { "key": "homepage.href", "value": "https://{{ wallos_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ wallos_fqdn }}/" }
+
+- name: deploy-wallos | Create wallos network
+  when: wallos_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ wallos_networks }}"
+
+- name: deploy-wallos | Create volume for wallos
+  when: wallos_volume_data_name is defined and wallos_volume_logos_name is defined and (wallos_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ wallos_volume_data_name }}"
+    - "{{ wallos_volume_logos_name }}"
+
+- name: deploy-wallos | Pull wallos image
+  community.docker.docker_image:
+    name: "{{ wallos_image }}"
+    source: pull
+
+- name: deploy-wallos | Deploy wallos
+  community.docker.docker_container:
+    name: "{{ wallos_service_name }}"
+    image: "{{ wallos_image }}"
+    detach: true
+    env:
+      TZ: "{{ homelab.timezone | default('UTC') }}"
+    labels: "{{ wallos_container_labels | default(omit) }}"
+    networks_cli_compatible: true
+    networks: "{{ wallos_networks | default(omit) }}"
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    volumes: "{{ default_host_volumes + wallos_volumes | default(omit) }}"
+  register: wallos_container_state
+
+- name: deploy-wallos | Wait for wallos to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ wallos_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: wallos_running
+  until: wallos_running is success
+  retries: 10

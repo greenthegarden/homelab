@@ -1,0 +1,31 @@
+---
+
+- name: Deploy Wallos
+
+  hosts: fireflyiii
+
+  vars:
+
+    # Wallos facts
+    # renovate: datasource=docker depName=walloslabs/wallos
+    wallos_image: bellamy/wallos:4.1.1
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Wallos
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-wallos.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      when: false # Temporarily disable for testing
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_volume_to_backup:
+          - "{{ wallos_db_backup_volume_name }}:/backup/wallos-backup:ro"
+        docker_volume_backup_backup_label: "{{ wallos_service_name }}-db"
+        docker_volume_backup_backup_retention_days: 7
