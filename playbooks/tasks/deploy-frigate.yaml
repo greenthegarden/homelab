@@ -110,6 +110,8 @@
   when: frigate_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
     state: present
   loop: "{{ frigate_networks }}"
 

@@ -7,7 +7,7 @@
 
     # Docmost facts
     # renovate: datasource=docker depName=edocmost/docmost
-    docmost_image: docmost/docmost:0.23.0
+    docmost_image: docmost/docmost:0.23.1
 
   tasks:
 
