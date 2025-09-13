@@ -82,9 +82,9 @@
     # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
-    - { "key": "homepage.name", "value": "Stirling_pdf" }
-    - { "key": "homepage.description", "value": "Open source project management system" }
-    - { "key": "homepage.icon", "value": "stirling_pdf.png" }
+    - { "key": "homepage.name", "value": "Stirling-PDF" }
+    - { "key": "homepage.description", "value": "Self-hosted PDF Application" }
+    - { "key": "homepage.icon", "value": "stirling-pdf.png" }
     - { "key": "homepage.href", "value": "https://{{ stirling_pdf_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ stirling_pdf_fqdn }}/" }
 
