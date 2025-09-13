@@ -34,7 +34,7 @@
     homepage_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ homepage_config_dir }}/config:/app/config"
+      - "{{ homepage_config_dir }}:/app/config"
 
 - name: deploy-homepage | Log homepage configuration
   ansible.builtin.debug:
