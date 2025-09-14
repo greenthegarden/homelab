@@ -12,5 +12,4 @@
     tag: "{{ item.tag }}"
     load_path: "/tmp/{{ item.name }}.tar"
     source: load
-    mode: "0644"
     state: present
