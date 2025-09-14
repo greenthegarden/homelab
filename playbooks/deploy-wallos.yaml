@@ -8,7 +8,7 @@
 
     # Wallos facts
     # renovate: datasource=docker depName=walloslabs/wallos
-    wallos_image: bellamy/wallos:4.1.1
+    wallos_image: bellamy/wallos:4.2.0
 
   tasks:
 
