@@ -3,15 +3,25 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
-- name: deploy-docker-socket-proxy | Set default for use_docker_socket_proxy_rw
+- name: deploy-docker-socket-proxy | Set Docker Socket Proxy configuration facts
   ansible.builtin.set_fact:
-    use_docker_socket_proxy_rw: "{{ use_docker_socket_proxy_rw | default(false) }}"
+    configure_for_docker_volume_backup: "{{ configure_for_docker_volume_backup | default(false) }}"
+
+####### DOCKER-SOCKET-PROXY SECTION
 
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy facts
   ansible.builtin.set_fact:
     docker_socket_proxy_image: "{{ docker_socket_proxy_image | default('ghcr.io/tecnativa/docker-socket-proxy:latest') }}"
-    docker_socket_proxy_service_name: "{{ docker_socket_proxy_service_name | default('docker-socket-proxy') }}{{ '-rw' if use_docker_socket_proxy_rw }}"
+    docker_socket_proxy_service_name: "{{ docker_socket_proxy_service_name | default('docker-socket-proxy') }}"
     docker_socket_proxy_service_port: "{{ docker_socket_proxy_service_port | default(2375) }}"
+
+- name: deploy-docker-socket-proxy | Set Docker Socket Proxy network facts
+  ansible.builtin.set_fact:
+    docker_socket_proxy_network_name: "{{ docker_socket_proxy_network_name | default(docker_socket_proxy_service_name) }}"
+
+- name: deploy-docker-socket-proxy | Set Docker Socket Proxy volume facts
+  ansible.builtin.set_fact:
+    docker_socket_proxy_volume_name: "{{ docker_socket_proxy_volume_name | default(docker_socket_proxy_service_name) }}"
 
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy aggregated facts
   ansible.builtin.set_fact:
@@ -20,13 +30,20 @@
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy service facts
   ansible.builtin.set_fact:
     docker_socket_proxy_networks:
-      - name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}{{ '-rw' if use_docker_socket_proxy_rw }}"
+      - name: "{{ docker_socket_proxy_network_name }}"
     docker_socket_proxy_ports:
       - "{{ docker_socket_proxy_service_port }}:2375/tcp"
+    docker_socket_proxy_volumes: []
 
-- name: deploy-docker-socket-proxy | Set Docker Socket Proxy configuration facts
-  ansible.builtin.set_fact:
-    configure_for_docker_volume_backup: "{{ configure_for_docker_volume_backup | default(false) }}"
+- name: deploy-docker-socket-proxy | Log Docker Socket Proxy configuration
+  ansible.builtin.debug:
+    msg:
+      - "Docker Socket Proxy image: {{ docker_socket_proxy_image }}"
+      - "Docker Socket Proxy service name: {{ docker_socket_proxy_service_name }}"
+      - "Docker Socket Proxy FQDN: {{ docker_socket_proxy_fqdn }}"
+      - "Docker Socket Proxy networks: {{ docker_socket_proxy_networks | default(omit) }}"
+      - "Docker Socket Proxy ports: {{ docker_socket_proxy_ports | default(omit) }}"
+      - "Docker Socket Proxy volumes: {{ docker_socket_proxy_volumes | default(omit) }}"
 
 - name: deploy-docker-socket-proxy | Create Docker Socket Proxy container labels
   ansible.builtin.set_fact:
@@ -66,22 +83,22 @@
       BUILD: "0"
       COMMIT: "0"
       CONFIGS: "0"
-      CONTAINERS: "1" # Allow access to viewing containers (Traefik, Portainer, Docker Volume Backup.)
+      CONTAINERS: "1" # Allow access to viewing containers (Traefik, Homepage, WUD, Docker Volume Backup.)
       DISTRIBUTION: "0"
       EXEC: "{{ 1 if configure_for_docker_volume_backup else 0 | quote }}" # Allow access for Docker Volume Backup to execute commands
-      IMAGES: "1" # Allow access to viewing images (Portainer)
-      INFO: "1" # Allow access to viewing info (Portainer, Docker Volume Backup)
-      NETWORKS: "1" # Allow access to viewing networks (Portainer)
+      IMAGES: "0"
+      INFO: "0"
+      NETWORKS: "0"
       NODES: "{{ 1 if configure_for_docker_volume_backup else 0 | quote }}" # Allow access for Docker Volume Backup to stop containers
       PLUGINS: "0"
-      SERVICES: "1" # Allow access to viewing services (Portainer)
+      SERVICES: "0"
       SESSION: "0"
       SWARM: "0"
       SYSTEM: "0"
-      TASKS: "1" # Allow access to viewing tasks (Portainer, Docker Volume Backup)
-      VOLUMES: "1" # Allow access to viewing volumes (Portainer)
+      TASKS: "0"
+      VOLUMES: "0"
     labels: "{{ docker_socket_proxy_container_labels | default(omit) }}"
-    networks: "{{ docker_socket_proxy_networks }}"
+    networks: "{{ docker_socket_proxy_networks | default(omit) }}"
     published_ports: "{{ docker_socket_proxy_ports if not use_docker_socket_proxy_rw else omit }}"
     recreate: true # Recreate to ensure env changes are used
     restart: true
@@ -89,7 +106,7 @@
     security_opts:
       - no-new-privileges=true
     state: started
-    volumes: "{{ default_host_volumes + docker_host_volume }}"
+    volumes: "{{ default_host_volumes + docker_host_volume + docker_socket_proxy_volumes | default(omit) }}"
   register: docker_socket_proxy_container_state
 
 - name: deploy-docker-socket-proxy | Wait for Docker Socket Proxy to accept connections

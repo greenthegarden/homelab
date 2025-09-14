@@ -19,12 +19,15 @@
   ansible.builtin.set_fact:
     paperless_ngx_network_name: "{{ paperless_ngx_network_name | default(paperless_ngx_service_name) }}"
 
+- name: deploy-paperless-ngx | Set Paperless-ngx mount facts
+  ansible.builtin.set_fact:
+    paperless_ngx_export_dir: "{{ paperless_ngx_export_dir | default('/root/' + paperless_ngx_service_name + '/export') }}"
+    paperless_ngx_consume_dir: "{{ paperless_ngx_export_dir | default('/root/' + paperless_ngx_service_name + '/consume') }}"
+
 - name: deploy-paperless-ngx | Set Paperless-ngx volume facts
   ansible.builtin.set_fact:
     paperless_ngx_volume_data_name: "{{ paperless_ngx_volume_name | default(paperless_ngx_service_name + '-data') }}"
     paperless_ngx_volume_media_name: "{{ paperless_ngx_volume_name | default(paperless_ngx_service_name + '-media') }}"
-    paperless_ngx_export_dir: "{{ paperless_ngx_export_dir | default('/root/' + paperless_ngx_service_name + '/export') }}"
-    paperless_ngx_consume_dir: "{{ paperless_ngx_export_dir | default('/root/' + paperless_ngx_service_name + '/consume') }}"
 
 - name: deploy-paperless-ngx | Set paperless_ngx aggregated facts
   ansible.builtin.set_fact:
@@ -50,14 +53,14 @@
 - name: deploy-paperless-ngx | Log Paperless-ngx configuration
   ansible.builtin.debug:
     msg:
-      - "paperless_ngx image: {{ paperless_ngx_image }}"
-      - "paperless_ngx service name: {{ paperless_ngx_service_name }}"
-      - "paperless_ngx FQDN: {{ paperless_ngx_fqdn }}"
-      - "paperless_ngx networks: {{ paperless_ngx_networks | default(omit) }}"
-      - "paperless_ngx ports: {{ paperless_ngx_ports | default(omit) }}"
-      - "paperless_ngx volumes: {{ paperless_ngx_volumes | default(omit) }}"
+      - "Paperless-ngx image: {{ paperless_ngx_image }}"
+      - "Paperless-ngx service name: {{ paperless_ngx_service_name }}"
+      - "Paperless-ngx FQDN: {{ paperless_ngx_fqdn }}"
+      - "Paperless-ngx networks: {{ paperless_ngx_networks | default(omit) }}"
+      - "Paperless-ngx ports: {{ paperless_ngx_ports | default(omit) }}"
+      - "Paperless-ngx volumes: {{ paperless_ngx_volumes | default(omit) }}"
 
-- name: deploy-paperless-ngx | Create paperless_ngx container labels
+- name: deploy-paperless-ngx | Create Paperless-ngx container labels
   ansible.builtin.set_fact:
     paperless_ngx_container_labels: "{{ paperless_ngx_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:

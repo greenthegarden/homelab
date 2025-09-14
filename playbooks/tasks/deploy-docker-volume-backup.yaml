@@ -1,7 +1,9 @@
 ---
+
 - name: deploy-docker-volume-backup | Only run if volume to backup has been defined
   when: docker_volume_backup_volume_to_backup is defined
   block:
+
     - name: deploy-docker-volume-backup | Ensure modern version of Docker is available on host
       ansible.builtin.include_tasks:
         file: tasks/hosts-dependency-check-docker-version.yaml
@@ -12,12 +14,12 @@
     #   vars:
     #     configure_for_docker_volume_backup: true
 
-    - name: deploy-docker-volume-backup | Deploy a containerised read-write instance of Docker Socket Proxy
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-docker-socket-proxy.yaml
-      vars:
-        use_docker_socket_proxy_rw: true
-        configure_for_docker_volume_backup: true
+    # - name: deploy-docker-volume-backup | Deploy a containerised read-write instance of Docker Socket Proxy
+    #   ansible.builtin.include_tasks:
+    #     file: tasks/deploy-docker-socket-proxy.yaml
+    #   vars:
+    #     use_docker_socket_proxy_rw: true
+    #     configure_for_docker_volume_backup: true
 
     # https://offen.github.io/docker-volume-backup/
 
@@ -31,9 +33,17 @@
         docker_volume_backup_service_name: "{{ docker_volume_backup_service_name | default('docker-volume-backup') }}"
         docker_volume_backup_backup_label: "{{ docker_volume_backup_backup_label | default('') }}"
 
+    - name: deploy-docker-volume-backup | Set Docker Volume Backup configuration facts
+      ansible.builtin.set_fact:
+        docker_volume_backup_config_dir: "{{ docker_volume_backup_config_dir | default('/root/' + docker_volume_backup_service_name) }}"
+
     - name: deploy-docker-volume-backup | Set Docker Volume Backup network facts
       ansible.builtin.set_fact:
         docker_volume_backup_network_name: "{{ docker_volume_backup_network_name | default(docker_volume_backup_service_name) }}"
+
+    - name: deploy-docker-volume-backup | Set Docker Volume Backup volume facts
+      ansible.builtin.set_fact:
+        docker_volume_backup_local_backups_dir: "{{ docker_volume_backup_local_backups_dir | default('/root/backups') }}"
 
     - name: deploy-docker-volume-backup | Set Docker Volume Backup aggregated facts
       ansible.builtin.set_fact:
@@ -42,26 +52,24 @@
     - name: deploy-docker-volume-backup | Set Docker Volume Backup service facts
       ansible.builtin.set_fact:
         docker_volume_backup_networks:
-          - { name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}" }
-        docker_volume_backup_mounts:
-          docker_volume_backup_config_dir: "{{ docker_volume_backup_config_dir | default('/root/' + docker_volume_backup_service_name) }}"
-          docker_volume_backup_local_backups_dir: "{{ docker_volume_backup_local_backups_dir | default('/tmp/backups') }}"
+          - { name: "{{ docker_volume_backup_network_name }}", internal: true }
         docker_volume_backup_volumes:
           - "{{ docker_volume_backup_local_backups_dir }}:/archive"
 
     - name: deploy-docker-volume-backup | Add volume to backup to Docker Volume Backup volumes
+      when: docker_volume_backup_volumes is defined and (docker_volume_backup_volumes | length > 0)
       ansible.builtin.set_fact:
         docker_volume_backup_volumes: "{{ docker_volume_backup_volumes + docker_volume_backup_volume_to_backup }}"
 
     - name: deploy-docker-volume-backup | Log Docker Volume Backup configuration
       ansible.builtin.debug:
         msg:
-          - "Docker Volume Backup image: {{ homepage_image }}"
-          - "Docker Volume Backup service name: {{ homepage_service_name }}"
-          - "Docker Volume Backup FQDN: {{ homepage_fqdn }}"
-          - "Docker Volume Backup networks: {{ homepage_networks | default(omit) }}"
-          - "Docker Volume Backup ports: {{ homepage_ports | default(omit) }}"
-          - "Docker Volume Backup volumes: {{ homepage_volumes | default(omit) }}"
+          - "Docker Volume Backup image: {{ docker_volume_backup_image }}"
+          - "Docker Volume Backup service name: {{ docker_volume_backup_service_name }}"
+          - "Docker Volume Backup FQDN: {{ docker_volume_backup_fqdn }}"
+          - "Docker Volume Backup networks: {{ docker_volume_backup_networks | default(omit) }}"
+          - "Docker Volume Backup ports: {{ docker_volume_backup_ports | default(omit) }}"
+          - "Docker Volume Backup volumes: {{ docker_volume_backup_volumes | default(omit) }}"
 
     - name: deploy-docker-volume-backup | Create Docker Volume Backup container labels
       ansible.builtin.set_fact:
@@ -73,6 +81,36 @@
           "key": "wud.link.template",
           "value": "https://github.com/offen/docker-volume-backup/releases/tag/v${major}.${minor}.${patch}",
         }
+
+    - name: deploy-docker-volume-backup | Create Docker Volume Backup networks
+      when: docker_volume_backup_networks is defined
+      community.docker.docker_network:
+        name: "{{ item.name }}"
+        driver: "{{ item.driver | default('bridge') }}"
+        internal: "{{ item.internal | default(false) }}"
+        state: present
+      loop: "{{ docker_volume_backup_networks }}"
+
+    # - name: deploy-docker-volume-backup | Create Docker Volume Backup volumes
+    #   when: docker_volume_backup_volume_name is defined
+    #   community.docker.docker_volume:
+    #     name: "{{ item }}"
+    #     state: present
+    #   loop:
+    #     - "{{ docker_volume_backup_volume_name }}"
+
+    # - name: deploy-docker-volume-backup | Set Docker Socket Proxy vars
+    #   ansible.builtin.set_fact:
+    #     docker_socket_proxy_service_name: "'docker-socket-proxy_' + {{ docker_volume_backup_service_name }}"
+
+    - name: deploy-docker-volume-backup | Deploy a containerised instance of Docker Socket Proxy configured for Docker Volume Backup
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-socket-proxy.yaml
+      vars:
+        configure_for_docker_volume_backup: true
+        docker_socket_proxy_service_name: "'docker-socket-proxy_' + {{ docker_volume_backup_service_name }}"
+        docker_socket_proxy_service_port: 2376
+        docker_socket_proxy_network_name: "{{ docker_volume_backup_network_name }}"
 
     - name: deploy-docker-volume-backup | Create Docker Volume Backup mount directories and configuration
       when: docker_volume_backup_local_backups_dir is defined and docker_volume_backup_config_dir is defined
