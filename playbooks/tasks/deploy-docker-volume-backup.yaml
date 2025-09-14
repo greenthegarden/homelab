@@ -150,7 +150,7 @@
         image: "{{ docker_volume_backup_image }}"
         env_file: "{{ docker_volume_backup_config_dir }}/docker-volume-backup.env"
         labels: "{{ docker_volume_backup_container_labels | default(omit) }}"
-        networks: "{{ docker_volume_backup_networks | default(omit) }}"
+        networks: "{{ docker_volume_backup_network_name | default(omit) }}"
         recreate: true # Recreate to ensure env changes are used
         restart: true
         restart_policy: always
