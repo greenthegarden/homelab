@@ -70,7 +70,7 @@
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/gotify/gotify/releases/tag/v${major}.${minor}.${patch}",
+      "value": "https://github.com/gotify/server/releases/tag/v${major}.${minor}.${patch}",
     }
     # ---------------------------------------------------------------
     # Homepage labels
