@@ -12,10 +12,16 @@
 - name: deploy-gotify | Set Gotify facts
   ansible.builtin.set_fact:
     gotify_image: "{{ gotify_image | default('gotify/server:latest') }}"
-    gotify_image_tag: "{{ gotify_image_tag | default('latest') }}"
     gotify_service_name: "{{ gotify_service_name | default('gotify') }}"
     gotify_service_port: "{{ gotify_service_port | default(80) }}"
-    gotify_data_volume_name: "{{ gotify_data_volume_name | default('gotify') }}"
+
+- name: deploy-gotify | Set Gotify network facts
+  ansible.builtin.set_fact:
+    gotify_network_name: "{{ gotify_network_name | default(gotify_service_name) }}"
+
+- name: deploy-gotify | Set Gotify volume facts
+  ansible.builtin.set_fact:
+    gotify_volume_name: "{{ gotify_volume_name | default(gotify_service_name) }}"
 
 - name: deploy-gotify | Set Gotify aggregated facts
   ansible.builtin.set_fact:
@@ -32,9 +38,17 @@
     gotify_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ gotify_data_volume_name }}:/gotify/data"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      - "{{ gotify_volume_name }}:/gotify/data"
+
+- name: deploy-gotify | Log Gotify configuration
+  ansible.builtin.debug:
+    msg:
+      - "Gotify image: {{ gotify_image }}"
+      - "Gotify service name: {{ gotify_service_name }}"
+      - "Gotify FQDN: {{ gotify_fqdn }}"
+      - "Gotify networks: {{ gotify_networks | default(omit) }}"
+      - "Gotify ports: {{ gotify_ports | default(omit) }}"
+      - "Gotify volumes: {{ gotify_volumes | default(omit) }}"
 
 - name: deploy-gotify | Create Gotify container labels
   ansible.builtin.set_fact:
@@ -67,12 +81,22 @@
     - { "key": "homepage.href", "value": "https://{{ gotify_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ gotify_fqdn }}/" }
 
-- name: deploy-gotify | Create Gotify volumes # noqa: syntax-check[unknown-module]
+- name: deploy-gotify | Create Gotify networks
+  when: gotify_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ gotify_networks }}"
+
+- name: deploy-gotify | Create Gotify volumes
+  when: gotify_volume_name is defined
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
   loop:
-    - "{{ gotify_data_volume_name }}"
+    - "{{ gotify_volume_name }}"
 
 - name: deploy-gotify | Check if Gotify is running
   community.docker.docker_container_info:
@@ -84,6 +108,7 @@
     - gotify_state.exists
     - (gotify_image | split(':') | last) != (gotify_state.container.Config.Image | split(':') | last)
   block:
+
     - name: deploy-gotify | Stop and remove existing Gotify container
       community.docker.docker_container:
         name: "{{ gotify_service_name }}"
@@ -97,6 +122,7 @@
   when:
     - not gotify_state.exists or (gotify_update | default(false))
   block:
+
     - name: deploy-gotify | Pull Gotify image
       community.docker.docker_image:
         name: "{{ gotify_image }}"
@@ -118,14 +144,14 @@
         volumes: "{{ gotify_volumes }}"
       register: gotify_container_state
 
-    - name: deploy-gotify | Wait for Gotify to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ gotify_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: gotify_running
-      until: gotify_running is success
-      retries: 10
+- name: deploy-gotify | Wait for Gotify to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ gotify_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: gotify_running
+  retries: 10
+  until: gotify_running is success
