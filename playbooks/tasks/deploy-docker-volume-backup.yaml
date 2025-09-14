@@ -110,7 +110,7 @@
         file: tasks/deploy-docker-socket-proxy.yaml
       vars:
         configure_for_docker_volume_backup: true
-        docker_socket_proxy_service_name: "'docker-socket-proxy_' + {{ docker_volume_backup_service_name }}"
+        docker_socket_proxy_service_name: "docker-socket-proxy-{{ docker_volume_backup_service_name }}"
         docker_socket_proxy_service_port: 2376
         docker_socket_proxy_network_name: "{{ docker_volume_backup_network_name }}"
 
