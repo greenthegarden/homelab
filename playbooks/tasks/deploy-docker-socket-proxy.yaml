@@ -99,7 +99,7 @@
       VOLUMES: "0"
     labels: "{{ docker_socket_proxy_container_labels | default(omit) }}"
     networks: "{{ docker_socket_proxy_networks | default(omit) }}"
-    published_ports: "{{ docker_socket_proxy_ports if not use_docker_socket_proxy_rw else omit }}"
+    published_ports: "{{ docker_socket_proxy_ports if not configure_for_docker_volume_backup else omit }}"
     recreate: true # Recreate to ensure env changes are used
     restart: true
     restart_policy: unless-stopped
