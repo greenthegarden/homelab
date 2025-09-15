@@ -27,6 +27,10 @@
   ansible.builtin.set_fact:
     traefik_letsencrypt_dir: "{{ traefik_letsencrypt_dir | default('/root/' + 'letsencrypt') }}"
 
+- name: deploy-traefik | Set Docker Socket Proxy facts
+  ansible.builtin.set_fact:
+    docker_socket_proxy_service_name: "docker-socket-proxy-{{ traefik_service_name }}"
+
 - name: deploy-traefik | Set Traefik aggregated facts
   ansible.builtin.set_fact:
     traefik_fqdn: "{{ traefik_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
@@ -115,9 +119,9 @@
       # - "--metrics.prometheus.addEntryPointsLabels=true"
 
     traefik_networks:
-      - name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}"
-      # - name: "{{ monitoring_network_name | default('monitoring') }}" # not needed without prometheus
-      - name: "{{ web_network_name | default('web') }}" # <== Placing traefik on the network named web, to access containers on this network
+      - { name: "{{ traefik_network_name }}", internal: true }
+      # - { name: "{{ monitoring_network_name | default('monitoring') }}" # not needed without prometheus }
+      - { name: "{{ web_network_name | default('web') }}" } # <== Placing traefik on the network named web, to access containers on this network
 
     traefik_ports:
       # Published ports to expose outside the container
@@ -191,6 +195,15 @@
       "value": "https://github.com/traefik/traefik/releases/tag/v${major}.${minor}.${patch}",
     }
 
+- name: deploy-traefik | Create Traefik networks
+  when: traefik_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ traefik_networks }}"
+
 - name: deploy-traefik | Create acme configuration
   when: traefik_letsencrypt_dir is defined
   block:
@@ -208,6 +221,16 @@
         state: touch
         mode: "600"
       register: acme_configuration_creation
+
+- name: deploy-traefik | Deploy a containerised instance of Docker Socket Proxy configured for Traefik
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-docker-socket-proxy.yaml
+  vars:
+    configure_for_docker_volume_backup: false
+    docker_socket_proxy_service_name: "{{ docker_socket_proxy_service_name }}"
+    docker_socket_proxy_network_name: "{{ traefik_network_name }}"
+
+# To check proxy and port is open use `nc -zv docker-socket-proxy-traefik 2375`
 
 - name: deploy-traefik | Pull image
   community.docker.docker_image:
@@ -233,7 +256,7 @@
       retries: 3
       start_period: 5s
     labels: "{{ traefik_container_labels | default(omit) }}"
-    networks: "{{ traefik_networks | default(omit) }}"
+    networks: "{{ traefik_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     published_ports: "{{ traefik_ports | default(omit) }}"
     recreate: true # Recreate to ensure any configuration changes are used
     restart: true
