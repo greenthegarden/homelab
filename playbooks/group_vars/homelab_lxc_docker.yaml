@@ -28,6 +28,8 @@ dozzle_network_name: dozzle
 portainer_network_name: portainer
 
 # Containerised service facts
+# Docker Socket Proxy service facts
+docker_socket_proxy_image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.1
 # Docker Volume Backup facts
 docker_volume_backup_image: offen/docker-volume-backup:v2.44.0
 # Dozzle Agent facts
@@ -42,7 +44,6 @@ prometheus_image: prom/prometheus:v3.5.0
 tinyauth_image: ghcr.io/steveiliop56/tinyauth:v3.6.2
 # Traefik facts
 traefik_image: traefik:3.5.2
-
 
 # Global definition of backup directory on hosts
 local_backups_dir: /root/backups
