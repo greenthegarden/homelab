@@ -23,7 +23,7 @@
 
 - name: deploy-emqx | Set EMQX volume facts
   ansible.builtin.set_fact:
-    emqx_volume_data_name: "{{ emqx_volume_data_name | default(emqx_service_name) }}"
+    emqx_volume_data_name: "{{ emqx_volume_data_name | default(emqx_service_name) + '-data' }}"
     emqx_volume_logs_name: "{{ emqx_volume_logs_name | default(emqx_service_name + '-logs') }}"
 
 - name: deploy-emqx | Set EMQX aggregated facts
