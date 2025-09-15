@@ -32,7 +32,7 @@
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy service facts
   ansible.builtin.set_fact:
     docker_socket_proxy_networks:
-      - { name: "{{ docker_socket_proxy_network_name }}" }
+      - { name: "{{ docker_socket_proxy_network_name }}", internal: "{{ docker_socket_proxy_network_internal | default(false) }}" }
     docker_socket_proxy_ports:
       - "{{ docker_socket_proxy_service_port }}:2375/tcp"
     docker_socket_proxy_volumes: []
@@ -63,7 +63,7 @@
   community.docker.docker_network:
     name: "{{ item.name }}"
     driver: "{{ item.driver | default('bridge') }}"
-    internal: "{{ item.internal | default(false) }}"
+    internal: "{{ item.internal }}"
     state: present
   loop: "{{ docker_socket_proxy_networks }}"
 
