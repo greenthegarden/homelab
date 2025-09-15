@@ -29,8 +29,8 @@
 
 - name: deploy-tududi | Set Tududi volume facts
   ansible.builtin.set_fact:
-    tududi_volume_data_name: "{{ tududi_volume_data_name | default(tududi_service_name + '-data') }}"
-    tududi_volume_uploads_name: "{{ tududi_volume_uploads_name | default(tududi_service_name + '-uploads') }}"
+    tududi_volume_data_name: "{{ tududi_volume_data_name | default(tududi_service_name + '_data') }}"
+    tududi_volume_uploads_name: "{{ tududi_volume_uploads_name | default(tududi_service_name + '_uploads') }}"
 
 - name: deploy-tududi | Set Tududi aggregated facts
   ansible.builtin.set_fact:
