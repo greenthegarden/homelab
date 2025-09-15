@@ -32,7 +32,7 @@
   community.docker.docker_network:
     name: "{{ item.name }}"
   loop:
-    - name: "{{ docker_monitoring_network_name }}"
+    # - name: "{{ docker_monitoring_network_name }}"
     - name: "{{ web_network_name }}"
 
 # Use the following agents to monitor Docker services via host docker socket
@@ -55,7 +55,7 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-docker-socket-proxy.yaml
   vars:
-    docker_socket_proxy_network_name: "{{ docker_socket_proxy_external_network_name }}"
+    docker_socket_proxy_service_name: "{{ docker_socket_proxy_external_network_name }}"
     docker_socket_proxy_publish_ports: true
 
 # Traefik used as a reverse proxy to manage access to web services with SSL via Let's Encrypt

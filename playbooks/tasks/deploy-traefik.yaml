@@ -223,7 +223,7 @@
       register: acme_configuration_creation
 
 - name: deploy-traefik | Deploy a containerised instance of Docker Socket Proxy configured for Traefik
-  ansible.builtin.include_task:
+  ansible.builtin.include_tasks:
     file: tasks/deploy-docker-socket-proxy.yaml
   vars:
     docker_socket_proxy_service_name: "docker-socket-proxy-{{ traefik_service_name }}"
