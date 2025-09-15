@@ -108,7 +108,7 @@
       EXEC: "{{ \"1\" if configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to execute commands
       GRPC: "0"
       IMAGES: "0"
-      INFO: "0"
+      INFO: "{{ \"1\" if configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to get swarm state
       NETWORKS: "0" # Block listing newtworks
       NODES: "{{ \"1\" if configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to stop containers
       PLUGINS: "0"
@@ -116,7 +116,7 @@
       SESSION: "0"
       SWARM: "0"
       SYSTEM: "0" # Block system-level API access
-      TASKS: "0" # Block listing tasks in a swarm
+      TASKS: "{{ \"1\" if configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to stop containers
       VOLUMES: "0" # Allow listing volumes
     labels: "{{ docker_socket_proxy_container_labels | default(omit) }}"
     networks: "{{ docker_socket_proxy_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"

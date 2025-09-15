@@ -25,6 +25,6 @@
       vars:
         docker_volume_backup_service_name: "docker-volume-backup-{{ uptimekuma_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ uptimekuma_volume_name }}:/backups/{{ uptimekuma_service_name }}-backup:ro"
+          - "{{ uptimekuma_volume_name }}:/backup/{{ uptimekuma_service_name }}-backup:ro"
         docker_volume_backup_backup_label: "{{ uptimekuma_service_name }}"
         docker_volume_backup_backup_retention_days: 1

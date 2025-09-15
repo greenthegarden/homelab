@@ -52,32 +52,6 @@
     homebox_container_labels: "{{ homebox_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # ---------------------------------------------------------------
-    # Traefik labels
-    - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.routers.{{ homebox_service_name }}.entrypoints",
-      "value": "websecure",
-    }
-    - {
-      "key": "traefik.http.routers.{{ homebox_service_name }}.rule",
-      "value": "Host(`{{ homebox_fqdn }}`)",
-    }
-    # - {
-    #   "key": "traefik.http.routers.{{ homebox_service_name }}.service",
-    #   "value": "{{ homebox_service_name }}",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ homebox_service_name }}.tls",
-    #   "value": "true",
-    # }
-    # ---------------------------------------------------------------
-    # What's up Docker? labels
-    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/sysadminsmedia/homebox/releases/tag/v${major}.${minor}.${patch}",
-    }
-    # ---------------------------------------------------------------
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
     # ---------------------------------------------------------------
@@ -99,6 +73,24 @@
     - { "key": "homepage.widget.username", "value": "{{ homebox.username }}" }
     - { "key": "homepage.widget.password", "value": "{{ homebox.password }}" }
     - { "key": "homepage.widget.fields", "value": "['items', 'locations', 'totalValue']" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ homebox_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ homebox_service_name }}.rule",
+      "value": "Host(`{{ homebox_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/sysadminsmedia/homebox/releases/tag/v${major}.${minor}.${patch}",
+    }
 
 - name: deploy-homebox | Create homebox networks
   when: homebox_networks is defined

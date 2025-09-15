@@ -55,6 +55,23 @@
     uptimekuma_container_labels: "{{ uptimekuma_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # ---------------------------------------------------------------
+    # Docker Volume Backup labels
+    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Monitoring" }
+    - { "key": "homepage.name", "value": "Uptimekuma" }
+    - { "key": "homepage.description", "value": "Is everything running?" }
+    - { "key": "homepage.icon", "value": "uptime-kuma.png" }
+    - { "key": "homepage.href", "value": "https://{{ uptimekuma_fqdn }}/" }
+    - {
+      "key": "homepage.siteMonitor",
+      "value": "https://{{ uptimekuma_fqdn }}/",
+    }
+    - { "key": "homepage.widget.type", "value": "uptimekuma" }
+    - { "key": "homepage.widget.url", "value": "https://{{ uptimekuma_fqdn }}" }
+    - { "key": "homepage.widget.slug", "value": "homelab" }
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
     - {
@@ -72,23 +89,6 @@
       "key": "wud.link.template",
       "value": "https://github.com/louislam/uptime-kuma/releases/tag/${major}.${minor}.${patch}",
     }
-    # ---------------------------------------------------------------
-    # Docker Volume Backup labels
-    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
-    # ---------------------------------------------------------------
-    # Homepage labels
-    - { "key": "homepage.group", "value": "Monitoring" }
-    - { "key": "homepage.name", "value": "Uptimekuma" }
-    - { "key": "homepage.description", "value": "Is everything running?" }
-    - { "key": "homepage.icon", "value": "uptime-kuma.png" }
-    - { "key": "homepage.href", "value": "https://{{ uptimekuma_fqdn }}/" }
-    - {
-      "key": "homepage.siteMonitor",
-      "value": "https://{{ uptimekuma_fqdn }}/",
-    }
-    - { "key": "homepage.widget.type", "value": "uptimekuma" }
-    - { "key": "homepage.widget.url", "value": "https://{{ uptimekuma_fqdn }}" }
-    - { "key": "homepage.widget.slug", "value": "homelab" }
 
 - name: deploy-uptimekuma | Create Uptime Kuma networks
   when: uptimekuma_networks is defined
@@ -115,7 +115,7 @@
 - name: deploy-uptimekuma | Remove uptimekuma container if changing version
   when:
     - uptimekuma_state.exists
-    - uptimekuma_image_tag != uptimekuma_state.container.Config.Image | split(':') | last
+    - (uptimekuma_image | split(':') | last) != uptimekuma_state.container.Config.Image | split(':') | last
   block:
 
     - name: deploy-uptimekuma | Stop and remove existing Uptime Kuma container

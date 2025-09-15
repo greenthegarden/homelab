@@ -65,6 +65,17 @@
     tududi_container_labels: "{{ tududi_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # ---------------------------------------------------------------
+    # Docker Volume Backup labels
+    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Tududi" }
+    - { "key": "homepage.description", "value": " Self-hosted task management tool " }
+    - { "key": "homepage.icon", "value": "tududi.png" }
+    - { "key": "homepage.href", "value": "https://{{ tududi_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ tududi_fqdn }}/" }
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
     - {
@@ -82,14 +93,6 @@
       "key": "wud.link.template",
       "value": "https://github.com/chrisvel/tududi/releases/tag/v${major}.${minor}.${patch}",
     }
-    # ---------------------------------------------------------------
-    # Homepage labels
-    - { "key": "homepage.group", "value": "Applications" }
-    - { "key": "homepage.name", "value": "Tududi" }
-    - { "key": "homepage.description", "value": " Self-hosted task management tool " }
-    - { "key": "homepage.icon", "value": "tududi.png" }
-    - { "key": "homepage.href", "value": "https://{{ tududi_fqdn }}/" }
-    - { "key": "homepage.siteMonitor", "value": "https://{{ tududi_fqdn }}/" }
 
 - name: deploy-tududi | Create Tududi networks
   when: tududi_networks is defined

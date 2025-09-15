@@ -20,11 +20,11 @@
         file: tasks/deploy-homebox.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
-      when: false # Temporarily disable for testing
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
+        docker_volume_backup_service_name: "docker-volume-backup-{{ homebox_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ homebox_volume_name }}:/backup/homebox-backup:ro"
+          - "{{ homebox_volume_name }}:/backup/{{ homebox_service_name }}-backup:ro"
         docker_volume_backup_backup_label: "{{ homebox_service_name }}"
         docker_volume_backup_backup_retention_days: 7
