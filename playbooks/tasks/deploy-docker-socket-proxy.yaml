@@ -3,9 +3,11 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+# TODO: think about better ways of managing this
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy configuration facts
   ansible.builtin.set_fact:
     configure_for_docker_volume_backup: "{{ configure_for_docker_volume_backup | default(false) }}"
+    docker_socket_proxy_publish_ports: "{{ docker_socket_proxy_publish_ports | default(false) }}"
 
 ####### DOCKER-SOCKET-PROXY SECTION
 
@@ -30,7 +32,7 @@
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy service facts
   ansible.builtin.set_fact:
     docker_socket_proxy_networks:
-      - name: "{{ docker_socket_proxy_network_name }}"
+      - { name: "{{ docker_socket_proxy_network_name }}" }
     docker_socket_proxy_ports:
       - "{{ docker_socket_proxy_service_port }}:2375/tcp"
     docker_socket_proxy_volumes: []
@@ -109,7 +111,7 @@
       VOLUMES: "0" # Allow listing volumes
     labels: "{{ docker_socket_proxy_container_labels | default(omit) }}"
     networks: "{{ docker_socket_proxy_networks | default(omit) }}"
-    published_ports: "{{ docker_socket_proxy_ports if not configure_for_docker_volume_backup else omit }}"
+    published_ports: "{{ docker_socket_proxy_ports if docker_socket_proxy_publish_ports else omit }}"
     recreate: true # Recreate to ensure env changes are used
     restart: true
     restart_policy: unless-stopped

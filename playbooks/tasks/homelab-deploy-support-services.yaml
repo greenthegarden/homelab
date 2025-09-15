@@ -50,12 +50,13 @@
     dozzle_agent_network_name: dozzle
 
 # Docker Socker Proxy used to restrict access to required Docker APIs to monitor remote Docker services
-# Used by Traefik, Homepage and What's up Docker?
+# Used by Homepage and What's up Docker?
 - name: homelab-deploy-support-services | Deploy a containerised read-only instance of Docker Socket Proxy
   ansible.builtin.include_tasks:
     file: tasks/deploy-docker-socket-proxy.yaml
   vars:
     docker_socket_proxy_network_name: "{{ docker_socket_proxy_external_network_name }}"
+    docker_socket_proxy_publish_ports: true
 
 # Traefik used as a reverse proxy to manage access to web services with SSL via Let's Encrypt
 - name: homelab-deploy-support-services | Deploy a containerised instance of Traefik
