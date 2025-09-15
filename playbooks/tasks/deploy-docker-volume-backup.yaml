@@ -150,7 +150,7 @@
         image: "{{ docker_volume_backup_image }}"
         env_file: "{{ docker_volume_backup_config_dir }}/docker-volume-backup.env"
         labels: "{{ docker_volume_backup_container_labels | default(omit) }}"
-        networks: "{{ (docker_volume_backup_networks | map(attribute='name') | list) | default(omit) }}"
+        networks: "{{ docker_volume_backup_networks | ansible.utils.remove_keys(target=['internal']) }}"
         recreate: true # Recreate to ensure env changes are used
         restart: true
         restart_policy: always
