@@ -223,11 +223,10 @@
       register: acme_configuration_creation
 
 - name: deploy-traefik | Deploy a containerised instance of Docker Socket Proxy configured for Traefik
-  ansible.builtin.include_tasks:
+  ansible.builtin.include_task:
     file: tasks/deploy-docker-socket-proxy.yaml
   vars:
-    configure_for_docker_volume_backup: false
-    docker_socket_proxy_service_name: "{{ docker_socket_proxy_service_name }}"
+    docker_socket_proxy_service_name: "docker-socket-proxy-{{ traefik_service_name }}"
     docker_socket_proxy_network_name: "{{ traefik_network_name }}"
 
 # To check proxy and port is open use `nc -zv docker-socket-proxy-traefik 2375`

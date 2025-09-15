@@ -58,6 +58,15 @@
       "value": "https://github.com/Tecnativa/docker-socket-proxy/releases/tag/v${major}.${minor}.${patch}",
     }
 
+- name: deploy-docker-socket-proxy | Create Docker Socket Proxy network
+  when: docker_socket_proxy_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ docker_socket_proxy_networks }}"
+
 - name: deploy-docker-socket-proxy | Pull Docker Socket Proxy image
   community.docker.docker_image_pull:
     name: "{{ docker_socket_proxy_image }}"

@@ -7,15 +7,11 @@
 # Note bridge networks are external by default unless internal: true is set
 # Docker Socket Proxy is used to connect services to the Docker API via the
 # docker-socket-proxy service
-# Read-Only access to the Docker Socket Proxy
-# Used by monitoring services (Traefik, Homepage and Uptime Kuma)
-docker_monitoring_network_name: docker-monitoring
+# Minimal access to the Docker Socket Proxy
+# Used by monitoring services (Traefik, Homepage, WUD and Uptime Kuma)
+docker_monitoring_network_name: docker-socket-proxy-external
 docker_monitoring_network_interal: false
-# Read-Write access to the Docker Socket Proxy
-# Used by services that need to stop/start containers (Docker Volume Backup)
-docker_management_network_name: docker-management
-docker_management_network_interal: true
-# # Monitoring is an internal network that is not exposed outside the host
+# Monitoring is an internal network that is not exposed outside the host
 # monitoring_network_name: monitoring
 # monitoring_network_internal: true
 # Web is an external network that is exposed outside the host
@@ -30,6 +26,7 @@ portainer_network_name: portainer
 # Containerised service facts
 # Docker Socket Proxy service facts
 docker_socket_proxy_image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.1
+docker_socket_proxy_network_name: docker-socket-proxy-external
 # Docker Volume Backup facts
 docker_volume_backup_image: offen/docker-volume-backup:v2.44.0
 # Dozzle Agent facts
