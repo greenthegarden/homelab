@@ -1,5 +1,5 @@
 ---
-- name: Deploy Broker
+- name: Deploy EMQX
 
   hosts: broker
 
@@ -7,7 +7,7 @@
 
     # EMQX facts
     # renovate: datasource=docker depName=emqx/emqx
-    emqx_image: emqx/emqx:5.10.0
+    emqx_image: emqx/emqx:5.8.8
 
   tasks:
 
