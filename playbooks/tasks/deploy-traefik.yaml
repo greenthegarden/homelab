@@ -28,16 +28,12 @@
     traefik_letsencrypt_dir: "{{ traefik_letsencrypt_dir | default('/root/' + 'letsencrypt') }}"
 
 # Deploy Docker Socket Proxy at this stage to ensure vars are set correctly
-# - name: deploy-traefik | Set Docker Socket Proxy facts
-#   ansible.builtin.set_fact:
-#     docker_socket_proxy_service_name: "docker-socket-proxy-{{ traefik_service_name }}"
-
+# To check proxy and port is open use `nc -zv docker-socket-proxy-traefik 2375`
 - name: deploy-traefik | Deploy a containerised instance of Docker Socket Proxy configured for Traefik
   ansible.builtin.include_tasks:
     file: tasks/deploy-docker-socket-proxy.yaml
   vars:
     docker_socket_proxy_service_name: "docker-socket-proxy-{{ traefik_service_name }}"
-    docker_socket_proxy_service_port: 2376
     docker_socket_proxy_network_name: "{{ traefik_network_name }}"
     docker_socket_proxy_network_internal: true
 
@@ -231,8 +227,6 @@
         state: touch
         mode: "600"
       register: acme_configuration_creation
-
-# To check proxy and port is open use `nc -zv docker-socket-proxy-traefik 2375`
 
 - name: deploy-traefik | Pull image
   community.docker.docker_image:
