@@ -119,7 +119,7 @@
       TASKS: "0" # Block listing tasks in a swarm
       VOLUMES: "0" # Allow listing volumes
     labels: "{{ docker_socket_proxy_container_labels | default(omit) }}"
-    networks: "{{ docker_socket_proxy_networks | default(omit) }}"
+    networks: "{{ docker_socket_proxy_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     published_ports: "{{ docker_socket_proxy_ports if docker_socket_proxy_publish_ports else omit }}"
     recreate: true # Recreate to ensure env changes are used
     restart: true
