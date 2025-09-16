@@ -50,12 +50,12 @@
 - name: deploy-stirling-pdf | Log Stirling-PDF configuration
   ansible.builtin.debug:
     msg:
-      - "Stirling_pdf image: {{ stirling_pdf_image }}"
-      - "Stirling_pdf service name: {{ stirling_pdf_service_name }}"
-      - "Stirling_pdf FQDN: {{ stirling_pdf_fqdn }}"
-      - "Stirling_pdf networks: {{ stirling_pdf_networks | default(omit) }}"
-      - "Stirling_pdf ports: {{ stirling_pdf_ports | default(omit) }}"
-      - "Stirling_pdf volumes: {{ stirling_pdf_volumes | default(omit) }}"
+      - "Stirling-PDF image: {{ stirling_pdf_image }}"
+      - "Stirling-PDF service name: {{ stirling_pdf_service_name }}"
+      - "Stirling-PDF FQDN: {{ stirling_pdf_fqdn }}"
+      - "Stirling-PDF networks: {{ stirling_pdf_networks | default(omit) }}"
+      - "Stirling-PDF ports: {{ stirling_pdf_ports | default(omit) }}"
+      - "Stirling-PDF volumes: {{ stirling_pdf_volumes | default(omit) }}"
 
 - name: deploy-stirling-pdf | Create Stirling-PDF container labels
   ansible.builtin.set_fact:

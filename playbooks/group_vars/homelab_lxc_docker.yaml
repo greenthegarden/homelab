@@ -25,21 +25,29 @@ portainer_network_name: portainer
 
 # Containerised service facts
 # Docker Socket Proxy service facts
+# renovate: datasource=docker depName=ghcr.io/tecnativa/docker-socket-proxy
 docker_socket_proxy_image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.1
 docker_socket_proxy_network_name: docker-socket-proxy-external
 # Docker Volume Backup facts
+# renovate: datasource=docker depName=offen/docker-volume-backup
 docker_volume_backup_image: offen/docker-volume-backup:v2.44.0
 # Dozzle Agent facts
+# renovate: datasource=docker depName=amir20/dozzle
 dozzle_agent_image: amir20/dozzle:v8.13.14
 # Node Exporter facts
+# renovate: datasource=docker depName=prom/node-exporter
 node_exporter_image: prom/node-exporter:v1.9.1
 # Portainer Agent facts
+# renovate: datasource=docker depName=portainer/agent
 portainer_agent_image: portainer/agent:2.33.1-alpine
 # Prometheus facts
+# renovate: datasource=docker depName=prom/prometheus
 prometheus_image: prom/prometheus:v3.5.0
 # Tinyauth facts
+# renovate: datasource=docker depName=ghcr.io/steveiliop56/tinyauth
 tinyauth_image: ghcr.io/steveiliop56/tinyauth:v3.6.2
 # Traefik facts
+# renovate: datasource=docker depName=traefik
 traefik_image: traefik:3.5.2
 
 # Global definition of backup directory on hosts
