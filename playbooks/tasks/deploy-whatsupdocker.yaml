@@ -31,8 +31,7 @@
     whatsupdocker_networks:
       # Docker Socket Proxy External provide access to exposed Docker APIs
       - { name: "{{ docker_socket_proxy_external | default('docker-socket-proxy-external') }}" }
-      # Traefik network allows Traefik to access the What's Up Docker? web application
-      # - { name: "{{ traefik_network_name | default('traefik') }}" }
+      # Web network is used to expose all applications via Traefik
       - { name: "{{ web_network_name | default('web') }}" }
     whatsupdocker_ports:
       # Published ports to expose outside the container
@@ -140,7 +139,7 @@
       # Remote hosts to watch
       WUD_WATCHER_ANSIBLE_HOST: "ansible.{{ lan_domain }}"
       WUD_WATCHER_BROKER_HOST: "broker.{{ lan_domain }}"
-      # WUD_WATCHER_DOZZLE_HOST: "lxc-dozzle-node-1.{{ lan_domain }}"
+      WUD_WATCHER_DOZZLE_HOST: "lxc-dozzle-node-1.{{ lan_domain }}"
       WUD_WATCHER_FIREFLYIII_HOST: "fireflyiii.{{ lan_domain }}"
       WUD_WATCHER_FRIGATE_HOST: "frigate.{{ lan_domain }}"
       WUD_WATCHER_GROCY_HOST: "grocy.{{ lan_domain }}"
@@ -151,7 +150,7 @@
       WUD_WATCHER_PORTAINER_HOST: "portainer.{{ lan_domain }}"
       WUD_WATCHER_PRODUCTIVITY_HOST: "productivity.{{ lan_domain }}"
       WUD_WATCHER_UPTIMEKUMA_HOST: "uptimekuma.{{ lan_domain }}"
-      WUD_WATCHER_WHATSUPDOCKER_HOST: "whatsupdocker.{{ lan_domain }}"
+      # WUD_WATCHER_WHATSUPDOCKER_HOST: "whatsupdocker.{{ lan_domain }}"
       # # Authentik integration
       # WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ whatsupdocker.oauth_client_id | default('dummy') }}"
       # WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ whatsupdocker.oauth_client_secret | default('dummy') }}"

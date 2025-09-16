@@ -34,7 +34,7 @@
     file: tasks/deploy-docker-socket-proxy.yaml
   vars:
     docker_socket_proxy_service_name: "docker-socket-proxy-{{ traefik_service_name }}"
-    docker_socket_proxy_network_name: "{{ traefik_network_name }}"
+    docker_socket_proxy_network_name: "docker-socket-proxy-{{ traefik_network_name }}"
     docker_socket_proxy_network_internal: true
 
 - name: deploy-traefik | Set Traefik aggregated facts
@@ -125,9 +125,9 @@
       # - "--metrics.prometheus.addEntryPointsLabels=true"
 
     traefik_networks:
-      - { name: "{{ traefik_network_name }}", internal: true }
+      - { name: "{{ docker_socket_proxy_network_name }}", internal: true }
       # - { name: "{{ monitoring_network_name | default('monitoring') }}" # not needed without prometheus }
-      - { name: "{{ web_network_name | default('web') }}" } # <== Placing traefik on the network named web, to access containers on this network
+      - { name: "{{ web_network_name | default('web') }}", internal: false } # <== Placing traefik on the network named web, to access containers on this network
 
     traefik_ports:
       # Published ports to expose outside the container
