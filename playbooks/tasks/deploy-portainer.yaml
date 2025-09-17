@@ -13,7 +13,7 @@
   ansible.builtin.set_fact:
     portainer_image: "{{ portainer_image | default('portainer/portainer-ce:latest') }}"
     portainer_service_name: "{{ portainer_service_name | default('portainer') }}"
-    portainer_service_port: "{{ portainer_service_port | default(9443) }}"
+    portainer_service_port: "{{ portainer_service_port | default(9000) }}"
 
 - name: deploy-portainer | Set Portainer network facts
   ansible.builtin.set_fact:

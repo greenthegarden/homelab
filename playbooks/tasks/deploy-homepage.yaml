@@ -29,8 +29,10 @@
 - name: deploy-homepage | Set Homepage service facts
   ansible.builtin.set_fact:
     homepage_networks:
-      - { name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}" }
-      - { name: "{{ web_network_name | default('web') }}" }
+      # Docker Socket Proxy External provide access to exposed Docker APIs
+      - { name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy-external') }}" }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     homepage_volumes:
       # Local paths to mount into the container
       # local path:container path
@@ -50,6 +52,14 @@
   ansible.builtin.set_fact:
     homepage_container_labels: "{{ homepage_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # # ---------------------------------------------------------------
+    # # Homepage labels
+    # - { "key": "homepage.group", "value": "Monitoring" }
+    # - { "key": "homepage.name", "value": "Homepage" }
+    # - { "key": "homepage.description", "value": "This page" }
+    # - { "key": "homepage.icon", "value": "homepage.png" }
+    # - { "key": "homepage.href", "value": "https://{{ homepage_fqdn }}/" }
+    # - { "key": "homepage.siteMonitor", "value": "https://{{ homepage_fqdn }}/" }
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
@@ -68,16 +78,8 @@
       "key": "wud.link.template",
       "value": "https://github.com/gethomepage/homepage/releases/tag/v${major}.${minor}.${patch}",
     }
-    # # ---------------------------------------------------------------
-    # # Homepage labels
-    # - { "key": "homepage.group", "value": "Monitoring" }
-    # - { "key": "homepage.name", "value": "Homepage" }
-    # - { "key": "homepage.description", "value": "This page" }
-    # - { "key": "homepage.icon", "value": "homepage.png" }
-    # - { "key": "homepage.href", "value": "https://{{ homepage_fqdn }}/" }
-    # - { "key": "homepage.siteMonitor", "value": "https://{{ homepage_fqdn }}/" }
 
-- name: deploy-homepage | Create homepage networks
+- name: deploy-homepage | Create Homepage networks
   when: homepage_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
@@ -129,7 +131,7 @@
       HOMEPAGE_ALLOWED_HOSTS: "{{ homepage_fqdn }}"
     labels: "{{ homepage_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ homepage_networks | default(omit) }}"
+    networks: "{{ homepage_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     state: started
