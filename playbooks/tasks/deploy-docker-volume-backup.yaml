@@ -45,7 +45,7 @@
 
     - name: deploy-docker-volume-backup | Set Docker Volume Backup volume facts
       ansible.builtin.set_fact:
-        docker_volume_backup_local_backups_dir: "{{ docker_volume_backup_local_backups_dir | default('/root/backups') }}"
+        docker_volume_backup_local_backups_dir: "{{ docker_volume_backup_local_backups_dir | default(local_backups_dir) }}"
 
     - name: deploy-docker-volume-backup | Set Docker Volume Backup aggregated facts
       ansible.builtin.set_fact:
@@ -97,9 +97,10 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-socket-proxy.yaml
       vars:
-        configure_for_docker_volume_backup: true
+        docker_socket_proxy_configure_for_docker_volume_backup: true
         docker_socket_proxy_service_name: "docker-socket-proxy-{{ docker_volume_backup_service_name }}"
         docker_socket_proxy_network_name: "{{ docker_volume_backup_network_name }}"
+        docker_socket_proxy_network_internal: true
 
     - name: deploy-docker-volume-backup | Create Docker Volume Backup mount directories and configuration
       when: docker_volume_backup_local_backups_dir is defined and docker_volume_backup_config_dir is defined

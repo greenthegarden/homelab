@@ -30,9 +30,9 @@
   ansible.builtin.set_fact:
     whatsupdocker_networks:
       # Docker Socket Proxy External provide access to exposed Docker APIs
-      - { name: "{{ docker_socket_proxy_external | default('docker-socket-proxy-external') }}" }
-      # Web network is used to expose all applications via Traefik
-      - { name: "{{ web_network_name | default('web') }}" }
+      - { name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy-external') }}" }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     whatsupdocker_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -57,28 +57,6 @@
     whatsupdocker_container_labels: "{{ whatsupdocker_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # ---------------------------------------------------------------
-    # Traefik labels
-    - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.entrypoints",
-      "value": "websecure",
-    }
-    - {
-      "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.rule",
-      "value": "Host(`{{ whatsupdocker_fqdn }}`)",
-    }
-    # - {
-    #   "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.middlewares",
-    #   "value": "tinyauth",
-    # }
-    # ---------------------------------------------------------------
-    # What's up Docker? labels
-    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/getwud/wud/releases/tag/${major}.${minor}.${patch}",
-    }
-    # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "System" }
     - { "key": "homepage.name", "value": "What's Up Docker" }
@@ -97,6 +75,28 @@
       "key": "homepage.widget.url",
       "value": "https://{{ whatsupdocker_fqdn }}",
     }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.rule",
+      "value": "Host(`{{ whatsupdocker_fqdn }}`)",
+    }
+    # - {
+    #   "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.middlewares",
+    #   "value": "tinyauth",
+    # }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/getwud/wud/releases/tag/${major}.${minor}.${patch}",
+    }
 
 - name: deploy-whatsupdocker | Create What's up Docker? networks
   when: whatsupdocker_networks is defined
@@ -108,7 +108,7 @@
   loop: "{{ whatsupdocker_networks }}"
 
 - name: deploy-whatsupdocker | Create What's up Docker? volumes
-  when: whatsupdocker_volume_name is defined
+  when: whatsupdocker_volume_name is defined and (whatsupdocker_volumes | length > 0)
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
@@ -127,8 +127,8 @@
     detach: true
     env:
       TZ: "{{ homelab.timezone | default('UTC') }}"
-      WUD_TRIGGER_DOCKER_UPDATE_DRYRUN: "true"
-      WUD_TRIGGER_DOCKER_UPDATE_PRUNE: "true"
+      # WUD_TRIGGER_DOCKER_UPDATE_DRYRUN: "true"
+      # WUD_TRIGGER_DOCKER_UPDATE_PRUNE: "true"
       WUD_TRIGGER_DOCKER_UPDATE_THRESHOLD: "minor"
       WUD_TRIGGER_MQTT_MOSQUITTO_URL: "mqtt://{{ emqx.broker_address }}:{{ emqx.broker_port }}"
       WUD_TRIGGER_MQTT_MOSQUITTO_USER: "{{ whatsupdocker.broker_username }}"
@@ -139,7 +139,7 @@
       # Remote hosts to watch
       WUD_WATCHER_ANSIBLE_HOST: "ansible.{{ lan_domain }}"
       WUD_WATCHER_BROKER_HOST: "broker.{{ lan_domain }}"
-      WUD_WATCHER_DOZZLE_HOST: "lxc-dozzle-node-1.{{ lan_domain }}"
+      WUD_WATCHER_DOZZLE_HOST: "dozzle.{{ lan_domain }}"
       WUD_WATCHER_FIREFLYIII_HOST: "fireflyiii.{{ lan_domain }}"
       WUD_WATCHER_FRIGATE_HOST: "frigate.{{ lan_domain }}"
       WUD_WATCHER_GROCY_HOST: "grocy.{{ lan_domain }}"
@@ -150,7 +150,7 @@
       WUD_WATCHER_PORTAINER_HOST: "portainer.{{ lan_domain }}"
       WUD_WATCHER_PRODUCTIVITY_HOST: "productivity.{{ lan_domain }}"
       WUD_WATCHER_UPTIMEKUMA_HOST: "uptimekuma.{{ lan_domain }}"
-      # WUD_WATCHER_WHATSUPDOCKER_HOST: "whatsupdocker.{{ lan_domain }}"
+      WUD_WATCHER_WHATSUPDOCKER_HOST: "whatsupdocker.{{ lan_domain }}"
       # # Authentik integration
       # WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ whatsupdocker.oauth_client_id | default('dummy') }}"
       # WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ whatsupdocker.oauth_client_secret | default('dummy') }}"
@@ -172,7 +172,7 @@
     #   start_period: 30s
     labels: "{{ whatsupdocker_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ whatsupdocker_networks | default(omit) }}"
+    networks: "{{ whatsupdocker_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     security_opts:

@@ -29,8 +29,10 @@
 - name: deploy-uptimekuma | Set Uptime Kuma service facts
   ansible.builtin.set_fact:
     uptimekuma_networks:
-      - { name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}" }
-      - { name: "{{ web_network_name | default('web') }}" }
+      # Docker Socket Proxy External provide access to exposed Docker APIs
+      - { name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy-external') }}" }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reversse-proxy') }}" }
     uptimekuma_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -60,7 +62,7 @@
     # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "Monitoring" }
-    - { "key": "homepage.name", "value": "Uptimekuma" }
+    - { "key": "homepage.name", "value": "Uptime Kuma" }
     - { "key": "homepage.description", "value": "Is everything running?" }
     - { "key": "homepage.icon", "value": "uptime-kuma.png" }
     - { "key": "homepage.href", "value": "https://{{ uptimekuma_fqdn }}/" }
@@ -76,7 +78,7 @@
     - { "key": "traefik.enable", "value": "true" }
     - {
       "key": "traefik.http.routers.{{ uptimekuma_service_name }}.entrypoints",
-      "value": "websecure",
+      "value": "{{ traefik_entrypoint_secure_name }}",
     }
     - {
       "key": "traefik.http.routers.{{ uptimekuma_service_name }}.rule",
@@ -146,11 +148,11 @@
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ (uptimekuma_container_labels | default({})) | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ uptimekuma_networks | default(omit) }}"
+        networks: "{{ uptimekuma_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ default_host_volumes + uptimekuma_volumes }}"
+        volumes: "{{ default_host_volumes + uptimekuma_volumes | default(omit) }}"
       register: uptimekuma_container_state
 
 - name: deploy-uptimekuma | Wait for Uptime Kuma to accept connections

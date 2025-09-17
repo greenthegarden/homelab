@@ -6,8 +6,8 @@
 # TODO: think about better ways of managing this
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy configuration facts
   ansible.builtin.set_fact:
-    configure_for_docker_volume_backup: "{{ configure_for_docker_volume_backup | default(false) }}"
-    docker_socket_proxy_publish_ports: "{{ docker_socket_proxy_publish_ports | default(false) }}"
+    docker_socket_proxy_configure_for_docker_volume_backup: "{{ docker_socket_proxy_configure_for_docker_volume_backup | default(false) }}"
+    # docker_socket_proxy_publish_ports: "{{ docker_socket_proxy_publish_ports | default(false) }}"
 
 ####### DOCKER-SOCKET-PROXY SECTION
 
@@ -20,6 +20,7 @@
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy network facts
   ansible.builtin.set_fact:
     docker_socket_proxy_network_name: "{{ docker_socket_proxy_network_name | default(docker_socket_proxy_service_name) }}"
+    docker_socket_proxy_network_internal: "{{ docker_socket_proxy_network_internal | default(true) }}"
 
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy volume facts
   ansible.builtin.set_fact:
@@ -32,7 +33,7 @@
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy service facts
   ansible.builtin.set_fact:
     docker_socket_proxy_networks:
-      - { name: "{{ docker_socket_proxy_network_name }}", internal: "{{ docker_socket_proxy_network_internal | default(false) }}" }
+      - { name: "{{ docker_socket_proxy_network_name }}", internal: "{{ docker_socket_proxy_network_internal }}" }
     docker_socket_proxy_ports:
       - "{{ docker_socket_proxy_service_port }}:2375/tcp"
     docker_socket_proxy_volumes: []
@@ -94,7 +95,7 @@
       # These API sections are considered security-critical, and thus access is revoked by default. Maximum caution when enabling these.
       AUTH: "0"
       SECRETS: "0"
-      POST: "{{ \"1\" if configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to stop containers
+      POST: "{{ \"1\" if docker_socket_proxy_configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to stop containers
       ## Not always needed
       # You will possibly need to grant access to some of these API sections, which are not so extremely critical but can expose some information that your service does not need.
       BUILD: "0"
@@ -105,22 +106,22 @@
       ALLOW_STOP: "0" # (containers/id/stop)
       ALLOW_RESTARTS: "0" # (containers/id/stop|restart|kill)
       DISTRIBUTION: "0"
-      EXEC: "{{ \"1\" if configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to execute commands
+      EXEC: "{{ \"1\" if docker_socket_proxy_configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to execute commands
       GRPC: "0"
       IMAGES: "0"
-      INFO: "{{ \"1\" if configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to get swarm state
+      INFO: "{{ \"1\" if docker_socket_proxy_configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to get swarm state
       NETWORKS: "0" # Block listing newtworks
-      NODES: "{{ \"1\" if configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to stop containers
+      NODES: "{{ \"1\" if docker_socket_proxy_configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to stop containers
       PLUGINS: "0"
       SERVICES: "0" # Block listing and managing services
       SESSION: "0"
       SWARM: "0"
       SYSTEM: "0" # Block system-level API access
-      TASKS: "{{ \"1\" if configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to stop containers
+      TASKS: "{{ \"1\" if docker_socket_proxy_configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to stop containers
       VOLUMES: "0" # Allow listing volumes
     labels: "{{ docker_socket_proxy_container_labels | default(omit) }}"
     networks: "{{ docker_socket_proxy_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
-    published_ports: "{{ docker_socket_proxy_ports if docker_socket_proxy_publish_ports else omit }}"
+    published_ports: "{{ docker_socket_proxy_ports if not docker_socket_proxy_network_internal else omit }}"
     recreate: true # Recreate to ensure env changes are used
     restart: true
     restart_policy: unless-stopped

@@ -21,42 +21,43 @@
   ansible.builtin.include_tasks:
     file: tasks/homelab-configure-docker-base.yaml
 
-# Define required Docker external networks for the homelab environment
-- name: homelab-deploy-support-services | Set Homelab network facts
-  ansible.builtin.set_fact:
-    docker_socket_proxy_external_network_name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy-external') }}"
-    web_network_name: "{{ web_network_name | default('web') }}"
+# # Define required Docker external networks for the homelab environment
+# - name: homelab-deploy-support-services | Set Homelab network facts
+#   ansible.builtin.set_fact:
+#     docker_socket_proxy_external_network_name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy-external') }}"
+#     reverse_proxy_network_name: "{{ web_network_name | default('web') }}"
 
-# Create required Docker external networks for the homelab environment
-- name: homelab-deploy-support-services | Create Homelab Docker networks  # noqa: syntax-check[unknown-module]
-  community.docker.docker_network:
-    name: "{{ item.name }}"
-  loop:
-    # - name: "{{ docker_monitoring_network_name }}"
-    - name: "{{ web_network_name }}"
+# # Create required Docker external networks for the homelab environment
+# - name: homelab-deploy-support-services | Create Homelab Docker networks  # noqa: syntax-check[unknown-module]
+#   community.docker.docker_network:
+#     name: "{{ item.name }}"
+#   loop:
+#     # - name: "{{ docker_monitoring_network_name }}"
+#     - name: "{{ web_network_name }}"
 
 # Use the following agents to monitor Docker services via host docker socket
 
-# Portainer used to provide a web UI to manage Docker services
-- name: homelab-deploy-support-services | Deploy a containerised instance of Portainer Agent
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-portainer-agent.yaml
-
-# Dozzle used to provide a web UI to view Docker logs
 - name: homelab-deploy-support-services | Deploy a containerised instance of Dozzle Agent
   ansible.builtin.include_tasks:
     file: tasks/deploy-dozzle-agent.yaml
   vars:
-    dozzle_agent_network_name: dozzle
+    dozzle_agent_network_name: "{{ dozzle_network_name }}"
+
+- name: homelab-deploy-support-services | Deploy a containerised instance of Portainer Agent
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-portainer-agent.yaml
+  vars:
+    portainer_agent_network_name: "{{ portainer_network_name }}"
 
 # Docker Socker Proxy used to restrict access to required Docker APIs to monitor remote Docker services
-# Used by Homepage and What's up Docker?
-- name: homelab-deploy-support-services | Deploy a containerised read-only instance of Docker Socket Proxy
+# Used by Homepage, Uptime Kuma, and What's up Docker?
+- name: homelab-deploy-support-services | Deploy a containerised exposed instance of Docker Socket Proxy
   ansible.builtin.include_tasks:
     file: tasks/deploy-docker-socket-proxy.yaml
   vars:
     docker_socket_proxy_service_name: "{{ docker_socket_proxy_external_network_name }}"
-    docker_socket_proxy_publish_ports: true
+    docker_socket_proxy_network_name: "{{ docker_socket_proxy_external_network_name }}"
+    docker_socket_proxy_network_internal: false
 
 # Traefik used as a reverse proxy to manage access to web services with SSL via Let's Encrypt
 - name: homelab-deploy-support-services | Deploy a containerised instance of Traefik
