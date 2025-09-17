@@ -30,8 +30,9 @@
 - name: deploy-portainer | Set Portainer service facts
   ansible.builtin.set_fact:
     portainer_networks:
-      - { name: "{{ portainer_network_name | default(portainer_service_name) }}" }
-      - { name: "{{ web_network_name | default('web') }}" }
+      - { name: "{{ portainer_network_name }}" }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     portainer_volumes:
       # Local paths to mount into the container
       # local path:container path
@@ -52,11 +53,22 @@
     portainer_container_labels: "{{ portainer_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # ---------------------------------------------------------------
+    # Docker Volume Backup labels
+    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "System" }
+    - { "key": "homepage.name", "value": "Portainer" }
+    - { "key": "homepage.description", "value": "Container management" }
+    - { "key": "homepage.icon", "value": "portainer.png" }
+    - { "key": "homepage.href", "value": "https://{{ portainer_fqdn }}" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ portainer_fqdn }}" }
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
     - {
       "key": "traefik.http.routers.{{ portainer_service_name }}.entrypoints",
-      "value": "websecure",
+      "value": "{{ traefik_entrypoint_secure_name }}",
     }
     - {
       "key": "traefik.http.routers.{{ portainer_service_name }}.rule",
@@ -73,17 +85,6 @@
       "key": "wud.link.template",
       "value": "https://github.com/portainer/portainer/releases/tag/${major}.${minor}.${patch}",
     }
-    # ---------------------------------------------------------------
-    # Docker Volume Backup labels
-    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
-    # ---------------------------------------------------------------
-    # Homepage labels
-    - { "key": "homepage.group", "value": "System" }
-    - { "key": "homepage.name", "value": "Portainer" }
-    - { "key": "homepage.description", "value": "Container management" }
-    - { "key": "homepage.icon", "value": "portainer.png" }
-    - { "key": "homepage.href", "value": "https://{{ portainer_fqdn }}" }
-    - { "key": "homepage.siteMonitor", "value": "https://{{ portainer_fqdn }}" }
 
 - name: deploy-portainer | Create Portainer networks
   when: portainer_networks is defined
@@ -114,7 +115,7 @@
     detach: true
     labels: "{{ portainer_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ portainer_networks | default(omit) }}"
+    networks: "{{ portainer_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     state: started

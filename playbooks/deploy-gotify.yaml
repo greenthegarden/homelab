@@ -25,6 +25,6 @@
       vars:
         docker_volume_backup_service_name: "docker-volume-backup-{{ gotify_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ gotify_volume_name }}:/backups/{{ gotify_service_name }}-backup:ro"
+          - "{{ gotify_volume_name }}:/backup/{{ gotify_service_name }}-backup:ro"
         docker_volume_backup_backup_label: "{{ gotify_service_name }}"
         docker_volume_backup_backup_retention_days: 7
