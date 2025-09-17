@@ -83,8 +83,8 @@
       ## https://medium.com/@containeroo/traefik-2-0-paranoid-about-mounting-var-run-docker-sock-22da9cb3e78c
       ## ---------------------------------------------------------------
       - "--providers.docker=true"
-      - "--providers.docker.exposedByDefault=false"
       - "--providers.docker.endpoint=tcp://{{ docker_socket_proxy_service_name }}:{{ docker_socket_proxy_service_port }}"
+      - "--providers.docker.exposedByDefault=false"
       - "--providers.docker.network={{ traefik_network_name }}"
       - "--providers.docker.watch=true"
 

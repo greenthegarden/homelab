@@ -100,11 +100,19 @@
     emqx_container_labels: "{{ emqx_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "System" }
+    - { "key": "homepage.name", "value": "Broker" }
+    - { "key": "homepage.description", "value": "MQTT Broker" }
+    - { "key": "homepage.icon", "value": "emqx.png" }
+    - { "key": "homepage.href", "value": "https://{{ emqx_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ emqx_fqdn }}/" }
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
     - {
       "key": "traefik.http.routers.{{ emqx_service_name }}.entrypoints",
-      "value": "websecure",
+      "value": "{{ traefik_entrypoint_secure_name }}",
     }
     - {
       "key": "traefik.http.routers.{{ emqx_service_name }}.rule",
@@ -121,14 +129,6 @@
       "key": "wud.link.template",
       "value": "https://github.com/emqx/emqx/releases/tag/v${major}.${minor}.${patch}",
     }
-    # ---------------------------------------------------------------
-    # Homepage labels
-    - { "key": "homepage.group", "value": "System" }
-    - { "key": "homepage.name", "value": "Broker" }
-    - { "key": "homepage.description", "value": "MQTT Broker" }
-    - { "key": "homepage.icon", "value": "emqx.png" }
-    - { "key": "homepage.href", "value": "https://{{ emqx_fqdn }}/" }
-    - { "key": "homepage.siteMonitor", "value": "https://{{ emqx_fqdn }}/" }
 
 - name: deploy-emqx | Create EMQX networks
   when: emqx_networks is defined

@@ -24,7 +24,8 @@
 - name: deploy-it_tools | Set IT-Tools service facts
   ansible.builtin.set_fact:
     it_tools_networks:
-      - { name: "{{ web_network_name | default('web') }}" }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     it_tools_volumes: []
       # Local paths to mount into the container
       # local path:container path
@@ -44,6 +45,17 @@
     it_tools_container_labels: "{{ it_tools_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "IT-Tools" }
+    - {
+      "key": "homepage.description",
+      "value": "Useful tools for developer and people working in IT",
+    }
+    - { "key": "homepage.icon", "value": "it-tools.png" }
+    - { "key": "homepage.href", "value": "https://{{ it_tools_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ it_tools_fqdn }}/" }
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
     - {
@@ -61,17 +73,6 @@
       "key": "wud.link.template",
       "value": "https://github.com/CorentinTh/it-tools/releases/tag/v${major}.${minor}.${patch}",
     }
-    # ---------------------------------------------------------------
-    # Homepage labels
-    - { "key": "homepage.group", "value": "Applications" }
-    - { "key": "homepage.name", "value": "It-tools" }
-    - {
-      "key": "homepage.description",
-      "value": "Useful tools for developer and people working in IT",
-    }
-    - { "key": "homepage.icon", "value": "it-tools.png" }
-    - { "key": "homepage.href", "value": "https://{{ it_tools_fqdn }}/" }
-    - { "key": "homepage.siteMonitor", "value": "https://{{ it_tools_fqdn }}/" }
 
 - name: deploy-it_tools | Create IT-Tools networks # noqa: syntax-check[unknown-module]
   when: it_tools_networks is defined
@@ -103,7 +104,7 @@
     detach: true
     labels: "{{ it_tools_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ it_tools_networks | default(omit) }}"
+    networks: "{{ it_tools_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     state: started

@@ -13,9 +13,13 @@
     beszel_service_name: "{{ beszel_service_name | default('beszel') }}"
     beszel_service_port: "{{ beszel_service_port | default(8090) }}"
 
+- name: deploy-beszel | Set Beszel network facts
+  ansible.builtin.set_fact:
+    beszel_network_name: "{{ beszel_network_name | default(beszel_service_name) }}"
+
 - name: deploy-beszel | Set Beszel volume facts
   ansible.builtin.set_fact:
-    beszel_volume_data_name: "{{ beszel_service_name }}-data"
+    beszel_volume_name: "{{ beszel_service_name }}"
 
 - name: deploy-beszel | Set Beszel aggregated facts
   ansible.builtin.set_fact:
@@ -24,8 +28,10 @@
 - name: deploy-beszel | Set Beszel service facts
   ansible.builtin.set_fact:
     beszel_networks:
-      - name: "{{ beszel_network_name | default('beszel') }}"
-      - name: "{{ web_network_name | default('web') }}"
+      # Beszel network allows connection to beszel agents
+      - { name: "{{ beszel_network_name }}" }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     beszel_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -33,18 +39,39 @@
     beszel_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ beszel_volume_data_name }}:/beszel_data"
+      - "{{ beszel_volume_name }}:/beszel_data"
+
+- name: deploy-beszel | Log Beszel configuration
+  ansible.builtin.debug:
+    msg:
+      - "Beszel image: {{ beszel_image }}"
+      - "Beszel service name: {{ beszel_service_name }}"
+      - "Beszel FQDN: {{ beszel_fqdn }}"
+      - "Beszel networks: {{ beszel_networks | default(omit) }}"
+      - "Beszel ports: {{ beszel_ports | default(omit) }}"
+      - "Beszel volumes: {{ beszel_volumes | default(omit) }}"
 
 - name: deploy-beszel | Create Beszel container labels
   ansible.builtin.set_fact:
     beszel_container_labels: "{{ beszel_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Monitoring" }
+    - { "key": "homepage.name", "value": "Beszel" }
+    - {
+      "key": "homepage.description",
+      "value": "Lightweight server monitoring hub with historical data, docker stats, and alerts.",
+    }
+    - { "key": "homepage.icon", "value": "beszel.png" }
+    - { "key": "homepage.href", "value": "https://{{ beszel_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ beszel_fqdn }}/" }
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
     - {
       "key": "traefik.http.routers.{{ beszel_service_name }}.entrypoints",
-      "value": "websecure",
+      "value": "{{ traefik_entrypoint_secure_name }}",
     }
     - {
       "key": "traefik.http.routers.{{ beszel_service_name }}.rule",
@@ -57,28 +84,29 @@
       "key": "wud.link.template",
       "value": "https://github.com/henrygd/beszel/releases/tag/v${major}.${minor}.${patch}",
     }
-    # ---------------------------------------------------------------
-    # Homepage labels
-    - { "key": "homepage.group", "value": "Monitoring" }
-    - { "key": "homepage.name", "value": "Beszel" }
-    - {
-      "key": "homepage.description",
-      "value": "Lightweight server monitoring hub with historical data, docker stats, and alerts.",
-    }
-    - { "key": "homepage.icon", "value": "beszel.png" }
-    - { "key": "homepage.href", "value": "https://{{ beszel_fqdn }}/" }
-    - { "key": "homepage.siteMonitor", "value": "https://{{ beszel_fqdn }}/" }
 
-- name: deploy-beszel | Create Beszel network  # noqa: syntax-check[unknown-module]
+- name: deploy-beszel | Create Beszel network
+  when: beszel_networks is defined
   community.docker.docker_network:
-    name: "{{ beszel_network_name }}"
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ beszel_networks }}"
+
+- name: deploy-beszel | Create volume for Beszel
+  when: beszel_volume_name is defined and (beszel_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ beszel_volume_name }}"
 
 - name: deploy-beszel | Pull Beszel image
   community.docker.docker_image:
     name: "{{ beszel_image }}"
     source: pull
 
-# docker run -d -v /var/run/docker.sock:/var/run/docker.sock -p 8080:8080 amir20/beszel:latest
 - name: deploy-beszel | Deploy Beszel
   community.docker.docker_container:
     name: "{{ beszel_service_name }}"
@@ -86,7 +114,7 @@
     detach: true
     labels: "{{ beszel_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ beszel_networks | default(omit) }}"
+    networks: "{{ beszel_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     state: started
@@ -102,5 +130,5 @@
     state: started
     timeout: 30
   register: beszel_running
-  until: beszel_running is success
   retries: 10
+  until: beszel_running is success

@@ -49,13 +49,21 @@ repos:
         stages: [pre-commit]
 
   - repo: https://github.com/Checkmarx/kics
-    rev: "v2.1.13" # change to correct tag or sha
+    rev: "v2.1.13"
     hooks:
       - id: kics-scan
         name: "🔒 security · Keeping Infrastructure as Code Secure"
         verbose: true
         args: [--ignore-on-exit, "all"]
 
+  # - repo: https://github.com/semgrep/pre-commit
+  #   rev: 'v1.136.0'
+  #   hooks:
+  #     - id: semgrep
+  #       entry: semgrep
+  #       # Replace <SEMGREP_RULESET_URL> with your custom rule source
+  #       # or see https://semgrep.dev/explore to select a ruleset and copy its URL
+  #       args: ['--config', '"p/default"', '--error', '--skip-unknown-extensions']
 
   # --------------------------- 🔍 Code Quality Tools -------------------------- #
 

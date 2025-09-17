@@ -32,7 +32,7 @@
       # Docker Socket Proxy External provide access to exposed Docker APIs
       - { name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy-external') }}" }
       # Reverse Proxy  network is used to expose applications via Traefik
-      - { name: "{{ reverse_proxy_network_name | default('reversse-proxy') }}" }
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     uptimekuma_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -102,7 +102,7 @@
   loop: "{{ uptimekuma_networks }}"
 
 - name: deploy-uptimekuma | Create Uptime Kuma volume
-  when: uptimekuma_volume_name is defined
+  when: uptimekuma_volume_name is defined and (uptimekuma_volumes | length > 0)
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present

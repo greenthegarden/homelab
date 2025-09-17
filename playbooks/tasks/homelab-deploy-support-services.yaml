@@ -63,6 +63,8 @@
 - name: homelab-deploy-support-services | Deploy a containerised instance of Traefik
   ansible.builtin.include_tasks:
     file: tasks/deploy-traefik.yaml
+  vars:
+    traefik_network_name: "{{ reverse_proxy_network_name }}"
 
 # Tinyauth used to provide basic authentication for web services
 - name: homelab-deploy-support-services | Deploy a containerised instance of Tinyauth
