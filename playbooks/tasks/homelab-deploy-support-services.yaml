@@ -21,33 +21,19 @@
   ansible.builtin.include_tasks:
     file: tasks/homelab-configure-docker-base.yaml
 
-# # Define required Docker external networks for the homelab environment
-# - name: homelab-deploy-support-services | Set Homelab network facts
-#   ansible.builtin.set_fact:
-#     docker_socket_proxy_external_network_name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy-external') }}"
-#     reverse_proxy_network_name: "{{ web_network_name | default('web') }}"
-
-# # Create required Docker external networks for the homelab environment
-# - name: homelab-deploy-support-services | Create Homelab Docker networks  # noqa: syntax-check[unknown-module]
-#   community.docker.docker_network:
-#     name: "{{ item.name }}"
-#   loop:
-#     # - name: "{{ docker_monitoring_network_name }}"
-#     - name: "{{ web_network_name }}"
-
 # Use the following agents to monitor Docker services via host docker socket
 
-- name: homelab-deploy-support-services | Deploy a containerised instance of Dozzle Agent
+- name: homelab-deploy-support-services | Deploy a containerised instance of a Dozzle Agent
   ansible.builtin.include_tasks:
     file: tasks/deploy-dozzle-agent.yaml
   vars:
     dozzle_agent_network_name: "{{ dozzle_network_name }}"
 
-- name: homelab-deploy-support-services | Deploy a containerised instance of Portainer Agent
+- name: homelab-deploy-support-services | Deploy a containerised instance of a Portainer Agent
   ansible.builtin.include_tasks:
     file: tasks/deploy-portainer-agent.yaml
 
-- name: homelab-deploy-support-services | Deploy a containerised exposed instance of Docker Socket Proxy configured for use by Homepage and Uptime Kuma
+- name: homelab-deploy-support-services | Deploy an exposed containerised instance of Docker Socket Proxy configured for use by Homepage and Uptime Kuma
   ansible.builtin.include_tasks:
     file: tasks/deploy-docker-socket-proxy.yaml
   vars:
@@ -58,7 +44,7 @@
     docker_socket_proxy_env:
       CONTAINERS: "1"
 
-- name: homelab-deploy-support-services | Deploy a containerised exposed instance of Docker Socket Proxy configured to What's Up Docker?
+- name: homelab-deploy-support-services | Deploy an exposed containerised instance of Docker Socket Proxy configured to What's Up Docker?
   ansible.builtin.include_tasks:
     file: tasks/deploy-docker-socket-proxy.yaml
   vars:

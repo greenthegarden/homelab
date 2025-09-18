@@ -29,8 +29,6 @@
 - name: deploy-whatsupdocker | Set What's up Docker? service facts
   ansible.builtin.set_fact:
     whatsupdocker_networks:
-      # Docker Socket Proxy External provide access to exposed Docker APIs
-      # - { name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy-external') }}" }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     whatsupdocker_ports:
@@ -138,20 +136,20 @@
       # Remote hosts to watch
       # WUD_WATCHER_ANSIBLE_HOST: "ansible.{{ lan_domain }}"
       # WUD_WATCHER_ANSIBLE_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
-      # WUD_WATCHER_BROKER_HOST: "broker.{{ lan_domain }}"
-      # WUD_WATCHER_BROKER_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_BROKER_HOST: "broker.{{ lan_domain }}"
+      WUD_WATCHER_BROKER_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
       WUD_WATCHER_DOZZLE_HOST: "dozzle.{{ lan_domain }}"
       WUD_WATCHER_DOZZLE_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
       # WUD_WATCHER_FIREFLYIII_HOST: "fireflyiii.{{ lan_domain }}"
       # WUD_WATCHER_FIREFLYIII_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
-      # WUD_WATCHER_FRIGATE_HOST: "frigate.{{ lan_domain }}"
-      # WUD_WATCHER_FRIGATE_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
-      # WUD_WATCHER_GROCY_HOST: "grocy.{{ lan_domain }}"
-      # WUD_WATCHER_GROCY_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
-      # WUD_WATCHER_HOMEBOX_HOST: "homebox.{{ lan_domain }}"
-      # WUD_WATCHER_HOMEBOX_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
-      # WUD_WATCHER_HOMEPAGE_HOST: "homepage.{{ lan_domain }}"
-      # WUD_WATCHER_HOMEPAGE_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_FRIGATE_HOST: "frigate.{{ lan_domain }}"
+      WUD_WATCHER_FRIGATE_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_GROCY_HOST: "grocy.{{ lan_domain }}"
+      WUD_WATCHER_GROCY_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_HOMEBOX_HOST: "homebox.{{ lan_domain }}"
+      WUD_WATCHER_HOMEBOX_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_HOMEPAGE_HOST: "homepage.{{ lan_domain }}"
+      WUD_WATCHER_HOMEPAGE_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
       # WUD_WATCHER_HORTUSFOX_HOST: "hortusfox.{{ lan_domain }}"
       # WUD_WATCHER_HORTUSFOX_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
       # WUD_WATCHER_OLLAMA_HOST: "ollama.{{ lan_domain }}"
@@ -160,10 +158,10 @@
       # WUD_WATCHER_PORTAINER_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
       # WUD_WATCHER_PRODUCTIVITY_HOST: "productivity.{{ lan_domain }}"
       # WUD_WATCHER_PRODUCTIVITY_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
-      # WUD_WATCHER_UPTIMEKUMA_HOST: "uptimekuma.{{ lan_domain }}"
-      # WUD_WATCHER_UPTIMEKUMA_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
-      # WUD_WATCHER_WHATSUPDOCKER_HOST: "whatsupdocker.{{ lan_domain }}"
-      # WUD_WATCHER_WHATSUPDOCKER_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_UPTIMEKUMA_HOST: "uptimekuma.{{ lan_domain }}"
+      WUD_WATCHER_UPTIMEKUMA_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_WHATSUPDOCKER_HOST: "whatsupdocker.{{ lan_domain }}"
+      WUD_WATCHER_WHATSUPDOCKER_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
       # # Authentik integration
       # WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ whatsupdocker.oauth_client_id | default('dummy') }}"
       # WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ whatsupdocker.oauth_client_secret | default('dummy') }}"

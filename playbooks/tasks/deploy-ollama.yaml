@@ -29,7 +29,8 @@
   ansible.builtin.set_fact:
     ollama_networks:
       - { name: "{{ ollama_network_name }}" }
-      - { name: "{{ web_network_name | default('web') }}" }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     ollama_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -131,7 +132,7 @@
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ ollama_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ ollama_networks | default(omit) }}"
+        networks: "{{ ollama_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         security_opts:

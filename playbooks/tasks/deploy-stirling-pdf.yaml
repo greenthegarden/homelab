@@ -33,8 +33,8 @@
 - name: deploy-stirling-pdf | Set Stirling-PDF service facts
   ansible.builtin.set_fact:
     stirling_pdf_networks:
-      - { name: "{{ stirling_pdf_network_name }}" }
-      - { name: "{{ web_network_name | default('web') }}" }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     stirling_pdf_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -149,7 +149,7 @@
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ stirling_pdf_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ stirling_pdf_networks | default(omit) }}"
+        networks: "{{ stirling_pdf_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started
