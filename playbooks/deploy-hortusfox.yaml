@@ -28,7 +28,8 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
+        docker_volume_backup_service_name: "docker-volume-backup-{{ hortusfox_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ hortusfox_db_backup_volume_name }}:/backup/hortusfox_db-backup:ro"
+          - "{{ hortusfox_db_backup_volume_name }}:/backup/{{ hortusfox_service_name }}-db-backup:ro"
         docker_volume_backup_backup_label: "{{ hortusfox_service_name }}-db"
         docker_volume_backup_backup_retention_days: 7

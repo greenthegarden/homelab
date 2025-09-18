@@ -41,16 +41,17 @@
 - name: deploy-hortusfox | Set Hortusfox service facts
   ansible.builtin.set_fact:
     hortusfox_networks:
-      - { name: "{{ web_network_name | default('web') }}", internal: true }
-      - { name: "{{ web_network_name | default('web') }}" }
+      - { name: "{{ hortusfox_network_name }}", internal: true }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     hortusfox_ports:
       # Published ports to expose outside the container
       # host port:container port
       - "{{ hortusfox_service_port }}:80"
-    hortusfox_volumes:
+    hortusfox_volumes: []
       # Local paths to mount into the container
       # local path:container path
-      - "{{ hortusfox_config_dir }}/config:/app/config"
+      # - "{{ hortusfox_config_dir }}/config:/app/config"
 
 - name: deploy-hortusfox | Log Hortusfox configuration
   ansible.builtin.debug:
@@ -66,6 +67,20 @@
   ansible.builtin.set_fact:
     hortusfox_container_labels: "{{ hortusfox_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "HortusFox" }
+    - {
+      "key": "homepage.description",
+      "value": "A self-hosted collaborative plant management system",
+    }
+    - { "key": "homepage.icon", "value": "hortusfox.png" }
+    - { "key": "homepage.href", "value": "https://{{ hortusfox_fqdn }}/" }
+    - {
+      "key": "homepage.siteMonitor",
+      "value": "https://{{ hortusfox_fqdn }}/",
+    }
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
@@ -84,20 +99,23 @@
       "key": "wud.link.template",
       "value": "https://github.com/danielbrendel/hortusfox-web/releases/tag/v${major}.${minor}.${patch}",
     }
-    # ---------------------------------------------------------------
-    # Homepage labels
-    - { "key": "homepage.group", "value": "Applications" }
-    - { "key": "homepage.name", "value": "HortusFox" }
-    - {
-      "key": "homepage.description",
-      "value": "A self-hosted collaborative plant management system",
-    }
-    - { "key": "homepage.icon", "value": "hortusfox.png" }
-    - { "key": "homepage.href", "value": "https://{{ hortusfox_fqdn }}/" }
-    - {
-      "key": "homepage.siteMonitor",
-      "value": "https://{{ hortusfox_fqdn }}/",
-    }
+
+- name: deploy-hortusfox | Create Hortusfox networks
+  when: hortusfox_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ hortusfox_networks }}"
+
+- name: deploy-hortusfox | Create Hortusfox volumes
+  when: hortusfox_volume_name is defined and (hortusfox_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ hortusfox_volume_name }}"
 
 - name: deploy-hortusfox | Create Hortusfox DB container labels
   ansible.builtin.set_fact:
@@ -173,7 +191,7 @@
           DB_CHARSET: "utf8mb4"
         labels: "{{ hortusfox_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ hortusfox_networks | default(omit) }}"
+        networks: "{{ hortusfox_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started
@@ -193,35 +211,35 @@
   until: hortusfox_running is success
 
 
-# remove when no longer using docker compose
+# # remove when no longer using docker compose
 
-- name: deploy-hortusfox | Create Hortusfox configuration directory
-  when: false
-  ansible.builtin.file:
-    path: "{{ hortusfox_config_dir }}"
-    state: directory
-    mode: "0644"
+# - name: deploy-hortusfox | Create Hortusfox configuration directory
+#   when: false
+#   ansible.builtin.file:
+#     path: "{{ hortusfox_config_dir }}"
+#     state: directory
+#     mode: "0644"
 
-- name: deploy-hortusfox | Create Hortusfox configuration
-  when: false
-  ansible.builtin.template:
-    src: templates/hortusfox/docker-compose.yml.j2
-    dest: "{{ hortusfox_config_dir }}/docker-compose.yml"
-    mode: "0644"
+# - name: deploy-hortusfox | Create Hortusfox configuration
+#   when: false
+#   ansible.builtin.template:
+#     src: templates/hortusfox/docker-compose.yml.j2
+#     dest: "{{ hortusfox_config_dir }}/docker-compose.yml"
+#     mode: "0644"
 
-- name: deploy-hortusfox | Create Hortusfox backup volume # noqa: syntax-check[unknown-module]
-  when: false
-  community.docker.docker_volume:
-    name: "{{ hortusfox_db_backup_volume_name }}"
-    state: present
+# - name: deploy-hortusfox | Create Hortusfox backup volume # noqa: syntax-check[unknown-module]
+#   when: false
+#   community.docker.docker_volume:
+#     name: "{{ hortusfox_db_backup_volume_name }}"
+#     state: present
 
-# - name: deploy-hortusfox | Tear down existing services
+# # - name: deploy-hortusfox | Tear down existing services
+# #   community.docker.docker_compose_v2:
+# #     project_src: /root/hortusfox
+# #     state: absent
+
+# - name: deploy-hortusfox | Deploy Hortusfox services # noqa: syntax-check[unknown-module]
+#   when: false
 #   community.docker.docker_compose_v2:
-#     project_src: /root/hortusfox
-#     state: absent
-
-- name: deploy-hortusfox | Deploy Hortusfox services # noqa: syntax-check[unknown-module]
-  when: false
-  community.docker.docker_compose_v2:
-    project_src: "{{ hortusfox_config_dir }}"
-  register: output
+#     project_src: "{{ hortusfox_config_dir }}"
+#   register: output
