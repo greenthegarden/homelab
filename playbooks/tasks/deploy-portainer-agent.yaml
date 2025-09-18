@@ -27,8 +27,7 @@
 
 - name: deploy-portainer-agent | Set Portainer Agent service facts
   ansible.builtin.set_fact:
-    portainer_agent_networks:
-      - { name: "{{ portainer_agent_network_name }}" }
+    portainer_agent_networks: []
     portainer_agent_ports:
       - "{{ portainer_agent_service_port }}:9001"
     portainer_agent_volumes: []

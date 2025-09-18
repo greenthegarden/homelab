@@ -14,11 +14,6 @@ docker_socket_proxy_external_network_name: docker-socket-proxy-external
 # Reverse Proxy Network is an external network that all applications hosted behind the reverse proxy (in this case Traefik) need to be on
 reverse_proxy_network_name: reverse-proxy
 
-# Docker manager service networks, are all external to connect to agents
-beszel_network_name: beszel
-dozzle_network_name: dozzle
-portainer_network_name: portainer
-
 # Containerised service facts
 
 # Docker Socket Proxy service facts

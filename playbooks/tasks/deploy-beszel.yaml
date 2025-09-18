@@ -28,8 +28,6 @@
 - name: deploy-beszel | Set Beszel service facts
   ansible.builtin.set_fact:
     beszel_networks:
-      # Beszel network allows connection to beszel agents
-      - { name: "{{ beszel_network_name }}" }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     beszel_ports:

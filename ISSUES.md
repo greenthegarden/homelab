@@ -13,14 +13,9 @@
 Install tools
 
 ```sh
-# Update apt cache
-apt update
-# Install ping
-apt install iputils-ping -y
-# Install nc
-apt install netcat-traditional -y
-# Install nmap
-apt install nmap -y
+# Update apt cache and install
+# ping, netcat (nc) and nmap
+apt update & apt install -y iputils-ping netcat-traditional nmap
 ```
 
 Use nmap to scan for open ports on the local host

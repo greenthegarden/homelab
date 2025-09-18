@@ -28,8 +28,6 @@
 - name: deploy-dozzle | Set Dozzle service facts
   ansible.builtin.set_fact:
     dozzle_networks:
-      # Dozzle network allows connection to dozzle agents
-      - { name: "{{ dozzle_network_name }}" }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     dozzle_ports:

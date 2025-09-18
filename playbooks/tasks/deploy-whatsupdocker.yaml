@@ -30,7 +30,7 @@
   ansible.builtin.set_fact:
     whatsupdocker_networks:
       # Docker Socket Proxy External provide access to exposed Docker APIs
-      - { name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy-external') }}" }
+      # - { name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy-external') }}" }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     whatsupdocker_ports:
@@ -127,15 +127,14 @@
     detach: true
     env:
       TZ: "{{ homelab.timezone | default('UTC') }}"
-      # WUD_TRIGGER_DOCKER_UPDATE_DRYRUN: "true"
-      # WUD_TRIGGER_DOCKER_UPDATE_PRUNE: "true"
-      WUD_TRIGGER_DOCKER_UPDATE_THRESHOLD: "minor"
       WUD_TRIGGER_MQTT_MOSQUITTO_URL: "mqtt://{{ emqx.broker_address }}:{{ emqx.broker_port }}"
       WUD_TRIGGER_MQTT_MOSQUITTO_USER: "{{ whatsupdocker.broker_username }}"
       WUD_TRIGGER_MQTT_MOSQUITTO_PASSWORD: "{{ whatsupdocker.broker_password }}"
       WUD_TRIGGER_MQTT_MOSQUITTO_HASS_ENABLED: "true"
-      # Local host to watch
-      WUD_WATCHER_LOCAL_HOST: "docker-socket-proxy-external"
+      # # Local host to watch
+      # WUD_WATCHER_DOCKER_HOST: "docker-socket-proxy-external"
+      # WUD_WATCHER_DOCKER_PORT: "2375"
+      # WUD_WATCHER_DOCKER_SOCKET: "tcp://docker-socket-proxy-external"
       # Remote hosts to watch
       WUD_WATCHER_ANSIBLE_HOST: "ansible.{{ lan_domain }}"
       WUD_WATCHER_BROKER_HOST: "broker.{{ lan_domain }}"

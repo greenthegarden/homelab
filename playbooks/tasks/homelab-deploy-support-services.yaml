@@ -46,8 +46,6 @@
 - name: homelab-deploy-support-services | Deploy a containerised instance of Portainer Agent
   ansible.builtin.include_tasks:
     file: tasks/deploy-portainer-agent.yaml
-  vars:
-    portainer_agent_network_name: "{{ portainer_network_name }}"
 
 # Docker Socker Proxy used to restrict access to required Docker APIs to monitor remote Docker services
 # Used by Homepage, Uptime Kuma, and What's up Docker?
@@ -58,6 +56,8 @@
     docker_socket_proxy_service_name: "{{ docker_socket_proxy_external_network_name }}"
     docker_socket_proxy_network_name: "{{ docker_socket_proxy_external_network_name }}"
     docker_socket_proxy_network_internal: false
+    docker_socket_proxy_env:
+      CONTAINERS: "1" # Required for Homepage, Uptime Kuma and WUD
 
 # Traefik used as a reverse proxy to manage access to web services with SSL via Let's Encrypt
 - name: homelab-deploy-support-services | Deploy a containerised instance of Traefik

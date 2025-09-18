@@ -27,8 +27,7 @@
 
 - name: deploy-dozzle-agent | Set Dozzle Agent service facts
   ansible.builtin.set_fact:
-    dozzle_agent_networks:
-      - { name: "{{ dozzle_agent_network_name }}" }
+    dozzle_agent_networks: []
     dozzle_agent_ports:
       # Published ports to expose outside the container
       # host port:container port

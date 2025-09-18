@@ -30,7 +30,6 @@
 - name: deploy-portainer | Set Portainer service facts
   ansible.builtin.set_fact:
     portainer_networks:
-      - { name: "{{ portainer_network_name }}" }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     portainer_volumes:
