@@ -3,6 +3,7 @@
 # The variables file used by the playbooks in the homelab_lxc group.
 # These don't have to be explicitly imported by vars_files: they are autopopulated.
 
+
 # Docker Networks
 
 # Note bridge networks are external by default unless 'internal: true' is set
@@ -13,6 +14,7 @@ docker_socket_proxy_external_network_name: docker-socket-proxy-external
 
 # Reverse Proxy Network is an external network that all applications hosted behind the reverse proxy (in this case Traefik) need to be on
 reverse_proxy_network_name: reverse-proxy
+
 
 # Containerised service facts
 
@@ -40,6 +42,22 @@ tinyauth_image: ghcr.io/steveiliop56/tinyauth:v3.6.2
 # Traefik facts
 # renovate: datasource=docker depName=traefik
 traefik_image: traefik:3.5.2
+traefik_entrypoint_insecure_name: web
+traefik_entrypoint_secure_name: "{{ traefik_entrypoint_insecure_name | default('web') }}secure"
+# What's Up Docker facts
+whatsupdocker_docker_socket_proxy_service_port: 2377
+whatsupdocker_docker_socket_proxy_env:
+  CONTAINERS: "1"
+  # EVENTS: "1"
+  IMAGES: "1"
+  INFO: "1"
+  NETWORKS: "1"
+  # PING: "1"
+  SERVICES: "1"
+  TASKS: "1"
+  # VERSION: "1"
+  VOLUMES: "1"
+
 
 # Global definition of backup directory on hosts
 local_backups_dir: /root/backups
@@ -54,7 +72,3 @@ docker_host_volume:
   # Local paths to mount into the container
   # local path:container path
   - /var/run/docker.sock:/var/run/docker.sock
-
-# Name of entrypoint for Reverse Proxy - Traefik
-traefik_entrypoint_insecure_name: web
-traefik_entrypoint_secure_name: "{{ traefik_entrypoint_insecure_name | default('web') }}secure"
