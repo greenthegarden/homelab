@@ -56,7 +56,7 @@
   with_items:
     # ---------------------------------------------------------------
     # What's up Docker? labels
-    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-alpine+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/redis/redis/releases/tag/${major}.${minor}.${patch}",

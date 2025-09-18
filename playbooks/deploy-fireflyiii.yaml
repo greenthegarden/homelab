@@ -9,7 +9,7 @@
     # Firefly III facts
     # Ensure values are also set in templates/fireflyiii/docker-compose.yaml.j2
     # TODO: Ensure variables set here are used in the docker-compose file
-    fireflyiii_image_tag: version-6.3.2
+    fireflyiii_image_tag: version-6.4.0
     fireflyiii_service_name: fireflyiii
     fireflyiii_service_port: 8080
     fireflyiii_db_backup_volume_name: fireflyiii_db_backup
@@ -25,11 +25,11 @@
         file: tasks/deploy-fireflyiii.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
-      when: false # Temporarily disable for testing
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
+        docker_volume_backup_service_name: "docker-volume-backup-{{ fireflyiii_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ fireflyiii_db_backup_volume_name }}:/backup/fireflyiii_db-backup:ro"
+          - "{{ fireflyiii_db_backup_volume_name }}:/backup/{{ fireflyiii_service_name }}_db-backup:ro"
         docker_volume_backup_backup_label: "{{ fireflyiii_service_name }}-db"
         docker_volume_backup_backup_retention_days: 7
