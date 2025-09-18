@@ -8,7 +8,7 @@
 
     # Wallos facts
     # renovate: datasource=docker depName=walloslabs/wallos
-    wallos_image: bellamy/wallos:4.2.0
+    wallos_image: bellamy/wallos:4.3.0
 
   tasks:
 
@@ -21,11 +21,11 @@
         file: tasks/deploy-wallos.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
-      when: false # Temporarily disable for testing
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
+        docker_volume_backup_service_name: "docker-volume-backup-{{ wallos_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ wallos_db_backup_volume_name }}:/backup/wallos-backup:ro"
+          - "{{ wallos_volume_data_name }}:/backup/{{ wallos_service_name }}-backup:ro"
         docker_volume_backup_backup_label: "{{ wallos_service_name }}-db"
         docker_volume_backup_backup_retention_days: 7

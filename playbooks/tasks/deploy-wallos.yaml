@@ -7,29 +7,30 @@
 
 # https://wallos.dev/guide/getting-started
 
-- name: deploy-wallos | Set wallos facts
+- name: deploy-wallos | Set Wallos facts
   ansible.builtin.set_fact:
     wallos_image: "{{ wallos_image | default('bellamy/wallos:latest') }}"
     wallos_service_name: "{{ wallos_service_name | default('wallos') }}"
     wallos_service_port: "{{ wallos_service_port | default(8282) }}"
 
-- name: deploy-wallos | Set wallos network facts
+- name: deploy-wallos | Set Wallos network facts
   ansible.builtin.set_fact:
     wallos_network_name: "{{ wallos_network_name | default(wallos_service_name) }}"
 
-- name: deploy-wallos | Set wallos volume facts
+- name: deploy-wallos | Set Wallos volume facts
   ansible.builtin.set_fact:
     wallos_volume_data_name: "{{ wallos_volume_data_name | default(wallos_service_name + '-data') }}"
     wallos_volume_logos_name: "{{ wallos_volume_logos_name | default(wallos_service_name + '-logos') }}"
 
-- name: deploy-wallos | Set wallos aggregated facts
+- name: deploy-wallos | Set Wallos aggregated facts
   ansible.builtin.set_fact:
     wallos_fqdn: "{{ wallos_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
-- name: deploy-wallos | Set wallos service facts
+- name: deploy-wallos | Set Wallos service facts
   ansible.builtin.set_fact:
     wallos_networks:
-      - { name: "{{ web_network_name | default('web') }}" }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     wallos_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -40,20 +41,31 @@
       - "{{ wallos_volume_data_name }}:/var/www/html/db"
       - "{{ wallos_volume_logos_name }}:/var/www/html/images/uploads/logos"
 
-- name: deploy-wallos | Log wallos configuration
+- name: deploy-wallos | Log Wallos configuration
   ansible.builtin.debug:
     msg:
-      - "wallos image: {{ wallos_image }}"
-      - "wallos service name: {{ wallos_service_name }}"
-      - "wallos FQDN: {{ wallos_fqdn }}"
-      - "wallos networks: {{ wallos_networks | default(omit) }}"
-      - "wallos ports: {{ wallos_ports | default(omit) }}"
-      - "wallos volumes: {{ wallos_volumes | default(omit) }}"
+      - "Wallos image: {{ wallos_image }}"
+      - "Wallos service name: {{ wallos_service_name }}"
+      - "Wallos FQDN: {{ wallos_fqdn }}"
+      - "Wallos networks: {{ wallos_networks | default(omit) }}"
+      - "Wallos ports: {{ wallos_ports | default(omit) }}"
+      - "Wallos volumes: {{ wallos_volumes | default(omit) }}"
 
-- name: deploy-wallos | Create wallos container labels
+- name: deploy-wallos | Create Wallos container labels
   ansible.builtin.set_fact:
     wallos_container_labels: "{{ wallos_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Wallos" }
+    - {
+      "key": "homepage.description",
+      "value": "Subscriptions management",
+    }
+    - { "key": "homepage.icon", "value": "wallos.png" }
+    - { "key": "homepage.href", "value": "https://{{ wallos_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ wallos_fqdn }}/" }
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
@@ -72,19 +84,8 @@
       "key": "wud.link.template",
       "value": "https://github.com/ellite/Wallos/releases/tag/v${major}.${minor}.${patch}",
     }
-    # ---------------------------------------------------------------
-    # Homepage labels
-    - { "key": "homepage.group", "value": "Applications" }
-    - { "key": "homepage.name", "value": "Wallos" }
-    - {
-      "key": "homepage.description",
-      "value": "Subscriptions management",
-    }
-    - { "key": "homepage.icon", "value": "wallos.png" }
-    - { "key": "homepage.href", "value": "https://{{ wallos_fqdn }}/" }
-    - { "key": "homepage.siteMonitor", "value": "https://{{ wallos_fqdn }}/" }
 
-- name: deploy-wallos | Create wallos network
+- name: deploy-wallos | Create Wallos network
   when: wallos_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
@@ -93,7 +94,7 @@
     state: present
   loop: "{{ wallos_networks }}"
 
-- name: deploy-wallos | Create volume for wallos
+- name: deploy-wallos | Create volume for Wallos
   when: wallos_volume_data_name is defined and wallos_volume_logos_name is defined and (wallos_volumes | length > 0)
   community.docker.docker_volume:
     name: "{{ item }}"
@@ -102,12 +103,12 @@
     - "{{ wallos_volume_data_name }}"
     - "{{ wallos_volume_logos_name }}"
 
-- name: deploy-wallos | Pull wallos image
+- name: deploy-wallos | Pull Wallos image
   community.docker.docker_image:
     name: "{{ wallos_image }}"
     source: pull
 
-- name: deploy-wallos | Deploy wallos
+- name: deploy-wallos | Deploy Wallos
   community.docker.docker_container:
     name: "{{ wallos_service_name }}"
     image: "{{ wallos_image }}"
@@ -116,14 +117,14 @@
       TZ: "{{ homelab.timezone | default('UTC') }}"
     labels: "{{ wallos_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ wallos_networks | default(omit) }}"
+    networks: "{{ wallos_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     state: started
     volumes: "{{ default_host_volumes + wallos_volumes | default(omit) }}"
   register: wallos_container_state
 
-- name: deploy-wallos | Wait for wallos to accept connections
+- name: deploy-wallos | Wait for Wallos to accept connections
   ansible.builtin.wait_for:
     host: "{{ wallos_fqdn }}"
     port: 80

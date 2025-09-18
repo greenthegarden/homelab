@@ -5,9 +5,10 @@ name: Firefly III
 networks:
 
   firefly_iii:
+    name: firefly-iii
     driver: bridge
-  web:
-    name: web
+  reverse_proxy:
+    name: reverse-proxy
     external: true
 
 services:
@@ -35,7 +36,7 @@ services:
     labels: {{ fireflyiii_container_labels | default(omit) }}
     networks:
       - firefly_iii
-      - web
+      - reverse_proxy
     # ports:
     #   - 8090:8080
     restart: unless-stopped
