@@ -41,7 +41,8 @@
 - name: deploy-semaphore | Set Semaphore service facts
   ansible.builtin.set_fact:
     semaphore_networks:
-      - { name: "{{ web_network_name | default('web') }}" }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     semaphore_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -68,24 +69,6 @@
     semaphore_container_labels: "{{ semaphore_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # ---------------------------------------------------------------
-    # Traefik labels
-    - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.routers.{{ semaphore_service_name }}.entrypoints",
-      "value": "websecure",
-    }
-    - {
-      "key": "traefik.http.routers.{{ semaphore_service_name }}.rule",
-      "value": "Host(`{{ semaphore_fqdn }}`)",
-    }
-    # ---------------------------------------------------------------
-    # What's up Docker? labels
-    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/semaphoreui/semaphore/releases/tag/v${major}.${minor}.${patch}",
-    }
-    # ---------------------------------------------------------------
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
     # ---------------------------------------------------------------
@@ -98,6 +81,24 @@
     - {
       "key": "homepage.siteMonitor",
       "value": "https://{{ semaphore_fqdn }}/",
+    }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ semaphore_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ semaphore_service_name }}.rule",
+      "value": "Host(`{{ semaphore_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/semaphoreui/semaphore/releases/tag/v${major}.${minor}.${patch}",
     }
 
 - name: deploy-semaphore | Create Semaphore networks
@@ -174,7 +175,7 @@
           SEMAPHORE_MAX_TASKS_PER_TEMPLATE: "{{ 10 | quote | default(omit) }}"
         labels: "{{ semaphore_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ semaphore_networks | default(omit) }}"
+        networks: "{{ semaphore_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started

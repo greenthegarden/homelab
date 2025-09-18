@@ -30,7 +30,8 @@
 - name: deploy-vaultwarden | Set Vaultwarden service facts
   ansible.builtin.set_fact:
     vaultwarden_networks:
-      - { name: "{{ web_network_name | default('web') }}" }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     vaultwarden_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -55,24 +56,6 @@
     vaultwarden_container_labels: "{{ vaultwarden_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # ---------------------------------------------------------------
-    # Traefik labels
-    - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.routers.{{ vaultwarden_service_name }}.entrypoints",
-      "value": "websecure",
-    }
-    - {
-      "key": "traefik.http.routers.{{ vaultwarden_service_name }}.rule",
-      "value": "Host(`{{ vaultwarden_fqdn }}`)",
-    }
-    # ---------------------------------------------------------------
-    # What's up Docker? labels
-    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-alpine+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/dani-garcia/vaultwarden/releases/tag/${major}.${minor}.${patch}",
-    }
-    # ---------------------------------------------------------------
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
     # ---------------------------------------------------------------
@@ -85,6 +68,24 @@
     - {
       "key": "homepage.siteMonitor",
       "value": "https://{{ vaultwarden_fqdn }}/",
+    }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ vaultwarden_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ vaultwarden_service_name }}.rule",
+      "value": "Host(`{{ vaultwarden_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-alpine+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/dani-garcia/vaultwarden/releases/tag/${major}.${minor}.${patch}",
     }
 
 - name: deploy-vaultwarden | Create Vaultwarden networks
@@ -135,7 +136,7 @@
     env_file: "{{ vaultwarden_config_dir }}/vaultwarden.env"
     labels: "{{ vaultwarden_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ vaultwarden_networks | default(omit) }}"
+    networks: "{{ vaultwarden_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     volumes: "{{ default_host_volumes + vaultwarden_volumes | default(omit) }}"
