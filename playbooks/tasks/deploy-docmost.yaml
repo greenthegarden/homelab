@@ -114,7 +114,8 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-redis.yaml
   vars:
-    redis_image: redis:7.2-alpine
+    # redis_image: redis:7.2-alpine
+    redis_image: redis:8.2.1-alpine
     redis_service_name: "{{ docmost_service_name }}-redis"
     redis_network_name: "{{ docmost_network_name }}"
     redis_volume_name: "{{ docmost_service_name }}-redis"

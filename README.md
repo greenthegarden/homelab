@@ -365,9 +365,7 @@ docker run -d \
   --name portainer_agent \
   --restart=always  \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v /var/lib/docker/volumes:/var/lib/docker/volumes \
-  -v /:/host \
-  portainer/agent:2.32.0-alpine
+  portainer/agent:2.34.0-alpine
 ```
 
 <!-- The Nginx Proxy Manager is deployed using the following script.
