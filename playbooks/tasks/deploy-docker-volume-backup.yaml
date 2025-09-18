@@ -97,8 +97,8 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-socket-proxy.yaml
       vars:
-        docker_socket_proxy_configure_for_docker_volume_backup: true
         docker_socket_proxy_service_name: "docker-socket-proxy-{{ docker_volume_backup_service_name }}"
+        docker_socket_proxy_service_port: 2375
         docker_socket_proxy_network_name: "{{ docker_volume_backup_network_name }}"
         docker_socket_proxy_network_internal: true
         docker_socket_proxy_env:

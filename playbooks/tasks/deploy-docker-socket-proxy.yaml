@@ -3,12 +3,6 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
-# TODO: think about better ways of managing this
-- name: deploy-docker-socket-proxy | Set Docker Socket Proxy configuration facts
-  ansible.builtin.set_fact:
-    docker_socket_proxy_configure_for_docker_volume_backup: "{{ docker_socket_proxy_configure_for_docker_volume_backup | default(false) }}"
-    # docker_socket_proxy_publish_ports: "{{ docker_socket_proxy_publish_ports | default(false) }}"
-
 ####### DOCKER-SOCKET-PROXY SECTION
 
 # https://github.com/Tecnativa/docker-socket-proxy
@@ -45,7 +39,7 @@
   # TASKS=0 \
   # VERSION=1 \
   # VOLUMES=0
-# Only the changed parameters need to be passed as environment variables to the container.
+# Only the changed parameters need to be passed, via environment variables, to the container.
 
 - name: deploy-docker-socket-proxy | Set Docker Socket Proxy facts
   ansible.builtin.set_fact:
@@ -119,47 +113,6 @@
     name: "{{ docker_socket_proxy_service_name }}"
     image: "{{ docker_socket_proxy_image }}"
     env: "{{ docker_socket_proxy_env | default(omit) }}"
-      # # For details see https://github.com/Tecnativa/docker-socket-proxy
-      # LOG_LEVEL: info # debug,info,notice,warning,err,crit,alert,emerg
-      # ## Variables match the URL prefix (i.e. AUTH blocks access to /auth/* parts of the API, etc.).
-      # # 0 to revoke access.
-      # # 1 to grant access.
-      # # See https://offen.github.io/docker-volume-backup/how-tos/use-custom-docker-host.html for config details
-      # # to support Docker Socket Proxy
-      # ## Granted by Default
-      # # These API sections are mostly harmless and almost required for any service that uses the API, so they are granted by default.
-      # EVENTS: "1"
-      # PING: "1"
-      # VERSION: "1"
-      # ## Revoked by Default
-      # # Security critical
-      # # These API sections are considered security-critical, and thus access is revoked by default. Maximum caution when enabling these.
-      # AUTH: "0"
-      # SECRETS: "0"
-      # POST: "{{ \"1\" if docker_socket_proxy_configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to stop containers
-      # ## Not always needed
-      # # You will possibly need to grant access to some of these API sections, which are not so extremely critical but can expose some information that your service does not need.
-      # ALLOW_RESTARTS: "0" # (containers/id/stop|restart|kill)
-      # ALLOW_START: "0" # (containers/id/start)
-      # ALLOW_STOP: "0" # (containers/id/stop)
-      # BUILD: "0"
-      # COMMIT: "0"
-      # CONFIGS: "0"
-      # CONTAINERS: "1" # Allow listing and managing containers (Traefik, Homepage, WUD, Docker Volume Backup.)
-      # DISTRIBUTION: "0"
-      # EXEC: "{{ \"1\" if docker_socket_proxy_configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to execute commands
-      # GRPC: "0"
-      # IMAGES: "0"
-      # INFO: "{{ \"1\" if docker_socket_proxy_configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to get swarm state
-      # NETWORKS: "0" # Block listing newtworks
-      # NODES: "{{ \"1\" if docker_socket_proxy_configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to stop containers
-      # PLUGINS: "0"
-      # SERVICES: "0" # Block listing and managing services
-      # SESSION: "0"
-      # SWARM: "0"
-      # SYSTEM: "0" # Block system-level API access
-      # TASKS: "{{ \"1\" if docker_socket_proxy_configure_for_docker_volume_backup else \"0\" }}" # Allow access for Docker Volume Backup to stop containers
-      # VOLUMES: "0" # Allow listing volumes
     labels: "{{ docker_socket_proxy_container_labels | default(omit) }}"
     networks: "{{ docker_socket_proxy_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     published_ports: "{{ docker_socket_proxy_ports if not docker_socket_proxy_network_internal else omit }}"

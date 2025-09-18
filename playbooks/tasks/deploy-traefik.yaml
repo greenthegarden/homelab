@@ -42,6 +42,7 @@
     file: tasks/deploy-docker-socket-proxy.yaml
   vars:
     docker_socket_proxy_service_name: "docker-socket-proxy-{{ traefik_service_name }}"
+    docker_socket_proxy_service_port: 2375
     docker_socket_proxy_network_name: "docker-socket-proxy-{{ traefik_service_name }}"
     docker_socket_proxy_network_internal: true
     docker_socket_proxy_env:
