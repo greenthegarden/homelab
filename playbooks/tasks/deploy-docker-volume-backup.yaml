@@ -8,26 +8,10 @@
       ansible.builtin.include_tasks:
         file: tasks/hosts-dependency-check-docker-version.yaml
 
-    # - name: deploy-docker-volume-backup | Ensure Docker Socket Proxy is deployed and configured
-    #   ansible.builtin.include_tasks:
-    #     file: tasks/deploy-docker-socket-proxy.yaml
-    #   vars:
-    #     configure_for_docker_volume_backup: true
-
-    # - name: deploy-docker-volume-backup | Deploy a containerised read-write instance of Docker Socket Proxy
-    #   ansible.builtin.include_tasks:
-    #     file: tasks/deploy-docker-socket-proxy.yaml
-    #   vars:
-    #     use_docker_socket_proxy_rw: true
-    #     configure_for_docker_volume_backup: true
-
     ####### DOCKER-VOLUME-BACKUP SECTION
 
     # https://offen.github.io/docker-volume-backup/
-
-    # - name: deploy-docker-volume-backup | Set Global facts
-    #   ansible.builtin.set_fact:
-    #     docker_volume_backup_local_backups_dir: "{{ docker_volume_backup_local_backups_dir | default('/tmp/backups') }}"
+    # https://github.com/offen/docker-volume-backup
 
     - name: deploy-docker-volume-backup | Set Docker Volume Backup facts
       ansible.builtin.set_fact:
@@ -55,6 +39,8 @@
       ansible.builtin.set_fact:
         docker_volume_backup_networks:
           - { name: "{{ docker_volume_backup_network_name }}", internal: true }
+        # Bridge to allow access to external network for uploads to remote storage
+          - { name: "docker-volume-backup-bridge", internal: false }
         docker_volume_backup_volumes:
           - "{{ docker_volume_backup_local_backups_dir }}:/archive"
 

@@ -46,14 +46,3 @@
     - name: Deploy a containerised instance of Dozzle
       ansible.builtin.include_tasks:
         file: tasks/deploy-dozzle.yaml
-
-# ---
-# - name: Deploy Dozzle Agenst
-
-#   hosts: homelab_lxc_docker
-
-#   tasks:
-
-#     - name: homelab-deploy-support-services | Deploy a containerised instance of Dozzle Agent
-#       ansible.builtin.include_tasks:
-#         file: tasks/deploy-dozzle-agent.yaml

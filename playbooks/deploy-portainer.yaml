@@ -29,4 +29,4 @@
         docker_volume_backup_volume_to_backup:
           - "{{ portainer_volume_name }}:/backup/{{ portainer_service_name }}-backup:ro"
         docker_volume_backup_backup_label: "{{ portainer_service_name }}"
-        docker_volume_backup_backup_retention_days: 3
+        docker_volume_backup_backup_retention_days: 1
