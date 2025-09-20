@@ -2,6 +2,7 @@
 - name: deploy-beszel-agent | Ensure modern version of Docker is available on host
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
+  tags: always
 
 ####### BESZEL AGENT SECTION
 
@@ -13,18 +14,42 @@
     beszel_agent_service_name: "{{ beszel_agent_service_name | default('beszel-agent') }}"
     beszel_agent_service_port: "{{ beszel_agent_service_port | default(45876) }}"
     beszel_agent_config_dir: /root/beszel-agent
+  tags: beszel
+
+- name: deploy-beszel-agent | Set Beszel Agent network facts
+  ansible.builtin.set_fact:
+    beszel_agent_network_name: "{{ beszel_agent_network_name | default(beszel_agent_service_name) }}"
+  tags: beszel
+
+- name: deploy-beszel-agent | Set Beszel Agent volume facts
+  ansible.builtin.set_fact:
+    beszel_agent_volume_name: "{{ beszel_agent_volume_name | default(beszel_agent_service_name) }}"
+  tags: beszel
+
+- name: deploy-beszel-agent | Set Beszel Agent aggregated facts
+  ansible.builtin.set_fact:
+    beszel_agent_fqdn: "{{ beszel_agent_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+  tags: beszel
 
 - name: deploy-beszel-agent | Set Beszel Agent service facts
   ansible.builtin.set_fact:
-    beszel_agent_networks:
-      - name: "{{ beszel_network_name | default('beszel') }}"
+    beszel_agent_networks: []
     beszel_agent_ports:
       - "{{ beszel_agent_service_port }}:45876"
     beszel_agent_volumes:
-      - ./beszel_socket:/beszel_socket
-      # - /var/run/docker.sock:/var/run/docker.sock
-      # - /etc/localtime:/etc/localtime:ro
-      # - /etc/timezone:/etc/timezone:ro
+      - "{{ beszel_agent_volume_name }}:/var/lib/beszel-agent"
+  tags: beszel
+
+- name: deploy-beszel-agent | Log Beszel Agent configuration
+  ansible.builtin.debug:
+    msg:
+      - "Beszel Agent image: {{ beszel_agent_image }}"
+      - "Beszel Agent service name: {{ beszel_agent_service_name }}"
+      - "Beszel Agent FQDN: {{ beszel_agent_fqdn }}"
+      - "Beszel Agent networks: {{ beszel_agent_networks | default(omit) }}"
+      - "Beszel Agent ports: {{ beszel_agent_ports | default(omit) }}"
+      - "Beszel Agent volumes: {{ beszel_agent_volumes | default(omit) }}"
+  tags: beszel
 
 - name: deploy-beszel-agent | Create Beszel Agent container labels
   ansible.builtin.set_fact:
@@ -36,29 +61,46 @@
       "key": "wud.link.template",
       "value": "https://github.com/henrygd/beszel/releases/tag/v${major}.${minor}.${patch}",
     }
+  tags: beszel
 
-- name: deploy-beszel-agent | Create Beszel network  # noqa: syntax-check[unknown-module]
+- name: deploy-beszel-agent | Create Beszel network
+  when: beszel_agent_networks is defined
   community.docker.docker_network:
-    name: "{{ beszel_network_name }}"
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ beszel_agent_networks }}"
+  tags: beszel
 
-- name: deploy-beszel-agent | Create Beszel Agent configuration directory
-  ansible.builtin.file:
-    path: "{{ beszel_agent_config_dir }}"
-    mode: "0644"
-    state: directory
-  register: beszel_agent_configuration_creation
+- name: deploy-beszel-agent | Create volume for Beszel Agent
+  when: beszel_agent_volume_name is defined and (beszel_agent_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ beszel_agent_volume_name }}"
+  tags: beszel
 
-- name: deploy-beszel-agent | Create Beszel Agent configuration
-  ansible.builtin.template:
-    src: templates/beszel-agent/beszel-agent.env.j2
-    dest: "{{ beszel_agent_config_dir }}/beszel-agent.env"
-    mode: "0644"
-  register: beszel_agent_configuration_creation
+# - name: deploy-beszel-agent | Create Beszel Agent configuration directory
+#   ansible.builtin.file:
+#     path: "{{ beszel_agent_config_dir }}"
+#     mode: "0644"
+#     state: directory
+#   register: beszel_agent_configuration_creation
+
+# - name: deploy-beszel-agent | Create Beszel Agent configuration
+#   ansible.builtin.template:
+#     src: templates/beszel-agent/beszel-agent.env.j2
+#     dest: "{{ beszel_agent_config_dir }}/beszel-agent.env"
+#     mode: "0644"
+#   register: beszel_agent_configuration_creation
 
 - name: deploy-beszel-agent | Pull Beszel Agent image
   community.docker.docker_image:
     name: "{{ beszel_agent_image }}"
     source: pull
+  tags: beszel
 
 # docker run -d -v /var/run/docker.sock:/var/run/docker.sock -p 8080:8080 amir20/beszel:latest
 - name: deploy-beszel-agent | Deploy Beszel Agent
@@ -66,29 +108,19 @@
     name: "{{ beszel_agent_service_name }}"
     image: "{{ beszel_agent_image }}"
     detach: true
-    env_file: "{{ beszel_agent_config_dir }}/beszel-agent.env"
+    # env_file: "{{ beszel_agent_config_dir }}/beszel-agent.env"
     env:
-      LISTEN: 45876
+      KEY: "{{ beszel.key | default('Provided in hub') }}"
+      LISTEN: "45876"
+      TOKEN: "{{ beszel.token | default('Provided in hub') }}"
+      HUB_URL: "{{ beszel.hub_url | default('https://beszel.dev') }}"
     labels: "{{ beszel_agent_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ beszel_agent_networks | default(omit) }}"
+    networks: "{{ beszel_agent_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     published_ports: "{{ beszel_agent_ports | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     state: started
     volumes: "{{ default_host_volumes + docker_host_volume + beszel_agent_volumes | default(omit) }}"
   register: beszel_agent_container_state
-
-# services:
-#   beszel-agent:
-#     image: "henrygd/beszel-agent"
-#     container_name: "beszel-agent"
-#     restart: unless-stopped
-#     network_mode: host
-#     volumes:
-#       - /var/run/docker.sock:/var/run/docker.sock:ro
-#       # monitor other disks / partitions by mounting a folder in /extra-filesystems
-#       # - /mnt/disk/.beszel:/extra-filesystems/sda1:ro
-#     environment:
-#       LISTEN: 45876
-#       KEY: "key"
+  tags: beszel

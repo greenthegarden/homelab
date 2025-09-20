@@ -15,23 +15,30 @@
 - name: homelab-deploy-support-services | Load homelab vars
   ansible.builtin.include_vars:
     file: vars/homelab_env.yaml
+  tags: always
 
 # Ensure docker is installed and configured on the host
 - name: homelab-deploy-support-services | Configure Homelab Docker base
   ansible.builtin.include_tasks:
     file: tasks/homelab-configure-docker-base.yaml
+  tags: always
 
 # Use the following agents to monitor Docker services via host docker socket
+
+- name: homelab-deploy-support-services | Deploy a containerised instance of a Beszel Agent
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-beszel-agent.yaml
+  tags: beszel
 
 - name: homelab-deploy-support-services | Deploy a containerised instance of a Dozzle Agent
   ansible.builtin.include_tasks:
     file: tasks/deploy-dozzle-agent.yaml
-  vars:
-    dozzle_agent_network_name: "{{ dozzle_network_name }}"
+  tags: dozzle
 
 - name: homelab-deploy-support-services | Deploy a containerised instance of a Portainer Agent
   ansible.builtin.include_tasks:
     file: tasks/deploy-portainer-agent.yaml
+  tags: portainer
 
 - name: homelab-deploy-support-services | Deploy an exposed containerised instance of Docker Socket Proxy configured for use by Homepage and Uptime Kuma
   ansible.builtin.include_tasks:

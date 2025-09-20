@@ -13,3 +13,4 @@
     - name: Configure base OS
       ansible.builtin.include_tasks:
         file: tasks/homelab-deploy-support-services.yaml
+      tags: always

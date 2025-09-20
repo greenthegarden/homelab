@@ -1,0 +1,31 @@
+---
+- name: Deploy Broker
+
+  hosts: broker
+
+  vars:
+
+    # Ntfy facts
+    # renovate: datasource=docker depName=binwiederhier/ntfy
+    ntfy_image: binwiederhier/ntfy:v2.14.0
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Ntfy
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-ntfy.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      when: false
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_service_name: "docker-volume-backup-{{ ntfy_service_name }}"
+        docker_volume_backup_volume_to_backup:
+          - "{{ ntfy_volume_name }}:/backup/{{ ntfy_service_name }}-backup:ro"
+        docker_volume_backup_backup_label: "{{ ntfy_service_name }}"
+        docker_volume_backup_backup_retention_days: 7

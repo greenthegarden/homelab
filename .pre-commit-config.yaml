@@ -45,7 +45,7 @@ repos:
     hooks:
       - id: encryption-check
         name: "🔒 security · Check for unencrypted Ansible vault files"
-        files: ^playbooks/(files/homepage/config/bookmarks\.yaml|vars/homelab_env\.yaml)$
+        files: ^playbooks/(files/homepage/config/bookmarks\.yaml|vars/homelab_env\.yaml|group_vars)$
         stages: [pre-commit]
 
   - repo: https://github.com/Checkmarx/kics
