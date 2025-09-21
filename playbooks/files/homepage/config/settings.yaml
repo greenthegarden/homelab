@@ -92,6 +92,12 @@ layout:
       initiallyCollapsed: true
       style: row
       columns: 2
+  - Networks:
+      tab: Applications
+      header: true
+      initiallyCollapsed: true
+      style: row
+      columns: 2
 # Devices Tab links
   - Devices:
       tab: Devices
