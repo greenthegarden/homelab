@@ -353,9 +353,11 @@ is  run from Semaphore. The history of all playbook runs is maintained within Se
 docker compose up --detach
 ```
 
-In addition, it is deployed behind an instance of Nginx Proxy Manager and DuckDNS to provide it with a valid certificate. A Portainer Agent instance is also deployed to manage containers.
+In addition, it is deployed behind an instance of Nginx Proxy Manager and DuckDNS to provide it with a valid certificate. Instance of a Beszel Agent and Portainer Agent are also deployed for observability.
 
 [nextcloud-aio]: https://nextcloud.com/blog/how-to-install-the-nextcloud-all-in-one-on-linux/
+
+The Beszel Agent is deployed using the Docker script provided from the Beszel Hub.
 
 The Portainer Agent is deployed using the following script.
 
@@ -367,19 +369,6 @@ docker run -d \
   -v /var/run/docker.sock:/var/run/docker.sock \
   portainer/agent:2.34.0-alpine
 ```
-
-<!-- The Nginx Proxy Manager is deployed using the following script.
-
-```bash
-docker run -d \
-  --name nginx-proxy-manager \
-  --env DISABLE_IPV6=true \
-  --network=host \
-  --restart=unless-stopped \
-  -v /home/nextcloud/data:/data:rw \
-  -v /home/nextcloud/letsencrypt:/etc/letsencrypt:rw \
-  docker.io/jc21/nginx-proxy-manager:latest
-``` -->
 
 ## Monitoring and Alerting
 
