@@ -88,13 +88,14 @@
         docker_socket_proxy_network_name: "{{ docker_volume_backup_network_name }}"
         docker_socket_proxy_network_internal: true
         docker_socket_proxy_env:
-          ALLOW_START: "1"
-          ALLOW_STOP: "1"
-          CONTAINERS: "1"
-          EXEC: "1"
           INFO: "1"
+          CONTAINERS: "1"
+          POST: "1"
+          EXEC: "1"
           NODES: "1"
           TASKS: "1"
+          # ALLOW_START: "1"
+          # ALLOW_STOP: "1"
 
     - name: deploy-docker-volume-backup | Create Docker Volume Backup mount directories and configuration
       when: docker_volume_backup_local_backups_dir is defined and docker_volume_backup_config_dir is defined
