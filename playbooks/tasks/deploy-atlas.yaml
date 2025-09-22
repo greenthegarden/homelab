@@ -1,0 +1,164 @@
+---
+- name: deploy-atlas | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### ATLAS SECTION
+
+# https://atlasdemo.vnerd.nl/
+# https://github.com/karam-ajaj/atlas
+# https://hub.docker.com/r/keinstien/atlas
+
+- name: deploy-atlas | Set Atlas facts
+  ansible.builtin.set_fact:
+    atlas_image: "{{ atlas_image | default('keinstien/atlas:latest') }}"
+    atlas_service_name: "{{ atlas_service_name | default('atlas') }}"
+    atlas_service_port: "{{ atlas_service_port | default(8888) }}"
+
+- name: deploy-atlas | Set Atlas network facts
+  ansible.builtin.set_fact:
+    atlas_network_name: "{{ atlas_network_name | default(atlas_service_name) }}"
+
+- name: deploy-atlas | Set Atlas volume facts
+  ansible.builtin.set_fact:
+    atlas_volume_name: "{{ atlas_volume_name | default(atlas_service_name) }}"
+
+- name: deploy-atlas | Set Atlas aggregated facts
+  ansible.builtin.set_fact:
+    atlas_fqdn: "{{ ansible_hostname }}.localdomain"
+
+- name: deploy-atlas | Set Atlas service facts
+  ansible.builtin.set_fact:
+    atlas_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    atlas_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ atlas_service_port }}:8888"
+    atlas_volumes: []
+      # Local paths to mount into the container
+      # local path:container path
+
+- name: deploy-atlas | Log Atlas configuration
+  ansible.builtin.debug:
+    msg:
+      - "Atlas image: {{ atlas_image }}"
+      - "Atlas service name: {{ atlas_service_name }}"
+      - "Atlas FQDN: {{ atlas_fqdn }}"
+      - "Atlas networks: {{ atlas_networks | default(omit) }}"
+      - "Atlas ports: {{ atlas_ports | default(omit) }}"
+      - "Atlas volumes: {{ atlas_volumes | default(omit) }}"
+
+- name: deploy-atlas | Create Atlas container labels
+  ansible.builtin.set_fact:
+    atlas_container_labels: "{{ atlas_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    # - { "key": "homepage.group", "value": "Monitoring" }
+    # - { "key": "homepage.name", "value": "Atlas" }
+    # - { "key": "homepage.description", "value": "Scan, analyze, and visualize network infrastructure dynamically" }
+    # - { "key": "homepage.icon", "value": "atlas.png" }
+    # - { "key": "homepage.href", "value": "https://{{ atlas_fqdn }}/" }
+    # - { "key": "homepage.siteMonitor", "value": "https://{{ atlas_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "false" }
+    - {
+      "key": "traefik.http.routers.{{ atlas_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ atlas_service_name }}.rule",
+      "value": "Host(`{{ atlas_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.services.{{ atlas_service_name }}.loadbalancer.server.port",
+      "value": "{{ atlas_service_port | quote }}",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/karam-ajaj/atlas/releases/tag/${major}.${minor}.${patch}",
+    }
+
+- name: deploy-atlas | Create Atlas networks
+  when: atlas_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ atlas_networks }}"
+
+- name: deploy-atlas | Create Atlas volumes
+  when: atlas_volume_name is defined and (atlas_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ atlas_volume_name }}"
+
+- name: deploy-atlas | Check if Atlas is running
+  community.docker.docker_container_info:
+    name: "{{ atlas_service_name }}"
+  register: atlas_state
+
+- name: deploy-atlas | Remove Atlas container if changing version
+  when:
+    - atlas_state.exists
+    - (atlas_image | split(':') | last) != (atlas_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-atlas | Stop and remove existing Atlas container
+      community.docker.docker_container:
+        name: "{{ atlas_service_name }}"
+        state: absent
+
+    - name: deploy-atlas | Set update Atlas
+      ansible.builtin.set_fact:
+        atlas_update: true
+
+- name: deploy-atlas | Deploy Atlas if not running
+  when:
+    - not atlas_state.exists or (atlas_update | default(false))
+  block:
+
+    - name: deploy-atlas | Pull Atlas image
+      community.docker.docker_image:
+        name: "{{ atlas_image }}"
+        source: pull
+
+    - name: deploy-atlas | Deploy Atlas
+      community.docker.docker_container:
+        name: "{{ atlas_service_name }}"
+        image: "{{ atlas_image }}"
+        capabilities:
+          - NET_ADMIN
+          - NET_RAW
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ atlas_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        network_mode: host
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + docker_host_volume + atlas_volumes | default(omit) }}"
+      register: atlas_container_state
+
+- name: deploy-atlas | Wait for Atlas to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ atlas_fqdn }}"
+    port: "{{ atlas_service_port }}"
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: atlas_running
+  retries: 10
+  until: atlas_running is success

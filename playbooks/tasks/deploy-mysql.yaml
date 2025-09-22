@@ -3,14 +3,14 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
-- name: deploy-mysql | Ensure required MySQL variables are set
-  ansible.builtin.assert:
-    that:
-      - mysql_root_password is defined
-      - mysql_database_name is defined
-      - mysql_user_name is defined
-      - mysql_user_password is defined
-    fail_msg: "One or more required Docmost variables are not defined! Please define them in your inventory or group_vars/host_vars."
+# - name: deploy-mysql | Ensure required MySQL variables are set
+#   ansible.builtin.assert:
+#     that:
+#       - mysql_root_password is defined
+#       - mysql_database_name is defined
+#       - mysql_user_name is defined
+#       - mysql_user_password is defined
+#     fail_msg: "One or more required MySQL variables are not defined! Please define them in your inventory or group_vars/host_vars."
 
 ####### MYSQL SECTION
 
@@ -39,8 +39,13 @@
 
 - name: deploy-mysql | Set MySQL service facts
   ansible.builtin.set_fact:
+    mysql_args: "{{ mysql_args | default(omit) }}"
+    mysql_command: "{{ mysql_command | default(omit) }}"
+    mysql_env: "{{ mysql_env | default(omit) }}"
+    mysql_env_file: "{{ mysql_env_file | default(omit) }}"
+    mysql_healthcheck: "{{ mysql_healthcheck | default(omit) }}"
     mysql_networks:
-      - { name: "{{ mysql_network_name }}" }
+      - { name: "{{ mysql_network_name }}", internal: true }
     mysql_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -48,7 +53,7 @@
     mysql_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ mysql_volume_name }}:/mysql/data"
+      - "{{ mysql_volume_name }}:/var/lib/mysql"
 
 - name: deploy-mysql | Log MySQL configuration
   ansible.builtin.debug:
@@ -56,6 +61,10 @@
       - "MySQL image: {{ mysql_image }}"
       - "MySQL service name: {{ mysql_service_name }}"
       - "MySQL FQDN: {{ mysql_fqdn }}"
+      - "MySQL command: {{ mysql_command | default(omit) }}"
+      - "MySQL env: {{ mysql_env | default(omit) }}"
+      - "MySQL env_file: {{ mysql_env_file | default(omit) }}"
+      - "MySQL healthcheck: {{ mysql_healthcheck | default(omit) }}"
       - "MySQL networks: {{ mysql_networks | default(omit) }}"
       - "MySQL ports: {{ mysql_ports | default(omit) }}"
       - "MySQL volumes: {{ mysql_volumes | default(omit) }}"
@@ -125,14 +134,10 @@
       community.docker.docker_container:
         name: "{{ mysql_service_name }}"
         image: "{{ mysql_image }}"
-        command: "{{ mysql_args | default(omit) }}"
+        command: "{{ mysql_command | default(omit) }}"
         detach: true
-        env:
-          MYSQL_ROOT_PASSWORD: "{{ mysql_root_password | default(omit) }}"
-          MYSQL_DATABASE: "{{ mysql_database_name | default(omit) }}"
-          MYSQL_USER: "{{ mysql_user_name | default(omit) }}"
-          MYSQL_PASSWORD: "{{ mysql_user_password | default(omit) }}"
-          TZ: "{{ homelab.timezone | default('UTC') }}"
+        env: "{{ mysql_env | default(omit) }}"
+        # env_file: "{{ mysql_env_file | default(omit) }}"
         healthcheck:
           test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
           interval: 30s
@@ -141,7 +146,7 @@
           start_period: 5s
         labels: "{{ mysql_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ mysql_networks | default(omit) }}"
+        networks: "{{ mysql_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started

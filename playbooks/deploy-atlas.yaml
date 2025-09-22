@@ -1,0 +1,20 @@
+---
+- name: Deploy Atlas - A tool to scan, analyze, and visualize network infrastructure dynamically
+
+  hosts: ansible
+
+  vars:
+
+    # Atlas facts
+    # renovate: datasource=docker depName=keinstien/atlas
+    atlas_image: keinstien/atlas:3.2.16
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Atlas
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-atlas.yaml

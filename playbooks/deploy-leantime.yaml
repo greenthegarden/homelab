@@ -1,7 +1,7 @@
 ---
 - name: Deploy LeanTime
 
-  hosts: productivity
+  hosts: ansible
 
   vars:
 
