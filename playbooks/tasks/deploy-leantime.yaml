@@ -7,6 +7,7 @@
 
 # https://leantime.io/
 # https://github.com/Leantime/leantime
+# https://github.com/Leantime/docker-leantime
 # https://hub.docker.com/r/leantime/leantime
 
 - name: deploy-leantime | Set Leantime facts
@@ -14,7 +15,7 @@
     leantime_image: "{{ leantime_image | default('leantime/leantime:latest') }}"
     leantime_image_tag: "{{ leantime_image_tag | default('latest') }}"
     leantime_service_name: "{{ leantime_service_name | default('leantime') }}"
-    leantime_service_port: "{{ leantime_service_port | default(80) }}"
+    leantime_service_port: "{{ leantime_service_port | default(8080) }}"
 
 - name: deploy-leantime | Set Leantime network facts
   ansible.builtin.set_fact:
@@ -37,11 +38,6 @@
 
 - name: deploy-leantime | Set Leantime service facts
   ansible.builtin.set_fact:
-    leantime_env:
-      LEAN_DB_HOST: "{{ leantime.mysql_host | default(leantime_service_name + '-mysql') }}"
-      LEAN_DB_DATABASE: "{{ leantime.mysql_database | default('leantime') }}"
-      LEAN_DB_USER: "{{ leantime.mysql_user | default('leantime') }}"
-      LEAN_DB_PASSWORD: "{{ leantime.mysql_password | default('dummy') }}"
     leantime_networks:
       - { name: "{{ leantime_network_name }}", internal: true }
       # Reverse Proxy  network is used to expose applications via Traefik
@@ -49,7 +45,7 @@
     leantime_ports:
       # Published ports to expose outside the container
       # host port:container port
-      - "{{ leantime_service_port }}:80"
+      - "{{ leantime_service_port }}:8080"
     leantime_volumes:
       # Local paths to mount into the container
       # local path:container path
@@ -118,24 +114,6 @@
     - "{{ leantime_volume_plugins }}"
     - "{{ leantime_volume_logs }}"
 
-- name: deploy-leantime | Create Leantime configuration
-  when: leantime_config_dir is defined
-  block:
-
-    - name: deploy-leantime | Create Leantime configuration directory
-      ansible.builtin.file:
-        path: "{{ leantime_config_dir }}"
-        state: directory
-        mode: "0644"
-
-    - name: deploy-leantime | Create Leantime configuration file
-      ansible.builtin.template:
-        src: templates/leantime/leantime.env.j2
-        dest: "{{ leantime_config_dir }}/{{ leantime_service_name }}.env"
-        owner: root
-        group: root
-        mode: "0644"
-
 - name: deploy-leantime | Deploy MySQL database
   when: leantime_mysql_database_create | default(true)
   ansible.builtin.include_tasks:
@@ -145,31 +123,24 @@
     mysql_service_name: "{{ leantime_service_name }}-mysql"
     mysql_network_name: "{{ leantime_network_name }}"
     mysql_volume_name: "{{ leantime_service_name }}-mysql"
-    mysql_env_file: "{{ leantime_config_dir }}/{{ leantime_service_name }}.env"
-    # mysql_env:
-    #   MYSQL_ROOT_PASSWORD: "{{ leantime.mysql_root_password | default('dummy') }}"
-    #   MYSQL_DATABASE: "{{ leantime.mysql_database | default('leantime') }}"
-    #   MYSQL_USER: "{{ leantime.mysql_user | default('dummy') }}"
-    #   MYSQL_PASSWORD: "{{ leantime.mysql_password | default('dummy') }}"
+    mysql_env:
+      MYSQL_ROOT_PASSWORD: "{{ leantime.mysql_root_password | default('dummy') }}"
+      MYSQL_DATABASE: "{{ leantime.mysql_database | default('leantime') }}"
+      MYSQL_USER: "{{ leantime.mysql_user | default('leantime') }}"
+      MYSQL_PASSWORD: "{{ leantime.mysql_password | default('dummy') }}"
     mysql_command:
       - "--character-set-server=UTF8MB4"
       - "--collation-server=UTF8MB4_unicode_ci"
 
-    # mysql_database_name: "{{ leantime.mysql_database_name | default('leantime') }}"
-    # mysql_user_name: "{{ leantime.mysql_user_name | default('leantime') }}"
-    # mysql_user_password: "{{ leantime.mysql_user_password | default('dummy') }}"
-
-#   # Add a helper container for volume permissions
-#   # Run via docker compose --profile mysql_helper up -d
-# - name: deploy-leantime | Deploy MySQL helper for volume permissions
-#   when: leantime_mysql_helper_create | default(true)
-#   ansible.builtin.include_tasks:
-#     file: tasks/deploy-mysql.yaml
-#   vars:
-#     mysql_image: mysql:8.4
-#     mysql_service_name: "{{ leantime_service_name }}-mysql-helper"
-#     mysql_command: "chown -R mysql:mysql /var/lib/mysql"
-#     mysql_volume_name: "{{ leantime_service_name }}-mysql"
+- name: deploy-leantime | Set Leantime env facts
+  ansible.builtin.set_fact:
+    leantime_env:
+      LEAN_DB_HOST: "{{ mysql_service_name }}"
+      LEAN_DB_DATABASE: "{{ leantime.mysql_database | default('leantime') }}"
+      LEAN_DB_USER: "{{ leantime.mysql_user | default('leantime') }}"
+      LEAN_DB_PASSWORD: "{{ leantime.mysql_password | default('dummy') }}"
+      LEAN_LANGUAGE: "{{ leantime.language | default('en_AU') }}"
+      LEAN_TIMEZONE: "{{ homelab.timezone | default('UTC') }}"
 
 - name: deploy-leantime | Check if Leantime is running
   community.docker.docker_container_info:
@@ -208,7 +179,7 @@
           - CAP_SETGID
           - CAP_SETUID
         detach: true
-        env_file: "{{ leantime_config_dir }}/{{ leantime_service_name }}.env"
+        env: "{{ leantime_env | default(omit) }}"
         labels: "{{ leantime_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ leantime_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
@@ -220,14 +191,14 @@
         volumes: "{{ default_host_volumes + leantime_volumes | default(omit) }}"
       register: leantime_container_state
 
-    - name: deploy-leantime | Wait for Leantime to accept connections
-      ansible.builtin.wait_for:
-        host: "{{ leantime_fqdn }}"
-        port: 80
-        connect_timeout: 1
-        delay: 10
-        state: started
-        timeout: 30
-      register: leantime_running
-      retries: 10
-      until: leantime_running is success
+- name: deploy-leantime | Wait for Leantime to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ leantime_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: leantime_running
+  retries: 10
+  until: leantime_running is success
