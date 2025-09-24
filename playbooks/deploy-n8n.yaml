@@ -1,0 +1,32 @@
+---
+
+- name: Deploy n8n
+
+  hosts: ansible
+
+  vars:
+
+    # n8n facts
+    # renovate: datasource=docker depName=docker.n8n.io/n8nio/n8n
+    n8n_image: docker.n8n.io/n8nio/n8n:1.112.4
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of n8n
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-n8n.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      when: deploy_docker_volume_backup | default(false)
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_service_name: "docker-volume-backup-{{ n8n_service_name }}"
+        docker_volume_backup_volume_to_backup:
+          - "{{ n8n_volume_name }}:/backup/{{ n8n_service_name }}-backup:ro"
+        docker_volume_backup_backup_label: "{{ n8n_service_name }}-db"
+        docker_volume_backup_backup_retention_days: 7

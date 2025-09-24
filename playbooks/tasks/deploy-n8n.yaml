@@ -1,0 +1,160 @@
+---
+
+- name: deploy-n8n | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### N8N SECTION
+
+# https://support.getn8n.com/self-managed/#what-is-self-hosted-n8n
+
+- name: deploy-n8n | Set N8n facts
+  ansible.builtin.set_fact:
+    n8n_image: "{{ n8n_image | default('docker.n8n.io/n8nio/n8n:latest') }}"
+    n8n_service_name: "{{ n8n_service_name | default('n8n') }}"
+    n8n_service_port: "{{ n8n_service_port | default(5678) }}"
+
+- name: deploy-n8n | Set N8n network facts
+  ansible.builtin.set_fact:
+    n8n_network_name: "{{ n8n_network_name | default(n8n_service_name) }}"
+
+- name: deploy-n8n | Set N8n volume facts
+  ansible.builtin.set_fact:
+    n8n_volume_name: "{{ n8n_volume_name | default(n8n_service_name) }}"
+
+- name: deploy-n8n | Set N8n aggregated facts
+  ansible.builtin.set_fact:
+    n8n_fqdn: "{{ n8n_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-n8n | Set N8n service facts
+  ansible.builtin.set_fact:
+    n8n_env:
+      GENERIC_TIMEZONE: "{{ homelab.timezone | default('UTC') }}"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_RUNNERS_ENABLED: "true"
+      TZ: "{{ homelab.timezone | default('UTC') }}"
+    n8n_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    n8n_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ n8n_service_port }}:5678"
+    n8n_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ n8n_volume_name }}:/home/node/.n8n"
+
+- name: deploy-n8n | Log N8n configuration
+  ansible.builtin.debug:
+    msg:
+      - "N8n image: {{ n8n_image }}"
+      - "N8n service name: {{ n8n_service_name }}"
+      - "N8n FQDN: {{ n8n_fqdn }}"
+      - "N8n networks: {{ n8n_networks | default(omit) }}"
+      - "N8n ports: {{ n8n_ports | default(omit) }}"
+      - "N8n volumes: {{ n8n_volumes | default(omit) }}"
+
+- name: deploy-n8n | Create N8n container labels
+  ansible.builtin.set_fact:
+    n8n_container_labels: "{{ n8n_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "N8n" }
+    - { "key": "homepage.description", "value": "N8n is a workflow automation platform." }
+    - { "key": "homepage.icon", "value": "n8n.png" }
+    - { "key": "homepage.href", "value": "https://{{ n8n_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ n8n_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ n8n_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ n8n_service_name }}.rule",
+      "value": "Host(`{{ n8n_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/n8n-io/n8n/releases/tag/n8n%40${major}.${minor}.${patch}",
+    }
+
+- name: deploy-n8n | Create N8n networks
+  when: n8n_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ n8n_networks }}"
+
+- name: deploy-n8n | Create N8n volumes
+  when: n8n_volume_name is defined and (n8n_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ n8n_volume_name }}"
+
+- name: deploy-n8n | Check if N8n is running
+  community.docker.docker_container_info:
+    name: "{{ n8n_service_name }}"
+  register: n8n_state
+
+- name: deploy-n8n | Remove N8n container if changing version
+  when:
+    - n8n_state.exists
+    - (n8n_image | split(':') | last) != (n8n_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-n8n | Stop and remove existing N8n container
+      community.docker.docker_container:
+        name: "{{ n8n_service_name }}"
+        state: absent
+
+    - name: deploy-n8n | Set update N8n
+      ansible.builtin.set_fact:
+        n8n_update: true
+
+- name: deploy-n8n | Deploy N8n if not running
+  when:
+    - not n8n_state.exists or (n8n_update | default(false))
+  block:
+
+    - name: deploy-n8n | Pull N8n image
+      community.docker.docker_image:
+        name: "{{ n8n_image }}"
+        source: pull
+
+    - name: deploy-n8n | Deploy N8n
+      community.docker.docker_container:
+        name: "{{ n8n_service_name }}"
+        image: "{{ n8n_image }}"
+        detach: true
+        labels: "{{ n8n_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ n8n_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + n8n_volumes | default(omit) }}"
+      register: n8n_container_state
+
+- name: deploy-n8n | Wait for N8n to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ n8n_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: n8n_running
+  retries: 10
+  until: n8n_running is success
