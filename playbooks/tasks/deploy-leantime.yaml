@@ -139,7 +139,7 @@
       LEAN_DB_DATABASE: "{{ leantime.mysql_database | default('leantime') }}"
       LEAN_DB_USER: "{{ leantime.mysql_user | default('leantime') }}"
       LEAN_DB_PASSWORD: "{{ leantime.mysql_password | default('dummy') }}"
-      LEAN_LANGUAGE: "{{ leantime.language | default('en_AU') }}"
+      LEAN_LANGUAGE: "{{ homelab.language | default('en_GB') }}"
       LEAN_TIMEZONE: "{{ homelab.timezone | default('UTC') }}"
 
 - name: deploy-leantime | Check if Leantime is running
