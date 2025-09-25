@@ -84,3 +84,7 @@
   when: false  # Disable for now as not needed with Dozzle
   ansible.builtin.include_tasks:
     file: tasks/deploy-prometheus.yaml
+
+- name: homelab-deploy-support-services | Deploy a containerised instance of Atlas
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-atlas.yaml

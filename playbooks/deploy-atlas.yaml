@@ -1,7 +1,7 @@
 ---
 - name: Deploy Atlas - A tool to scan, analyze, and visualize network infrastructure dynamically
 
-  hosts: ansible
+  hosts: fireflyiii
 
   vars:
 
