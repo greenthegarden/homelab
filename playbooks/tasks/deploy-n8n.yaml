@@ -63,7 +63,7 @@
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "N8n" }
-    - { "key": "homepage.description", "value": "N8n is a workflow automation platform." }
+    - { "key": "homepage.description", "value": "A workflow automation platform" }
     - { "key": "homepage.icon", "value": "n8n.png" }
     - { "key": "homepage.href", "value": "https://{{ n8n_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ n8n_fqdn }}/" }
