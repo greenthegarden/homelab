@@ -1,0 +1,165 @@
+---
+
+- name: deploy-tracktor | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+# - name: deploy-tracktor | Ensure required Tracktor variables are set
+#   ansible.builtin.assert:
+#     that:
+#       - tracktor.admin_password is defined
+#       - tracktor.admin_email is defined
+#     fail_msg: "One or more required tracktor variables are not defined! Please define them in your inventory or group_vars/host_vars."
+
+####### TRACKTOR SECTION
+
+# https://github.com/javedh-dev/tracktor/blob/dev/docs/INSTALL.md
+
+- name: deploy-tracktor | Set Tracktor facts
+  ansible.builtin.set_fact:
+    tracktor_image: "{{ tracktor_image | default('ghcr.io/javedh-dev/tracktor:latest') }}"
+    tracktor_service_name: "{{ tracktor_service_name | default('tracktor') }}"
+    tracktor_service_port: "{{ tracktor_service_port | default(3000) }}"
+
+- name: deploy-tracktor | Set Tracktor network facts
+  ansible.builtin.set_fact:
+    tracktor_network_name: "{{ tracktor_network_name | default(tracktor_service_name) }}"
+
+- name: deploy-tracktor | Set Tracktor volume facts
+  ansible.builtin.set_fact:
+    tracktor_volume_name: "{{ tracktor_volume_name | default(tracktor_service_name) }}"
+
+- name: deploy-tracktor | Set Tracktor aggregated facts
+  ansible.builtin.set_fact:
+    tracktor_fqdn: "{{ tracktor_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-tracktor | Set Tracktor service facts
+  ansible.builtin.set_fact:
+    tracktor_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    tracktor_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ tracktor_service_port }}:3000"
+    tracktor_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ tracktor_volume_name }}:/data"
+
+- name: deploy-tracktor | Log Tracktor configuration
+  ansible.builtin.debug:
+    msg:
+      - "Tracktor image: {{ tracktor_image }}"
+      - "Tracktor service name: {{ tracktor_service_name }}"
+      - "Tracktor FQDN: {{ tracktor_fqdn }}"
+      - "Tracktor networks: {{ tracktor_networks | default(omit) }}"
+      - "Tracktor ports: {{ tracktor_ports | default(omit) }}"
+      - "Tracktor volumes: {{ tracktor_volumes | default(omit) }}"
+
+- name: deploy-tracktor | Create Tracktor container labels
+  ansible.builtin.set_fact:
+    tracktor_container_labels: "{{ tracktor_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Tracktor" }
+    - { "key": "homepage.description", "value": "Comprehensive vehicle management." }
+    - { "key": "homepage.icon", "value": "tracktor.png" }
+    - { "key": "homepage.href", "value": "https://{{ tracktor_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ tracktor_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ tracktor_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ tracktor_service_name }}.rule",
+      "value": "Host(`{{ tracktor_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/javedh-dev/tracktor/releases/tag/${major}.${minor}.${patch}",
+    }
+
+- name: deploy-tracktor | Create Tracktor networks
+  when: tracktor_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ tracktor_networks }}"
+
+- name: deploy-tracktor | Create Tracktor volumes
+  when: tracktor_volume_name is defined and (tracktor_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ tracktor_volume_name }}"
+
+- name: deploy-tracktor | Check if Tracktor is running
+  community.docker.docker_container_info:
+    name: "{{ tracktor_service_name }}"
+  register: tracktor_state
+
+- name: deploy-tracktor | Remove Tracktor container if changing version
+  when:
+    - tracktor_state.exists
+    - (tracktor_image | split(':') | last) != (tracktor_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-tracktor | Stop and remove existing Tracktor container
+      community.docker.docker_container:
+        name: "{{ tracktor_service_name }}"
+        state: absent
+
+    - name: deploy-tracktor | Set update Tracktor
+      ansible.builtin.set_fact:
+        tracktor_update: true
+
+- name: deploy-tracktor | Deploy Tracktor if not running
+  when:
+    - not tracktor_state.exists or (tracktor_update | default(false))
+  block:
+
+    - name: deploy-tracktor | Pull Tracktor image
+      community.docker.docker_image:
+        name: "{{ tracktor_image }}"
+        source: pull
+
+    - name: deploy-tracktor | Deploy Tracktor
+      community.docker.docker_container:
+        name: "{{ tracktor_service_name }}"
+        image: "{{ tracktor_image }}"
+        detach: true
+        env:
+          AUTH_PIN: "{{ tracktor.auth_pin | default(000000) | quote }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ tracktor_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ tracktor_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + tracktor_volumes | default(omit) }}"
+      register: tracktor_container_state
+
+- name: deploy-tracktor | Wait for Tracktor to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ tracktor_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: tracktor_running
+  retries: 10
+  until: tracktor_running is success

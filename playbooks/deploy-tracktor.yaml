@@ -1,0 +1,32 @@
+---
+
+- name: Deploy Tracktor
+
+  hosts: ansible
+
+  vars:
+
+    # Tracktor facts
+    # renovate: datasource=docker depName=ghcr.io/javedh-dev/tracktor
+    tracktor_image: ghcr.io/javedh-dev/tracktor:0.2.2
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Tracktor
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-tracktor.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      when: deploy_docker_volume_backup | default(false)
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_service_name: "docker-volume-backup-{{ tracktor_service_name }}"
+        docker_volume_backup_volume_to_backup:
+          - "{{ tracktor_volume_name }}:/backup/{{ tracktor_service_name }}-backup:ro"
+        docker_volume_backup_backup_label: "{{ tracktor_service_name }}-db"
+        docker_volume_backup_backup_retention_days: 7
