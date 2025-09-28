@@ -35,6 +35,20 @@
 
 - name: deploy-tracktor | Set Tracktor service facts
   ansible.builtin.set_fact:
+    tracktor_env:
+      # Tracktor environment variables
+      NODE_ENV: "production"
+      BACKEND_HOST: "0.0.0.0"
+      BACKEND_PORT: "{{ 3000 | quote }}"
+      DATABASE_PAT: "/data/tracktor.db"
+      FORCE_DEMO_SEED_DATA: "{{ false | quote }}"
+      AUTH_PIN: "{{ tracktor.auth_pin | default(000000) | quote }}"
+      # CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000?
+      FRONTEND_HOST: "0.0.0.0"
+      FRONTEND_PORT: "{{ 5173 | quote }}"
+      PUBLIC_API_BASE_URL: "http://localhost:3000"
+      PUBLIC_DEMO_MODE: "{{ false | quote }}"
+      TZ: "{{ homelab.timezone | default('UTC') }}"
     tracktor_networks:
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
@@ -53,6 +67,7 @@
       - "Tracktor image: {{ tracktor_image }}"
       - "Tracktor service name: {{ tracktor_service_name }}"
       - "Tracktor FQDN: {{ tracktor_fqdn }}"
+      - "Tracktor env: {{ tracktor_env | default(omit) }}"
       - "Tracktor networks: {{ tracktor_networks | default(omit) }}"
       - "Tracktor ports: {{ tracktor_ports | default(omit) }}"
       - "Tracktor volumes: {{ tracktor_volumes | default(omit) }}"
@@ -79,6 +94,10 @@
     - {
       "key": "traefik.http.routers.{{ tracktor_service_name }}.rule",
       "value": "Host(`{{ tracktor_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.services.{{ tracktor_service_name }}.loadbalancer.server.port",
+      "value": "{{ tracktor_service_port }}",
     }
     # ---------------------------------------------------------------
     # What's up Docker? labels
@@ -140,12 +159,11 @@
         name: "{{ tracktor_service_name }}"
         image: "{{ tracktor_image }}"
         detach: true
-        env:
-          AUTH_PIN: "{{ tracktor.auth_pin | default(000000) | quote }}"
-          TZ: "{{ homelab.timezone | default('UTC') }}"
+        env: "{{ tracktor_env | default(omit) }}"
         labels: "{{ tracktor_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ tracktor_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        published_ports: "{{ tracktor_ports | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started
