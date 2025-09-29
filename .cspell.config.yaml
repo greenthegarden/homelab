@@ -1,0 +1,12 @@
+default_language: en_AU
+dictionaryDefinitions:
+  - name: .spelling
+    path: "./.spelling"
+    addWords: true
+dictionaries:
+  - .spelling
+ignorePaths:
+  - "**/.git/**"
+  - ".ansible/**"
+  - "**/*.{yaml,yml,json,md,txt,log,ini,cfg,conf,env,sh,bash}"
+  - ".spelling"
