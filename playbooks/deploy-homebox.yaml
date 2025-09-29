@@ -9,6 +9,8 @@
     # renovate: datasource=docker depName=ghcr.io/sysadminsmedia/homebox
     homebox_image: ghcr.io/sysadminsmedia/homebox:0.21.0
 
+    homebox_deploy_docker_volume_backup: true
+
   tasks:
 
     - name: Load homelab vars
@@ -20,6 +22,7 @@
         file: tasks/deploy-homebox.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
+      when: homebox_deploy_docker_volume_backup | default(false)
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:

@@ -13,6 +13,8 @@
     hortusfox_service_port: 80
     hortusfox_db_backup_volume_name: hortusfox_db_backup
 
+    hortusfox_deploy_docker_volume_backup: false
+
   tasks:
 
     - name: Load homelab vars
@@ -24,7 +26,7 @@
         file: tasks/deploy-hortusfox.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
-      when: false # Temporarily disable for testing
+      when: hortusfox_deploy_docker_volume_backup | default(false)
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:

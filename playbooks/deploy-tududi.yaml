@@ -9,6 +9,8 @@
     # renovate: datasource=docker depName=chrisvel/tududi
     tududi_image: chrisvel/tududi:0.80
 
+    tududi_deploy_docker_volume_backup: true
+
   tasks:
 
     - name: Load homelab vars
@@ -20,6 +22,7 @@
         file: tasks/deploy-tududi.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
+      when: tududi_deploy_docker_volume_backup | default(false)
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:

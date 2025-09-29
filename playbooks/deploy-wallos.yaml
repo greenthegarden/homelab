@@ -10,6 +10,8 @@
     # renovate: datasource=docker depName=walloslabs/wallos
     wallos_image: bellamy/wallos:4.3.0
 
+    wallos_deploy_docker_volume_backup: true
+
   tasks:
 
     - name: Load homelab vars
@@ -21,6 +23,7 @@
         file: tasks/deploy-wallos.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
+      when: wallos_deploy_docker_volume_backup | default(false)
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:

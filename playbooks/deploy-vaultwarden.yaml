@@ -9,6 +9,8 @@
     # renovate: datasource=docker depName=vaultwarden/server
     vaultwarden_image: vaultwarden/server:1.34.3-alpine
 
+    vaultwarden_deploy_docker_volume_backup: true
+
   tasks:
 
     - name: Load homelab vars
@@ -20,6 +22,7 @@
         file: tasks/deploy-vaultwarden.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
+      when: vaultwarden_deploy_docker_volume_backup | default(false)
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:

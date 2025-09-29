@@ -9,6 +9,8 @@
     # renovate: datasource=docker depName=louislam/uptime-kuma
     uptimekuma_image: louislam/uptime-kuma:1.23.16-alpine
 
+    uptimekuma_deploy_docker_volume_backup: true
+
   tasks:
 
     - name: Load homelab vars
@@ -20,6 +22,7 @@
         file: tasks/deploy-uptimekuma.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
+      when: uptimekuma_deploy_docker_volume_backup | default(false)
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:

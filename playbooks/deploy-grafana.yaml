@@ -20,7 +20,7 @@
         file: tasks/deploy-grafana.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
-      when: false # Temporarily disable for testing
+      when: grafana_deploy_docker_volume_backup | default(false)
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:

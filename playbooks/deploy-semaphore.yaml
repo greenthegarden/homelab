@@ -10,6 +10,8 @@
     semaphore_image: semaphoreui/semaphore:v2.16.31
     semaphore_db_dialect: bolt
 
+    semaphore_deploy_docker_volume_backup: true
+
   tasks:
 
     - name: Load homelab vars
@@ -21,6 +23,7 @@
         file: tasks/deploy-semaphore.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
+      when: semaphore_deploy_docker_volume_backup | default(false)
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:

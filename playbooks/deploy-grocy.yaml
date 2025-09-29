@@ -9,6 +9,8 @@
     # renovate: datasource=docker depName=linuxserver/grocy
     grocy_image: linuxserver/grocy:4.4.2 # 4.5.0
 
+    grocy_deploy_docker_volume_backup: true
+
   tasks:
 
     - name: Load homelab vars
@@ -20,6 +22,7 @@
         file: tasks/deploy-grocy.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
+      when: grocy_deploy_docker_volume_backup | default(false)
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:

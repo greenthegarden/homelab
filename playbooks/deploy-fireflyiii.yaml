@@ -14,6 +14,8 @@
     fireflyiii_service_port: 8080
     fireflyiii_db_backup_volume_name: fireflyiii_db_backup
 
+    fireflyiii_deploy_docker_volume_backup: true
+
   tasks:
 
     - name: Load homelab vars
@@ -25,6 +27,7 @@
         file: tasks/deploy-fireflyiii.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
+      when: fireflyiii_deploy_docker_volume_backup | default(false)
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:

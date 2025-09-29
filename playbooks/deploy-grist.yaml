@@ -10,6 +10,8 @@
     # renovate: datasource=docker depName=gristlabs/grist
     grist_image: gristlabs/grist:1.7.3
 
+    grist_deploy_docker_volume_backup: true
+
   tasks:
 
     - name: Load homelab vars
@@ -21,6 +23,7 @@
         file: tasks/deploy-grist.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
+      when: grist_deploy_docker_volume_backup | default(false)
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
