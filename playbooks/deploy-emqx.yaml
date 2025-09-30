@@ -7,7 +7,7 @@
 
     # EMQX facts
     # renovate: datasource=docker depName=emqx/emqx
-    emqx_image: emqx/emqx:5.8.8
+    emqx_image: emqx/emqx:6.0.0
 
   tasks:
 
