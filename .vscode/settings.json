@@ -1,5 +1,6 @@
 {
   "ansible.python.interpreterPath": "/bin/python3",
+  "cSpell.language": "en-au,en-gb",
   "editor.formatOnSave": true, // Used to autoformat on save
   "files.associations": {
     "*.yaml.j2": "yaml",

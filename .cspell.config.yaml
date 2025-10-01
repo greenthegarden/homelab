@@ -8,5 +8,6 @@ dictionaries:
 ignorePaths:
   - "**/.git/**"
   - ".ansible/**"
+  - "**/.drawio/**"
   - "**/*.{yaml,yml,json,md,txt,log,ini,cfg,conf,env,sh,bash}"
   - ".spelling"
