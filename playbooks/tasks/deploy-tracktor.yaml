@@ -37,17 +37,17 @@
   ansible.builtin.set_fact:
     tracktor_env:
       # Tracktor environment variables
-      NODE_ENV: "production"
-      BACKEND_HOST: "0.0.0.0"
-      BACKEND_PORT: "{{ 3000 | quote }}"
-      DATABASE_PAT: "/data/tracktor.db"
-      FORCE_DEMO_SEED_DATA: "{{ false | quote }}"
+      # NODE_ENV: "production"
+      # BACKEND_HOST: "0.0.0.0"
+      # BACKEND_PORT: "{{ 3000 | quote }}"
       AUTH_PIN: "{{ tracktor.auth_pin | default(000000) | quote }}"
+      # DATABASE_PATH: "/data/tracktor.db"
+      # FORCE_DEMO_SEED_DATA: "{{ false | quote }}"
       # CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000?
-      FRONTEND_HOST: "0.0.0.0"
-      FRONTEND_PORT: "{{ 5173 | quote }}"
-      PUBLIC_API_BASE_URL: "http://localhost:3000"
-      PUBLIC_DEMO_MODE: "{{ false | quote }}"
+      # FRONTEND_HOST: "0.0.0.0"
+      # FRONTEND_PORT: "{{ 5173 | quote }}"
+      # PUBLIC_API_BASE_URL: "http://localhost:3000"
+      # PUBLIC_DEMO_MODE: "{{ false | quote }}"
       TZ: "{{ homelab.timezone | default('UTC') }}"
     tracktor_networks:
       # Reverse Proxy  network is used to expose applications via Traefik
