@@ -20,7 +20,7 @@ reverse_proxy_network_name: reverse-proxy
 
 # Beszel Agent facts
 # renovate: datasource=docker depName=beszel/beszel-agent
-beszel_agent_image: henrygd/beszel-agent:0.12.12
+beszel_agent_image: henrygd/beszel-agent:0.13.0
 # Docker Socket Proxy service facts
 # renovate: datasource=docker depName=ghcr.io/tecnativa/docker-socket-proxy
 docker_socket_proxy_image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.1
