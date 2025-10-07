@@ -1,13 +1,13 @@
 ---
 - name: Deploy Atlas - A tool to scan, analyze, and visualize network infrastructure dynamically
 
-  hosts: fireflyiii
+  hosts: homelab_lxc_docker
 
   vars:
 
     # Atlas facts
     # renovate: datasource=docker depName=keinstien/atlas
-    atlas_image: keinstien/atlas:3.2.16
+    atlas_image: keinstien/atlas:3.2.18
 
   tasks:
 
