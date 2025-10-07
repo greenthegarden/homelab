@@ -7,7 +7,7 @@
 
     # Apprise facts
     # renovate: datasource=docker depName=caronc/apprise
-    apprise_image: caronc/apprise:1.2.1
+    apprise_image: caronc/apprise:1.2.2
 
   tasks:
 
