@@ -46,6 +46,7 @@
       - "redis image: {{ redis_image }}"
       - "redis service name: {{ redis_service_name }}"
       - "redis FQDN: {{ redis_fqdn }}"
+      - "redis args: {{ redis_args | default(omit) }}"
       - "redis networks: {{ redis_networks | default(omit) }}"
       - "redis ports: {{ redis_ports | default(omit) }}"
       - "redis volumes: {{ redis_volumes | default(omit) }}"
@@ -113,6 +114,12 @@
         detach: true
         env:
           TZ: "{{ homelab.timezone | default('UTC') }}"
+        healthcheck:
+          test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+          interval: 30s
+          retries: 5
+          start_period: 30s
+          timeout: 10s
         labels: "{{ redis_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ redis_networks | default(omit) }}"

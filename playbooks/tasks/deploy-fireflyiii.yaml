@@ -90,6 +90,7 @@
   ansible.builtin.set_fact:
     fireflyiii_db_container_labels: "{{ fireflyiii_db_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
     # Docker Volume Backup labels
     - {
       "key": "docker-volume-backup.archive-pre",
@@ -98,23 +99,27 @@
         -p{{ fireflyiii.db_password }} --all-databases > /tmp/dumps/dump.sql'",
     }
 
-- name: deploy-fireflyiii | Create Firefly III configuration directory
-  ansible.builtin.file:
-    path: "{{ fireflyiii_config_dir }}"
-    state: directory
-    mode: "0644"
-
 - name: deploy-fireflyiii | Create Firefly III configuration
-  ansible.builtin.template:
-    src: "templates/fireflyiii/{{ item }}.j2"
-    dest: "{{ fireflyiii_config_dir }}/{{ item }}"
-    mode: "0644"
-  loop:
-    - docker-compose.yml
-    - fireflyiii.env
-    - fireflyiii_importer.env
+  when: fireflyiii_config_dir is defined
+  block:
 
-- name: deploy-fireflyiii | Create Firefly III backup volume # noqa: syntax-check[unknown-module]
+    - name: deploy-fireflyiii | Create Firefly III configuration directory
+      ansible.builtin.file:
+        path: "{{ fireflyiii_config_dir }}"
+        state: directory
+        mode: "0644"
+
+    - name: deploy-fireflyiii | Create Firefly III configuration
+      ansible.builtin.template:
+        src: "templates/fireflyiii/{{ item }}.j2"
+        dest: "{{ fireflyiii_config_dir }}/{{ item }}"
+        mode: "0644"
+      loop:
+        - docker-compose.yml
+        - fireflyiii.env
+        - fireflyiii_importer.env
+
+- name: deploy-fireflyiii | Create Firefly III backup volume
   community.docker.docker_volume:
     name: "{{ fireflyiii_db_backup_volume_name }}"
     state: present
@@ -124,7 +129,7 @@
 #     project_src: /root/fireflyiii
 #     state: absent
 
-- name: deploy-fireflyiii | Deploy Firefly III services # noqa: syntax-check[unknown-module]
+- name: deploy-fireflyiii | Deploy Firefly III services
   community.docker.docker_compose_v2:
     project_src: "{{ fireflyiii_config_dir }}"
     env_files:

@@ -125,7 +125,7 @@
       - "--maxmemory 256mb"
       - "--maxmemory-policy allkeys-lru"
 
-- name: deploy-docmost | Deploy Postgres database
+- name: deploy-docmost | Deploy Postgres database for Docmost
   when: docmost_postgres_database_create | default(true)
   ansible.builtin.include_tasks:
     file: tasks/deploy-postgres.yaml

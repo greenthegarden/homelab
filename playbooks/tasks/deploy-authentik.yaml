@@ -3,13 +3,28 @@
   ansible.builtin.include_tasks:
     file: tasks/hosts-dependency-check-docker-version.yaml
 
+####### AUTHENTIK SECTION
+
+# https://goauthentik.io/
+# https://github.com/goauthentik/authentik
+# https://github.com/brokenscripts/authentik_traefik
+#
 # https://authentik.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-authentik-dashboard/
 
 - name: deploy-authentik | Set Authentik facts
   ansible.builtin.set_fact:
     authentik_service_name: "{{ authentik_service_name | default('authentik') }}"
-    authentik_service_port: "{{ authentik_service_port | default(3000) }}"
-    authentik_config_dir: /root/authentik
+    authentik_service_port_http: "{{ authentik_service_port | default(9000) }}"
+
+- name: deploy-authentik | Set Authentik network facts
+  ansible.builtin.set_fact:
+    authentik_network_name: "{{ authentik_network_name | default(authentik_service_name) }}"
+
+- name: deploy-authentik | Set Authentik volume facts
+  ansible.builtin.set_fact:
+    authentik_volume_certs_name: "{{ authentik_volume_certs_name | default(authentik_service_name + '-certs') }}"
+    authentik_volume_media_name: "{{ authentik_volume_media_name | default(authentik_service_name + '-media') }}"
+    authentik_volume_templates_name: "{{ authentik_volume_templates_name | default(authentik_service_name + '-templates') }}"
 
 - name: deploy-authentik | Set Authentik aggregated facts
   ansible.builtin.set_fact:
@@ -18,59 +33,87 @@
 - name: deploy-authentik | Set Authentik API facts
   ansible.builtin.set_fact:
     authentik_networks:
-      - name: "{{ docker_monitoring_network_name | default('docker-monitoring') }}"
-      - name: "{{ web_network_name | default('web') }}"
+      - { name: "{{ authentik_network_name }}", internal: true }
+      # Docker Socket Proxy External provide access to exposed Docker APIs
+      - { name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy-external') }}" }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     authentik_ports:
-      - "{{ authentik_service_port | default(3000) }}:3000"
+      - "{{ authentik_service_port_http }}:9000"
     authentik_volumes:
-      - "/root/authentik/config:/app/config"
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      # /certs is used for authentik to import external certs, which in most cases shouldn't be used for SAML, but rather if you use authentik without a reverse proxy, this can be used for example for the Let's Encrypt integration
+      # - "{{ authentik_volume_certs_name }}:/certs"
+      # /media is used to store icons and such, but not required, and if not mounted, authentik will allow you to set a URL to icons in place of a file upload
+      - "{{ authentik_volume_media_name }}:/media"
+      # /templates is used for custom email templates, and as with the other ones fully optional
+      - "{{ authentik_volume_templates_name }}:/templates"
+
+- name: deploy-authentik | Log Authentik configuration
+  ansible.builtin.debug:
+    msg:
+      - "Authentik image: {{ authentik_image }}"
+      - "Authentik service name: {{ authentik_service_name }}"
+      - "Authentik FQDN: {{ authentik_fqdn }}"
+      - "Authentik networks: {{ authentik_networks | default(omit) }}"
+      - "Authentik ports: {{ authentik_ports | default(omit) }}"
+      - "Authentik volumes: {{ authentik_volumes | default(omit) }}"
 
 - name: deploy-authentik | Create Authentik container labels
   ansible.builtin.set_fact:
     authentik_container_labels: "{{ authentik_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Authentik" }
+    - { "key": "homepage.description", "value": "Centralised logins" }
+    - { "key": "homepage.icon", "value": "authentik.png" }
+    - { "key": "homepage.href", "value": "https://{{ authentik_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ authentik_fqdn }}/" }
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - { "key": "traefik.docker.network", "value": "{{ web_network_name }}" }
     - {
       "key": "traefik.http.routers.{{ authentik_service_name }}.entrypoints",
-      "value": "websecure",
+      "value": "{{ traefik_entrypoint_secure_name }}",
     }
     - {
       "key": "traefik.http.routers.{{ authentik_service_name }}.rule",
       "value": "Host(`{{ authentik_fqdn }}`)",
+    }
+    ## Individual Application forwardAuth regex (catch any subdomain using individual application forwardAuth)
+    # https://github.com/brokenscripts/authentik_traefik/blob/traefik3/my-compose/authentik/compose.yaml
+    - {
+      "key": "traefik.http.routers.{{ authentik_service_name }}-output.rule",
+      "value": "HostRegexp(`{subdomain:[a-z0-9-]+}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}}`) && PathPrefix(`/outpost.goauthentik.io/`)",
     }
     - {
       "key": "traefik.http.routers.{{ authentik_service_name }}.service",
       "value": "{{ authentik_service_name }}",
     }
     - {
-      "key": "traefik.http.routers.{{ authentik_service_name }}.tls",
-      "value": "true",
+      "key": "traefik.http.services.{{ authentik_service_name }}.loadbalancer.server.port",
+      "value": "{{ authentik_service_port_http | quote }}",
     }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
       "value": "https://github.com/getauthentik/authentik/releases/tag/v${major}.${minor}.${patch}",
     }
-    # Homepage labels
-    - { "key": "homepage.group", "value": "System" }
-    - { "key": "homepage.name", "value": "authentik" }
-    - { "key": "homepage.description", "value": "Centralised logins" }
-    - { "key": "homepage.icon", "value": "authentik.png" }
-    - { "key": "homepage.href", "value": "https://{{ authentik_fqdn }}/" }
-    - {
-      "key": "homepage.siteMonitor",
-      "value": "https://{{ authentik_fqdn }}/",
-    }
 
 - name: deploy-authentik | Create Authentik DB container labels
   ansible.builtin.set_fact:
     authentik_db_container_labels: "{{ authentik_db_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
+    # Docker Volume Backup labels
+    - {
+      "key": "docker-volume-backup.archive-pre",
+      "value": "/bin/sh -c 'PGPASSWORD={{ authentik.db_password }} pg_dump -U {{ authentik.db_user }} {{ authentik.db_name }} > /tmp/dumps/dump.sql'",
+    }
+    # ---------------------------------------------------------------
     # What's up Docker? labels
     # Fix WUD to version 16 for PostgreSQL
     - { "key": "wud.tag.include", "value": '^16+\.\d+\.\d+$$' }
@@ -82,35 +125,122 @@
       "key": "wud.link.template",
       "value": "https://github.com/postgres/postgres/releases/tag/REL_${major}_${minor}",
     }
-    # Docker Volume Backup labels
-    - {
-      "key": "docker-volume-backup.archive-pre",
-      "value": "/bin/sh -c 'PGPASSWORD={{ authentik.db_password }} pg_dump -U {{ authentik.db_user }} {{ authentik.db_name }} > /tmp/dumps/dump.sql'",
-    }
 
-- name: deploy-authentik | Create Authentik configuration directory
-  ansible.builtin.file:
-    path: "{{ authentik_config_dir }}"
-    state: directory
-    mode: "0644"
+- name: deploy-authentik | Create Authentik networks
+  when: authentik_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ authentik_networks }}"
 
-- name: deploy-authentik | Create Authentik configuration
-  ansible.builtin.template:
-    src: "templates/authentik/{{ item }}.j2"
-    dest: "{{ authentik_config_dir }}/{{ item }}"
-    mode: "0644"
+- name: deploy-authentik | Create Authentik volumes
+  when: authentik_volume_name is defined
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
   loop:
-    - docker-compose.yml
-    - authentik.env
+    - "{{ authentik_volume_certs_name }}"
+    - "{{ authentik_volume_media_name }}"
+    - "{{ authentik_volume_templates_name }}"
 
-# - name: deploy-authentik | Tear down existing services
-#   community.docker.docker_compose_v2:
-#     project_src: /root/authentik
-#     state: absent
+- name: deploy-authentik | Deploy Redis for Authentik
+  when: authentik_redis_create | default(true)
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-redis.yaml
+  vars:
+    # renovate: datasource=docker depName=redis
+    redis_image: redis:8.2.2-alpine
+    redis_service_name: "{{ authentik_service_name }}-redis"
+    redis_network_name: "{{ authentik_network_name }}"
+    redis_volume_name: "{{ authentik_service_name }}-redis"
+    redis_args:
+      - "--save ''"
+      - "--appendonly no"
+      - "--maxmemory 256mb"
+      - "--maxmemory-policy allkeys-lru"
 
-- name: deploy-authentik | Deploy Authentik services # noqa: syntax-check[unknown-module]
-  community.docker.docker_compose_v2:
-    project_src: "{{ authentik_config_dir }}"
-    env_files:
-      - authentik.env
-  register: output
+- name: deploy-authentik | Deploy Postgres database for Authentik
+  when: authentik_postgres_database_create | default(true)
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-postgres.yaml
+  vars:
+    # renovate: datasource=docker depName=docker.io/library/postgres
+    postgres_image: docker.io/library/postgres:16.8-alpine
+    postgres_service_name: "{{ authentik_service_name }}-postgres"
+    postgres_network_name: "{{ authentik_network_name }}"
+    postgres_volume_name: "{{ authentik_service_name }}-postgres"
+    postgres_database: "{{ authentik.db_name | default('authentik') }}"
+    postgres_user: "{{ authentik.db_user | default('authentik') }}"
+    postgres_password: "{{ authentik.db_password | default('dummy') }}"
+
+- name: deploy-authentik | Pull Authentik image
+  community.docker.docker_image:
+    name: "{{ authentik_image }}"
+    source: pull
+
+# For architecture details see https://docs.goauthentik.io/core/architecture/
+
+- name: deploy-authentik | Deploy Authentik server
+  community.docker.docker_container:
+    name: "{{ authentik_service_name }}"
+    image: "{{ authentik_image }}"
+    command: server
+    detach: true
+    env:
+      AUTHENTIK_REDIS__HOST: "{{ redis_service_name }}"
+      AUTHENTIK_POSTGRESQL__HOST: "{{ postgres_service_name }}"
+      AUTHENTIK_POSTGRESQL__NAME: "{{ authentik.db_name | default('authentik') }}"
+      AUTHENTIK_POSTGRESQL__USER: "{{ authentik.db_user | default('authentik') }}"
+      AUTHENTIK_POSTGRESQL__PASSWORD: "{{ authentik.db_password | default('dummy') }}"
+      AUTHENTIK_LOG_LEVEL: warning # debug, info, warning, error, trace
+      AUTHENTIK_SECRET_KEY: "{{ authentik.secret_key | default('dummy') }}"
+    labels: "{{ authentik_container_labels | default(omit) }}"
+    networks_cli_compatible: true
+    networks:
+      - name: "{{ authentik_network_name }}"
+      - name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}"
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    volumes: "{{ authentik_volumes | default(omit) }}" # do not change timezone to host timezone
+  register: authentik_container_state
+
+- name: deploy-authentik | Deploy Authentik worker
+  community.docker.docker_container:
+    name: "{{ authentik_service_name }}-worker"
+    image: "{{ authentik_image }}"
+    command: worker
+    detach: true
+    env:
+      DOCKER_HOST: "tcp://docker-socket-proxy-external:2375"
+      AUTHENTIK_REDIS__HOST: "{{ redis_service_name }}"
+      AUTHENTIK_POSTGRESQL__HOST: "{{ postgres_service_name }}"
+      AUTHENTIK_POSTGRESQL__NAME: "{{ authentik.db_name | default('authentik') }}"
+      AUTHENTIK_POSTGRESQL__USER: "{{ authentik.db_user | default('authentik') }}"
+      AUTHENTIK_POSTGRESQL__PASSWORD: "{{ authentik.db_password | default('dummy') }}"
+      AUTHENTIK_LOG_LEVEL: warning # debug, info, warning, error, trace
+      AUTHENTIK_SECRET_KEY: "{{ authentik.secret_key | default('dummy') }}"
+    networks_cli_compatible: true
+    networks:
+      - name: "{{ authentik_network_name }}"
+      - name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy-external') }}"
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    # user: "root:root"
+    volumes: "{{ authentik_volumes | default(omit) }}" # do not change timezone to host timezone
+  register: authentik_container_state
+
+- name: deploy-authentik | Wait for Authentik to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ authentik_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: authentik_running
+  retries: 10
+  until: authentik_running is success

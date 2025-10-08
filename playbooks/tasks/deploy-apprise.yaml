@@ -67,7 +67,7 @@
     - { "key": "traefik.enable", "value": "true" }
     - {
       "key": "traefik.http.routers.{{ apprise_service_name }}.entrypoints",
-      "value": "websecure",
+      "value": "{{ traefik_entrypoint_secure_name }}",
     }
     - {
       "key": "traefik.http.routers.{{ apprise_service_name }}.rule",

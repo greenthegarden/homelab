@@ -13,7 +13,6 @@
 - name: deploy-leantime | Set Leantime facts
   ansible.builtin.set_fact:
     leantime_image: "{{ leantime_image | default('leantime/leantime:latest') }}"
-    leantime_image_tag: "{{ leantime_image_tag | default('latest') }}"
     leantime_service_name: "{{ leantime_service_name | default('leantime') }}"
     leantime_service_port: "{{ leantime_service_port | default(8080) }}"
 

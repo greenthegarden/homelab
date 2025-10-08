@@ -126,9 +126,12 @@
         command: "{{ postgres_args | default(omit) }}"
         detach: true
         env:
-          POSTGRES_DB: "{{ postgres_database | default(omit) }}"
-          POSTGRES_USER: "{{ postgres_user | default(omit) }}"
-          POSTGRES_PASSWORD: "{{ postgres_password | default(omit) }}"
+          # Creates a new superuser with this name (defaults to "postgres" if not specified).
+          POSTGRES_USER: "{{ postgres_user | default('postgres') }}"
+          # Set the password for the PostgreSQL superuser (required).
+          POSTGRES_PASSWORD: "{{ postgres_password | default('dummy') }}"
+          # Creates a new database with this name (defaults to the username if not specified).
+          POSTGRES_DB: "{{ postgres_database | default('postgres') }}"
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ postgres_container_labels | default(omit) }}"
         networks_cli_compatible: true

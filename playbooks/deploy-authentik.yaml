@@ -2,14 +2,13 @@
 
 - name: Deploy Authentik
 
-  hosts: authentik
+  hosts: ansible
 
   vars:
 
     # Authentik facts
-    authentik_image_tag: 2025.8.4
-    authentik_service_name: authentik
-    authentik_service_port: 9443
+    # renovate: datasource=docker depName=ghcr.io/goauthentik/server
+    authentik_image: ghcr.io/goauthentik/server:2025.8.4
 
   tasks:
 
