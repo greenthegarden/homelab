@@ -1,0 +1,172 @@
+---
+- name: deploy-consul | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### CONSUL SECTION
+
+# https://github.com/hashicorp/consul
+# https://developer.hashicorp.com/consul/docs
+
+- name: deploy-consul | Set Consul facts
+  ansible.builtin.set_fact:
+    consul_image: "{{ consul_image | default('hashicorp/consul:latest') }}"
+    consul_service_name: "{{ consul_service_name | default('consul') }}"
+    consul_service_port_ui: "{{ consul_service_port | default(8500) }}"
+
+- name: deploy-consul | Set Consul network facts
+  ansible.builtin.set_fact:
+    consul_network_name: "{{ consul_network_name | default(consul_service_name) }}"
+
+- name: deploy-consul | Set Consul volume facts
+  ansible.builtin.set_fact:
+    consul_volume_name: "{{ consul_volume_name | default(consul_service_name) }}"
+
+- name: deploy-consul | Set Consul aggregated facts
+  ansible.builtin.set_fact:
+    consul_fqdn: "{{ consul_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-consul | Set Consul service facts
+  ansible.builtin.set_fact:
+    consul_command:
+      - "consul"
+      - "agent"
+      - "-server"
+      - "-ui"
+      - "-node={{ consul_service_name }}-1"
+      - "-bootstrap-expect=1"
+      - "-client=0.0.0.0"
+      - "-data-dir=/consul/data"
+    consul_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    consul_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - 8600:8600/udp
+    consul_volumes: []
+      # Local paths to mount into the container
+      # local path:container path
+      # - "{{ consul_volume_name }}:/consul/data"
+
+- name: deploy-consul | Log Consul configuration
+  ansible.builtin.debug:
+    msg:
+      - "Consul image: {{ consul_image }}"
+      - "Consul service name: {{ consul_service_name }}"
+      - "Consul FQDN: {{ consul_fqdn }}"
+      - "Consul networks: {{ consul_networks | default(omit) }}"
+      - "Consul ports: {{ consul_ports | default(omit) }}"
+      - "Consul volumes: {{ consul_volumes | default(omit) }}"
+
+- name: deploy-consul | Create Consul container labels
+  ansible.builtin.set_fact:
+    consul_container_labels: "{{ consul_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "System" }
+    - { "key": "homepage.name", "value": "Consul" }
+    - { "key": "homepage.description", "value": "A simple server for sending and receiving messages" }
+    - { "key": "homepage.icon", "value": "consul.png" }
+    - { "key": "homepage.href", "value": "https://{{ consul_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ consul_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ consul_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ consul_service_name }}.rule",
+      "value": "Host(`{{ consul_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.services.{{ consul_service_name }}.loadbalancer.server.port",
+      "value": "{{ consul_service_port_ui | quote }}",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/consul/server/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-consul | Create Consul networks
+  when: consul_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ consul_networks }}"
+
+- name: deploy-consul | Create Consul volumes
+  when: consul_volume_name is defined and (consul_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ consul_volume_name }}"
+
+- name: deploy-consul | Check if Consul is running
+  community.docker.docker_container_info:
+    name: "{{ consul_service_name }}"
+  register: consul_state
+
+- name: deploy-consul | Remove Consul container if changing version
+  when:
+    - consul_state.exists
+    - (consul_image | split(':') | last) != (consul_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-consul | Stop and remove existing Consul container
+      community.docker.docker_container:
+        name: "{{ consul_service_name }}"
+        state: absent
+
+    - name: deploy-consul | Set update Consul
+      ansible.builtin.set_fact:
+        consul_update: true
+
+- name: deploy-consul | Deploy Consul if not running
+  when:
+    - not consul_state.exists or (consul_update | default(false))
+  block:
+
+    - name: deploy-consul | Pull Consul image
+      community.docker.docker_image:
+        name: "{{ consul_image }}"
+        source: pull
+
+    - name: deploy-consul | Deploy Consul
+      community.docker.docker_container:
+        name: "{{ consul_service_name }}"
+        image: "{{ consul_image }}"
+        command: "{{ consul_command }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ consul_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ consul_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        # published_ports: "{{ consul_ports | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + consul_volumes | default(omit) }}"
+      register: consul_container_state
+
+- name: deploy-consul | Wait for Consul to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ consul_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: consul_running
+  retries: 10
+  until: consul_running is success

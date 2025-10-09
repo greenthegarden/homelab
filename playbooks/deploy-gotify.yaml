@@ -1,5 +1,5 @@
 ---
-- name: Deploy Broker
+- name: Deploy Gotify
 
   hosts: broker
 

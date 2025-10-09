@@ -112,8 +112,6 @@
         image: "{{ redis_image }}"
         command: "{{ redis_args | default(omit) }}"
         detach: true
-        env:
-          TZ: "{{ homelab.timezone | default('UTC') }}"
         healthcheck:
           test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
           interval: 30s
@@ -126,5 +124,5 @@
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ default_host_volumes + redis_volumes | default(omit) }}"
+        volumes: "{{ redis_volumes | default(omit) }}"
       register: redis_container_state
