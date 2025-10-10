@@ -18,6 +18,9 @@ reverse_proxy_network_name: reverse-proxy
 
 # Containerised service facts
 
+# Atlas facts
+# renovate: datasource=docker depName=keinstien/atlas
+atlas_image: keinstien/atlas:3.2.29
 # Beszel Agent facts
 # renovate: datasource=docker depName=beszel/beszel-agent
 beszel_agent_image: henrygd/beszel-agent:0.13.2
