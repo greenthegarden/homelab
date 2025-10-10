@@ -7,7 +7,7 @@
 
     # Atlas facts
     # renovate: datasource=docker depName=keinstien/atlas
-    atlas_image: keinstien/atlas:3.2.18
+    atlas_image: keinstien/atlas:3.2.29
 
   tasks:
 

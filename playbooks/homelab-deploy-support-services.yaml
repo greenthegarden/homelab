@@ -1,7 +1,7 @@
 ---
 - name: Install and configure Docker and base containers
 
-  hosts: homelab_lxc_docker
+  hosts: portainer # homelab_lxc_docker
 
   vars:
 
