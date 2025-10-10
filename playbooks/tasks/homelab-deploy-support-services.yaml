@@ -86,5 +86,6 @@
     file: tasks/deploy-prometheus.yaml
 
 - name: homelab-deploy-support-services | Deploy a containerised instance of Atlas
+  when: deploy_atlas | default(false)
   ansible.builtin.include_tasks:
     file: tasks/deploy-atlas.yaml

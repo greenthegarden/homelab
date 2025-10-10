@@ -1,5 +1,5 @@
 ---
-- name: Deploy IT Tooling Stack
+- name: Deploy Dozzle
 
   # This playbook deploys a containerised instance of Dozzle, Beszel, and IT Tools
   # It is intended to be run on the 'dozzle' host group defined in the Ansible inventory
