@@ -5,7 +5,8 @@
 
 ####### GROCY SECTION
 
-# https://hub.docker.com/_/grocy
+# https://github.com/linuxserver/docker-grocy
+# https://hub.docker.com/r/linuxserver/grocy/
 # https://codeopolis.com/posts/how-to-install-grocy-using-docker/
 # Initial login: User: admin, Password: admin
 

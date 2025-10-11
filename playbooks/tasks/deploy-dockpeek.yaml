@@ -1,0 +1,155 @@
+---
+- name: deploy-dockpeek | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### DOCKPEEK SECTION
+
+# https://github.com/dockpeek/dockpeek
+
+- name: deploy-dockpeek | Set Dockpeek facts
+  ansible.builtin.set_fact:
+    dockpeek_image: "{{ dockpeek_image | default('ghcr.io/dockpeek/dockpeek:latest') }}"
+    dockpeek_service_name: "{{ dockpeek_service_name | default('dockpeek') }}"
+    dockpeek_service_port: "{{ dockpeek_service_port | default(8000) }}"
+
+- name: deploy-dockpeek | Set Dockpeek network facts
+  ansible.builtin.set_fact:
+    dockpeek_network_name: "{{ dockpeek_network_name | default(dockpeek_service_name) }}"
+
+- name: deploy-dockpeek | Set Dockpeek volume facts
+  ansible.builtin.set_fact:
+    dockpeek_volume_name: "{{ dockpeek_volume_name | default(dockpeek_service_name) }}"
+
+- name: deploy-dockpeek | Set Dockpeek aggregated facts
+  ansible.builtin.set_fact:
+    dockpeek_fqdn: "{{ dockpeek_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-dockpeek | Set Dockpeek service facts
+  ansible.builtin.set_fact:
+    dockpeek_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    dockpeek_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ dockpeek_service_port }}:8000"
+    dockpeek_volumes: []
+      # Local paths to mount into the container
+      # local path:container path
+
+- name: deploy-dockpeek | Log Dockpeek configuration
+  ansible.builtin.debug:
+    msg:
+      - "Dockpeek image: {{ dockpeek_image }}"
+      - "Dockpeek service name: {{ dockpeek_service_name }}"
+      - "Dockpeek FQDN: {{ dockpeek_fqdn }}"
+      - "Dockpeek networks: {{ dockpeek_networks | default(omit) }}"
+      - "Dockpeek ports: {{ dockpeek_ports | default(omit) }}"
+      - "Dockpeek volumes: {{ dockpeek_volumes | default(omit) }}"
+
+- name: deploy-dockpeek | Create Dockpeek container labels
+  ansible.builtin.set_fact:
+    dockpeek_container_labels: "{{ dockpeek_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Dockpeek" }
+    - { "key": "homepage.description", "value": "A simple server for sending and receiving messages" }
+    - { "key": "homepage.icon", "value": "dockpeek.png" }
+    - { "key": "homepage.href", "value": "https://{{ dockpeek_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ dockpeek_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ dockpeek_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ dockpeek_service_name }}.rule",
+      "value": "Host(`{{ dockpeek_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/dockpeek/dockpeek/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-dockpeek | Create Dockpeek networks
+  when: dockpeek_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ dockpeek_networks }}"
+
+- name: deploy-dockpeek | Create Dockpeek volumes
+  when: dockpeek_volume_name is defined and (dockpeek_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ dockpeek_volume_name }}"
+
+- name: deploy-dockpeek | Check if Dockpeek is running
+  community.docker.docker_container_info:
+    name: "{{ dockpeek_service_name }}"
+  register: dockpeek_state
+
+- name: deploy-dockpeek | Remove Dockpeek container if changing version
+  when:
+    - dockpeek_state.exists
+    - (dockpeek_image | split(':') | last) != (dockpeek_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-dockpeek | Stop and remove existing Dockpeek container
+      community.docker.docker_container:
+        name: "{{ dockpeek_service_name }}"
+        state: absent
+
+    - name: deploy-dockpeek | Set update Dockpeek
+      ansible.builtin.set_fact:
+        dockpeek_update: true
+
+- name: deploy-dockpeek | Deploy Dockpeek if not running
+  when:
+    - not dockpeek_state.exists or (dockpeek_update | default(false))
+  block:
+
+    - name: deploy-dockpeek | Pull Dockpeek image
+      community.docker.docker_image:
+        name: "{{ dockpeek_image }}"
+        source: pull
+
+    - name: deploy-dockpeek | Deploy Dockpeek
+      community.docker.docker_container:
+        name: "{{ dockpeek_service_name }}"
+        image: "{{ dockpeek_image }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ dockpeek_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ dockpeek_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ docker_host_volume + default_host_volumes + dockpeek_volumes | default(omit) }}"
+      register: dockpeek_container_state
+
+- name: deploy-dockpeek | Wait for Dockpeek to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ dockpeek_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: dockpeek_running
+  retries: 10
+  until: dockpeek_running is success

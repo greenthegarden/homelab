@@ -1,0 +1,156 @@
+---
+- name: deploy-termix | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### TERMIX SECTION
+
+# https://github.com/termix/termix
+
+- name: deploy-termix | Set Termix facts
+  ansible.builtin.set_fact:
+    termix_image: "{{ termix_image | default('ghcr.io/lukegus/termix:latest') }}"
+    termix_service_name: "{{ termix_service_name | default('termix') }}"
+    termix_service_port: "{{ termix_service_port | default(8080) }}"
+
+- name: deploy-termix | Set Termix network facts
+  ansible.builtin.set_fact:
+    termix_network_name: "{{ termix_network_name | default(termix_service_name) }}"
+
+- name: deploy-termix | Set Termix volume facts
+  ansible.builtin.set_fact:
+    termix_volume_name: "{{ termix_volume_name | default(termix_service_name) }}"
+
+- name: deploy-termix | Set Termix aggregated facts
+  ansible.builtin.set_fact:
+    termix_fqdn: "{{ termix_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-termix | Set Termix service facts
+  ansible.builtin.set_fact:
+    termix_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    termix_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ termix_service_port }}:8080"
+    termix_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ termix_volume_name }}:/app/data"
+
+- name: deploy-termix | Log Termix configuration
+  ansible.builtin.debug:
+    msg:
+      - "Termix image: {{ termix_image }}"
+      - "Termix service name: {{ termix_service_name }}"
+      - "Termix FQDN: {{ termix_fqdn }}"
+      - "Termix networks: {{ termix_networks | default(omit) }}"
+      - "Termix ports: {{ termix_ports | default(omit) }}"
+      - "Termix volumes: {{ termix_volumes | default(omit) }}"
+
+- name: deploy-termix | Create Termix container labels
+  ansible.builtin.set_fact:
+    termix_container_labels: "{{ termix_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Termix" }
+    - { "key": "homepage.description", "value": "A simple server for sending and receiving messages" }
+    - { "key": "homepage.icon", "value": "termix.png" }
+    - { "key": "homepage.href", "value": "https://{{ termix_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ termix_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ termix_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ termix_service_name }}.rule",
+      "value": "Host(`{{ termix_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/termix/termix/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-termix | Create Termix networks
+  when: termix_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ termix_networks }}"
+
+- name: deploy-termix | Create Termix volumes
+  when: termix_volume_name is defined and (termix_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ termix_volume_name }}"
+
+- name: deploy-termix | Check if Termix is running
+  community.docker.docker_container_info:
+    name: "{{ termix_service_name }}"
+  register: termix_state
+
+- name: deploy-termix | Remove Termix container if changing version
+  when:
+    - termix_state.exists
+    - (termix_image | split(':') | last) != (termix_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-termix | Stop and remove existing Termix container
+      community.docker.docker_container:
+        name: "{{ termix_service_name }}"
+        state: absent
+
+    - name: deploy-termix | Set update Termix
+      ansible.builtin.set_fact:
+        termix_update: true
+
+- name: deploy-termix | Deploy Termix if not running
+  when:
+    - not termix_state.exists or (termix_update | default(false))
+  block:
+
+    - name: deploy-termix | Pull Termix image
+      community.docker.docker_image:
+        name: "{{ termix_image }}"
+        source: pull
+
+    - name: deploy-termix | Deploy Termix
+      community.docker.docker_container:
+        name: "{{ termix_service_name }}"
+        image: "{{ termix_image }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ termix_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ termix_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + termix_volumes | default(omit) }}"
+      register: termix_container_state
+
+- name: deploy-termix | Wait for Termix to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ termix_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: termix_running
+  retries: 10
+  until: termix_running is success

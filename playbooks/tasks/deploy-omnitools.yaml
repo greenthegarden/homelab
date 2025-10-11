@@ -1,0 +1,155 @@
+---
+- name: deploy-omnitools | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### OMNITOOLS SECTION
+
+# https://github.com/omnitools/omnitools
+
+- name: deploy-omnitools | Set Omnitools facts
+  ansible.builtin.set_fact:
+    omnitools_image: "{{ omnitools_image | default('iib0011/omni-tools:latest') }}"
+    omnitools_service_name: "{{ omnitools_service_name | default('omnitools') }}"
+    omnitools_service_port: "{{ omnitools_service_port | default(80) }}"
+
+- name: deploy-omnitools | Set Omnitools network facts
+  ansible.builtin.set_fact:
+    omnitools_network_name: "{{ omnitools_network_name | default(omnitools_service_name) }}"
+
+- name: deploy-omnitools | Set Omnitools volume facts
+  ansible.builtin.set_fact:
+    omnitools_volume_name: "{{ omnitools_volume_name | default(omnitools_service_name) }}"
+
+- name: deploy-omnitools | Set Omnitools aggregated facts
+  ansible.builtin.set_fact:
+    omnitools_fqdn: "{{ omnitools_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-omnitools | Set Omnitools service facts
+  ansible.builtin.set_fact:
+    omnitools_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    omnitools_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ omnitools_service_port }}:80"
+    omnitools_volumes: []
+      # Local paths to mount into the container
+      # local path:container path
+
+- name: deploy-omnitools | Log Omnitools configuration
+  ansible.builtin.debug:
+    msg:
+      - "Omnitools image: {{ omnitools_image }}"
+      - "Omnitools service name: {{ omnitools_service_name }}"
+      - "Omnitools FQDN: {{ omnitools_fqdn }}"
+      - "Omnitools networks: {{ omnitools_networks | default(omit) }}"
+      - "Omnitools ports: {{ omnitools_ports | default(omit) }}"
+      - "Omnitools volumes: {{ omnitools_volumes | default(omit) }}"
+
+- name: deploy-omnitools | Create Omnitools container labels
+  ansible.builtin.set_fact:
+    omnitools_container_labels: "{{ omnitools_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Omnitools" }
+    - { "key": "homepage.description", "value": "A simple server for sending and receiving messages" }
+    - { "key": "homepage.icon", "value": "omnitools.png" }
+    - { "key": "homepage.href", "value": "https://{{ omnitools_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ omnitools_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ omnitools_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ omnitools_service_name }}.rule",
+      "value": "Host(`{{ omnitools_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/omnitools/omnitools/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-omnitools | Create Omnitools networks
+  when: omnitools_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ omnitools_networks }}"
+
+- name: deploy-omnitools | Create Omnitools volumes
+  when: omnitools_volume_name is defined and (omnitools_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ omnitools_volume_name }}"
+
+- name: deploy-omnitools | Check if Omnitools is running
+  community.docker.docker_container_info:
+    name: "{{ omnitools_service_name }}"
+  register: omnitools_state
+
+- name: deploy-omnitools | Remove Omnitools container if changing version
+  when:
+    - omnitools_state.exists
+    - (omnitools_image | split(':') | last) != (omnitools_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-omnitools | Stop and remove existing Omnitools container
+      community.docker.docker_container:
+        name: "{{ omnitools_service_name }}"
+        state: absent
+
+    - name: deploy-omnitools | Set update Omnitools
+      ansible.builtin.set_fact:
+        omnitools_update: true
+
+- name: deploy-omnitools | Deploy Omnitools if not running
+  when:
+    - not omnitools_state.exists or (omnitools_update | default(false))
+  block:
+
+    - name: deploy-omnitools | Pull Omnitools image
+      community.docker.docker_image:
+        name: "{{ omnitools_image }}"
+        source: pull
+
+    - name: deploy-omnitools | Deploy Omnitools
+      community.docker.docker_container:
+        name: "{{ omnitools_service_name }}"
+        image: "{{ omnitools_image }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ omnitools_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ omnitools_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + omnitools_volumes | default(omit) }}"
+      register: omnitools_container_state
+
+- name: deploy-omnitools | Wait for Omnitools to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ omnitools_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: omnitools_running
+  retries: 10
+  until: omnitools_running is success

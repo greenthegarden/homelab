@@ -1,0 +1,20 @@
+---
+- name: Deploy Dockpeek
+
+  hosts: ansible
+
+  vars:
+
+    # Dockpeek facts
+    # renovate: datasource=docker depName=ghcr.io/dockpeek/dockpeek
+    dockpeek_image: ghcr.io/dockpeek/dockpeek:v1.6.5
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Dockpeek
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-dockpeek.yaml
