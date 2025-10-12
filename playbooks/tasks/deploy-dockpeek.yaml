@@ -132,6 +132,10 @@
         image: "{{ dockpeek_image }}"
         detach: true
         env:
+          SECRET_KEY: "{{ dockpeek.key | default(dummy) }}"
+          USERNAME: "{{ dockpeek.username | default('admin') }}"
+          PASSWORD: "{{ dockpeek.password | default(dummy) }}"
+          # DOCKER_HOST=tcp://socket-proxy:2375 # Connect via socket proxy
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ dockpeek_container_labels | default(omit) }}"
         networks_cli_compatible: true
