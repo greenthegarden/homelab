@@ -1,0 +1,20 @@
+---
+- name: Deploy Opensox
+
+  hosts: ansible
+
+  vars:
+
+    # Opensox facts
+    # renovate: datasource=docker depName=opensox/opensox
+    opensox_image: opensox/opensox:v1.0.0
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Opensox
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-opensox.yaml

@@ -1,0 +1,182 @@
+---
+- name: deploy-kopia | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### KOPIA SECTION
+
+# https://kopia.io/
+# https://github.com/kopia/kopia/
+
+- name: deploy-kopia | Set Kopia facts
+  ansible.builtin.set_fact:
+    kopia_image: "{{ kopia_image | default('kopia/kopia:latest') }}"
+    kopia_service_name: "{{ kopia_service_name | default('kopia') }}"
+    kopia_service_port: "{{ kopia_service_port | default(51515) }}"
+
+- name: deploy-kopia | Set Kopia network facts
+  ansible.builtin.set_fact:
+    kopia_network_name: "{{ kopia_network_name | default(kopia_service_name) }}"
+
+- name: deploy-kopia | Set Kopia volume facts
+  ansible.builtin.set_fact:
+    kopia_volume_config_name: "{{ kopia_volume_name | default(kopia_service_name + '-config') }}"
+    kopia_volume_cache_name: "{{ kopia_volume_name | default(kopia_service_name + '-cache') }}"
+    kopia_volume_logs_name: "{{ kopia_volume_name | default(kopia_service_name + '-logs') }}"
+    kopia_volume_repository_name: "{{ kopia_volume_name | default(kopia_service_name + '-repository') }}"
+    kopia_volume_tmp_name: "{{ kopia_volume_name | default(kopia_service_name + '-tmp') }}"
+
+- name: deploy-kopia | Set Kopia aggregated facts
+  ansible.builtin.set_fact:
+    kopia_fqdn: "{{ kopia_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-kopia | Set Kopia service facts
+  ansible.builtin.set_fact:
+    kopia_command:
+      - server
+      - start
+      - --disable-csrf-token-checks
+      - --insecure
+      - --address=0.0.0.0:51515
+      - --server-username={{ kopia.username | default('admin') }}
+      - --server-password={{ kopia.password | default(dummy) }}
+    kopia_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    kopia_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ kopia_service_port }}:51515"
+    kopia_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      # Mount local folders needed by kopia
+      - "{{ kopia_volume_config_name }}:/app/config"
+      - "{{ kopia_volume_cache_name }}:/app/cache"
+      - "{{ kopia_volume_logs_name }}:/app/logs"
+      # Mount local folders to snapshot
+      - /:/data:ro
+      # Mount repository location
+      - "{{ kopia_volume_repository_name }}:/repository"
+      # Mount path for browsing mounted snapshots
+      - "{{ kopia_volume_tmp_name }}:/tmp:shared"
+
+
+- name: deploy-kopia | Log Kopia configuration
+  ansible.builtin.debug:
+    msg:
+      - "Kopia image: {{ kopia_image }}"
+      - "Kopia service name: {{ kopia_service_name }}"
+      - "Kopia FQDN: {{ kopia_fqdn }}"
+      - "Kopia networks: {{ kopia_networks | default(omit) }}"
+      - "Kopia ports: {{ kopia_ports | default(omit) }}"
+      - "Kopia volumes: {{ kopia_volumes | default(omit) }}"
+
+- name: deploy-kopia | Create Kopia container labels
+  ansible.builtin.set_fact:
+    kopia_container_labels: "{{ kopia_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Kopia" }
+    - { "key": "homepage.description", "value": "Fast and Secure Open-Source Backup Software" }
+    - { "key": "homepage.icon", "value": "kopia.png" }
+    - { "key": "homepage.href", "value": "https://{{ kopia_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ kopia_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ kopia_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ kopia_service_name }}.rule",
+      "value": "Host(`{{ kopia_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/kopia/kopia/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-kopia | Create Kopia networks
+  when: kopia_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ kopia_networks }}"
+
+- name: deploy-kopia | Create Kopia volumes
+  when: kopia_volume_name is defined and (kopia_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ kopia_volume_name }}"
+
+- name: deploy-kopia | Check if Kopia is running
+  community.docker.docker_container_info:
+    name: "{{ kopia_service_name }}"
+  register: kopia_state
+
+- name: deploy-kopia | Remove Kopia container if changing version
+  when:
+    - kopia_state.exists
+    - (kopia_image | split(':') | last) != (kopia_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-kopia | Stop and remove existing Kopia container
+      community.docker.docker_container:
+        name: "{{ kopia_service_name }}"
+        state: absent
+
+    - name: deploy-kopia | Set update Kopia
+      ansible.builtin.set_fact:
+        kopia_update: true
+
+- name: deploy-kopia | Deploy Kopia if not running
+  when:
+    - not kopia_state.exists or (kopia_update | default(false))
+  block:
+
+    - name: deploy-kopia | Pull Kopia image
+      community.docker.docker_image:
+        name: "{{ kopia_image }}"
+        source: pull
+
+    - name: deploy-kopia | Deploy Kopia
+      community.docker.docker_container:
+        name: "{{ kopia_service_name }}"
+        image: "{{ kopia_image }}"
+        kopia_command: "{{ kopia_command | default(omit) }}"
+        detach: true
+        env:
+          KOPIA_PASSWORD: "{{ kopia.password | default(dummy) }}"
+          USER: "{{ kopia.username | default('admin') }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ kopia_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ kopia_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + kopia_volumes | default(omit) }}"
+      register: kopia_container_state
+
+- name: deploy-kopia | Wait for Kopia to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ kopia_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: kopia_running
+  retries: 10
+  until: kopia_running is success

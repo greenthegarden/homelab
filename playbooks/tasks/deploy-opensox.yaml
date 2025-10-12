@@ -1,0 +1,184 @@
+---
+- name: deploy-opensox | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+- name: deploy-opensox | Ensure required Opensox variables are set
+  ansible.builtin.assert:
+    that:
+      - opensox.app_secret is defined
+      - opensox.postgres_user is defined
+      - opensox.postgres_password is defined
+      - opensox.postgres_database is defined
+    fail_msg: "One or more required Opensox variables are not defined! Please define them in your inventory or group_vars/host_vars."
+
+####### OPENSOX SECTION
+
+# https://www.opensox.ai/
+# https://github.com/apsinghdev/opensox
+# https://hub.docker.com/r/opensox/opensox
+
+- name: deploy-opensox | Set Opensox facts
+  ansible.builtin.set_fact:
+    opensox_image: "{{ opensox_image | default('opensox-api:latest') }}"
+    opensox_service_name: "{{ opensox_service_name | default('opensox') }}"
+    opensox_service_port: "{{ opensox_service_port | default(4000) }}"
+
+- name: deploy-opensox | Set Opensox network facts
+  ansible.builtin.set_fact:
+    opensox_network_name: "{{ opensox_network_name | default(opensox_service_name) }}"
+
+- name: deploy-opensox | Set Opensox volume facts
+  ansible.builtin.set_fact:
+    opensox_volume_name: "{{ opensox_volume_name | default(opensox_service_name) }}"
+
+- name: deploy-opensox | Set Opensox aggregated facts
+  ansible.builtin.set_fact:
+    opensox_fqdn: "{{ opensox_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-opensox | Set Opensox service facts
+  ansible.builtin.set_fact:
+    opensox_networks:
+      - { name: "{{ opensox_network_name }}" }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    opensox_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ opensox_service_port }}:4000"
+    opensox_volumes: []
+      # Local paths to mount into the container
+      # local path:container path
+
+- name: deploy-opensox | Log Opensox configuration
+  ansible.builtin.debug:
+    msg:
+      - "Opensox image: {{ opensox_image }}"
+      - "Opensox service name: {{ opensox_service_name }}"
+      - "Opensox FQDN: {{ opensox_fqdn }}"
+      - "Opensox networks: {{ opensox_networks | default(omit) }}"
+      - "Opensox ports: {{ opensox_ports | default(omit) }}"
+      - "Opensox volumes: {{ opensox_volumes | default(omit) }}"
+
+- name: deploy-opensox | Create Opensox container labels
+  ansible.builtin.set_fact:
+    opensox_container_labels: "{{ opensox_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Opensox" }
+    - { "key": "homepage.description", "value": "Supercharge Your Open Source Journey" }
+    - { "key": "homepage.icon", "value": "opensox.png" }
+    - { "key": "homepage.href", "value": "https://{{ opensox_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ opensox_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ opensox_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ opensox_service_name }}.rule",
+      "value": "Host(`{{ opensox_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/apsinghdev/opensox/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-opensox | Create Opensox networks
+  when: opensox_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ opensox_networks }}"
+
+- name: deploy-opensox | Create Opensox volumes
+  when: opensox_volume_name is defined
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ opensox_volume_name }}"
+
+- name: deploy-opensox | Deploy Postgres database for Opensox
+  when: opensox_postgres_database_create | default(true)
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-postgres.yaml
+  vars:
+    postgres_image: postgres:15-alpine
+    postgres_service_name: "{{ opensox_service_name }}-postgres"
+    postgres_network_name: "{{ opensox_network_name }}"
+    postgres_volume_name: "{{ opensox_service_name }}-postgres"
+    postgres_database: "{{ opensox.postgres_database | default('opensox') }}"
+    postgres_user: "{{ opensox.postgres_user | default('opensox') }}"
+    postgres_password: "{{ opensox.postgres_password | default('dummy') }}"
+
+- name: deploy-opensox | Check if Opensox is running
+  community.docker.docker_container_info:
+    name: "{{ opensox_service_name }}"
+  register: opensox_state
+
+- name: deploy-opensox | Remove Opensox container if changing version
+  when:
+    - opensox_state.exists
+    - (opensox_image | split(':') | last) != (opensox_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-opensox | Stop and remove existing Opensox container
+      community.docker.docker_container:
+        name: "{{ opensox_service_name }}"
+        state: absent
+
+    - name: deploy-opensox | Set update Opensox
+      ansible.builtin.set_fact:
+        opensox_update: true
+
+- name: deploy-opensox | Deploy Opensox if not running
+  when:
+    - not opensox_state.exists or (opensox_update | default(false))
+  block:
+
+    - name: deploy-opensox | Pull Opensox image
+      community.docker.docker_image:
+        name: "{{ opensox_image }}"
+        source: pull
+
+    - name: deploy-opensox | Deploy Opensox
+      community.docker.docker_container:
+        name: "{{ opensox_service_name }}"
+        image: "{{ opensox_image }}"
+        detach: true
+        env:
+          DATABASE_URL: "postgresql://{{ opensox.postgres_user }}:{{ opensox.postgres_password }}@{{ opensox_service_name }}-postgres:5432/{{ opensox.postgres_database }}?schema=public"
+          JWT_SECRET: "{{ opensox.app_secret | default('dummy') }}"
+          PORT: "{{ 4000 | quote }}"
+          NODE_ENV: "production"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ opensox_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ opensox_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + opensox_volumes | default(omit) }}"
+      register: opensox_container_state
+
+- name: deploy-opensox | Wait for Opensox to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ opensox_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: opensox_running
+  retries: 10
+  until: opensox_running is success
