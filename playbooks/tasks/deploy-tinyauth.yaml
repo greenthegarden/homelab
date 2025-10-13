@@ -34,9 +34,10 @@
       # Published ports to expose outside the container
       # host port:container port
       - "{{ tinyauth_service_port }}:3000"
-    tinyauth_volumes: []
+    tinyauth_volumes:
       # Local paths to mount into the container
       # local path:container path
+      - "{{ tinyauth_volume_name }}:/data"
 
 - name: deploy-tinyauth | Log Tinyauth configuration
   ansible.builtin.debug:
@@ -103,7 +104,6 @@
     image: "{{ tinyauth_image }}"
     detach: true
     env:
-      SECRET: "{{ tinyauth.secret }}"
       APP_URL: "https://{{ tinyauth_fqdn }}"
       USERS: "{{ tinyauth.username }}:{{ tinyauth.password_hash }}"
       # USERS: "{{ tinyauth.username }}:{{ tinyauth.password_hash | default(tinyauth.password | password_hash('bcrypt')) }}"
