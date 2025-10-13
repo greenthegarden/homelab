@@ -1,0 +1,160 @@
+---
+- name: deploy-zot | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### ZOT SECTION
+
+# https://zotregistry.dev/v2.1.8/
+# https://github.com/project-zot/zot
+
+- name: deploy-zot | Set Zot facts
+  ansible.builtin.set_fact:
+    zot_image: "{{ zot_image | default('ghcr.io/project-zot/zot-linux-amd64:latest') }}"
+    zot_service_name: "{{ zot_service_name | default('zot') }}"
+    zot_service_port: "{{ zot_service_port | default(5000) }}"
+
+- name: deploy-zot | Set Zot network facts
+  ansible.builtin.set_fact:
+    zot_network_name: "{{ zot_network_name | default(zot_service_name) }}"
+
+- name: deploy-zot | Set Zot volume facts
+  ansible.builtin.set_fact:
+    zot_volume_name: "{{ zot_volume_name | default(zot_service_name) }}"
+
+- name: deploy-zot | Set Zot aggregated facts
+  ansible.builtin.set_fact:
+    zot_fqdn: "{{ zot_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-zot | Set Zot service facts
+  ansible.builtin.set_fact:
+    zot_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    zot_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ zot_service_port }}:5000"
+    zot_volumes: []
+      # Local paths to mount into the container
+      # local path:container path
+
+- name: deploy-zot | Log Zot configuration
+  ansible.builtin.debug:
+    msg:
+      - "Zot image: {{ zot_image }}"
+      - "Zot service name: {{ zot_service_name }}"
+      - "Zot FQDN: {{ zot_fqdn }}"
+      - "Zot networks: {{ zot_networks | default(omit) }}"
+      - "Zot ports: {{ zot_ports | default(omit) }}"
+      - "Zot volumes: {{ zot_volumes | default(omit) }}"
+
+- name: deploy-zot | Create Zot container labels
+  ansible.builtin.set_fact:
+    zot_container_labels: "{{ zot_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Zot" }
+    - { "key": "homepage.description", "value": "A production-ready vendor-neutral OCI image registry" }
+    - { "key": "homepage.icon", "value": "zot.png" }
+    - { "key": "homepage.href", "value": "https://{{ zot_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ zot_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ zot_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ zot_service_name }}.rule",
+      "value": "Host(`{{ zot_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.services.{{ zot_service_name }}.loadbalancer.server.port",
+      "value": "{{ zot_service_port | quote }}",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/zot/zot/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-zot | Create Zot networks
+  when: zot_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ zot_networks }}"
+
+- name: deploy-zot | Create Zot volumes
+  when: zot_volume_name is defined and (zot_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ zot_volume_name }}"
+
+- name: deploy-zot | Check if Zot is running
+  community.docker.docker_container_info:
+    name: "{{ zot_service_name }}"
+  register: zot_state
+
+- name: deploy-zot | Remove Zot container if changing version
+  when:
+    - zot_state.exists
+    - (zot_image | split(':') | last) != (zot_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-zot | Stop and remove existing Zot container
+      community.docker.docker_container:
+        name: "{{ zot_service_name }}"
+        state: absent
+
+    - name: deploy-zot | Set update Zot
+      ansible.builtin.set_fact:
+        zot_update: true
+
+- name: deploy-zot | Deploy Zot if not running
+  when:
+    - not zot_state.exists or (zot_update | default(false))
+  block:
+
+    - name: deploy-zot | Pull Zot image
+      community.docker.docker_image:
+        name: "{{ zot_image }}"
+        source: pull
+
+    - name: deploy-zot | Deploy Zot
+      community.docker.docker_container:
+        name: "{{ zot_service_name }}"
+        image: "{{ zot_image }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ zot_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ zot_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + zot_volumes | default(omit) }}"
+      register: zot_container_state
+
+- name: deploy-zot | Wait for Zot to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ zot_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: zot_running
+  retries: 10
+  until: zot_running is success

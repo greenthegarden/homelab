@@ -75,13 +75,13 @@
 
 # Node Exporter used to monitor server and docker metrics
 - name: homelab-deploy-support-services | Deploy a containerised instance of Node Exporter
-  when: false  # Disable for now as not needed with Dozzle
+  when: deploy_node_exporter | default(false)  # Disable for now as not needed with Dozzle
   ansible.builtin.include_tasks:
     file: tasks/deploy-node-exporter.yaml
 
 # Prometheus used to monitor server and docker metrics
 - name: homelab-deploy-support-services | Deploy a containerised instance of Prometheus
-  when: false  # Disable for now as not needed with Dozzle
+  when: deploy_prometheus | default(false)  # Disable for now as not needed with Dozzle
   ansible.builtin.include_tasks:
     file: tasks/deploy-prometheus.yaml
 
