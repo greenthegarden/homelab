@@ -29,7 +29,7 @@ beszel_agent_image: henrygd/beszel-agent:0.13.2
 docker_socket_proxy_image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.1
 # Docker Volume Backup facts
 # renovate: datasource=docker depName=offen/docker-volume-backup
-docker_volume_backup_image: offen/docker-volume-backup:v2.44.0
+docker_volume_backup_image: offen/docker-volume-backup:v2.44.1
 # Dozzle Agent facts
 # renovate: datasource=docker depName=amir20/dozzle
 dozzle_agent_image: amir20/dozzle:v8.14.4
@@ -44,7 +44,7 @@ portainer_agent_image: portainer/agent:2.34.0-alpine
 prometheus_image: prom/prometheus:v3.6.0
 # Tinyauth facts
 # renovate: datasource=docker depName=ghcr.io/steveiliop56/tinyauth
-tinyauth_image: ghcr.io/steveiliop56/tinyauth:v3.6.2
+tinyauth_image: ghcr.io/steveiliop56/tinyauth:v4.0.0
 # Traefik facts
 # renovate: datasource=docker depName=traefik
 traefik_image: traefik:3.5.3
