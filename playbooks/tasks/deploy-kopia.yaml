@@ -59,7 +59,7 @@
       # Mount repository location
       - "{{ kopia_volume_repository_name }}:/repository"
       # Mount path for browsing mounted snapshots
-      - "{{ kopia_volume_tmp_name }}:/tmp:shared"
+      - "{{ kopia_volume_tmp_name }}:/tmp/shared"
 
 
 - name: deploy-kopia | Log Kopia configuration
@@ -154,7 +154,7 @@
       community.docker.docker_container:
         name: "{{ kopia_service_name }}"
         image: "{{ kopia_image }}"
-        kopia_command: "{{ kopia_command | default(omit) }}"
+        command: "{{ kopia_command | default(omit) }}"
         detach: true
         env:
           KOPIA_PASSWORD: "{{ kopia.password | default(dummy) }}"
