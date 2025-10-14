@@ -1,0 +1,31 @@
+---
+- name: Deploy Gitea
+
+  hosts: ansible
+
+  vars:
+
+    # Gitea facts
+    # renovate: datasource=docker depName=docker.gitea.com/gitea
+    gitea_image: docker.gitea.com/gitea:1.24.6
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Gitea
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-gitea.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      when: gitea_deploy_docker_volume_backup | default(false)
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_service_name: "docker-volume-backup-{{ gitea_service_name }}"
+        docker_volume_backup_volume_to_backup:
+          - "{{ gitea_volume_name }}:/backup/{{ gitea_service_name }}-backup:ro"
+        docker_volume_backup_backup_label: "{{ gitea_service_name }}"
+        docker_volume_backup_backup_retention_days: 7

@@ -1,0 +1,165 @@
+---
+- name: deploy-gitea | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### GITEA SECTION
+
+# https://about.gitea.com/
+# https://github.com/go-gitea/gitea
+
+- name: deploy-gitea | Set Gitea facts
+  ansible.builtin.set_fact:
+    gitea_image: "{{ gitea_image | default('docker.gitea.com/gitea:latest') }}"
+    gitea_service_name: "{{ gitea_service_name | default('gitea') }}"
+    gitea_service_port: "{{ gitea_service_port | default(3000) }}"
+
+- name: deploy-gitea | Set Gitea network facts
+  ansible.builtin.set_fact:
+    gitea_network_name: "{{ gitea_network_name | default(gitea_service_name) }}"
+
+- name: deploy-gitea | Set Gitea volume facts
+  ansible.builtin.set_fact:
+    gitea_volume_name: "{{ gitea_volume_name | default(gitea_service_name) }}"
+
+- name: deploy-gitea | Set Gitea aggregated facts
+  ansible.builtin.set_fact:
+    gitea_fqdn: "{{ gitea_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-gitea | Set Gitea service facts
+  ansible.builtin.set_fact:
+    gitea_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    gitea_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      # - "{{ gitea_service_port }}:3000"
+      - "{{ gitea_service_port | int + 1 }}:22"
+    gitea_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ gitea_volume_name }}:/data"
+
+- name: deploy-gitea | Log Gitea configuration
+  ansible.builtin.debug:
+    msg:
+      - "Gitea image: {{ gitea_image }}"
+      - "Gitea service name: {{ gitea_service_name }}"
+      - "Gitea FQDN: {{ gitea_fqdn }}"
+      - "Gitea networks: {{ gitea_networks | default(omit) }}"
+      - "Gitea ports: {{ gitea_ports | default(omit) }}"
+      - "Gitea volumes: {{ gitea_volumes | default(omit) }}"
+
+- name: deploy-gitea | Create Gitea container labels
+  ansible.builtin.set_fact:
+    gitea_container_labels: "{{ gitea_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Gitea" }
+    - { "key": "homepage.description", "value": "Private, Fast, Reliable DevOps Platform" }
+    - { "key": "homepage.icon", "value": "gitea.png" }
+    - { "key": "homepage.href", "value": "https://{{ gitea_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ gitea_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ gitea_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ gitea_service_name }}.rule",
+      "value": "Host(`{{ gitea_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.services.{{ gitea_service_name }}.loadbalancer.server.port",
+      "value": "{{ gitea_service_port | quote }}",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/go-gitea/gitea/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-gitea | Create Gitea networks
+  when: gitea_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ gitea_networks }}"
+
+- name: deploy-gitea | Create Gitea volumes
+  when: gitea_volume_name is defined and (gitea_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ gitea_volume_name }}"
+
+- name: deploy-gitea | Check if Gitea is running
+  community.docker.docker_container_info:
+    name: "{{ gitea_service_name }}"
+  register: gitea_state
+
+- name: deploy-gitea | Remove Gitea container if changing version
+  when:
+    - gitea_state.exists
+    - (gitea_image | split(':') | last) != (gitea_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-gitea | Stop and remove existing Gitea container
+      community.docker.docker_container:
+        name: "{{ gitea_service_name }}"
+        state: absent
+
+    - name: deploy-gitea | Set update Gitea
+      ansible.builtin.set_fact:
+        gitea_update: true
+
+- name: deploy-gitea | Deploy Gitea if not running
+  when:
+    - not gitea_state.exists or (gitea_update | default(false))
+  block:
+
+    - name: deploy-gitea | Pull Gitea image
+      community.docker.docker_image:
+        name: "{{ gitea_image }}"
+        source: pull
+
+    - name: deploy-gitea | Deploy Gitea
+      community.docker.docker_container:
+        name: "{{ gitea_service_name }}"
+        image: "{{ gitea_image }}"
+        detach: true
+        env:
+          USER_UID: "{{ 1000 | quote }}"
+          USER_GID: "{{ 1000 | quote }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ gitea_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ gitea_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        # published_ports: "{{ gitea_ports | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + gitea_volumes | default(omit) }}"
+      register: gitea_container_state
+
+- name: deploy-gitea | Wait for Gitea to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ gitea_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: gitea_running
+  retries: 10
+  until: gitea_running is success
