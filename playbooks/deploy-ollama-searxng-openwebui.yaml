@@ -11,11 +11,11 @@
 
     # SearXNG facts
     # renovate: datasource=docker depName=searxng/searxng
-    searxng_image: searxng/searxng:2025.10.12-5492de15b
+    searxng_image: searxng/searxng:2025.10.13-c34bb6128
 
     # Open WebUI facts
     # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
-    open_webui_image: ghcr.io/open-webui/open-webui:0.6.33
+    open_webui_image: ghcr.io/open-webui/open-webui:0.6.33-slim
     open_webui_network_name: open-webui
 
   tasks:

@@ -1,5 +1,5 @@
 ---
-- name: Deploy Broker
+- name: Deploy Ntfy
 
   hosts: broker
 
@@ -20,7 +20,7 @@
         file: tasks/deploy-ntfy.yaml
 
     - name: Deploy a containerised instance of Docker Volume Backup
-      when: nfty_deploy_docker_volume_backup | default(false)
+      when: ntfy_deploy_docker_volume_backup | default(false)
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
