@@ -95,6 +95,10 @@
       "key": "traefik.http.routers.{{ kopia_service_name }}.rule",
       "value": "Host(`{{ kopia_fqdn }}`)",
     }
+    - {
+      "key": "traefik.http.services.{{ kopia_service_name }}.loadbalancer.server.port",
+      "value": "{{ kopia_service_port | quote }}",
+    }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }

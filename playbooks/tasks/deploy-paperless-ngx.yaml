@@ -66,6 +66,14 @@
     paperless_ngx_container_labels: "{{ paperless_ngx_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Paperless-ngx" }
+    - { "key": "homepage.description", "value": "Open source document management system" }
+    - { "key": "homepage.icon", "value": "paperless-ngx.png" }
+    - { "key": "homepage.href", "value": "https://{{ paperless_ngx_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ paperless_ngx_fqdn }}/" }
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
     - {
@@ -83,14 +91,6 @@
       "key": "wud.link.template",
       "value": "https://github.com/paperless-ngx/paperless-ngx/releases/tag/v${major}.${minor}.${patch}",
     }
-    # ---------------------------------------------------------------
-    # Homepage labels
-    - { "key": "homepage.group", "value": "Applications" }
-    - { "key": "homepage.name", "value": "Paperless-ngx" }
-    - { "key": "homepage.description", "value": "Open source document management system" }
-    - { "key": "homepage.icon", "value": "paperless-ngx.png" }
-    - { "key": "homepage.href", "value": "https://{{ paperless_ngx_fqdn }}/" }
-    - { "key": "homepage.siteMonitor", "value": "https://{{ paperless_ngx_fqdn }}/" }
 
 - name: deploy-paperless-ngx | Create Paperless-ngx networks # noqa: syntax-check[unknown-module]
   when: paperless_ngx_networks is defined
