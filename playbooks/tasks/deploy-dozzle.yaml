@@ -111,7 +111,7 @@
     detach: true
     env:
       DOZZLE_ENABLE_ACTIONS: "true" # "{{ true | quote }}"
-      DOZZLE_REMOTE_AGENT: dozzle.{{ lan_domain }}:7007,ansible.{{ lan_domain }}:7007,broker.{{ lan_domain }}:7007,fireflyiii.{{ lan_domain }}:7007,frigate.{{ lan_domain }}:7007,grocy.{{ lan_domain }}:7007,homebox.{{ lan_domain }}:7007,homepage.{{ lan_domain }}:7007,hortusfox.{{ lan_domain }}:7007,productivity.{{ lan_domain }}:7007,ollama.{{ lan_domain }}:7007,portainer.{{ lan_domain }}:7007,uptimekuma.{{ lan_domain }}:7007,vaultwarden.{{ lan_domain }}:7007,whatsupdocker.{{ lan_domain }}:7007
+      DOZZLE_REMOTE_AGENT: dozzle.{{ lan_domain }}:7007,ansible.{{ lan_domain }}:7007,broker.{{ lan_domain }}:7007,fireflyiii.{{ lan_domain }}:7007,frigate.{{ lan_domain }}:7007,grocy.{{ lan_domain }}:7007,homebox.{{ lan_domain }}:7007,homepage.{{ lan_domain }}:7007,hortusfox.{{ lan_domain }}:7007,productivity.{{ lan_domain }}:7007,ollama.{{ lan_domain }}:7007,uptimekuma.{{ lan_domain }}:7007,vaultwarden.{{ lan_domain }}:7007,whatsupdocker.{{ lan_domain }}:7007
     healthcheck:
       test: ["CMD", "/dozzle", "healthcheck"]
       interval: 3s

@@ -54,24 +54,6 @@
     open_webui_container_labels: "{{ open_webui_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # ---------------------------------------------------------------
-    # Traefik labels
-    - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.routers.{{ open_webui_service_name }}.entrypoints",
-      "value": "websecure",
-    }
-    - {
-      "key": "traefik.http.routers.{{ open_webui_service_name }}.rule",
-      "value": "Host(`{{ open_webui_fqdn }}`)",
-    }
-    # ---------------------------------------------------------------
-    # What's up Docker? labels
-    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/open-webui/open-webui/releases/tag/v${major}.${minor}.${patch}",
-    }
-    # ---------------------------------------------------------------
     # Docker Volume Backup labels
     - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
     # ---------------------------------------------------------------
@@ -84,6 +66,24 @@
     - {
       "key": "homepage.siteMonitor",
       "value": "https://{{ open_webui_fqdn }}/",
+    }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ open_webui_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ open_webui_service_name }}.rule",
+      "value": "Host(`{{ open_webui_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-slim$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/open-webui/open-webui/releases/tag/v${major}.${minor}.${patch}",
     }
 
 - name: deploy-open-webui | Create Open WebUI networks  # noqa: syntax-check[unknown-module]

@@ -169,20 +169,19 @@
       # WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ whatsupdocker.oauth_client_secret | default('dummy') }}"
       # WUD_AUTH_OIDC_AUTHENTIK_DISCOVERY: "{{ authentik.url }}/application/o/wud/.well-known/openid-configuration"
       # WUD_AUTH_OIDC_AUTHENTIK_REDIRECT: "false" # Set to true to skip internal login page
-    # healthcheck:
-    #   test:
-    #     [
-    #       "CMD",
-    #       "curl",
-    #       "--fail",
-    #       "http://localhost:{{ whatsupdocker_service_port }}/health",
-    #       "||",
-    #       "exit 1"
-    #     ]
-    #   interval: 30s
-    #   timeout: 30s
-    #   retries: 3
-    #   start_period: 30s
+    healthcheck:
+      test:
+        [
+          "curl",
+          "--fail",
+          "http://localhost:{{ whatsupdocker_service_port }}/health",
+          "||",
+          "exit 1"
+        ]
+      interval: 30s
+      start_period: 30s
+      timeout: 30s
+      retries: 3
     labels: "{{ whatsupdocker_container_labels | default(omit) }}"
     networks_cli_compatible: true
     networks: "{{ whatsupdocker_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"

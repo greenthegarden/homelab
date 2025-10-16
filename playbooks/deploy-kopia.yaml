@@ -7,7 +7,7 @@
 
     # Kopia facts
     # renovate: datasource=docker depName=kopia/kopia
-    kopia_image: kopia/kopia:20251013.0.200931
+    kopia_image: kopia/kopia:20251015.0.22854
 
   tasks:
 
