@@ -39,20 +39,34 @@
       # local path:container path
       - "{{ searxng_volume_name }}:/etc/searxng"
 
-- name: deploy-searxng | Log Searxng configuration
+- name: deploy-searxng | Log SearXNG configuration
   ansible.builtin.debug:
     msg:
-      - "Searxng image: {{ searxng_image }}"
-      - "Searxng service name: {{ searxng_service_name }}"
-      - "Searxng FQDN: {{ searxng_fqdn }}"
-      - "Searxng networks: {{ searxng_networks | default(omit) }}"
-      - "Searxng ports: {{ searxng_ports | default(omit) }}"
-      - "Searxng volumes: {{ searxng_volumes | default(omit) }}"
+      - "SearXNG image: {{ searxng_image }}"
+      - "SearXNG service name: {{ searxng_service_name }}"
+      - "SearXNG FQDN: {{ searxng_fqdn }}"
+      - "SearXNG networks: {{ searxng_networks | default(omit) }}"
+      - "SearXNG ports: {{ searxng_ports | default(omit) }}"
+      - "SearXNG volumes: {{ searxng_volumes | default(omit) }}"
 
 - name: deploy-searxng | Create SearXNG container labels
   ansible.builtin.set_fact:
     searxng_container_labels: "{{ searxng_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
+    # Docker Volume Backup labels
+    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "SearXNG" }
+    - { "key": "homepage.description", "value": "Search engine" }
+    - { "key": "homepage.icon", "value": "searxng.png" }
+    - { "key": "homepage.href", "value": "https://{{ searxng_fqdn }}/" }
+    - {
+      "key": "homepage.siteMonitor",
+      "value": "https://{{ searxng_fqdn }}/",
+    }
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
@@ -70,20 +84,6 @@
     - {
       "key": "wud.link.template",
       "value": "https://github.com/searxng/searxng/releases/tag/v${major}.${minor}.${patch}",
-    }
-    # ---------------------------------------------------------------
-    # Docker Volume Backup labels
-    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
-    # ---------------------------------------------------------------
-    # Homepage labels
-    - { "key": "homepage.group", "value": "Applications" }
-    - { "key": "homepage.name", "value": "SearXNG" }
-    - { "key": "homepage.description", "value": "Search engine" }
-    - { "key": "homepage.icon", "value": "searxng.png" }
-    - { "key": "homepage.href", "value": "https://{{ searxng_fqdn }}/" }
-    - {
-      "key": "homepage.siteMonitor",
-      "value": "https://{{ searxng_fqdn }}/",
     }
 
 - name: deploy-searxng | Create SearXNG networks
