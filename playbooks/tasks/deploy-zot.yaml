@@ -58,7 +58,7 @@
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Zot" }
     - { "key": "homepage.description", "value": "A production-ready vendor-neutral OCI image registry" }
-    - { "key": "homepage.icon", "value": "zot.png" }
+    - { "key": "homepage.icon", "value": "zot-registry.png" }
     - { "key": "homepage.href", "value": "https://{{ zot_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ zot_fqdn }}/" }
     # ---------------------------------------------------------------
