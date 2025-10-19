@@ -1,7 +1,7 @@
 ---
 - name: Deploy What's up Docker?
 
-  hosts: whatsupdocker
+  hosts: dozzle
 
   vars:
 

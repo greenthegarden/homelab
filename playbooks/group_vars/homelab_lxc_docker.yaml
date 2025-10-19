@@ -32,7 +32,7 @@ docker_socket_proxy_image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.1
 docker_volume_backup_image: offen/docker-volume-backup:v2.45.0
 # Dozzle Agent facts
 # renovate: datasource=docker depName=amir20/dozzle
-dozzle_agent_image: amir20/dozzle:v8.14.4
+dozzle_agent_image: amir20/dozzle:v8.14.5
 # Node Exporter facts
 # renovate: datasource=docker depName=prom/node-exporter
 node_exporter_image: prom/node-exporter:v1.9.1
