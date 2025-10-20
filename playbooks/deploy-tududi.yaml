@@ -1,7 +1,7 @@
 ---
-- name: Deploy Homebox
+- name: Deploy Tududi
 
-  hosts: homebox
+  hosts: ansible
 
   vars:
 
