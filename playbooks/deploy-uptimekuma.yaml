@@ -7,9 +7,9 @@
 
     # Uptime Kuma facts
     # renovate: datasource=docker depName=louislam/uptime-kuma
-    uptimekuma_image: louislam/uptime-kuma:1.23.16-alpine
+    uptimekuma_image: louislam/uptime-kuma:1.23.17-alpine
 
-    uptimekuma_deploy_docker_volume_backup: true
+    uptimekuma_deploy_docker_volume_backup: false
 
   tasks:
 
