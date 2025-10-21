@@ -1,0 +1,158 @@
+---
+- name: deploy-vert | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### VERT SECTION
+
+# https://hub.docker.com/r/vert/vert
+# https://vert.net/docs/traefik
+# https://github.com/1RandomDev/homeassistant-vert
+
+- name: deploy-vert | Set VERT facts
+  ansible.builtin.set_fact:
+    vert_image: "{{ vert_image | default('ghcr.io/vert-sh/vert:latest') }}"
+    vert_service_name: "{{ vert_service_name | default('vert') }}"
+    vert_service_port: "{{ vert_service_port | default(80) }}"
+
+- name: deploy-vert | Set VERT network facts
+  ansible.builtin.set_fact:
+    vert_network_name: "{{ vert_network_name | default(vert_service_name) }}"
+
+- name: deploy-vert | Set VERT volume facts
+  ansible.builtin.set_fact:
+    vert_volume_name: "{{ vert_volume_name | default(vert_service_name) }}"
+
+- name: deploy-vert | Set VERT aggregated facts
+  ansible.builtin.set_fact:
+    vert_fqdn: "{{ vert_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-vert | Set VERT service facts
+  ansible.builtin.set_fact:
+    vert_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    vert_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ vert_service_port }}:80"
+    vert_volumes: []
+      # Local paths to mount into the container
+      # local path:container path
+
+- name: deploy-vert | Log VERT configuration
+  ansible.builtin.debug:
+    msg:
+      - "VERT image: {{ vert_image }}"
+      - "VERT service name: {{ vert_service_name }}"
+      - "VERT FQDN: {{ vert_fqdn }}"
+      - "VERT command: {{ vert_command | default(omit) }}"
+      - "VERT networks: {{ vert_networks | default(omit) }}"
+      - "VERT ports: {{ vert_ports | default(omit) }}"
+      - "VERT volumes: {{ vert_volumes | default(omit) }}"
+
+- name: deploy-vert | Create VERT container labels
+  ansible.builtin.set_fact:
+    vert_container_labels: "{{ vert_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "VERT" }
+    - { "key": "homepage.description", "value": "Send push notifications to your phone or desktops" }
+    - { "key": "homepage.icon", "value": "vert.png" }
+    - { "key": "homepage.href", "value": "https://{{ vert_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ vert_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ vert_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ vert_service_name }}.rule",
+      "value": "Host(`{{ vert_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/VERT-sh/VERT/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-vert | Create VERT networks
+  when: vert_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ vert_networks }}"
+
+- name: deploy-vert | Create VERT volumes
+  when: vert_volume_cache_name is defined and vert_volume_config_name is defined and (vert_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ vert_volume_name }}"
+
+- name: deploy-vert | Check if VERT is running
+  community.docker.docker_container_info:
+    name: "{{ vert_service_name }}"
+  register: vert_state
+
+- name: deploy-vert | Remove VERT container if changing version
+  when:
+    - vert_state.exists
+    - (vert_image | split(':') | last) != (vert_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-vert | Stop and remove existing VERT container
+      community.docker.docker_container:
+        name: "{{ vert_service_name }}"
+        state: absent
+
+    - name: deploy-vert | Set update VERT
+      ansible.builtin.set_fact:
+        vert_update: true
+
+- name: deploy-vert | Deploy VERT if not running
+  when:
+    - not vert_state.exists or (vert_update | default(false))
+  block:
+
+    - name: deploy-vert | Pull VERT image
+      community.docker.docker_image:
+        name: "{{ vert_image }}"
+        source: pull
+
+    - name: deploy-vert | Deploy VERT
+      community.docker.docker_container:
+        name: "{{ vert_service_name }}"
+        image: "{{ vert_image }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ vert_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ vert_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + vert_volumes | default(omit) }}"
+      register: vert_container_state
+
+- name: deploy-vert | Wait for VERT to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ vert_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: vert_running
+  retries: 10
+  until: vert_running is success

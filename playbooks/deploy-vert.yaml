@@ -1,0 +1,20 @@
+---
+- name: Deploy VERT
+
+  hosts: ansible
+
+  vars:
+
+    # Vert facts
+    # renovate: datasource=docker depName=ghcr.io/vert-sh/vert
+    vert_image: ghcr.io/vert-sh/vert:sha-00e38b6
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of VERT
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-vert.yaml
