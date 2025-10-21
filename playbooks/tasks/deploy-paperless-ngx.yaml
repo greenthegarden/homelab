@@ -92,14 +92,14 @@
       "value": "https://github.com/paperless-ngx/paperless-ngx/releases/tag/v${major}.${minor}.${patch}",
     }
 
-- name: deploy-paperless-ngx | Create Paperless-ngx networks # noqa: syntax-check[unknown-module]
+- name: deploy-paperless-ngx | Create Paperless-ngx networks
   when: paperless_ngx_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
     state: present
   loop: "{{ paperless_ngx_networks }}"
 
-- name: deploy-paperless-ngx | Create Paperless-ngx volumes # noqa: syntax-check[unknown-module]
+- name: deploy-paperless-ngx | Create Paperless-ngx volumes
   when: paperless_ngx_volume_data_name is defined and paperless_ngx_volume_media_name is defined
   community.docker.docker_volume:
     name: "{{ item }}"
