@@ -130,7 +130,7 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-postgres.yaml
   vars:
-    postgres_image: postgres:16-alpine
+    postgres_image: postgres:16.8-alpine
     postgres_service_name: "{{ docmost_service_name }}-postgres"
     postgres_network_name: "{{ docmost_network_name }}"
     postgres_volume_name: "{{ docmost_service_name }}-postgres"
