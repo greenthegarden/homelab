@@ -1,0 +1,124 @@
+---
+- name: deploy-socket-proxy | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### SOCKET-PROXY SECTION
+
+# https://github.com/wollomatic/socket-proxy
+
+- name: deploy-socket-proxy | Set Socket Proxy facts
+  ansible.builtin.set_fact:
+    socket_proxy_image: "{{ socket_proxy_image | default('wollomatic/socket-proxy:latest') }}"
+    socket_proxy_service_name: "{{ socket_proxy_service_name | default('socket-proxy') }}"
+    socket_proxy_service_port: "{{ socket_proxy_service_port | default(2375) }}"
+
+- name: deploy-socket-proxy | Set Socket Proxy network facts
+  ansible.builtin.set_fact:
+    socket_proxy_network_name: "{{ socket_proxy_network_name | default(socket_proxy_service_name) }}"
+    socket_proxy_network_internal: "{{ socket_proxy_network_internal | default(true) }}"
+
+- name: deploy-socket-proxy | Set Socket Proxy volume facts
+  ansible.builtin.set_fact:
+    socket_proxy_volume_name: "{{ socket_proxy_volume_name | default(socket_proxy_service_name) }}"
+
+- name: deploy-socket-proxy | Set Socket Proxy aggregated facts
+  ansible.builtin.set_fact:
+    socket_proxy_fqdn: "{{ socket_proxy_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-socket-proxy | Set Socket Proxy service facts
+  ansible.builtin.set_fact:
+    socket_proxy_command:
+      - '-loglevel=info'
+      # - '-allowfrom=dozzle' # allow only the dozzle container
+      - '-listenip=0.0.0.0'
+      - '-allowGET=/v1\..{2}/(containers/.*|events|info)'
+      - '-allowHEAD=/_ping'
+      - '-watchdoginterval=3600'
+      - '-stoponwatchdog'
+      - '-shutdowngracetime=10'
+    socket_proxy_memory: "64M"
+    socket_proxy_networks:
+      - { name: "{{ socket_proxy_network_name }}", internal: "{{ socket_proxy_network_internal }}" }
+    socket_proxy_ports:
+      - "{{ socket_proxy_service_port }}:2375/tcp"
+    socket_proxy_volumes: []
+
+# - name: deploy-socket-proxy | Set Socket Proxy env
+#   ansible.builtin.set_fact:
+#     socket_proxy_env: "{{ socket_proxy_env | default({}) | combine({item.key: item.value}) }}"
+
+- name: deploy-socket-proxy | Log Socket Proxy configuration
+  ansible.builtin.debug:
+    msg:
+      - "Socket Proxy image: {{ socket_proxy_image }}"
+      - "Socket Proxy service name: {{ socket_proxy_service_name }}"
+      - "Socket Proxy FQDN: {{ socket_proxy_fqdn }}"
+      - "Socket Proxy networks: {{ socket_proxy_networks | default(omit) }}"
+      - "Socket Proxy ports: {{ socket_proxy_ports | default(omit) }}"
+      - "Socket Proxy volumes: {{ socket_proxy_volumes | default(omit) }}"
+      - "Socket Proxy env: {{ socket_proxy_env | default(omit) }}"
+
+- name: deploy-socket-proxy | Create Socket Proxy container labels
+  ansible.builtin.set_fact:
+    socket_proxy_container_labels: "{{ socket_proxy_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/wollomatic/socket-proxy/releases/tag/${major}.${minor}.${patch}",
+    }
+
+- name: deploy-socket-proxy | Create Socket Proxy network
+  when: socket_proxy_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal }}"
+    state: present
+  loop: "{{ socket_proxy_networks }}"
+
+- name: deploy-socket-proxy | Pull Socket Proxy image
+  community.docker.docker_image_pull:
+    name: "{{ socket_proxy_image }}"
+    pull: always
+
+- name: deploy-socket-proxy | Deploy Socket Proxy
+  community.docker.docker_container:
+    name: "{{ socket_proxy_service_name }}"
+    image: "{{ socket_proxy_image }}"
+    cap_drop:
+      - ALL
+    command: "{{ socket_proxy_command | default(omit) }}"
+    env: "{{ socket_proxy_env | default(omit) }}"
+    labels: "{{ socket_proxy_container_labels | default(omit) }}"
+    memory: "{{ socket_proxy_memory | default(omit) }}"
+    networks: "{{ socket_proxy_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+    published_ports: "{{ socket_proxy_ports if not socket_proxy_network_internal else omit }}"
+    read_only: true
+    restart: true
+    restart_policy: unless-stopped
+    security_opts:
+      - no-new-privileges=true
+    state: started
+    user: 65534:998
+    volumes: "{{ default_host_volumes + docker_host_volume + socket_proxy_volumes | default(omit) }}"
+  register: socket_proxy_container_state
+
+- name: deploy-socket-proxy | Wait for Socket Proxy to accept connections
+  when: false # not use_socket_proxy_rw not works, needs to be fixed
+  ansible.builtin.wait_for:
+    host: "{{ socket_proxy_container_state['container']\
+      ['NetworkSettings']\
+      ['Networks']\
+      [docker_monitoring_network_name]\
+      ['IPAddress'] }}"
+    port: "{{ socket_proxy_service_port }}"
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: socket_proxy_running
+  retries: 10
+  until: socket_proxy_running is success

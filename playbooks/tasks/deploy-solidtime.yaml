@@ -1,0 +1,180 @@
+---
+- name: deploy-solidtime | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### SOLIDTIME SECTION
+
+# https://hub.docker.com/r/solidtime/solidtime
+# https://solidtime.net/docs/traefik
+# https://github.com/1RandomDev/homeassistant-solidtime
+
+- name: deploy-solidtime | Set Solidtime facts
+  ansible.builtin.set_fact:
+    solidtime_image: "{{ solidtime_image | default('solidtime/solidtime:latest') }}"
+    solidtime_service_name: "{{ solidtime_service_name | default('solidtime') }}"
+    solidtime_service_port: "{{ solidtime_service_port | default(80) }}"
+
+- name: deploy-solidtime | Set Solidtime network facts
+  ansible.builtin.set_fact:
+    solidtime_network_name: "{{ solidtime_network_name | default(solidtime_service_name) }}"
+
+- name: deploy-solidtime | Set Solidtime volume facts
+  ansible.builtin.set_fact:
+    solidtime_volume_name: "{{ solidtime_volume_name | default(solidtime_service_name) }}"
+
+- name: deploy-solidtime | Set Solidtime aggregated facts
+  ansible.builtin.set_fact:
+    solidtime_fqdn: "{{ solidtime_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-solidtime | Set Solidtime service facts
+  ansible.builtin.set_fact:
+    solidtime_command:
+      - "serve"
+      # - "--port"
+      # - "80"
+      # - "--data-dir"
+      # - "/solidtime/data"
+      # - "--cache-dir"
+      # - "/solidtime/cache"
+      # - "--config-dir"
+      # - "/solidtime/config"
+      # - "--log-level"
+      # - "info"
+      # - "--log-format"
+      # - "text"
+      # - "--allow-anonymous"
+      # - "true"
+      # - "--cors-origin"
+      # - "*"
+    solidtime_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    solidtime_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ solidtime_service_port }}:80"
+    solidtime_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ solidtime_volume_cache_name }}:/var/cache/solidtime"
+      # - "{{ solidtime_volume_config_name }}:/etc/solidtime"
+
+- name: deploy-solidtime | Log Solidtime configuration
+  ansible.builtin.debug:
+    msg:
+      - "Solidtime image: {{ solidtime_image }}"
+      - "Solidtime service name: {{ solidtime_service_name }}"
+      - "Solidtime FQDN: {{ solidtime_fqdn }}"
+      - "Solidtime command: {{ solidtime_command | default(omit) }}"
+      - "Solidtime networks: {{ solidtime_networks | default(omit) }}"
+      - "Solidtime ports: {{ solidtime_ports | default(omit) }}"
+      - "Solidtime volumes: {{ solidtime_volumes | default(omit) }}"
+
+- name: deploy-solidtime | Create Solidtime container labels
+  ansible.builtin.set_fact:
+    solidtime_container_labels: "{{ solidtime_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Solidtime" }
+    - { "key": "homepage.description", "value": "Send push notifications to your phone or desktops" }
+    - { "key": "homepage.icon", "value": "solidtime.png" }
+    - { "key": "homepage.href", "value": "https://{{ solidtime_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ solidtime_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ solidtime_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ solidtime_service_name }}.rule",
+      "value": "Host(`{{ solidtime_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/binwiederhier/solidtime/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-solidtime | Create Solidtime networks
+  when: solidtime_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ solidtime_networks }}"
+
+- name: deploy-solidtime | Create Solidtime volumes
+  when: solidtime_volume_cache_name is defined and solidtime_volume_config_name is defined and (solidtime_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ solidtime_volume_cache_name }}"
+    # - "{{ solidtime_volume_config_name }}"
+
+- name: deploy-solidtime | Check if Solidtime is running
+  community.docker.docker_container_info:
+    name: "{{ solidtime_service_name }}"
+  register: solidtime_state
+
+- name: deploy-solidtime | Remove Solidtime container if changing version
+  when:
+    - solidtime_state.exists
+    - (solidtime_image | split(':') | last) != (solidtime_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-solidtime | Stop and remove existing Solidtime container
+      community.docker.docker_container:
+        name: "{{ solidtime_service_name }}"
+        state: absent
+
+    - name: deploy-solidtime | Set update Solidtime
+      ansible.builtin.set_fact:
+        solidtime_update: true
+
+- name: deploy-solidtime | Deploy Solidtime if not running
+  when:
+    - not solidtime_state.exists or (solidtime_update | default(false))
+  block:
+
+    - name: deploy-solidtime | Pull Solidtime image
+      community.docker.docker_image:
+        name: "{{ solidtime_image }}"
+        source: pull
+
+    - name: deploy-solidtime | Deploy Solidtime
+      community.docker.docker_container:
+        name: "{{ solidtime_service_name }}"
+        image: "{{ solidtime_image }}"
+        command: "{{ solidtime_command }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ solidtime_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ solidtime_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + solidtime_volumes | default(omit) }}"
+      register: solidtime_container_state
+
+- name: deploy-solidtime | Wait for Solidtime to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ solidtime_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: solidtime_running
+  retries: 10
+  until: solidtime_running is success

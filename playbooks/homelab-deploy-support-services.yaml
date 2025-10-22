@@ -10,7 +10,7 @@
 
   tasks:
 
-    - name: Configure base OS
+    - name: Configure base containerised services
       ansible.builtin.include_tasks:
         file: tasks/homelab-deploy-support-services.yaml
       tags: always
