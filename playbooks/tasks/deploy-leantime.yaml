@@ -118,7 +118,8 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-mysql.yaml
   vars:
-    mysql_image: mysql:9.4.0
+    # renovate: datasource=docker depName=mysql
+    mysql_image: mysql:9.5.0
     mysql_service_name: "{{ leantime_service_name }}-mysql"
     mysql_network_name: "{{ leantime_network_name }}"
     mysql_volume_name: "{{ leantime_service_name }}-mysql"
