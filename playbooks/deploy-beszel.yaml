@@ -7,7 +7,7 @@
 
     # Beszel facts
     # renovate: datasource=docker depName=henrygd/beszel
-    beszel_image: henrygd/beszel:0.14.1
+    beszel_image: henrygd/beszel:0.15.0
 
   tasks:
 
