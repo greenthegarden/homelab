@@ -20,11 +20,11 @@
 
 - name: deploy-kopia | Set Kopia volume facts
   ansible.builtin.set_fact:
-    kopia_volume_config_name: "{{ kopia_volume_name | default(kopia_service_name + '-config') }}"
-    kopia_volume_cache_name: "{{ kopia_volume_name | default(kopia_service_name + '-cache') }}"
-    kopia_volume_logs_name: "{{ kopia_volume_name | default(kopia_service_name + '-logs') }}"
-    kopia_volume_repository_name: "{{ kopia_volume_name | default(kopia_service_name + '-repository') }}"
-    kopia_volume_tmp_name: "{{ kopia_volume_name | default(kopia_service_name + '-tmp') }}"
+    kopia_volume_config_name: "{{ kopia_volume_config_name | default(kopia_service_name + '-config') }}"
+    kopia_volume_cache_name: "{{ kopia_volume_cache_name | default(kopia_service_name + '-cache') }}"
+    kopia_volume_logs_name: "{{ kopia_volume_logs_name | default(kopia_service_name + '-logs') }}"
+    kopia_volume_repository_name: "{{ kopia_volume_repository_name | default(kopia_service_name + '-repository') }}"
+    kopia_volume_tmp_name: "{{ kopia_volume_tmp_name | default(kopia_service_name + '-tmp') }}"
 
 - name: deploy-kopia | Set Kopia aggregated facts
   ansible.builtin.set_fact:
