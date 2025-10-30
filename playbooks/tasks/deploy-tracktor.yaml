@@ -80,7 +80,7 @@
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Tracktor" }
-    - { "key": "homepage.description", "value": "Comprehensive vehicle management." }
+    - { "key": "homepage.description", "value": "Comprehensive vehicle management" }
     - { "key": "homepage.icon", "value": "tracktor.png" }
     - { "key": "homepage.href", "value": "https://{{ tracktor_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ tracktor_fqdn }}/" }

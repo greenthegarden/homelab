@@ -60,7 +60,7 @@
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Open WebUI" }
-    - { "key": "homepage.description", "value": "AI platform" }
+    - { "key": "homepage.description", "value": "User-friendly AI interface" }
     - { "key": "homepage.icon", "value": "open-webui.png" }
     - { "key": "homepage.href", "value": "https://{{ open_webui_fqdn }}/" }
     - {

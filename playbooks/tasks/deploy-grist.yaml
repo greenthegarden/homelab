@@ -65,7 +65,7 @@
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Grist" }
-    - { "key": "homepage.description", "value": "Grist is a software product to organize, analyze, and share data." }
+    - { "key": "homepage.description", "value": "A software product to organize, analyze, and share data." }
     - { "key": "homepage.icon", "value": "grist.png" }
     - { "key": "homepage.href", "value": "https://{{ grist_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ grist_fqdn }}/" }

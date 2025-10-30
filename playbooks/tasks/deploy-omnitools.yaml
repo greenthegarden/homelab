@@ -56,7 +56,7 @@
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Omnitools" }
-    - { "key": "homepage.description", "value": "A simple server for sending and receiving messages" }
+    - { "key": "homepage.description", "value": "Self-hosted collection of powerful web-based tools for everyday tasks" }
     - { "key": "homepage.icon", "value": "omni-tools.png" }
     - { "key": "homepage.href", "value": "https://{{ omnitools_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ omnitools_fqdn }}/" }

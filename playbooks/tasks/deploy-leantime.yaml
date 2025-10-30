@@ -71,7 +71,7 @@
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Leantime" }
-    - { "key": "homepage.description", "value": "Open source project management system" }
+    - { "key": "homepage.description", "value": "A goals focused project management system for non-project managers, building with ADHD, Autism, and dyslexia in mind." }
     - { "key": "homepage.icon", "value": "leantime.png" }
     - { "key": "homepage.href", "value": "https://{{ leantime_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ leantime_fqdn }}/" }

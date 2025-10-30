@@ -59,7 +59,7 @@
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "VERT" }
-    - { "key": "homepage.description", "value": "Send push notifications to your phone or desktops" }
+    - { "key": "homepage.description", "value": "The next-generation file converter" }
     - { "key": "homepage.icon", "value": "vert.png" }
     - { "key": "homepage.href", "value": "https://{{ vert_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ vert_fqdn }}/" }

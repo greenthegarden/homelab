@@ -56,7 +56,7 @@
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Dockpeek" }
-    - { "key": "homepage.description", "value": "A simple server for sending and receiving messages" }
+    - { "key": "homepage.description", "value": "A lightweight, self-hosted Docker dashboard for quick access to your containers" }
     - { "key": "homepage.icon", "value": "dockpeek.png" }
     - { "key": "homepage.href", "value": "https://{{ dockpeek_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ dockpeek_fqdn }}/" }

@@ -69,7 +69,7 @@
     # Homepage labels
     - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Docmost" }
-    - { "key": "homepage.description", "value": "Open source project management system" }
+    - { "key": "homepage.description", "value": "Open-source collaborative wiki and documentation software" }
     - { "key": "homepage.icon", "value": "docmost.png" }
     - { "key": "homepage.href", "value": "https://{{ docmost_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ docmost_fqdn }}/" }
