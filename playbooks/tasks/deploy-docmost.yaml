@@ -39,7 +39,7 @@
 - name: deploy-docmost | Set Docmost service facts
   ansible.builtin.set_fact:
     docmost_networks:
-      - { name: "{{ docmost_network_name }}" }
+      - { name: "{{ docmost_network_name }}", internal: true }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     docmost_ports:

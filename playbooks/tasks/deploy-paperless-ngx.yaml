@@ -36,7 +36,7 @@
 - name: deploy-paperless-ngx | Set Paperless-ngx service facts
   ansible.builtin.set_fact:
     paperless_ngx_networks:
-      - { name: "{{ paperless_ngx_network_name }}" }
+      - { name: "{{ paperless_ngx_network_name }}", internal: true }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     paperless_ngx_ports:
