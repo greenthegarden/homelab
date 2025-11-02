@@ -125,6 +125,8 @@
     detach: true
     env:
       TZ: "{{ homelab.timezone | default('UTC') }}"
+      # Publish to MQTT broker when updates are available
+      WUD_TRIGGER_MQTT_ENABLED: "false"
       WUD_TRIGGER_MQTT_MOSQUITTO_URL: "mqtt://{{ emqx.broker_address }}:{{ emqx.broker_port | default(1883) }}"
       WUD_TRIGGER_MQTT_MOSQUITTO_USER: "{{ whatsupdocker.broker_username }}"
       WUD_TRIGGER_MQTT_MOSQUITTO_PASSWORD: "{{ whatsupdocker.broker_password }}"
