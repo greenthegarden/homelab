@@ -7,7 +7,7 @@
 
     # Dockpeek facts
     # renovate: datasource=docker depName=ghcr.io/dockpeek/dockpeek
-    dockpeek_image: ghcr.io/dockpeek/dockpeek:v1.6.5
+    dockpeek_image: ghcr.io/dockpeek/dockpeek:v1.7.1
 
   tasks:
 
