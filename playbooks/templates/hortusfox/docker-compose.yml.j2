@@ -7,7 +7,7 @@ networks:
   hortusfox:
     driver: bridge
   web:
-    name: web
+    name: reverse-proxy
     external: true
 
 services:
@@ -31,7 +31,7 @@ services:
 
   app:
     container_name: hortusfox_app
-    image: ghcr.io/danielbrendel/hortusfox-web:v5.2
+    image: ghcr.io/danielbrendel/hortusfox-web:v5.4
     environment:
       APP_ADMIN_EMAIL: {{ hortusfox.admin_email | default('admin@localhost') }}
       APP_ADMIN_PASSWORD: {{ hortusfox.admin_password | default('dummy') }}
@@ -47,8 +47,6 @@ services:
     networks:
       - hortusfox
       - web
-#    ports:
-#      - "8090:80"
     volumes:
       - app_images:/var/www/html/public/img
       - app_logs:/var/www/html/app/logs

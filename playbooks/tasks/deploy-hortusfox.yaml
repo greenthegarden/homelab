@@ -100,103 +100,136 @@
       "value": "https://github.com/danielbrendel/hortusfox-web/releases/tag/v${major}.${minor}.${patch}",
     }
 
-- name: deploy-hortusfox | Create Hortusfox networks
-  when: hortusfox_networks is defined
-  community.docker.docker_network:
-    name: "{{ item.name }}"
-    driver: "{{ item.driver | default('bridge') }}"
-    internal: "{{ item.internal | default(false) }}"
-    state: present
-  loop: "{{ hortusfox_networks }}"
+# - name: deploy-hortusfox | Create Hortusfox networks
+#   when: hortusfox_networks is defined
+#   community.docker.docker_network:
+#     name: "{{ item.name }}"
+#     driver: "{{ item.driver | default('bridge') }}"
+#     internal: "{{ item.internal | default(false) }}"
+#     state: present
+#   loop: "{{ hortusfox_networks }}"
 
-- name: deploy-hortusfox | Create Hortusfox volumes
-  when: hortusfox_volume_name is defined and (hortusfox_volumes | length > 0)
-  community.docker.docker_volume:
-    name: "{{ item }}"
-    state: present
-  loop:
-    - "{{ hortusfox_volume_name }}"
+# - name: deploy-hortusfox | Create Hortusfox volumes
+#   when: hortusfox_volume_name is defined and (hortusfox_volumes | length > 0)
+#   community.docker.docker_volume:
+#     name: "{{ item }}"
+#     state: present
+#   loop:
+#     - "{{ hortusfox_volume_name }}"
 
-- name: deploy-hortusfox | Create Hortusfox DB container labels
-  ansible.builtin.set_fact:
-    hortusfox_db_container_labels: "{{ hortusfox_db_container_labels | default({}) | combine({item.key: item.value}) }}"
-  with_items:
-    # Docker Volume Backup labels
-    - {
-      "key": "docker-volume-backup.archive-pre",
-      "value":
-        "/bin/sh -c 'mariadb-dump --single-transaction --user={{ hortusfox.db_user }}
-        -p{{ hortusfox.db_password }} --all-databases > /tmp/dumps/dump.sql'",
-    }
+# - name: deploy-hortusfox | Create Hortusfox DB container labels
+#   ansible.builtin.set_fact:
+#     hortusfox_db_container_labels: "{{ hortusfox_db_container_labels | default({}) | combine({item.key: item.value}) }}"
+#   with_items:
+#     # Docker Volume Backup labels
+#     - {
+#       "key": "docker-volume-backup.archive-pre",
+#       "value":
+#         "/bin/sh -c 'mariadb-dump --single-transaction --user={{ hortusfox.db_user }}
+#         -p{{ hortusfox.db_password }} --all-databases > /tmp/dumps/dump.sql'",
+#     }
 
-- name: deploy-hortusfox | Deploy MarisDB database
-  when: hortusfox_mariadb_database_create | default(true)
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-mariadb.yaml
-  vars:
-    mariadb_image: mariadb:lts
-    mariadb_service_name: db
-    mariadb_service_port: 3306
-    mariadb_network_name: "{{ hortusfox_network_name }}"
-    mariadb_volume_name: "{{ hortusfox_service_name }}-mariadb"
-    mariadb_root_password: "{{ hortusfox.db_root_password | default('dummy') }}"
-    mariadb_database: "{{ hortusfox.db_database | default(hortusfox_service_name) }}"
-    mariadb_user: "{{ hortusfox.db_user | default(hortusfox_service_name) }}"
-    mariadb_password: "{{ hortusfox.db_password | default('dummy') }}"
+# - name: deploy-hortusfox | Deploy MarisDB database
+#   when: hortusfox_mariadb_database_create | default(true)
+#   ansible.builtin.include_tasks:
+#     file: tasks/deploy-mariadb.yaml
+#   vars:
+#     mariadb_image: mariadb:lts
+#     mariadb_service_name: db
+#     mariadb_service_port: 3306
+#     mariadb_network_name: "{{ hortusfox_network_name }}"
+#     mariadb_volume_name: "{{ hortusfox_service_name }}-mariadb"
+#     mariadb_root_password: "{{ hortusfox.db_root_password | default('dummy') }}"
+#     mariadb_database: "{{ hortusfox.db_database | default(hortusfox_service_name) }}"
+#     mariadb_user: "{{ hortusfox.db_user | default(hortusfox_service_name) }}"
+#     mariadb_password: "{{ hortusfox.db_password | default('dummy') }}"
 
-- name: deploy-hortusfox | Check if Hortusfox is running
-  community.docker.docker_container_info:
-    name: "{{ hortusfox_service_name }}"
-  register: hortusfox_state
+# - name: deploy-hortusfox | Check if Hortusfox is running
+#   community.docker.docker_container_info:
+#     name: "{{ hortusfox_service_name }}"
+#   register: hortusfox_state
 
-- name: deploy-hortusfox | Remove Hortusfox container if changing version
-  when:
-    - hortusfox_state.exists
-    - (hortusfox_image | split(':') | last) != (hortusfox_state.container.Config.Image | split(':') | last)
+# - name: deploy-hortusfox | Remove Hortusfox container if changing version
+#   when:
+#     - hortusfox_state.exists
+#     - (hortusfox_image | split(':') | last) != (hortusfox_state.container.Config.Image | split(':') | last)
+#   block:
+
+#     - name: deploy-hortusfox | Stop and remove existing Hortusfox container
+#       community.docker.docker_container:
+#         name: "{{ hortusfox_service_name }}"
+#         state: absent
+
+#     - name: deploy-hortusfox | Set update Hortusfox
+#       ansible.builtin.set_fact:
+#         hortusfox_update: true
+
+# - name: deploy-hortusfox | Deploy Hortusfox if not running
+#   when:
+#     - not hortusfox_state.exists or (hortusfox_update | default(false))
+#   block:
+
+#     - name: deploy-hortusfox | Pull Hortusfox image
+#       community.docker.docker_image:
+#         name: "{{ hortusfox_image }}"
+#         source: pull
+
+#     - name: deploy-hortusfox | Deploy Hortusfox
+#       community.docker.docker_container:
+#         name: "{{ hortusfox_service_name }}"
+#         image: "{{ hortusfox_image }}"
+#         detach: true
+#         env:
+#           APP_ADMIN_EMAIL: "{{ hortusfox.admin_email | default('admin@localhost') }}"
+#           APP_ADMIN_PASSWORD: "{{ hortusfox.admin_password | default('dummy') }}"
+#           APP_TIMEZONE: "{{ homelab.timezone | default(omit) }}"
+#           DB_HOST: "{{ mariadb_service_name }}"
+#           DB_PORT: "{{ mariadb_service_port | quote }}"
+#           DB_DATABASE: "{{ hortusfox.db_database | default(hortusfox_service_name) }}"
+#           DB_USERNAME: "{{ hortusfox.db_user | default(hortusfox_service_name) }}"
+#           DB_PASSWORD: "{{ hortusfox.db_password | default('dummy') }}"
+#           DB_CHARSET: "utf8mb4"
+#         labels: "{{ hortusfox_container_labels | default(omit) }}"
+#         networks_cli_compatible: true
+#         networks: "{{ hortusfox_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+#         restart: true
+#         restart_policy: unless-stopped
+#         state: started
+#         volumes: "{{ default_host_volumes + hortusfox_volumes | default(omit) }}"
+#       register: hortusfox_container_state
+
+# remove when no longer using docker compose
+
+- name: deploy-hortusfox | Deploy Hortusfox via Docker Compose
+  when: deploy_hortusfox_via_docker_compose | default(true)
   block:
 
-    - name: deploy-hortusfox | Stop and remove existing Hortusfox container
-      community.docker.docker_container:
-        name: "{{ hortusfox_service_name }}"
-        state: absent
+    - name: deploy-hortusfox | Create Hortusfox configuration directory
+      ansible.builtin.file:
+        path: "{{ hortusfox_config_dir }}"
+        state: directory
+        mode: "0644"
 
-    - name: deploy-hortusfox | Set update Hortusfox
-      ansible.builtin.set_fact:
-        hortusfox_update: true
+    - name: deploy-hortusfox | Create Hortusfox configuration
+      ansible.builtin.template:
+        src: templates/hortusfox/docker-compose.yml.j2
+        dest: "{{ hortusfox_config_dir }}/docker-compose.yml"
+        mode: "0644"
 
-- name: deploy-hortusfox | Deploy Hortusfox if not running
-  when:
-    - not hortusfox_state.exists or (hortusfox_update | default(false))
-  block:
+    - name: deploy-hortusfox | Create Hortusfox backup volume # noqa: syntax-check[unknown-module]
+      community.docker.docker_volume:
+        name: "{{ hortusfox_db_backup_volume_name }}"
+        state: present
 
-    - name: deploy-hortusfox | Pull Hortusfox image
-      community.docker.docker_image:
-        name: "{{ hortusfox_image }}"
-        source: pull
+    # - name: deploy-hortusfox | Tear down existing services
+    #   community.docker.docker_compose_v2:
+    #     project_src: /root/hortusfox
+    #     state: absent
 
-    - name: deploy-hortusfox | Deploy Hortusfox
-      community.docker.docker_container:
-        name: "{{ hortusfox_service_name }}"
-        image: "{{ hortusfox_image }}"
-        detach: true
-        env:
-          APP_ADMIN_EMAIL: "{{ hortusfox.admin_email | default('admin@localhost') }}"
-          APP_ADMIN_PASSWORD: "{{ hortusfox.admin_password | default('dummy') }}"
-          APP_TIMEZONE: "{{ homelab.timezone | default(omit) }}"
-          DB_HOST: "{{ mariadb_service_name }}"
-          DB_PORT: "{{ mariadb_service_port | quote }}"
-          DB_DATABASE: "{{ hortusfox.db_database | default(hortusfox_service_name) }}"
-          DB_USERNAME: "{{ hortusfox.db_user | default(hortusfox_service_name) }}"
-          DB_PASSWORD: "{{ hortusfox.db_password | default('dummy') }}"
-          DB_CHARSET: "utf8mb4"
-        labels: "{{ hortusfox_container_labels | default(omit) }}"
-        networks_cli_compatible: true
-        networks: "{{ hortusfox_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
-        restart: true
-        restart_policy: unless-stopped
-        state: started
-        volumes: "{{ default_host_volumes + hortusfox_volumes | default(omit) }}"
-      register: hortusfox_container_state
+    - name: deploy-hortusfox | Deploy Hortusfox services # noqa: syntax-check[unknown-module]
+      community.docker.docker_compose_v2:
+        project_src: "{{ hortusfox_config_dir }}"
+      register: output
 
 - name: deploy-hortusfox | Wait for Hortusfox to accept connections
   ansible.builtin.wait_for:
@@ -209,37 +242,3 @@
   register: hortusfox_running
   retries: 10
   until: hortusfox_running is success
-
-
-# # remove when no longer using docker compose
-
-# - name: deploy-hortusfox | Create Hortusfox configuration directory
-#   when: false
-#   ansible.builtin.file:
-#     path: "{{ hortusfox_config_dir }}"
-#     state: directory
-#     mode: "0644"
-
-# - name: deploy-hortusfox | Create Hortusfox configuration
-#   when: false
-#   ansible.builtin.template:
-#     src: templates/hortusfox/docker-compose.yml.j2
-#     dest: "{{ hortusfox_config_dir }}/docker-compose.yml"
-#     mode: "0644"
-
-# - name: deploy-hortusfox | Create Hortusfox backup volume # noqa: syntax-check[unknown-module]
-#   when: false
-#   community.docker.docker_volume:
-#     name: "{{ hortusfox_db_backup_volume_name }}"
-#     state: present
-
-# # - name: deploy-hortusfox | Tear down existing services
-# #   community.docker.docker_compose_v2:
-# #     project_src: /root/hortusfox
-# #     state: absent
-
-# - name: deploy-hortusfox | Deploy Hortusfox services # noqa: syntax-check[unknown-module]
-#   when: false
-#   community.docker.docker_compose_v2:
-#     project_src: "{{ hortusfox_config_dir }}"
-#   register: output
