@@ -1,0 +1,34 @@
+---
+
+- name: Deploy Gramps Web
+
+  hosts: ansible
+
+  vars:
+
+    # Gramps Web facts
+    # renovate: datasource=docker depName=ghcr.io/gramps-project/grampsweb:latest
+    grampsweb_image: ghcr.io/gramps-project/grampsweb:25.10.2
+
+    grampsweb_deploy_docker_volume_backup: false
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Gramps Web
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-grampsweb.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      when: grampsweb_deploy_docker_volume_backup | default(false)
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_service_name: "docker-volume-backup-{{ grampsweb_service_name }}"
+        docker_volume_backup_volume_to_backup:
+          - "{{ grampsweb_volume_data_name }}:/backup/{{ grampsweb_service_name }}-backup:ro"
+        docker_volume_backup_backup_label: "{{ grampsweb_service_name }}-db"
+        docker_volume_backup_backup_retention_days: 7

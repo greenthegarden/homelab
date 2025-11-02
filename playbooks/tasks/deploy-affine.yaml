@@ -1,0 +1,229 @@
+---
+- name: deploy-affine | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+# - name: deploy-affine | Ensure required AFFiNE variables are set
+#   ansible.builtin.assert:
+#     that:
+#       - affine.app_secret is defined
+#       - affine.postgres_user is defined
+#       - affine.postgres_password is defined
+#       - affine.postgres_database is defined
+#     fail_msg: "One or more required AFFiNE variables are not defined! Please define them in your inventory or group_vars/host_vars."
+
+####### AFFINE SECTION
+
+# https://affine.pro/
+# https://docs.affine.pro/
+# https://github.com/toeverything/AFFiNE
+# https://hub.docker.com/r/affine/affine
+
+- name: deploy-affine | Set AFFiNE facts
+  ansible.builtin.set_fact:
+    affine_image: "{{ affine_image | default('ghcr.io/toeverything/affine:latest') }}"
+    affine_service_name: "{{ affine_service_name | default('affine') }}"
+    affine_service_port: "{{ affine_service_port | default(3010) }}"
+
+- name: deploy-affine | Set AFFiNE network facts
+  ansible.builtin.set_fact:
+    affine_network_name: "{{ affine_network_name | default(affine_service_name) }}"
+
+- name: deploy-affine | Set AFFiNE volume facts
+  ansible.builtin.set_fact:
+    affine_volume_config_name: "{{ affine_volume_config_name | default(affine_service_name + '-config') }}"
+    affine_volume_upload_name: "{{ affine_volume_upload_name | default(affine_service_name + '-upload') }}"
+
+- name: deploy-affine | Set AFFiNE aggregated facts
+  ansible.builtin.set_fact:
+    affine_fqdn: "{{ affine_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-affine | Set AFFiNE service facts
+  ansible.builtin.set_fact:
+    affine_networks:
+      - { name: "{{ affine_network_name }}", internal: true }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    affine_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ affine_service_port }}:3010"
+    affine_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ affine_volume_config_name }}:/root/.affine/config"
+      - "{{ affine_volume_upload_name }}:/root/.affine/storage"
+
+- name: deploy-affine | Log AFFiNE configuration
+  ansible.builtin.debug:
+    msg:
+      - "AFFiNE image: {{ affine_image }}"
+      - "AFFiNE service name: {{ affine_service_name }}"
+      - "AFFiNE FQDN: {{ affine_fqdn }}"
+      - "AFFiNE networks: {{ affine_networks | default(omit) }}"
+      - "AFFiNE ports: {{ affine_ports | default(omit) }}"
+      - "AFFiNE volumes: {{ affine_volumes | default(omit) }}"
+
+- name: deploy-affine | Create AFFiNE container labels
+  ansible.builtin.set_fact:
+    affine_container_labels: "{{ affine_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "AFFiNE" }
+    - { "key": "homepage.description", "value": "A workspace with fully merged docs, whiteboards and databases." }
+    - { "key": "homepage.icon", "value": "affine.png" }
+    - { "key": "homepage.href", "value": "https://{{ affine_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ affine_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ affine_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ affine_service_name }}.rule",
+      "value": "Host(`{{ affine_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.services.{{ affine_service_name }}.loadbalancer.server.port",
+      "value": "{{ affine_service_port | quote }}",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/affine/affine/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-affine | Create AFFiNE networks
+  when: affine_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ affine_networks }}"
+
+- name: deploy-affine | Create AFFiNE volumes
+  when: affine_volume_name is defined
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ affine_volume_config_name }}"
+    - "{{ affine_volume_upload_name }}"
+
+- name: deploy-affine | Deploy Redis for AFFiNE
+  when: affine_redis_create | default(true)
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-redis.yaml
+  vars:
+    # renovate: datasource=docker depName=redis
+    redis_image: redis:8.2.2-alpine
+    redis_service_name: "{{ affine_service_name }}-redis"
+    redis_network_name: "{{ affine_network_name }}"
+    redis_volume_name: "{{ affine_service_name }}-redis"
+    redis_args:
+      - "--save ''"
+      - "--appendonly no"
+      - "--maxmemory 256mb"
+      - "--maxmemory-policy allkeys-lru"
+
+- name: deploy-affine | Deploy Postgres database for AFFiNE
+  when: affine_postgres_database_create | default(true)
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-postgres.yaml
+  vars:
+    postgres_image: pgvector/pgvector:pg16
+    postgres_service_name: "{{ affine_service_name }}-postgres"
+    postgres_network_name: "{{ affine_network_name }}"
+    postgres_volume_name: "{{ affine_service_name }}-postgres"
+    postgres_database: "{{ affine.postgres_database | default('affine') }}"
+    postgres_user: "{{ affine.postgres_user | default('affine') }}"
+    postgres_password: "{{ affine.postgres_password | default('dummy') }}"
+
+- name: deploy-affine | Check if AFFiNE is running
+  community.docker.docker_container_info:
+    name: "{{ affine_service_name }}"
+  register: affine_state
+
+- name: deploy-affine | Remove AFFiNE container if changing version
+  when:
+    - affine_state.exists
+    - (affine_image | split(':') | last) != (affine_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-affine | Stop and remove existing AFFiNE container
+      community.docker.docker_container:
+        name: "{{ affine_service_name }}"
+        state: absent
+
+    - name: deploy-affine | Set update AFFiNE
+      ansible.builtin.set_fact:
+        affine_update: true
+
+- name: deploy-affine | Deploy AFFiNE if not running
+  when:
+    - not affine_state.exists or (affine_update | default(false))
+  block:
+
+    - name: deploy-affine | Pull AFFiNE image
+      community.docker.docker_image:
+        name: "{{ affine_image }}"
+        source: pull
+
+    - name: deploy-affine | Deploy AffAFFiNEine migration container
+      when: affine_migration_required | default(true)
+      community.docker.docker_container:
+        name: "{{ affine_service_name }}-migration"
+        image: "{{ affine_image }}"
+        command: ['sh', '-c', 'node ./scripts/self-host-predeploy.js']
+        detach: true
+        env:
+          AFFINE_INDEXER_ENABLED: "false"
+          DATABASE_URL: "postgresql://{{ affine.postgres_user }}:{{ affine.postgres_password }}@{{ affine_service_name }}-postgres:5432/{{ affine.postgres_database }}?schema=public"
+          REDIS_SERVER_HOST: "{{ affine_service_name }}-redis"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        networks_cli_compatible: true
+        networks:
+          - { name: "{{ affine_network_name }}" }
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + affine_volumes | default(omit) }}"
+      register: affine_container_state
+
+    - name: deploy-affine | Deploy AFFiNE
+      community.docker.docker_container:
+        name: "{{ affine_service_name }}"
+        image: "{{ affine_image }}"
+        detach: true
+        env:
+          AFFINE_INDEXER_ENABLED: "false"
+          DATABASE_URL: "postgresql://{{ affine.postgres_user }}:{{ affine.postgres_password }}@{{ affine_service_name }}-postgres:5432/{{ affine.postgres_database }}?schema=public"
+          REDIS_SERVER_HOST: "{{ affine_service_name }}-redis"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ affine_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ affine_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + affine_volumes | default(omit) }}"
+      register: affine_container_state
+
+- name: deploy-affine | Wait for AFFiNE to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ affine_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: affine_running
+  retries: 10
+  until: affine_running is success

@@ -1,0 +1,223 @@
+---
+- name: deploy-grampsweb | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### GRAMPSWEB SECTION
+
+# https://www.grampsweb.org/
+# https://github.com/gramps-project/grampsweb
+
+- name: deploy-grampsweb | Set Grampsweb facts
+  ansible.builtin.set_fact:
+    grampsweb_image: "{{ grampsweb_image | default('ghcr.io/gramps-project/grampsweb:latest') }}"
+    grampsweb_service_name: "{{ grampsweb_service_name | default('grampsweb') }}"
+    grampsweb_service_port: "{{ grampsweb_service_port | default(5000) }}"
+
+- name: deploy-grampsweb | Set Grampsweb network facts
+  ansible.builtin.set_fact:
+    grampsweb_network_name: "{{ grampsweb_network_name | default(grampsweb_service_name) }}"
+
+- name: deploy-grampsweb | Set Grampsweb volume facts
+  ansible.builtin.set_fact:
+    grampsweb_volume_users_name: "{{ grampsweb_volume_users_name | default(grampsweb_service_name + '-users') }}"
+    grampsweb_volume_index_name: "{{ grampsweb_volume_index_name | default(grampsweb_service_name + '-index') }}"
+    grampsweb_volume_thumb_cache_name: "{{ grampsweb_volume_thumb_cache_name | default(grampsweb_service_name + '-thumb-cache') }}"
+    grampsweb_volume_cache_name: "{{ grampsweb_volume_cache_name | default(grampsweb_service_name + '-cache') }}"
+    grampsweb_volume_secret_name: "{{ grampsweb_volume_secret_name | default(grampsweb_service_name + '-secret') }}"
+    grampsweb_volume_db_name: "{{ grampsweb_volume_db_name | default(grampsweb_service_name + '-db') }}"
+    grampsweb_volume_media_name: "{{ grampsweb_volume_media_name | default(grampsweb_service_name + '-media') }}"
+    grampsweb_volume_tmp_name: "{{ grampsweb_volume_tmp_name | default(grampsweb_service_name + '-tmp') }}"
+
+- name: deploy-grampsweb | Set Grampsweb aggregated facts
+  ansible.builtin.set_fact:
+    grampsweb_fqdn: "{{ grampsweb_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-grampsweb | Set Grampsweb service facts
+  ansible.builtin.set_fact:
+    grampsweb_networks:
+      - { name: "{{ grampsweb_network_name }}", internal: true }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    grampsweb_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ grampsweb_service_port }}:5000"
+    grampsweb_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ grampsweb_volume_users_name }}:/app/users"  # persist user database
+      - "{{ grampsweb_volume_index_name }}:/app/indexdir"  # persist search index
+      - "{{ grampsweb_volume_thumb_cache_name }}:/app/thumbnail_cache"  # persist thumbnails
+      - "{{ grampsweb_volume_cache_name }}:/app/cache"  # persist export and report caches
+      - "{{ grampsweb_volume_secret_name }}:/app/secret"  # persist flask secret
+      - "{{ grampsweb_volume_db_name }}:/root/.gramps/grampsdb"  # persist Gramps database
+      - "{{ grampsweb_volume_media_name }}:/app/media"  # persist media files
+      - "{{ grampsweb_volume_tmp_name }}:/tmp"
+
+- name: deploy-grampsweb | Log Gramps Web configuration
+  ansible.builtin.debug:
+    msg:
+      - "Grampsweb image: {{ grampsweb_image }}"
+      - "Grampsweb service name: {{ grampsweb_service_name }}"
+      - "Grampsweb FQDN: {{ grampsweb_fqdn }}"
+      - "Grampsweb networks: {{ grampsweb_networks | default(omit) }}"
+      - "Grampsweb ports: {{ grampsweb_ports | default(omit) }}"
+      - "Grampsweb volumes: {{ grampsweb_volumes | default(omit) }}"
+
+- name: deploy-grampsweb | Create Grampsweb container labels
+  ansible.builtin.set_fact:
+    grampsweb_container_labels: "{{ grampsweb_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Grampsweb" }
+    - {
+      "key": "homepage.description",
+      "value": "Subscriptions management",
+    }
+    - { "key": "homepage.icon", "value": "gramps-web.png" }
+    - { "key": "homepage.href", "value": "https://{{ grampsweb_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ grampsweb_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ grampsweb_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ grampsweb_service_name }}.rule",
+      "value": "Host(`{{ grampsweb_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/gramps-project/gramps-web/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-grampsweb | Create Grampsweb network
+  when: grampsweb_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ grampsweb_networks }}"
+
+- name: deploy-grampsweb | Create volume for Grampsweb
+  when: grampsweb_volume_data_name is defined and grampsweb_volume_logos_name is defined and (grampsweb_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ grampsweb_volume_users_name }}"
+    - "{{ grampsweb_volume_index_name }}"
+    - "{{ grampsweb_volume_thumb_cache_name }}"
+    - "{{ grampsweb_volume_cache_name }}"
+    - "{{ grampsweb_volume_secret_name }}"
+    - "{{ grampsweb_volume_db_name }}"
+    - "{{ grampsweb_volume_media_name }}"
+    - "{{ grampsweb_volume_tmp_name }}"
+
+- name: deploy-grampsweb | Deploy Redis for Grampsweb
+  when: grampsweb_redis_create | default(true)
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-redis.yaml
+  vars:
+    # renovate: datasource=docker depName=redis
+    redis_image: redis:8.2.2-alpine
+    redis_service_name: "{{ grampsweb_service_name }}-redis"
+    redis_network_name: "{{ grampsweb_network_name }}"
+    redis_volume_name: "{{ grampsweb_service_name }}-redis"
+    redis_args:
+      - "--save ''"
+      - "--appendonly no"
+      - "--maxmemory 256mb"
+      - "--maxmemory-policy allkeys-lru"
+
+- name: deploy-grampsweb | Check if Grampsweb is running
+  community.docker.docker_container_info:
+    name: "{{ grampsweb_service_name }}"
+  register: grampsweb_state
+
+- name: deploy-grampsweb | Remove Grampsweb container if changing version
+  when:
+    - grampsweb_state.exists
+    - (grampsweb_image | split(':') | last) != (grampsweb_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-grampsweb | Stop and remove existing Grampsweb container
+      community.docker.docker_container:
+        name: "{{ grampsweb_service_name }}"
+        state: absent
+
+    - name: deploy-grampsweb | Set update Grampsweb
+      ansible.builtin.set_fact:
+        grampsweb_update: true
+
+- name: deploy-grampsweb | Deploy Grampsweb if not running
+  when:
+    - not grampsweb_state.exists or (grampsweb_update | default(false))
+  block:
+
+    - name: deploy-grampsweb | Pull Grampsweb image
+      community.docker.docker_image:
+        name: "{{ grampsweb_image }}"
+        source: pull
+
+    - name: deploy-grampsweb | Deploy Grampsweb
+      community.docker.docker_container:
+        name: "{{ grampsweb_service_name }}"
+        image: "{{ grampsweb_image }}"
+        detach: true
+        env:
+          GRAMPSWEB_TREE: "Gramps Web"  # will create a new tree if not exists
+          GRAMPSWEB_CELERY_CONFIG__broker_url: "redis://{{ grampsweb_service_name }}-redis:6379/0"
+          GRAMPSWEB_CELERY_CONFIG__result_backend: "redis://{{ grampsweb_service_name }}-redis:6379/0"
+          GRAMPSWEB_RATELIMIT_STORAGE_URI: "redis://{{ grampsweb_service_name }}-redis:6379/1"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ grampsweb_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ grampsweb_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + grampsweb_volumes | default(omit) }}"
+      register: grampsweb_container_state
+
+    - name: deploy-grampsweb | Deploy Grampsweb Celery
+      community.docker.docker_container:
+        name: "{{ grampsweb_service_name }}-celery"
+        image: "{{ grampsweb_image }}"
+        command: celery -A gramps_webapi.celery worker --loglevel=INFO --concurrency=2
+        detach: true
+        env:
+          GRAMPSWEB_TREE: "Gramps Web"  # will create a new tree if not exists
+          GRAMPSWEB_CELERY_CONFIG__broker_url: "redis://{{ grampsweb_service_name }}-redis:6379/0"
+          GRAMPSWEB_CELERY_CONFIG__result_backend: "redis://{{ grampsweb_service_name }}-redis:6379/0"
+          GRAMPSWEB_RATELIMIT_STORAGE_URI: "redis://{{ grampsweb_service_name }}-redis:6379/1"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        networks_cli_compatible: true
+        networks:
+          - { name: "{{ grampsweb_network_name }}" }
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + grampsweb_volumes | default(omit) }}"
+      register: grampsweb_container_state
+
+- name: deploy-grampsweb | Wait for Grampsweb to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ grampsweb_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: grampsweb_running
+  until: grampsweb_running is success
+  retries: 10
