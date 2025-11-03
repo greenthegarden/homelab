@@ -1,0 +1,124 @@
+---
+- name: deploy-networking-toolbox | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### NETWORKING TOOLBOX SECTION
+
+# https://github.com/CorentinTh/networking toolbox
+
+- name: deploy-networking-toolbox | Set Networking Toolbox facts
+  ansible.builtin.set_fact:
+    networking_toolbox_image: "{{ networking_toolbox_image | default('lissy93/networking-toolbox:latest') }}"
+    networking_toolbox_service_name: "{{ networking_toolbox_service_name | default('networking-toolbox') }}"
+    networking_toolbox_service_port: "{{ networking_toolbox_service_port | default(3000) }}"
+
+- name: deploy-networking-toolbox | Set Networking Toolbox volume facts
+  ansible.builtin.set_fact:
+    networking_toolbox_volume_name: "{{ networking_toolbox_volume_name | default(networking_toolbox_service_name) }}"
+
+- name: deploy-networking-toolbox | Set Networking Toolbox aggregated facts
+  ansible.builtin.set_fact:
+    networking_toolbox_fqdn: "{{ networking_toolbox_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-networking-toolbox | Set Networking Toolbox service facts
+  ansible.builtin.set_fact:
+    networking_toolbox_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    networking_toolbox_volumes: []
+      # Local paths to mount into the container
+      # local path:container path
+
+- name: deploy-networking-toolbox | Log Networking Toolbox configuration
+  ansible.builtin.debug:
+    msg:
+      - "Networking Toolbox image: {{ networking_toolbox_image }}"
+      - "Networking Toolbox service name: {{ networking_toolbox_service_name }}"
+      - "Networking Toolbox FQDN: {{ networking_toolbox_fqdn }}"
+      - "Networking Toolbox networks: {{ networking_toolbox_networks | default(omit) }}"
+      - "Networking Toolbox ports: {{ networking_toolbox_ports | default(omit) }}"
+      - "Networking Toolbox volumes: {{ networking_toolbox_volumes | default(omit) }}"
+
+- name: deploy-networking-toolbox | Create Networking Toolbox container labels
+  ansible.builtin.set_fact:
+    networking_toolbox_container_labels: "{{ networking_toolbox_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Networking Toolbox" }
+    - {
+      "key": "homepage.description",
+      "value": "The all-in-one offline-first networking toolbox for sysadmins",
+    }
+    - { "key": "homepage.icon", "value": "networking-toolbox.png" }
+    - { "key": "homepage.href", "value": "https://{{ networking_toolbox_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ networking_toolbox_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ networking_toolbox_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ networking_toolbox_service_name }}.rule",
+      "value": "Host(`{{ networking_toolbox_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/Lissy93/networking-toolbox/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-networking-toolbox | Create Networking Toolbox networks
+  when: networking_toolbox_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ networking_toolbox_networks }}"
+
+- name: deploy-networking-toolbox | Create Networking Toolbox volume
+  when: networking_toolbox_volume_name is defined and (networking_toolbox_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ networking_toolbox_volume_name }}"
+
+- name: deploy-networking-toolbox | Pull Networking Toolbox image
+  community.docker.docker_image:
+    name: "{{ networking_toolbox_image }}"
+    source: pull
+
+# docker run -d -p 8080:3000 lissy93/networking-toolbox:v1.5.0
+- name: deploy-networking-toolbox | Deploy Networking Toolbox
+  community.docker.docker_container:
+    name: "{{ networking_toolbox_service_name }}"
+    image: "{{ networking_toolbox_image }}"
+    detach: true
+    labels: "{{ networking_toolbox_container_labels | default(omit) }}"
+    networks_cli_compatible: true
+    networks: "{{ networking_toolbox_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    volumes: "{{ default_host_volumes + networking_toolbox_volumes | default(omit) }}"
+  register: networking_toolbox_container_state
+
+- name: deploy-networking-toolbox | Wait for Networking Toolbox to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ networking_toolbox_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: networking_toolbox_running
+  retries: 10
+  until: networking_toolbox_running is success
