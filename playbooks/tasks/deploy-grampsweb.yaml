@@ -75,7 +75,7 @@
     - { "key": "homepage.name", "value": "Grampsweb" }
     - {
       "key": "homepage.description",
-      "value": "Subscriptions management",
+      "value": "Free, open-source genealogy system for building your family tree – together.",
     }
     - { "key": "homepage.icon", "value": "gramps-web.png" }
     - { "key": "homepage.href", "value": "https://{{ grampsweb_fqdn }}/" }
@@ -129,7 +129,7 @@
     file: tasks/deploy-redis.yaml
   vars:
     # renovate: datasource=docker depName=redis
-    redis_image: redis:8.2.2-alpine
+    redis_image: redis:8.2.3-alpine
     redis_service_name: "{{ grampsweb_service_name }}-redis"
     redis_network_name: "{{ grampsweb_network_name }}"
     redis_volume_name: "{{ grampsweb_service_name }}-redis"

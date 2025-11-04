@@ -68,7 +68,7 @@
     - { "key": "homepage.group", "value": "System" }
     - { "key": "homepage.name", "value": "Consul" }
     - { "key": "homepage.description", "value": "A simple server for sending and receiving messages" }
-    - { "key": "homepage.icon", "value": "consul.png" }
+    - { "key": "homepage.icon", "value": "hashicorp-consul.png" }
     - { "key": "homepage.href", "value": "https://{{ consul_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ consul_fqdn }}/" }
     # ---------------------------------------------------------------
