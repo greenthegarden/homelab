@@ -49,7 +49,7 @@ repos:
         stages: [pre-commit]
 
   - repo: https://github.com/Checkmarx/kics
-    rev: "v2.1.14"
+    rev: "v2.1.15"
     hooks:
       - id: kics-scan
         name: "🔒 security · Keeping Infrastructure as Code Secure"
@@ -144,7 +144,7 @@ repos:
         stages: [pre-commit]
 
   - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v9.2.0
+    rev: v9.2.1
     hooks:
       - id: cspell # Spell check changed files
       - id: cspell # Spell check the commit message
@@ -160,7 +160,7 @@ repos:
 
   ### Renovate ###
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 41.157.1
+    rev: 41.169.3
     hooks:
       - id: renovate-config-validator
         # args: [--strict]

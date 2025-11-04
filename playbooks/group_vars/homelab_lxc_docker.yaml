@@ -24,7 +24,7 @@ socket_proxy_external_network_name: socket-proxy-external
 
 # Atlas facts
 # renovate: datasource=docker depName=keinstien/atlas
-atlas_image: keinstien/atlas:3.3.0
+atlas_image: keinstien/atlas:3.3
 # Beszel Agent facts
 # renovate: datasource=docker depName=beszel/beszel-agent
 beszel_agent_image: henrygd/beszel-agent:0.15.3
