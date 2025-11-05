@@ -7,7 +7,7 @@
 
     # Homepage facts
     # renovate: datasource=docker depName=ghcr.io/gethomepage/homepage
-    homepage_image: ghcr.io/gethomepage/homepage:v1.6.0
+    homepage_image: ghcr.io/gethomepage/homepage:v1.6.1
 
   tasks:
 
