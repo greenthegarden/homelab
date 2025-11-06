@@ -2,7 +2,7 @@
 collections:
   # required to use Docker
   - name: community.docker
-    version: 4.7.0
+    version: 4.8.2
     type: galaxy
 
   - name: ansible.utils
