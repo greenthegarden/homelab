@@ -34,7 +34,7 @@ repos:
   # ----------------------------- 🔒 Security Tools ---------------------------- #
 
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.28.0
+    rev: v8.29.0
     hooks:
       - id: gitleaks
         name: "🔒 security · Detect hardcoded secrets"
@@ -160,7 +160,7 @@ repos:
 
   ### Renovate ###
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 41.169.3
+    rev: 42.1.3
     hooks:
       - id: renovate-config-validator
         # args: [--strict]
