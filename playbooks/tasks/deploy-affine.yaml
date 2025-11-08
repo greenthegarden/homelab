@@ -96,7 +96,7 @@
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/affine/affine/releases/tag/v${major}.${minor}.${patch}",
+      "value": "https://github.com/toeverything/AFFiNE/releases/tag/v${major}.${minor}.${patch}",
     }
 
 - name: deploy-affine | Create AFFiNE networks
