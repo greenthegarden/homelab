@@ -127,7 +127,7 @@ repos:
 
   ### Ansible ###
   - repo: https://github.com/ansible-community/ansible-lint
-    rev: v25.9.2
+    rev: v25.11.0
     hooks:
       - id: ansible-lint
         name: "⚙️ ansible · Lint Ansible playbooks"
@@ -144,7 +144,7 @@ repos:
         stages: [pre-commit]
 
   - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v9.2.1
+    rev: v9.3.0
     hooks:
       - id: cspell # Spell check changed files
       - id: cspell # Spell check the commit message
@@ -160,7 +160,7 @@ repos:
 
   ### Renovate ###
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 42.1.3
+    rev: 42.6.1
     hooks:
       - id: renovate-config-validator
         # args: [--strict]
@@ -237,7 +237,7 @@ repos:
   ### Commit Message Standards ###
 
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.9.1
+    rev: v4.10.0
     hooks:
       - id: commitizen
         name: "🌳 git · Validate commit message"
