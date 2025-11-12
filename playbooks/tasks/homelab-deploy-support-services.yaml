@@ -3,13 +3,16 @@
 # This playbook deploys support services for the homelab environment and are intended to be run on all Homelab LXC based servers.
 
 # The services include:
-# - Portainer Agent
+# - Beszel Agent
 # - Dozzle Agent
+# - Portainer Agent
+# - Socket Proxy
 # - Docker Socket Proxy
 # - Traefik
 # - Tinyauth
 # - Node Exporter
 # - Prometheus
+# - Atlas
 
 # Load environment variables applicable to the homelab environment
 - name: homelab-deploy-support-services | Load homelab vars
@@ -39,6 +42,8 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-portainer-agent.yaml
   tags: portainer
+
+# Use the following socket proxies to provide controlled access to the Docker socket for services that require it
 
 - name: homelab-deploy-support-services | Deploy an exposed containerised instance of Socket Proxy configured for use by Homepage and Uptime Kuma
   ansible.builtin.include_tasks:
@@ -70,29 +75,36 @@
     docker_socket_proxy_network_internal: false
     docker_socket_proxy_env: "{{ whatsupdocker_docker_socket_proxy_env }}"
 
-# Traefik used as a reverse proxy to manage access to web services with SSL via Let's Encrypt
+# Use Traefik as a reverse proxy to manage access to web services with SSL via Let's Encrypt
+
 - name: homelab-deploy-support-services | Deploy a containerised instance of Traefik
   ansible.builtin.include_tasks:
     file: tasks/deploy-traefik.yaml
   vars:
     traefik_network_name: "{{ reverse_proxy_network_name }}"
 
-# Tinyauth used to provide basic authentication for web services
+# Use Tinyauth to provide basic authentication for web services
+
 - name: homelab-deploy-support-services | Deploy a containerised instance of Tinyauth
+  when: deploy_tinyauth | default(false)
   ansible.builtin.include_tasks:
     file: tasks/deploy-tinyauth.yaml
 
-# Node Exporter used to monitor server and docker metrics
-- name: homelab-deploy-support-services | Deploy a containerised instance of Node Exporter
-  when: deploy_node_exporter | default(false)  # Disable for now as not needed with Dozzle
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-node-exporter.yaml
+# Use Prometheus stack to monitor host metrics
 
-# Prometheus used to monitor server and docker metrics
-- name: homelab-deploy-support-services | Deploy a containerised instance of Prometheus
-  when: deploy_prometheus | default(false)  # Disable for now as not needed with Dozzle
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-prometheus.yaml
+- name: homelab-deploy-support-services | Deploy Prometheus stack services
+  when: deploy_prometheus_stack | default(false)  # Disable for now as not needed with Dozzle
+  block:
+
+    - name: homelab-deploy-support-services | Deploy a containerised instance of Node Exporter
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-node-exporter.yaml
+
+    - name: homelab-deploy-support-services | Deploy a containerised instance of Prometheus
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-prometheus.yaml
+
+# Use Atlas to visualise Docker network topology
 
 - name: homelab-deploy-support-services | Deploy a containerised instance of Atlas
   when: deploy_atlas | default(false)
