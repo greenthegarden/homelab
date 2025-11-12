@@ -7,7 +7,7 @@
 
     # Tududi facts
     # renovate: datasource=docker depName=chrisvel/tududi
-    tududi_image: chrisvel/tududi:0.85.1
+    tududi_image: chrisvel/tududi:0.86.0
 
     tududi_deploy_docker_volume_backup: false
 

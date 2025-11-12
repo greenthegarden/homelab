@@ -6,8 +6,8 @@
   vars:
 
     # Vert facts
-    # renovate: datasource=docker depName=ghcr.io/vert-sh/vert
-    vert_image: ghcr.io/vert-sh/vert:sha-00e38b6
+    # renovate: datasource=docker depName=wollomatic/socket-proxy
+    vert_image: wollomatic/socket-proxy:1.10.0
 
   tasks:
 
