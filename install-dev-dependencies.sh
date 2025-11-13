@@ -88,6 +88,7 @@ if ! command -v uvx &> /dev/null; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
 else
     echo -e "${INFO} uv is already installed.${NC}"
+    uv self update
 fi
 
 mkdir -p "${HOME}/.local/bin"
