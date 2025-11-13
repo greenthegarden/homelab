@@ -176,7 +176,7 @@
         name: "{{ affine_image }}"
         source: pull
 
-    - name: deploy-affine | Deploy AffAFFiNEine migration container
+    - name: deploy-affine | Deploy AFFiNE migration container
       when: affine_migration_required | default(true)
       community.docker.docker_container:
         name: "{{ affine_service_name }}-migration"
