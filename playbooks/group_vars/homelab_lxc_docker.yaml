@@ -27,7 +27,7 @@ socket_proxy_external_network_name: socket-proxy-external
 atlas_image: keinstien/atlas:3.3.1
 # Beszel Agent facts
 # renovate: datasource=docker depName=henrygd/beszel-agent
-beszel_agent_image: henrygd/beszel-agent:0.16.0
+beszel_agent_image: henrygd/beszel-agent:0.16.1
 # Docker Socket Proxy service facts
 # renovate: datasource=docker depName=ghcr.io/tecnativa/docker-socket-proxy
 docker_socket_proxy_image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.1
@@ -36,7 +36,7 @@ docker_socket_proxy_image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.1
 docker_volume_backup_image: offen/docker-volume-backup:v2.46.1
 # Dozzle Agent facts
 # renovate: datasource=docker depName=amir20/dozzle
-dozzle_agent_image: amir20/dozzle:v8.14.7
+dozzle_agent_image: amir20/dozzle:v8.14.8
 # Node Exporter facts
 # renovate: datasource=docker depName=prom/node-exporter
 node_exporter_image: prom/node-exporter:v1.10.2

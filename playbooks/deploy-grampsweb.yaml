@@ -8,7 +8,7 @@
 
     # Gramps Web facts
     # renovate: datasource=docker depName=ghcr.io/gramps-project/grampsweb:latest
-    grampsweb_image: ghcr.io/gramps-project/grampsweb:25.10.2
+    grampsweb_image: ghcr.io/gramps-project/grampsweb:25.11.0
 
     grampsweb_deploy_docker_volume_backup: false
 
