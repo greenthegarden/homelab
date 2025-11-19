@@ -10,6 +10,8 @@
 
 ## Services for consideration
 
+- [BentoPDF](https://github.com/alam00000/bentopdf)
+- [ESPectre](https://github.com/francescopace/espe...)
 - [Dockmon](https://github.com/laurensk/Dockmon)
 - [Tugtainer](https://github.com/Quenary/tugtainer)
 - [Velld](https://github.com/dendianugerah/velld)

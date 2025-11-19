@@ -123,7 +123,7 @@
     file: tasks/deploy-redis.yaml
   vars:
     # renovate: datasource=docker depName=redis
-    redis_image: redis:8.2.3-alpine
+    redis_image: redis:8.4.0-alpine
     redis_service_name: "{{ affine_service_name }}-redis"
     redis_network_name: "{{ affine_network_name }}"
     redis_volume_name: "{{ affine_service_name }}-redis"
