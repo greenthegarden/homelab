@@ -11,6 +11,11 @@
 ## Services for consideration
 
 - [BentoPDF](https://github.com/alam00000/bentopdf)
+- [Pulse](https://github.com/rcourtman/Pulse): An open-source purpose-built docker container you can run
+    to monitor your Proxmox and Docker environment.
+- [Komodo](https://github.com/moghtech/komodo): multi-purpose management tool for Docker containers
+- [Mailrise](https://github.com/YoRyan/mailrise): An SMTP gateway for Apprise notifications.
+- [NetBox](https://github.com/netbox-community/netbox): An infrastructure resource modeling (IRM) tool
 - [ESPectre](https://github.com/francescopace/espe...)
 - [Dockmon](https://github.com/laurensk/Dockmon)
 - [Tugtainer](https://github.com/Quenary/tugtainer)
