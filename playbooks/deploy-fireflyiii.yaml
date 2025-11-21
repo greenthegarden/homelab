@@ -9,7 +9,7 @@
     # Firefly III facts
     # Ensure values are also set in templates/fireflyiii/docker-compose.yaml.j2
     # TODO: Ensure variables set here are used in the docker-compose file
-    fireflyiii_image_tag: version-6.4.7
+    fireflyiii_image_tag: version-6.4.8
     fireflyiii_service_name: fireflyiii
     fireflyiii_service_port: 8080
     fireflyiii_db_backup_volume_name: fireflyiii_db_backup
