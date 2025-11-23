@@ -11,7 +11,7 @@
 
     # SearXNG facts
     # renovate: datasource=docker depName=searxng/searxng
-    searxng_image: searxng/searxng:2025.11.21-b876d0bed
+    searxng_image: searxng/searxng:2025.11.22-c0d69cec4
 
     # Open WebUI facts
     # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
