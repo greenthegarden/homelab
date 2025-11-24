@@ -48,10 +48,10 @@ portainer_agent_image: portainer/agent:2.35.0-alpine
 prometheus_image: prom/prometheus:v3.7.3
 # SOcket Proxy facts
 # renovate: datasource=docker depName=wollomatic/socket-proxy
-socket_proxy_image: wollomatic/socket-proxy:1.10.0
+socket_proxy_image: wollomatic/socket-proxy:1.10.1
 # Tinyauth facts
 # renovate: datasource=docker depName=ghcr.io/steveiliop56/tinyauth
-tinyauth_image: ghcr.io/steveiliop56/tinyauth:v4.0.1
+tinyauth_image: ghcr.io/steveiliop56/tinyauth:v4.1.0
 # Traefik facts
 # renovate: datasource=docker depName=traefik
 traefik_image: traefik:3.6.2
