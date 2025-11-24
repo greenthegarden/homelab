@@ -1,0 +1,20 @@
+---
+- name: Deploy Container Census
+
+  hosts: ansible
+
+  vars:
+
+    # Beszel facts
+    # renovate: datasource=docker depName=ghcr.io/selfhosters-cc/container-census
+    container_census_image: ghcr.io/selfhosters-cc/container-census:1.6.2
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Container Census
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-container-census.yaml

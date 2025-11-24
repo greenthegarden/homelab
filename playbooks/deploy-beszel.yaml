@@ -1,5 +1,5 @@
 ---
-- name: Deploy IT Tooling Stack
+- name: Deploy Beszel
 
   hosts: dozzle
 

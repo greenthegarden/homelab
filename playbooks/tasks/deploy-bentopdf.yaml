@@ -1,0 +1,157 @@
+---
+- name: deploy-bentopdf | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### BENTOPDF SECTION
+
+# https://bentopdf.com/
+# https://github.com/alam00000/bentopdf
+
+- name: deploy-bentopdf | Set BentoPDF facts
+  ansible.builtin.set_fact:
+    bentopdf_image: "{{ bentopdf_image | default('ghcr.io/bentopdf-sh/bentopdf:latest') }}"
+    bentopdf_service_name: "{{ bentopdf_service_name | default('bentopdf') }}"
+    bentopdf_service_port: "{{ bentopdf_service_port | default(8080) }}"
+
+- name: deploy-bentopdf | Set BentoPDF network facts
+  ansible.builtin.set_fact:
+    bentopdf_network_name: "{{ bentopdf_network_name | default(bentopdf_service_name) }}"
+
+- name: deploy-bentopdf | Set BentoPDF volume facts
+  ansible.builtin.set_fact:
+    bentopdf_volume_name: "{{ bentopdf_volume_name | default(bentopdf_service_name) }}"
+
+- name: deploy-bentopdf | Set BentoPDF aggregated facts
+  ansible.builtin.set_fact:
+    bentopdf_fqdn: "{{ bentopdf_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-bentopdf | Set BentoPDF service facts
+  ansible.builtin.set_fact:
+    bentopdf_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    bentopdf_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ bentopdf_service_port }}:8080"
+    bentopdf_volumes: []
+      # Local paths to mount into the container
+      # local path:container path
+
+- name: deploy-bentopdf | Log BentoPDF configuration
+  ansible.builtin.debug:
+    msg:
+      - "BentoPDF image: {{ bentopdf_image }}"
+      - "BentoPDF service name: {{ bentopdf_service_name }}"
+      - "BentoPDF FQDN: {{ bentopdf_fqdn }}"
+      - "BentoPDF command: {{ bentopdf_command | default(omit) }}"
+      - "BentoPDF networks: {{ bentopdf_networks | default(omit) }}"
+      - "BentoPDF ports: {{ bentopdf_ports | default(omit) }}"
+      - "BentoPDF volumes: {{ bentopdf_volumes | default(omit) }}"
+
+- name: deploy-bentopdf | Create BENTOPDF container labels
+  ansible.builtin.set_fact:
+    bentopdf_container_labels: "{{ bentopdf_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "BentoPDF" }
+    - { "key": "homepage.description", "value": "A powerful, privacy-first, client-side PDF toolkit" }
+    - { "key": "homepage.icon", "value": "bentopdf.png" }
+    - { "key": "homepage.href", "value": "https://{{ bentopdf_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ bentopdf_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ bentopdf_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ bentopdf_service_name }}.rule",
+      "value": "Host(`{{ bentopdf_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/alam00000/bentopdf/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-bentopdf | Create BentoPDF networks
+  when: bentopdf_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ bentopdf_networks }}"
+
+- name: deploy-bentopdf | Create BentoPDF volumes
+  when: bentopdf_volume_cache_name is defined and bentopdf_volume_config_name is defined and (bentopdf_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ bentopdf_volume_name }}"
+
+- name: deploy-bentopdf | Check if BentoPDF is running
+  community.docker.docker_container_info:
+    name: "{{ bentopdf_service_name }}"
+  register: bentopdf_state
+
+- name: deploy-bentopdf | Remove BentoPDF container if changing version
+  when:
+    - bentopdf_state.exists
+    - (bentopdf_image | split(':') | last) != (bentopdf_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-bentopdf | Stop and remove existing BentoPDF container
+      community.docker.docker_container:
+        name: "{{ bentopdf_service_name }}"
+        state: absent
+
+    - name: deploy-bentopdf | Set update BentoPDF
+      ansible.builtin.set_fact:
+        bentopdf_update: true
+
+- name: deploy-bentopdf | Deploy BentoPDF if not running
+  when:
+    - not bentopdf_state.exists or (bentopdf_update | default(false))
+  block:
+
+    - name: deploy-bentopdf | Pull BentoPDF image
+      community.docker.docker_image:
+        name: "{{ bentopdf_image }}"
+        source: pull
+
+    - name: deploy-bentopdf | Deploy BentoPDF
+      community.docker.docker_container:
+        name: "{{ bentopdf_service_name }}"
+        image: "{{ bentopdf_image }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ bentopdf_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ bentopdf_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + bentopdf_volumes | default(omit) }}"
+      register: bentopdf_container_state
+
+- name: deploy-bentopdf | Wait for BentoPDF to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ bentopdf_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: bentopdf_running
+  retries: 10
+  until: bentopdf_running is success

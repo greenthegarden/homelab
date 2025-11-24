@@ -1,0 +1,150 @@
+---
+
+- name: deploy-mailrise | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+- name: deploy-mailrise | Ensure required Mailrise variables are set
+  ansible.builtin.assert:
+    that:
+      - mailrise.admin_password is defined
+      - mailrise.admin_email is defined
+    fail_msg: "One or more required mailrise variables are not defined! Please define them in your inventory or group_vars/host_vars."
+
+####### MAILRISE SECTION
+
+# https://github.com/YoRyan/mailrise
+
+- name: deploy-mailrise | Set Mailrise facts
+  ansible.builtin.set_fact:
+    mailrise_image: "{{ mailrise_image | default('yoryan/mailrise:latest') }}"
+    mailrise_service_name: "{{ mailrise_service_name | default('mailrise') }}"
+    mailrise_service_port: "{{ mailrise_service_port | default(465) }}"
+
+- name: deploy-mailrise | Set Mailrise network facts
+  ansible.builtin.set_fact:
+    mailrise_network_name: "{{ mailrise_network_name | default(mailrise_service_name) }}"
+
+- name: deploy-mailrise | Set Mailrise volume facts
+  ansible.builtin.set_fact:
+    mailrise_volume_name: "{{ mailrise_volume_name | default(mailrise_service_name) }}"
+
+- name: deploy-mailrise | Set Mailrise aggregated facts
+  ansible.builtin.set_fact:
+    mailrise_fqdn: "{{ mailrise_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-mailrise | Set Mailrise service facts
+  ansible.builtin.set_fact:
+    mailrise_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    mailrise_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ mailrise_service_port }}:465"
+    mailrise_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "./mailrise.conf/etc/mailrise.conf:ro"
+
+- name: deploy-mailrise | Log Mailrise configuration
+  ansible.builtin.debug:
+    msg:
+      - "Mailrise image: {{ mailrise_image }}"
+      - "Mailrise service name: {{ mailrise_service_name }}"
+      - "Mailrise FQDN: {{ mailrise_fqdn }}"
+      - "Mailrise networks: {{ mailrise_networks | default(omit) }}"
+      - "Mailrise ports: {{ mailrise_ports | default(omit) }}"
+      - "Mailrise volumes: {{ mailrise_volumes | default(omit) }}"
+
+- name: deploy-mailrise | Create Mailrise container labels
+  ansible.builtin.set_fact:
+    mailrise_container_labels: "{{ mailrise_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Mailrise" }
+    - { "key": "homepage.description", "value": "An SMTP server that converts the emails it receives into Apprise notifications" }
+    - { "key": "homepage.icon", "value": "mailrise.png" }
+    - { "key": "homepage.href", "value": "https://{{ mailrise_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ mailrise_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.tcp.routers.{{ mailrise_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.tcp.routers.{{ mailrise_service_name }}.rule",
+      "value": "Host(`{{ mailrise_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/mailriselabs/mailrise-core/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-mailrise | Create Mailrise networks
+  when: mailrise_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ mailrise_networks }}"
+
+- name: deploy-mailrise | Create Mailrise volumes
+  when: mailrise_volume_name is defined and (mailrise_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ mailrise_volume_name }}"
+
+- name: deploy-mailrise | Check if Mailrise is running
+  community.docker.docker_container_info:
+    name: "{{ mailrise_service_name }}"
+  register: mailrise_state
+
+- name: deploy-mailrise | Remove Mailrise container if changing version
+  when:
+    - mailrise_state.exists
+    - (mailrise_image | split(':') | last) != (mailrise_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-mailrise | Stop and remove existing Mailrise container
+      community.docker.docker_container:
+        name: "{{ mailrise_service_name }}"
+        state: absent
+
+    - name: deploy-mailrise | Set update Mailrise
+      ansible.builtin.set_fact:
+        mailrise_update: true
+
+- name: deploy-mailrise | Deploy Mailrise if not running
+  when:
+    - not mailrise_state.exists or (mailrise_update | default(false))
+  block:
+
+    - name: deploy-mailrise | Pull Mailrise image
+      community.docker.docker_image:
+        name: "{{ mailrise_image }}"
+        source: pull
+
+    - name: deploy-mailrise | Deploy Mailrise
+      community.docker.docker_container:
+        name: "{{ mailrise_service_name }}"
+        image: "{{ mailrise_image }}"
+        detach: true
+        labels: "{{ mailrise_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ mailrise_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + mailrise_volumes | default(omit) }}"
+      register: mailrise_container_state

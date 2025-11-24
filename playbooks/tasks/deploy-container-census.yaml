@@ -1,0 +1,132 @@
+---
+- name: deploy-container-census | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### CONTAINER CENSUS SECTION
+
+# https://github.com/selfhosters-cc/container-census
+
+- name: deploy-container-census | Set Container Census facts
+  ansible.builtin.set_fact:
+    container_census_image: "{{ container_census_image | default('ghcr.io/selfhosters-cc/container-census:latest') }}"
+    container_census_service_name: "{{ container_census_service_name | default('container-census') }}"
+    container_census_service_port: "{{ container_census_service_port | default(8080) }}"
+
+- name: deploy-container-census | Set Container Census network facts
+  ansible.builtin.set_fact:
+    container_census_network_name: "{{ container_census_network_name | default(container_census_service_name) }}"
+
+- name: deploy-container-census | Set Container-census volume facts
+  ansible.builtin.set_fact:
+    container_census_volume_name: "{{ container_census_service_name }}"
+
+- name: deploy-container-census | Set Container Census aggregated facts
+  ansible.builtin.set_fact:
+    container_census_fqdn: "{{ container_census_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-container-census | Set Container Census service facts
+  ansible.builtin.set_fact:
+    container_census_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    container_census_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ container_census_service_port }}:8080"
+    container_census_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ container_census_volume_name }}:/app/data"
+
+- name: deploy-container-census | Log Container-census configuration
+  ansible.builtin.debug:
+    msg:
+      - "Container Censuss image: {{ container_census_image }}"
+      - "Container Census service name: {{ container_census_service_name }}"
+      - "Container Census FQDN: {{ container_census_fqdn }}"
+      - "Container Census networks: {{ container_census_networks | default(omit) }}"
+      - "Container Census ports: {{ container_census_ports | default(omit) }}"
+      - "Container Census volumes: {{ container_census_volumes | default(omit) }}"
+
+- name: deploy-container-census | Create Container Census container labels
+  ansible.builtin.set_fact:
+    container_census_container_labels: "{{ container_census_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Monitoring" }
+    - { "key": "homepage.name", "value": "Container Census" }
+    - {
+      "key": "homepage.description",
+      "value": "Manage your docker containers and generate a report to share and compare with other self hosters",
+    }
+    - { "key": "homepage.icon", "value": "container-census.png" }
+    - { "key": "homepage.href", "value": "https://{{ container_census_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ container_census_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ container_census_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ container_census_service_name }}.rule",
+      "value": "Host(`{{ container_census_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/selfhosters-cc/container-census/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-container-census | Create Container Census network
+  when: container_census_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ container_census_networks }}"
+
+- name: deploy-container-census | Create volume for Container Census
+  when: container_census_volume_name is defined and (container_census_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ container_census_volume_name }}"
+
+- name: deploy-container-census | Pull Container Census image
+  community.docker.docker_image:
+    name: "{{ container_census_image }}"
+    source: pull
+
+- name: deploy-container-census | Deploy Container Census
+  community.docker.docker_container:
+    name: "{{ container_census_service_name }}"
+    image: "{{ container_census_image }}"
+    detach: true
+    labels: "{{ container_census_container_labels | default(omit) }}"
+    networks_cli_compatible: true
+    networks: "{{ container_census_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    volumes: "{{ default_host_volumes + docker_host_volume + container_census_volumes | default(omit) }}"
+  register: container_census_container_state
+
+- name: deploy-container-census | Wait for Container Census to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ container_census_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: container_census_running
+  retries: 10
+  until: container_census_running is success
