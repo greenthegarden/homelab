@@ -171,6 +171,8 @@ Some good sources of information for setting up Proxmox are:
 
 ADD DETAILS!!
 
+Added [Pulse directly on Proxmox host](https://github.com/rcourtman/pulse) using Official Installer.
+
 ### Storage Server Software
 
 The storage service is running [TrueNAS Scale Community Edition][storsoft] as the storage solution.
