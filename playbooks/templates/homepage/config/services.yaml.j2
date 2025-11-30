@@ -103,13 +103,13 @@
             - state: sensor.indoor_co2_2
             - state: sensor.indoor_voc_parts_2
 
-- Monitoring:
+# - Monitoring:
 
-    - Wazuh:
-        href: {{ wazuh.url }}
-        description: Wazuh
-        icon: wazuh.png
-        siteMonitor: {{ wazuh.url }}
+#     - Wazuh:
+#         href: {{ wazuh.url }}
+#         description: Wazuh
+#         icon: wazuh.png
+#         siteMonitor: {{ wazuh.url }}
 
 - Sensors:
 
@@ -123,9 +123,3 @@
         description: Open-source energy visualisation
         icon: mdi-power-socket-au
         siteMonitor: http://emonpi.{{ lan_domain }}
-
-    - RoomSense IQ:
-        href: http://192.168.20.112
-        description: RoomSense IQ
-        icon: mdi-account-check
-        siteMonitor: http://192.168.20.112
