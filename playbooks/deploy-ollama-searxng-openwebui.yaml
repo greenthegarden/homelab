@@ -7,15 +7,15 @@
 
     # Ollama facts
     # renovate: datasource=docker depName=ollama/ollama
-    ollama_image: ollama/ollama:0.13.0
+    ollama_image: ollama/ollama:0.13.1
 
     # SearXNG facts
     # renovate: datasource=docker depName=searxng/searxng
-    searxng_image: searxng/searxng:2025.12.2-fb089ae29
+    searxng_image: searxng/searxng:2025.12.3-1174fde1f
 
     # Open WebUI facts
     # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
-    open_webui_image: ghcr.io/open-webui/open-webui:0.6.40-slim
+    open_webui_image: ghcr.io/open-webui/open-webui:0.6.41-slim
     open_webui_network_name: open-webui
 
   tasks:
