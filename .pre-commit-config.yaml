@@ -89,7 +89,7 @@ repos:
   #       stages: [pre-commit]
 
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.19.1
+    rev: v0.20.0
     hooks:
       - id: markdownlint-cli2
         name: "📝 markdown · Lint markdown"
@@ -117,7 +117,7 @@ repos:
 
   ### PNG Images ###
   - repo: https://github.com/shssoichiro/oxipng
-    rev: v9.1.5
+    rev: v10.0.0
     hooks:
       - id: oxipng
         name: "🖼️ images · Optimize PNG files"
@@ -160,7 +160,7 @@ repos:
 
   ### Renovate ###
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 42.31.0
+    rev: 42.39.2
     hooks:
       - id: renovate-config-validator
         # args: [--strict]
