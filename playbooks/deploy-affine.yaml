@@ -7,7 +7,7 @@
 
     # Affine facts
     # renovate: datasource=docker depName=ghcr.io/toeverything/affine
-    affine_image: ghcr.io/toeverything/affine:0.25.6
+    affine_image: ghcr.io/toeverything/affine:0.25.7
 
   tasks:
 
