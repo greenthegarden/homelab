@@ -36,13 +36,13 @@ docker_socket_proxy_image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.1
 docker_volume_backup_image: offen/docker-volume-backup:v2.46.1
 # Dozzle Agent facts
 # renovate: datasource=docker depName=amir20/dozzle
-dozzle_agent_image: amir20/dozzle:v8.14.10
+dozzle_agent_image: amir20/dozzle:v8.14.11
 # Node Exporter facts
 # renovate: datasource=docker depName=prom/node-exporter
 node_exporter_image: prom/node-exporter:v1.10.2
 # Portainer Agent facts
 # renovate: datasource=docker depName=portainer/agent
-portainer_agent_image: portainer/agent:2.36.0-alpine
+portainer_agent_image: portainer/agent:2.37.0-alpine
 # Prometheus facts
 # renovate: datasource=docker depName=prom/prometheus
 prometheus_image: prom/prometheus:v3.7.3
