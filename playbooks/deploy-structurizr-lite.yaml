@@ -8,7 +8,7 @@
 
     # Structurizr Lite facts
     # renovate: datasource=docker depName=structurizr/lite
-    structurizr_lite_image: structurizr/lite:2025.11.01
+    structurizr_lite_image: structurizr/lite:2025.11.08
 
   tasks:
 

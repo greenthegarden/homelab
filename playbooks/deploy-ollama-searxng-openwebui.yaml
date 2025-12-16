@@ -7,7 +7,7 @@
 
     # Ollama facts
     # renovate: datasource=docker depName=ollama/ollama
-    ollama_image: ollama/ollama:0.13.1
+    ollama_image: ollama/ollama:0.13.4
 
     # SearXNG facts
     # renovate: datasource=docker depName=searxng/searxng
