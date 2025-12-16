@@ -1,0 +1,157 @@
+---
+
+- name: deploy-structurizr-lite | Ensure modern version of Docker is available on host
+  ansible.builtin.include_tasks:
+    file: tasks/hosts-dependency-check-docker-version.yaml
+
+####### STRUCTURIZR LITE SECTION
+
+# https://docs.structurizr.com/lite/installation
+
+- name: deploy-structurizr-lite | Set Structurizr Lite facts
+  ansible.builtin.set_fact:
+    structurizr_lite_image: "{{ structurizr_lite_image | default('structurizr/lite:latest') }}"
+    structurizr_lite_service_name: "{{ structurizr_lite_service_name | default('structurizr-lite') }}"
+    structurizr_lite_service_port: "{{ structurizr_lite_service_port | default(8080) }}"
+
+- name: deploy-structurizr-lite | Set Structurizr Lite network facts
+  ansible.builtin.set_fact:
+    structurizr_lite_network_name: "{{ structurizr_lite_network_name | default(structurizr_lite_service_name) }}"
+
+- name: deploy-structurizr-lite | Set Structurizr Lite volume facts
+  ansible.builtin.set_fact:
+    structurizr_lite_volume_name: "{{ structurizr_lite_volume_name | default(structurizr_lite_service_name) }}"
+
+- name: deploy-structurizr-lite | Set Structurizr Lite aggregated facts
+  ansible.builtin.set_fact:
+    structurizr_lite_fqdn: "{{ structurizr_lite_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-structurizr-lite | Set Structurizr Lite service facts
+  ansible.builtin.set_fact:
+    structurizr_lite_env:
+      TZ: "{{ homelab.timezone | default('UTC') }}"
+    structurizr_lite_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    structurizr_lite_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ structurizr_lite_service_port }}:8080"
+    structurizr_lite_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ structurizr_lite_volume_name }}:/usr/local/structurizr"
+
+- name: deploy-structurizr-lite | Log Structurizr Lite configuration
+  ansible.builtin.debug:
+    msg:
+      - "Structurizr Lite image: {{ structurizr_lite_image }}"
+      - "Structurizr Lite service name: {{ structurizr_lite_service_name }}"
+      - "Structurizr Lite FQDN: {{ structurizr_lite_fqdn }}"
+      - "Structurizr Lite networks: {{ structurizr_lite_networks | default(omit) }}"
+      - "Structurizr Lite ports: {{ structurizr_lite_ports | default(omit) }}"
+      - "Structurizr Lite volumes: {{ structurizr_lite_volumes | default(omit) }}"
+
+- name: deploy-structurizr-lite | Create Structurizr Lite container labels
+  ansible.builtin.set_fact:
+    structurizr_lite_container_labels: "{{ structurizr_lite_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Structurizr Lite" }
+    - { "key": "homepage.description", "value": "Diagram-as-Code tool" }
+    - { "key": "homepage.icon", "value": "structurizr.png" }
+    - { "key": "homepage.href", "value": "https://{{ structurizr_lite_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ structurizr_lite_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ structurizr_lite_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ structurizr_lite_service_name }}.rule",
+      "value": "Host(`{{ structurizr_lite_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/structurizr/lite/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-structurizr-lite | Create Structurizr Lite networks
+  when: structurizr_lite_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ structurizr_lite_networks }}"
+
+- name: deploy-structurizr-lite | Create Structurizr Lite volumes
+  when: structurizr_lite_volume_name is defined and (structurizr_lite_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ structurizr_lite_volume_name }}"
+
+- name: deploy-structurizr-lite | Check if Structurizr Lite is running
+  community.docker.docker_container_info:
+    name: "{{ structurizr_lite_service_name }}"
+  register: structurizr_lite_state
+
+- name: deploy-structurizr-lite | Remove Structurizr Lite container if changing version
+  when:
+    - structurizr_lite_state.exists
+    - (structurizr_lite_image | split(':') | last) != (structurizr_lite_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-structurizr-lite | Stop and remove existing Structurizr Lite container
+      community.docker.docker_container:
+        name: "{{ structurizr_lite_service_name }}"
+        state: absent
+
+    - name: deploy-structurizr-lite | Set update Structurizr Lite
+      ansible.builtin.set_fact:
+        structurizr_lite_update: true
+
+- name: deploy-structurizr-lite | Deploy Structurizr Lite if not running
+  when:
+    - not structurizr_lite_state.exists or (structurizr_lite_update | default(false))
+  block:
+
+    - name: deploy-structurizr-lite | Pull Structurizr Lite image
+      community.docker.docker_image:
+        name: "{{ structurizr_lite_image }}"
+        source: pull
+
+    - name: deploy-structurizr-lite | Deploy Structurizr Lite
+      community.docker.docker_container:
+        name: "{{ structurizr_lite_service_name }}"
+        image: "{{ structurizr_lite_image }}"
+        detach: true
+        labels: "{{ structurizr_lite_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ structurizr_lite_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + structurizr_lite_volumes | default(omit) }}"
+      register: structurizr_lite_container_state
+
+- name: deploy-structurizr-lite | Wait for Structurizr Lite to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ structurizr_lite_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: structurizr_lite_running
+  retries: 10
+  until: structurizr_lite_running is success

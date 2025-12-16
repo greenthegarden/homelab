@@ -1,0 +1,21 @@
+---
+
+- name: Deploy Structurizr Lite
+
+  hosts: ansible
+
+  vars:
+
+    # Structurizr Lite facts
+    # renovate: datasource=docker depName=structurizr/lite
+    structurizr_lite_image: structurizr/lite:2025.11.01
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Structurizr Lite
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-structurizr-lite.yaml
