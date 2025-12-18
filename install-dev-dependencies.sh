@@ -43,30 +43,30 @@ echo -e "Running on shell version: ${B}$(bash --version | head -n 1)${NC}"
 # echo -e "Running on shell options: ${B}$(set | grep -E 'BASH|BASH_VERSION|BASH_ENV')${NC}"
 # echo -e "Running on shell options: ${B}$(set | grep -E 'PROMPT_COMMAND|PS4')${NC}"
 
-# echo -e "${INFO} Updating system packages...${NC}"
-# apt update && apt -y upgrade
+echo -e "${INFO} Updating system packages...${NC}"
+apt update && apt -y upgrade
 
-# # install required packages
-# echo -e "${INFO} Installing required packages...${NC}"
-# apt install -y \
-#     build-essential \
-#     curl \
-#     wget \
-#     git \
-#     vim \
-#     htop \
-#     jq \
-#     tree \
-#     unzip \
-#     zip \
-#     software-properties-common \
-#     apt-transport-https \
-#     ca-certificates \
-#     ncdu \
-#     zsh \
-#     bash-completion \
-#     autojump \
-#     fonts-powerline
+# install required packages
+echo -e "${INFO} Installing required packages...${NC}"
+apt install -y \
+    build-essential \
+    curl \
+    wget \
+    git \
+    vim \
+    htop \
+    jq \
+    tree \
+    unzip \
+    zip \
+    software-properties-common \
+    apt-transport-https \
+    ca-certificates \
+    ncdu \
+    zsh \
+    bash-completion \
+    autojump \
+    fonts-powerline
 
 # install oh-my-zsh
 # https://ohmyz.sh/

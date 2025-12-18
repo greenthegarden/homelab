@@ -49,7 +49,7 @@ repos:
         stages: [pre-commit]
 
   - repo: https://github.com/Checkmarx/kics
-    rev: "v2.1.17"
+    rev: "v2.1.18"
     hooks:
       - id: kics-scan
         name: "🔒 security · Keeping Infrastructure as Code Secure"
@@ -160,7 +160,7 @@ repos:
 
   ### Renovate ###
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 42.62.0
+    rev: 42.64.0
     hooks:
       - id: renovate-config-validator
         # args: [--strict]
