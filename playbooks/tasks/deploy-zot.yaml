@@ -20,7 +20,7 @@
 
 - name: deploy-zot | Set Zot volume facts
   ansible.builtin.set_fact:
-    zot_volume_name: "{{ zot_volume_name | default(zot_service_name) }}"
+    zot_volume_name: "{{ zot_volume_name | default(zot_service_name + '-registry') }}"
 
 - name: deploy-zot | Set Zot aggregated facts
   ansible.builtin.set_fact:
@@ -35,9 +35,10 @@
       # Published ports to expose outside the container
       # host port:container port
       - "{{ zot_service_port }}:5000"
-    zot_volumes: []
+    zot_volumes:
       # Local paths to mount into the container
       # local path:container path
+      - "{{ zot_volume_name }}:/var/lib/registry"
 
 - name: deploy-zot | Log Zot configuration
   ansible.builtin.debug:
