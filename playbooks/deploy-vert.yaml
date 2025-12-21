@@ -7,7 +7,7 @@
 
     # Vert facts
     # renovate: datasource=docker depName=ghcr.io/vert-sh/vert
-    vert_image: ghcr.io/vert-sh/vert:sha-f5a56c8
+    vert_image: ghcr.io/vert-sh/vert:sha-6ac287e
 
   tasks:
 
