@@ -7,7 +7,7 @@
 
     # Ntfy facts
     # renovate: datasource=docker depName=binwiederhier/ntfy
-    ntfy_image: binwiederhier/ntfy:v2.14.0
+    ntfy_image: binwiederhier/ntfy:v2.15.0
 
   tasks:
 
