@@ -98,10 +98,12 @@
           url: {{ home_assistant.url }}
           key: {{ home_assistant.key }}
           custom:
-            - state: sensor.indoor_temperature_2
-            - state: sensor.indoor_humidity_2
-            - state: sensor.indoor_co2_2
-            - state: sensor.indoor_voc_parts_2
+            - template: "{{ states('sensor.indoor_temperature', rounded=true, with_unit=true) }}"
+              label: Indoor Temperature
+            - template: "{{ states('sensor.indoor_humidity', rounded=true, with_unit=true) }}"
+              label: Indoor Humidity
+            - state: sensor.indoor_co2
+            - state: sensor.indoor_voc_parts
 
 # - Monitoring:
 
