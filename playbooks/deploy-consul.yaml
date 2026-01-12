@@ -7,7 +7,7 @@
 
     # Consul facts
     # renovate: datasource=docker depName=consul/server
-    consul_image: hashicorp/consul:1.22.0
+    consul_image: hashicorp/consul:1.22.2
   tasks:
 
     - name: Load homelab vars

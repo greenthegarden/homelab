@@ -97,7 +97,7 @@ export PATH="$HOME/.local/bin:$PATH"
 # export UVX_CACHE="$HOME/.cache/uvx"
 # export UVX_CONFIG="$HOME/.config/uvx"
 
-PYTHON_VERSION=3.13
+PYTHON_VERSION=3.14
 # install PYTHON_VERSION
 if ! uv python list | grep -q "python@${PYTHON_VERSION}"; then
     echo -e "${INFO} Installing Python ${PYTHON_VERSION} via uv...${NC}"
