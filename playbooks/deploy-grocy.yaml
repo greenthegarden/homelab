@@ -7,7 +7,7 @@
 
     # Grocy facts
     # renovate: datasource=docker depName=linuxserver/grocy
-    grocy_image: linuxserver/grocy:4.4.2 # 4.5.0
+    grocy_image: linuxserver/grocy:4.5.0
 
     grocy_deploy_docker_volume_backup: true
 

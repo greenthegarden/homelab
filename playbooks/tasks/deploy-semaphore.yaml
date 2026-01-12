@@ -168,11 +168,11 @@
         detach: true
         env:
           SEMAPHORE_DB_DIALECT: "{{ semaphore_db_dialect }}"
-          SEMAPHORE_ADMIN: "{{ semaphore.admin_username | default('dummy') }}"
-          SEMAPHORE_ADMIN_PASSWORD: "{{ semaphore.admin_password | default('dummy') }}"
-          SEMAPHORE_ADMIN_NAME: "{{ semaphore.admin_name | default('dummy') }}"
-          SEMAPHORE_ADMIN_EMAIL: "{{ semaphore.admin_email | default('dummy') }}"
-          SEMAPHORE_MAX_TASKS_PER_TEMPLATE: "{{ 10 | quote | default(omit) }}"
+          SEMAPHORE_ADMIN: "{{ semaphore.admin_username | default('admin') }}"
+          SEMAPHORE_ADMIN_PASSWORD: "{{ semaphore.admin_password | default('changeme') }}"
+          SEMAPHORE_ADMIN_NAME: "{{ semaphore.admin_name | default('Admin') }}"
+          SEMAPHORE_ADMIN_EMAIL: "{{ semaphore.admin_email | default('admin@localhost') }}"
+          # SEMAPHORE_MAX_TASKS_PER_TEMPLATE: "{{ 10 | quote | default(omit) }}"
         labels: "{{ semaphore_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ semaphore_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
