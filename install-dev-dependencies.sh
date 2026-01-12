@@ -113,6 +113,9 @@ uv tool install --python ${PYTHON_VERSION} --with-executables-from ansible-core,
 # https://adamj.eu/tech/2025/05/07/pre-commit-install-uv/
 uv tool install --python ${PYTHON_VERSION} pre-commit --with pre-commit-uv
 
+# Upgrade tools
+uv tool upgrade --all
+
 # install git hook scripts
 uvx --from pre-commit pre-commit install --hook-type pre-commit --hook-type pre-push
 uvx --from pre-commit pre-commit autoupdate
