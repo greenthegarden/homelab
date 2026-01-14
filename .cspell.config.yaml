@@ -11,3 +11,4 @@ ignorePaths:
   - "**/.drawio/**"
   - "**/*.{yaml,yml,json,md,txt,log,ini,cfg,conf,env,sh,bash}"
   - ".spelling"
+  - playbooks/templates/fireflyiii/**.env.j2
