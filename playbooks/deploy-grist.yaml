@@ -8,7 +8,7 @@
 
     # Grist facts
     # renovate: datasource=docker depName=gristlabs/grist
-    grist_image: gristlabs/grist:1.7.9
+    grist_image: gristlabs/grist:1.7.10
 
     grist_deploy_docker_volume_backup: true
 

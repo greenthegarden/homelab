@@ -7,7 +7,7 @@
 
     # Paperless-ngx facts
     # renovate: datasource=docker depName=ghcr.io/paperless-ngx/paperless-ngx
-    paperless_ngx_image: ghcr.io/paperless-ngx/paperless-ngx:2.20.3
+    paperless_ngx_image: ghcr.io/paperless-ngx/paperless-ngx:2.20.4
 
   tasks:
 
