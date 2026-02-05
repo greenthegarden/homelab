@@ -8,7 +8,7 @@
 
     # Tracktor facts
     # renovate: datasource=docker depName=ghcr.io/javedh-dev/tracktor
-    tracktor_image: ghcr.io/javedh-dev/tracktor:1.1.0
+    tracktor_image: ghcr.io/javedh-dev/tracktor:1.2.1
 
     tracktor_deploy_docker_volume_backup: false
 

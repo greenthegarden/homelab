@@ -7,7 +7,7 @@
 
     # BentoPDF facts
     # renovate: datasource=docker depName=ghcr.io/alam00000/bentopdf
-    bentopdf_image: ghcr.io/alam00000/bentopdf:1.15.3
+    bentopdf_image: ghcr.io/alam00000/bentopdf:2.1.0
 
   tasks:
 
