@@ -33,7 +33,7 @@ beszel_agent_image: henrygd/beszel-agent:0.18.2
 docker_socket_proxy_image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.1
 # Docker Volume Backup facts
 # renovate: datasource=docker depName=offen/docker-volume-backup
-docker_volume_backup_image: offen/docker-volume-backup:v2.46.1
+docker_volume_backup_image: offen/docker-volume-backup:v2.47.0
 # Dozzle Agent facts
 # renovate: datasource=docker depName=amir20/dozzle
 dozzle_agent_image: amir20/dozzle:v9.0.1
