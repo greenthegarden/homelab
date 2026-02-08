@@ -6,7 +6,7 @@
   vars:
     # Affine facts
     # renovate: datasource=docker depName=ghcr.io/toeverything/affine
-    affine_image: ghcr.io/toeverything/affine:0.26.1
+    affine_image: ghcr.io/toeverything/affine:0.26.2
 
   tasks:
     - name: Load homelab vars
