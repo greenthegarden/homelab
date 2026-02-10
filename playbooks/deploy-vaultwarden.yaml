@@ -7,7 +7,7 @@
 
     # Vaultwarden facts
     # renovate: datasource=docker depName=vaultwarden/server
-    vaultwarden_image: vaultwarden/server:1.35.2-alpine
+    vaultwarden_image: vaultwarden/server:1.35.3-alpine
 
     vaultwarden_deploy_docker_volume_backup: true
 
