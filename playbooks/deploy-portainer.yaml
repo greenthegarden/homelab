@@ -9,7 +9,7 @@
     # Ensure image version is also updated in group_vars/homelab_lxc_docker.yaml.
     # TODO: Ensure variables set here are used in group_vars
     # renovate: datasource=docker depName=portainer/portainer-ce
-    portainer_image: portainer/portainer-ce:2.37.0-alpine
+    portainer_image: portainer/portainer-ce:2.38.0-alpine
 
   tasks:
 

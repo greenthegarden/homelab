@@ -7,7 +7,7 @@
 
     # Grafana facts
     # renovate: datasource=docker depName=grafana/grafana
-    grafana_image: grafana/grafana:12.2.1
+    grafana_image: grafana/grafana:12.3.2
 
   tasks:
 

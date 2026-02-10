@@ -31,7 +31,7 @@ services:
 
   app:
     container_name: firefly_iii_core
-    image: fireflyiii/core:version-6.4.16
+    image: fireflyiii/core:version-6.4.18
     env_file: fireflyiii.env
     labels: {{ fireflyiii_container_labels | default(omit) }}
     networks:

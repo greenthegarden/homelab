@@ -7,7 +7,7 @@
 
     # Gotify facts
     # renovate: datasource=docker depName=gotify/server
-    gotify_image: gotify/server:2.7.3
+    gotify_image: gotify/server:2.8.0
 
   tasks:
 
