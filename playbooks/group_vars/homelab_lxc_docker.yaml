@@ -42,7 +42,7 @@ dozzle_agent_image: amir20/dozzle:v9.0.3
 node_exporter_image: prom/node-exporter:v1.10.2
 # Portainer Agent facts
 # renovate: datasource=docker depName=portainer/agent
-portainer_agent_image: portainer/agent:2.38.0-alpine
+portainer_agent_image: portainer/agent:2.38.1-alpine
 # Prometheus facts
 # renovate: datasource=docker depName=prom/prometheus
 prometheus_image: prom/prometheus:v3.9.1
@@ -54,7 +54,7 @@ socket_proxy_image: wollomatic/socket-proxy:1.11.2
 tinyauth_image: ghcr.io/steveiliop56/tinyauth:v4.1.0
 # Traefik facts
 # renovate: datasource=docker depName=traefik
-traefik_image: traefik:v3.6.6
+traefik_image: traefik:v3.6.8
 traefik_entrypoint_insecure_name: web
 traefik_entrypoint_secure_name: "{{ traefik_entrypoint_insecure_name | default('web') }}secure"
 # What's Up Docker facts
