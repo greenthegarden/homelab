@@ -7,7 +7,7 @@
 
     # Termix facts
     # renovate: datasource=docker depName=ghcr.io/lukegus/termix
-    termix_image: ghcr.io/lukegus/termix:release-1.11.0
+    termix_image: ghcr.io/lukegus/termix:release-1.11.1
 
   tasks:
 
