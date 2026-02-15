@@ -31,7 +31,7 @@ services:
 
   app:
     container_name: firefly_iii_core
-    image: fireflyiii/core:version-6.4.18
+    image: fireflyiii/core:version-6.4.21
     env_file: fireflyiii.env
     labels: {{ fireflyiii_container_labels | default(omit) }}
     networks:
@@ -54,7 +54,7 @@ services:
   #
   importer:
     container_name: firefly_iii_importer
-    image: fireflyiii/data-importer:version-2.0.5
+    image: fireflyiii/data-importer:version-2.1.0
     env_file: fireflyiii_importer.env
     hostname: importer
     labels:
