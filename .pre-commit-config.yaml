@@ -89,7 +89,7 @@ repos:
   #       stages: [pre-commit]
 
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.20.0
+    rev: v0.21.0
     hooks:
       - id: markdownlint-cli2
         name: "📝 markdown · Lint markdown"
@@ -160,7 +160,7 @@ repos:
 
   ### Renovate ###
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 43.15.0
+    rev: 43.15.1
     hooks:
       - id: renovate-config-validator
         # args: [--strict]
