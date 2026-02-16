@@ -54,7 +54,7 @@
   with_items:
     # ---------------------------------------------------------------
     # Homepage labels
-    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.group", "value": "Monitoring" }
     - { "key": "homepage.name", "value": "Dockpeek" }
     - { "key": "homepage.description", "value": "A lightweight, self-hosted Docker dashboard for quick access to your containers" }
     - { "key": "homepage.icon", "value": "dockpeek.png" }

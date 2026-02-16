@@ -55,7 +55,7 @@
   with_items:
     # ---------------------------------------------------------------
     # Homepage labels
-    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.group", "value": "Monitoring" }
     - { "key": "homepage.name", "value": "Termix" }
     - { "key": "homepage.description", "value": "A simple server for sending and receiving messages" }
     - { "key": "homepage.icon", "value": "termix.png" }
