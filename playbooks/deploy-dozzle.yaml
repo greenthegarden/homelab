@@ -35,7 +35,7 @@
     # Ensure values are also set in group_vars/homelab_lxc_docker.yaml.
     # TODO: Ensure variables set here are used in group_vars
     # renovate: datasource=docker depName=amir20/dozzle
-    dozzle_image: amir20/dozzle:v10.0.2
+    dozzle_image: amir20/dozzle:v10.0.3
 
   tasks:
 
