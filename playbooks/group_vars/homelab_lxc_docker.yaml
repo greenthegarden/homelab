@@ -48,7 +48,7 @@ portainer_agent_image: portainer/agent:2.38.1-alpine
 prometheus_image: prom/prometheus:v3.9.1
 # SOcket Proxy facts
 # renovate: datasource=docker depName=wollomatic/socket-proxy
-socket_proxy_image: wollomatic/socket-proxy:1.11.2
+socket_proxy_image: wollomatic/socket-proxy:1.11.3
 # Tinyauth facts
 # renovate: datasource=docker depName=ghcr.io/steveiliop56/tinyauth
 tinyauth_image: ghcr.io/steveiliop56/tinyauth:v4.1.0
