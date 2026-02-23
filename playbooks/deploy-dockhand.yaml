@@ -7,7 +7,7 @@
 
     # Dockhand facts
     # renovate: datasource=docker depName=fnsys/dockhand
-    dockhand_image: fnsys/dockhand:v1.0.17
+    dockhand_image: fnsys/dockhand:v1.0.18
 
   tasks:
 
