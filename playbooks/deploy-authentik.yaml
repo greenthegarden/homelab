@@ -8,7 +8,7 @@
 
     # Authentik facts
     # renovate: datasource=docker depName=ghcr.io/goauthentik/server
-    authentik_image: ghcr.io/goauthentik/server:2025.12.4
+    authentik_image: ghcr.io/goauthentik/server:2026.2.0
 
   tasks:
 

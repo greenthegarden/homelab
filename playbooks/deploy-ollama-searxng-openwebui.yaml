@@ -15,7 +15,7 @@
 
     # Open WebUI facts
     # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
-    open_webui_image: ghcr.io/open-webui/open-webui:0.8.3-slim
+    open_webui_image: ghcr.io/open-webui/open-webui:0.8.5-slim
     open_webui_network_name: open-webui
 
   tasks:

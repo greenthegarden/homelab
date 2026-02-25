@@ -127,7 +127,7 @@
     file: tasks/deploy-redis.yaml
   vars:
     # renovate: datasource=docker depName=redis
-    redis_image: docker.io/library/redis:8.6.0-alpine
+    redis_image: docker.io/library/redis:8.6.1-alpine
     redis_service_name: "{{ paperless_ngx_service_name }}-redis"
     redis_service_port: 6379
     redis_network_name: "{{ paperless_ngx_network_name }}"

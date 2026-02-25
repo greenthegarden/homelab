@@ -70,7 +70,7 @@ repos:
   ### Markdown ###
 
   - repo: https://github.com/thlorenz/doctoc
-    rev: v2.2.0
+    rev: v2.3.0
     hooks:
       - id: doctoc
         name: "📝 markdown · Generate table of contents"
@@ -144,7 +144,7 @@ repos:
         stages: [pre-commit]
 
   - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v9.6.0
+    rev: v9.7.0
     hooks:
       - id: cspell # Spell check changed files
       - id: cspell # Spell check the commit message
@@ -160,7 +160,7 @@ repos:
 
   ### Renovate ###
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 43.25.7
+    rev: 43.31.9
     hooks:
       - id: renovate-config-validator
         # args: [--strict]
