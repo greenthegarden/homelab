@@ -8,7 +8,7 @@
 
     # n8n facts
     # renovate: datasource=docker depName=docker.n8n.io/n8nio/n8n
-    n8n_image: docker.n8n.io/n8nio/n8n:2.8.3
+    n8n_image: docker.n8n.io/n8nio/n8n:2.9.2
 
   tasks:
 
