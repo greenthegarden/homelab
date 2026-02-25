@@ -7,7 +7,7 @@
 
     # What's up Docker? facts
     # renovate: datasource=docker depName=getwud/wud
-    whatsupdocker_image: getwud/wud:8.2.0
+    whatsupdocker_image: getwud/wud:8.2.1
 
   tasks:
 
