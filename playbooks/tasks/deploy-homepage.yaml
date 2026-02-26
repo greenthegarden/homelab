@@ -114,7 +114,7 @@
         mode: "0644"
       loop:
         - docker
-        - services
+        # - services
         - widgets
 
 - name: deploy-homepage | Pull Homepage image
