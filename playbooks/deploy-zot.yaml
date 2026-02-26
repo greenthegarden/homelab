@@ -8,7 +8,7 @@
 
     # Zot facts
     # renovate: datasource=docker depName=ghcr.io/project-zot/zot-linux-amd64
-    zot_image: ghcr.io/project-zot/zot-linux-amd64:v2.1.11
+    zot_image: ghcr.io/project-zot/zot-linux-amd64:v2.1.14
 
     zot_deploy_docker_volume_backup: false
 
