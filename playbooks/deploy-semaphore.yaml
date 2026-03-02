@@ -10,7 +10,7 @@
     semaphore_image: semaphoreui/semaphore:v2.17.15
     # semaphore_db_dialect: bolt
 
-    semaphore_deploy_docker_volume_backup: true
+    semaphore_deploy_docker_volume_backup: false
 
   tasks:
 

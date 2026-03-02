@@ -120,7 +120,9 @@ install_python () {
 
 install_ansible_via_uv () {
     # install ansible and ansible-lint via uv
-    uv tool install --python ${PYTHON_VERSION} --with-executables-from ansible-core,ansible-lint ansible
+    # uv tool install --python ${PYTHON_VERSION} --with-executables-from ansible-core,ansible-lint ansible
+    uv tool install ansible-dev-tools --python ${PYTHON_VERSION}  --with-executables-from ansible,ansible-builder,ansible-core,ansible-creator,ansible-dev-environment,ansible-galaxy,ansible-lint,ansible-sign,molecule,ansible-navigator
+    uv tool upgrade ansible-dev-tools
 }
 
 install_prec () {
