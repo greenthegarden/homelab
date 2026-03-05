@@ -1,15 +1,4 @@
 ---
-roles:
-  - name: geerlingguy.docker
-    scm: git
-    src: git+https://github.com/geerlingguy/ansible-role-docker
-    version: 8.0.0
-
-  - name: geerlingguy.pip
-    scm: git
-    src: git+https://github.com/geerlingguy/ansible-role-pip
-    version: 3.1.2
-
 collections:
   # required to use Docker
   - name: community.docker
