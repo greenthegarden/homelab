@@ -204,7 +204,7 @@
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/traefik/traefik/releases/tag/v${major}.${minor}.${patch}",
+      "value": "https://github.com/traefik/traefik/releases/tag/${major}.${minor}.${patch}",
     }
 
 - name: deploy-traefik | Create Traefik networks
