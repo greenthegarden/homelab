@@ -55,7 +55,7 @@
   with_items:
     # ---------------------------------------------------------------
     # Homepage labels
-    - { "key": "homepage.group", "value": "Monitoring" }
+    - { "key": "homepage.group", "value": "System" }
     - { "key": "homepage.name", "value": "Dockhand" }
     - {
       "key": "homepage.description",
