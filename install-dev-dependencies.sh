@@ -119,8 +119,11 @@ install_python () {
 }
 
 install_ansible_via_uv () {
-    # install ansible and ansible-lint via uv
-    # uv tool install --python ${PYTHON_VERSION} --with-executables-from ansible-core,ansible-lint ansible
+    uv tool install ansible-tools --python ${PYTHON_VERSION} --with-executables-from ansible,ansible-core,ansible-lint
+    uv tool upgrade ansible-tools
+}
+
+install_ansible_dev_via_uv () {
     uv tool install ansible-dev-tools --python ${PYTHON_VERSION}  --with-executables-from ansible,ansible-builder,ansible-core,ansible-creator,ansible-dev-environment,ansible-galaxy,ansible-lint,ansible-sign,molecule,ansible-navigator
     uv tool upgrade ansible-dev-tools
 }
@@ -189,7 +192,7 @@ add_aliases_to_zshrc () {
             echo "alias ansible='uvx --from ansible-core ansible'"
             echo "alias ansible-lint='uvx --from ansible-lint ansible-lint'"
             echo "alias ansible-playbook='uvx --from ansible-core ansible-playbook'"
-            echo "alias pre-commit='uvx --from pre-commit-uv pre-commit'"
+            echo "alias ansible-galaxy='uvx --from ansible-core ansible-galaxy'"
         } >> "$ZSHRC"
         echo -e "${INFO} Aliases added to .zshrc.${NC}"
     else
