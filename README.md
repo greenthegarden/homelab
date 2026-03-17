@@ -120,9 +120,7 @@ Given the importance of the time service, it is deployed as a [Docker container]
 
 ### Compute Server Hardware
 
-A [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC][compserv] was selected as the Homelab compute server.
-
-The system uses an i5-1235U processor which, with 10 cores, provides a good amount of parallel processing in a relatively efficient, compact, unit.
+The compute server is in the process of being upgraded from a [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC][compserv] which used an i5-1235U processor, to a Minisforum MS-A2.
 
 #### Compute Server Specifications
 
@@ -135,6 +133,17 @@ The system uses an i5-1235U processor which, with 10 cores, provides a good amou
 |           | 2TB SATA 3 2.5″ SSD                                                                        |
 | Network   | 1x Gigabit Ethernet (Realtek)                                                              |
 | Ports     | 1x USB 3.1 Type-C (data) / 2x USB 3.0 / 2x USB 2.0 / 2x HDMI 2.1 / Audio Jack / BIOS Reset |
+
+| Component | Details                                                                                    |
+| --------- | ------------------------------------------------------------------------------------------ |
+| CPU       | AMD Ryzen™ 9 9955HX, Zen 5 architecture with 16 cores and 32 threads. Boost clock speed    |
+|           | 5.4 GHz, 100W TDP                                                                          |
+| GPU       | AMD Radeon™ 610M integrated GPU, 2200 MHz                                                  |
+| RAM       | 64GB Dual Channel DDR5-5600MHz supports up to 96GB                                         |
+| Storage   | 3x M.2 PCIe 4.0 NVME SSD slots supporting 2280 and 22110. 1 TB installed                   |
+| Network   | Dual 10Gbps SFP+ Lan & 2.5G RJ45 Lan Ports WIFI 6E & BT 5.3                                |
+| Expansion | PCle x16 Slot (support split)                                                              |
+| Ports     |                                                                                            |
 
 ### Storage Server Hardware
 
@@ -177,9 +186,11 @@ Added [Pulse directly on Proxmox host](https://github.com/rcourtman/pulse) using
 
 The storage service is running [TrueNAS Scale Community Edition][storsoft] as the storage solution.
 
-TrueNAS Scale ElectricEel-24.10.2 was installed directly on to the ZimaBlade.
+TrueNAS Community 25.10.2.1 - Goldeye is installed directly on to the ZimaBlade.
 
 The initial configuration of TrueNAS was based on details described in [6 Crucial Settings to Enable on TrueNAS SCALE][truenassettings].
+
+Proxmox Backup Server is installed
 
 ### Homelab Applications and Services
 
