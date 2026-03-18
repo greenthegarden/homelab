@@ -53,24 +53,11 @@ install_packages () {
 # install required packages
 echo -e "${INFO} Installing required packages...${NC}"
 apt install -y \
-    build-essential \
     curl \
-    wget \
     git \
-    vim \
-    htop \
-    jq \
-    tree \
-    unzip \
-    zip \
     software-properties-common \
     apt-transport-https \
-    ca-certificates \
-    ncdu \
-    zsh \
-    bash-completion \
-    autojump \
-    fonts-powerline
+    ca-certificates
 }
 
 install_oh_my_zsh () {
@@ -221,7 +208,7 @@ print_final_message () {
 display_system_env
 update_system
 install_packages
-install_oh_my_zsh
+# install_oh_my_zsh
 install_uv
 create_local_bin
 install_python
