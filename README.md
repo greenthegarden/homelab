@@ -17,6 +17,10 @@
   - [Homelab Applications and Services](#homelab-applications-and-services)
 - [Provisioning](#provisioning)
   - [Network Infrastucutre](#network-infrastucutre)
+  - [Controller Node](#controller-node)
+    - [Installation of git](#installation-of-git)
+    - [Github ssh configuration](#github-ssh-configuration)
+    - [Create dns record](#create-dns-record)
   - [Ansible](#ansible)
     - [Ansible linting](#ansible-linting)
     - [Ansible naming conventions](#ansible-naming-conventions)
@@ -323,6 +327,38 @@ dig NS greenthegarden.com
 ```
 
 If DNSOwl isn’t listed, update your domain registrar to point to the correct nameservers.
+
+### Controller Node
+
+Use a controller node to run installations across other nodes.
+
+The following is required to set up the node.
+
+#### Installation of git
+
+```bash
+apt install git
+```
+
+#### Github ssh configuration
+
+Create a key pair, `id_ed25519_github` for access to Github repositories following instructions at https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent.
+
+Add the following entry to `~/.ssh/config`
+
+```txt
+Host github.com
+  HostName github.com
+  PreferredAuthentications publickey
+  IdentityFile ~/.ssh/id_ed25519_github
+```
+
+#### Create dns record
+
+To allow remote connection to controller node, add entry to DNS records on Ubiquity Controller.
+
+
+
 
 ### Ansible
 
