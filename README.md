@@ -9,6 +9,8 @@
   - [Network Hardware](#network-hardware)
   - [Compute Server Hardware](#compute-server-hardware)
     - [Compute Server Specifications](#compute-server-specifications)
+      - [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC](#beelink-sei12-i5-1235u-intel-12-gen-mini-pc)
+      - [Minisforum MS-A2](#minisforum-ms-a2)
   - [Storage Server Hardware](#storage-server-hardware)
     - [Storage Server Specifications](#storage-server-specifications)
 - [Software](#software)
@@ -16,7 +18,7 @@
   - [Storage Server Software](#storage-server-software)
   - [Homelab Applications and Services](#homelab-applications-and-services)
 - [Provisioning](#provisioning)
-  - [Network Infrastucutre](#network-infrastucutre)
+  - [Network Infrastructure](#network-infrastructure)
   - [Controller Node](#controller-node)
     - [Installation of git](#installation-of-git)
     - [Github ssh configuration](#github-ssh-configuration)
@@ -104,9 +106,19 @@ Some good sources of information for setting up a Unifi network include:
 - [Full Unifi Config - Setup from Start to Finish][youtube_unififullconfig]
 - [COMPLETE UniFi Network Setup Guide (Detailed for Beginners)][youtube_unifisetup]
 
-In addition, a Raspberry Pi 3 Model B+ single board computer, running Rasbian  Bullseye, is used to host an instance of [AdGuard Home][adguard], to provide a local DNS service.
+The Unifi Network Application provides the following services:
 
-All hosts within the Homelab are configured automatically by the Gateway, to use the DNS capability within AdGuard Home to resolve hostnames internal to the Homelab.
+- Network topology including VLANs, DNS and Firewalls
+- Wireless networks (WiFi)
+- Wide Area Network connections
+- VPN
+- Security, including packet inspection, region blocking and content filtering
+- Monitoring
+
+In addition, a Raspberry Pi 3 Model B+ single board computer, running Rasbian Bullseye, is used to host an instance of [AdGuard Home][adguard], \
+previously provided a local DNS service, but is now used as the secondary DNS.
+
+All hosts within the Homelab are configured automatically by the Gateway, to use the UCG as the primary DNS, and AdGurrd Home as the secondary, to resolve hostnames internal to the Homelab.
 
 I wrote an article about using AdGuard Home as a DNS service which is [available on Medium][medium_dns].
 
@@ -124,9 +136,11 @@ Given the importance of the time service, it is deployed as a [Docker container]
 
 ### Compute Server Hardware
 
-The compute server is in the process of being upgraded from a [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC][compserv] which used an i5-1235U processor, to a Minisforum MS-A2.
+The compute server is in the process of being upgraded from a [Beelink SEi12 i5-1235U Intel 12 Gen Mini PC][compserv] to a Minisforum MS-A2.
 
 #### Compute Server Specifications
+
+##### Beelink SEi12 i5-1235U Intel 12 Gen Mini PC
 
 | Component | Details                                                                                    |
 | --------- | ------------------------------------------------------------------------------------------ |
@@ -138,16 +152,17 @@ The compute server is in the process of being upgraded from a [Beelink SEi12 i5-
 | Network   | 1x Gigabit Ethernet (Realtek)                                                              |
 | Ports     | 1x USB 3.1 Type-C (data) / 2x USB 3.0 / 2x USB 2.0 / 2x HDMI 2.1 / Audio Jack / BIOS Reset |
 
-| Component | Details                                                                                    |
-| --------- | ------------------------------------------------------------------------------------------ |
-| CPU       | AMD Ryzen™ 9 9955HX, Zen 5 architecture with 16 cores and 32 threads. Boost clock speed    |
-|           | 5.4 GHz, 100W TDP                                                                          |
-| GPU       | AMD Radeon™ 610M integrated GPU, 2200 MHz                                                  |
-| RAM       | 64GB Dual Channel DDR5-5600MHz supports up to 96GB                                         |
-| Storage   | 3x M.2 PCIe 4.0 NVME SSD slots supporting 2280 and 22110. 1 TB installed                   |
-| Network   | Dual 10Gbps SFP+ Lan & 2.5G RJ45 Lan Ports WIFI 6E & BT 5.3                                |
-| Expansion | PCle x16 Slot (support split)                                                              |
-| Ports     |                                                                                            |
+##### Minisforum MS-A2
+
+| Component | Details                                                                                                   |
+| --------- | --------------------------------------------------------------------------------------------------------- |
+| CPU       | AMD Ryzen™ 9 9955HX, Zen 5 architecture with 16 cores and 32 threads. Boost clock speed 5.4 GHz, 100W TDP |
+| GPU       | AMD Radeon™ 610M integrated GPU, 2200 MHz                                                                 |
+| RAM       | 64GB Dual Channel DDR5-5600MHz supports up to 96GB                                                        |
+| Storage   | 3x M.2 PCIe 4.0 NVME SSD slots supporting 2280 and 22110. 1 TB installed                                  |
+| Network   | Dual 10Gbps SFP+ Lan & 2.5G RJ45 Lan Ports WIFI 6E & BT 5.3                                               |
+| Expansion | PCle x16 Slot (support split)                                                                             |
+| Ports     |                                                                                                           |
 
 ### Storage Server Hardware
 
@@ -175,14 +190,13 @@ For storage, two [4TB Western Digital Red Plus 3.5" NAS hard drives](https://www
 
 ### Compute Server Software
 
-The compute server is running [Proxmox Virtual Environment 8 hypervisor][compsoft] as the OS.
-Proxmox supports both Virtual Machines and LXC Linux Containers to be used to host the services and applications.
+The compute server is running [Proxmox Virtual Environment 9 hypervisor][compsoft] as the OS.
 
-Proxmox 8 was installed on top of Debian 12 as I was unable to boot the Compute Server directly into the Proxmox installer.
+Proxmox supports both Virtual Machines and LXC Linux Containers to host the services and applications.
 
 Some good sources of information for setting up Proxmox are:
 
-ADD DETAILS!!
+TODO: ADD DETAILS!!
 
 Added [Pulse directly on Proxmox host](https://github.com/rcourtman/pulse) using Official Installer.
 
@@ -194,14 +208,14 @@ TrueNAS Community 25.10.2.1 - Goldeye is installed directly on to the ZimaBlade.
 
 The initial configuration of TrueNAS was based on details described in [6 Crucial Settings to Enable on TrueNAS SCALE][truenassettings].
 
-Proxmox Backup Server is installed
+Proxmox Backup Server is to installed on TrueNAS.
 
 ### Homelab Applications and Services
 
 The majority of applications and services running within the Homelab are deployed as [Docker containers][docker], running within [LXC Linux containers][linuxcontainers].
-The exceptions are Nextcloud and Home Assistant, which are running in virtual machines, and Wazuh is installed directly on an LXC Linux Container.
+The exceptions are Nextcloud and Home Assistant, which are running in virtual machines.
 
-The Linux containers run [Debian 12 Bookworm][debian] as the host OS.
+The Linux containers run [Debian 13 Trixie][debian] as the host OS.
 
 The following resource details are used for LXC Linux Containers:
 
@@ -283,7 +297,7 @@ Icons are sourced from [dashboard-icons][dashboardicons].
 
 ## Provisioning
 
-### Network Infrastucutre
+### Network Infrastructure
 
 TODO: Add details about setting up domain and DNS entries (Cloudflare, Letsencrypt, etc)
 
