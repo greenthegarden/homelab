@@ -2,7 +2,7 @@
 
 - name: Deploy n8n
 
-  hosts: ansible
+  hosts: ansibleg
 
   vars:
 
