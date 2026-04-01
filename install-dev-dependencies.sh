@@ -116,7 +116,7 @@ install_ansible_dev_via_uv () {
 }
 
 install_prec () {
-    PREK_VERSION=v0.3.3
+    PREK_VERSION=v0.3.8
     curl --proto '=https' --tlsv1.2 -LsSf https://github.com/j178/prek/releases/download/${PREK_VERSION}/prek-installer.sh | sh
 }
 
