@@ -36,7 +36,7 @@ docker_socket_proxy_image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.2
 docker_volume_backup_image: offen/docker-volume-backup:v2.47.2
 # Dozzle Agent facts
 # renovate: datasource=docker depName=amir20/dozzle
-dozzle_agent_image: amir20/dozzle:v10.2.1
+dozzle_agent_image: amir20/dozzle:v10.3.0
 # Node Exporter facts
 # renovate: datasource=docker depName=prom/node-exporter
 node_exporter_image: prom/node-exporter:v1.11.0
@@ -54,7 +54,7 @@ socket_proxy_image: wollomatic/socket-proxy:1.11.4
 tinyauth_image: ghcr.io/steveiliop56/tinyauth:v5.0.6
 # Traefik facts
 # renovate: datasource=docker depName=traefik
-traefik_image: traefik:3.6.12
+traefik_image: traefik:3.6.13
 traefik_entrypoint_insecure_name: web
 traefik_entrypoint_secure_name: "{{ traefik_entrypoint_insecure_name | default('web') }}secure"
 # What's Up Docker facts
