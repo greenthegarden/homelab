@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+PYTHON_VERSION=3.14
+PREK_VERSION=v0.3.8
+
 # Based on https://github.com/ralish/bash-script-template/blob/main/template.sh
 
 # Enable xtrace if the DEBUG environment variable is set
@@ -54,6 +57,14 @@ install_packages () {
 echo -e "${INFO} Installing required packages...${NC}"
 apt install -y \
     curl \
+    git
+}
+
+install_packages_dev () {
+# install required packages
+echo -e "${INFO} Installing required packages...${NC}"
+apt install -y \
+    curl \
     git \
     software-properties-common \
     apt-transport-https \
@@ -94,8 +105,6 @@ create_local_bin () {
 }
 
 install_python () {
-    PYTHON_VERSION=3.14
-    # install PYTHON_VERSION
     if ! uv python list | grep -q "python@${PYTHON_VERSION}"; then
         echo -e "${INFO} Installing Python ${PYTHON_VERSION} via uv...${NC}"
         uv python install ${PYTHON_VERSION}
@@ -211,7 +220,7 @@ install_packages
 # install_oh_my_zsh
 install_uv
 create_local_bin
-install_python
+# install_python
 install_ansible_via_uv
-install_prec
-pre_commit_update
+# install_prec
+# pre_commit_update
