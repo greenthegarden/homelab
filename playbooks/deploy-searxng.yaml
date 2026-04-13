@@ -7,7 +7,7 @@
 
     # SearXNG facts
     # renovate: datasource=docker depName=searxng/searxng
-    searxng_image: searxng/searxng:2026.4.7-08ef7a63d
+    searxng_image: searxng/searxng:2026.4.13-ee66b070a
 
   tasks:
 
