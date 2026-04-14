@@ -31,7 +31,7 @@
 
 - name: deploy-tracktor | Set Tracktor aggregated facts
   ansible.builtin.set_fact:
-    tracktor_fqdn: "{{ tracktor_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    tracktor_fqdn: "{{ tracktor_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-tracktor | Set Tracktor service facts
   ansible.builtin.set_fact:

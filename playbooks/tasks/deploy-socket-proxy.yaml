@@ -1,7 +1,4 @@
 ---
-- name: deploy-socket-proxy | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
 
 ####### SOCKET-PROXY SECTION
 
@@ -24,19 +21,33 @@
 
 - name: deploy-socket-proxy | Set Socket Proxy aggregated facts
   ansible.builtin.set_fact:
-    socket_proxy_fqdn: "{{ socket_proxy_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    socket_proxy_fqdn: "{{ socket_proxy_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+# - name: deploy-socket-proxy | Set Socker Proxy default command facts
+#   ansible.builtin.set_fact:
+#     socket_proxy_command_default:
+#       - '-loglevel=info'
+#       # - '-allowfrom=dozzle' # allow only the dozzle container
+#       - '-listenip=0.0.0.0'
+#       - '-allowGET=/v1\..{2}/(containers/.*|events|info)'
+#       - '-allowHEAD=/_ping'
+#       - '-watchdoginterval=3600'
+#       - '-stoponwatchdog'
+#       - '-shutdowngracetime=10'
 
 - name: deploy-socket-proxy | Set Socket Proxy service facts
   ansible.builtin.set_fact:
     socket_proxy_command:
-      - '-loglevel=info'
-      # - '-allowfrom=dozzle' # allow only the dozzle container
+      - '-loglevel=debug'
+      - '-allowfrom=traefik'
       - '-listenip=0.0.0.0'
-      - '-allowGET=/v1\..{2}/(containers/.*|events|info)'
+      - '-allowGET=/v1\..{1,2}/(version|containers/.*|events.*)' # this regexp allows readonly access only for requests that traefik needs
       - '-allowHEAD=/_ping'
-      - '-watchdoginterval=3600'
+      - '-shutdowngracetime=5'
+      - '-watchdoginterval=600'
       - '-stoponwatchdog'
-      - '-shutdowngracetime=10'
+      # - '-proxysocketendpoint=/socket/traefik.sock'
+      # - '-proxysocketendpointfilemode=0600'
     socket_proxy_memory: "64M"
     socket_proxy_networks:
       - { name: "{{ socket_proxy_network_name }}", internal: "{{ socket_proxy_network_internal }}" }
@@ -57,7 +68,9 @@
       - "Socket Proxy networks: {{ socket_proxy_networks | default(omit) }}"
       - "Socket Proxy ports: {{ socket_proxy_ports | default(omit) }}"
       - "Socket Proxy volumes: {{ socket_proxy_volumes | default(omit) }}"
+      - "Socket Proxy command: {{ socket_proxy_command | default(omit) }}"
       - "Socket Proxy env: {{ socket_proxy_env | default(omit) }}"
+      - "Socket Proxy memory: {{ socket_proxy_memory | default(omit) }}"
 
 - name: deploy-socket-proxy | Create Socket Proxy container labels
   ansible.builtin.set_fact:
@@ -94,6 +107,7 @@
     env: "{{ socket_proxy_env | default(omit) }}"
     labels: "{{ socket_proxy_container_labels | default(omit) }}"
     memory: "{{ socket_proxy_memory | default(omit) }}"
+    network_mode: none
     networks: "{{ socket_proxy_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     published_ports: "{{ socket_proxy_ports if not socket_proxy_network_internal else omit }}"
     read_only: true
@@ -102,7 +116,10 @@
     security_opts:
       - no-new-privileges=true
     state: started
-    user: 65534:998
+    user: 65534:991
+    # volumes:
+    #   - /var/run/docker.sock:/var/run/docker.sock:ro
+    #   # - socket:/socket/
     volumes: "{{ default_host_volumes + docker_host_volume + socket_proxy_volumes | default(omit) }}"
   register: socket_proxy_container_state
 

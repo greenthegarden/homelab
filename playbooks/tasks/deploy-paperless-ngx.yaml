@@ -31,7 +31,7 @@
 
 - name: deploy-paperless-ngx | Set paperless_ngx aggregated facts
   ansible.builtin.set_fact:
-    paperless_ngx_fqdn: "{{ paperless_ngx_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    paperless_ngx_fqdn: "{{ paperless_ngx_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-paperless-ngx | Set Paperless-ngx service facts
   ansible.builtin.set_fact:

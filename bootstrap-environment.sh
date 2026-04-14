@@ -1,5 +1,46 @@
 #!/usr/bin/env bash
 
+#
+# Script Name: setup_host.sh
+# Description: This script sets up a host .
+# Author: Philip Cutler
+# Date: 2026-04-11
+# Version: 1.0
+#
+# Usage:
+#   ./setup_host.sh
+#
+# Parameters:
+#   None
+#
+# Exit Status:
+#   0 - Success
+#   1 - Failure
+#
+# Example:
+#   To execute the script, simply run:
+#   ./setup_host.sh
+#
+# Notes:
+#   -
+
+# Use shellcheck for static analysis.
+
+log_info()  { echo -e "\033[0;32m[INFO]\033[0m  $1"; }
+log_warn()  { echo -e "\033[1;33m[WARN]\033[0m  $1"; }
+log_error() { echo -e "\033[0;31m[ERROR]\033[0m $1" >&2; }
+
+# if command -v tput >/dev/null && [[ $(tput colors) -ge 8 ]]; then
+#     RED='\033[0;31m'
+#     GREEN='\033[0;32m'
+# else
+#     RED=''; GREEN=''; NC=''
+# fi
+
+# log_file="/var/log/setup_host.log"
+# echo "$(date) - Script started" >> "$log_file"
+
+# Set versions
 PYTHON_VERSION=3.14
 PREK_VERSION=v0.3.8
 
@@ -22,20 +63,44 @@ fi
 # Enable errtrace or the error trap handler will not work as expected
 set -o errtrace         # Ensure the error trap handler is inherited
 
-# R='\033[0;31m'   #'0;31' is Red's ANSI color code
+R='\033[0;31m'   #'0;31' is Red's ANSI color code
 # G='\033[0;32m'   #'0;32' is Green's ANSI color code
 # Y='\033[1;33m'   #'1;33' is Yellow's ANSI color code
 B='\033[0;34m'   #'0;34' is Blue's ANSI color code
 NC='\033[0m'     # No Color
 
-INFO="[${B}INFO${NC}]"
-# ERROR="[${R}ERROR${NC}]"
+# INFO="[${B}INFO${NC}]"
+# # ERROR="[${R}ERROR${NC}]"
+
+# error () {
+#     printf "${R}!!! %s${NC}\\n" "${*}" 1>&2
+# }
+
+main() {
+    parse_args "$@"
+    display_system_env
+    update_system
+    install_packages
+    install_uv
+    # monitor_connections
+}
+
+parse_args() {
+    # parse CLI flags
+    while getopts "vh" opt; do
+        case $opt in
+            v) echo "Verbose mode enabled" ;;
+            h) echo "Usage: $0 [-v] [-h]"; exit 0 ;;
+        esac
+    done
+}
 
 display_system_env () {
+    log_info "Environment details..."
     echo -e "Running script: ${B}$(basename "$0")${NC}"
     echo -e "Running in directory: ${B}$(pwd)${NC}"
     echo -e "Running on host: ${B}$(hostname)${NC}"
-    echo -e "Running on OS: ${B}$(lsb_release -d | cut -f2)${NC}"
+    echo -e "Running on OS: ${B}$(cat /etc/os-release | grep -E '^(PRETTY_NAME)')${NC}"
     echo -e "Running on kernel: ${B}$(uname -r)${NC}"
     echo -e "Running on architecture: ${B}$(uname -m)${NC}"
     # shellcheck disable=SC2116,SC2086
@@ -48,13 +113,13 @@ display_system_env () {
 }
 
 update_system () {
-    echo -e "${INFO} Updating system packages...${NC}"
+    log_info 'Updating system packages...'
     apt update && apt -y upgrade
 }
 
 install_packages () {
 # install required packages
-echo -e "${INFO} Installing required packages...${NC}"
+log_info "Installing required packages..."
 apt install -y \
     curl \
     git
@@ -88,12 +153,17 @@ install_oh_my_zsh () {
 install_uv () {
     # https://docs.astral.sh/uv/getting-started/installation/
     if ! command -v uvx &> /dev/null; then
-        echo -e "${INFO} Installing uv...${NC}"
+        log_info "Installing uv ..."
         curl -LsSf https://astral.sh/uv/install.sh | sh
     else
-        echo -e "${INFO} uv is already installed.${NC}"
+        log_warn "uv is already installed."
+        log_info "Updating uv ..."
         uv self update
     fi
+}
+
+install_dependencies_via_uv () {
+  uv sync
 }
 
 create_local_bin () {
@@ -114,6 +184,10 @@ install_python () {
     fi
 }
 
+# install_docker () {
+#
+# }
+
 install_ansible_via_uv () {
     uv tool install ansible-tools --python ${PYTHON_VERSION} --with-executables-from ansible,ansible-core,ansible-lint
     uv tool upgrade ansible-tools
@@ -122,10 +196,8 @@ install_ansible_via_uv () {
 install_ansible_dev_via_uv () {
     uv tool install ansible-dev-tools --python ${PYTHON_VERSION}  --with-executables-from ansible,ansible-builder,ansible-core,ansible-creator,ansible-dev-environment,ansible-galaxy,ansible-lint,ansible-sign,molecule,ansible-navigator
     uv tool upgrade ansible-dev-tools
-}
 
 install_prec () {
-    PREK_VERSION=v0.3.8
     curl --proto '=https' --tlsv1.2 -LsSf https://github.com/j178/prek/releases/download/${PREK_VERSION}/prek-installer.sh | sh
 }
 
@@ -213,14 +285,17 @@ print_final_message () {
     echo -e "${INFO} Development dependencies installed successfully!${NC}"
 }
 
-# Run components
-display_system_env
-update_system
-install_packages
-# install_oh_my_zsh
-install_uv
-create_local_bin
-# install_python
-install_ansible_via_uv
-# install_prec
-# pre_commit_update
+install_dev_components () {
+  display_system_env
+  update_system
+  install_packages
+  # install_oh_my_zsh
+  install_uv
+  create_local_bin
+  # install_python
+  install_ansible_via_uv
+  # install_prec
+  # pre_commit_update
+}
+
+main "$@"

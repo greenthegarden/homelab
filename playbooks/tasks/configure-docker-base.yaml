@@ -1,20 +1,20 @@
 ---
 
-- name: homelab-configure-docker-base | Load homelab vars
+- name: configure-docker-base | Load homelab vars
   ansible.builtin.include_vars:
     file: vars/homelab_env.yaml
 
-- name: homelab-configure-docker-base | Configure base OS
+- name: configure-docker-base | Configure base OS
   ansible.builtin.include_tasks:
-    file: tasks/homelab-configure-base-os.yaml
+    file: tasks/configure-base-os.yaml
 
-- name: homelab-configure-docker-base | Check Docker is available  # noqa: syntax-check[unknown-module]
+- name: configure-docker-base | Check Docker is available  # noqa: syntax-check[unknown-module]
   community.docker.docker_host_info:
   register: host_docker_info
   ignore_errors: true
 
 # TODO: only install if not present
-- name: homelab-configure-docker-base | Install Docker
+- name: configure-docker-base | Install Docker
   when: (host_docker_info.can_talk_to_docker is defined and not host_docker_info.can_talk_to_docker) or
         (host_docker_info is failed)
   ansible.builtin.import_role:

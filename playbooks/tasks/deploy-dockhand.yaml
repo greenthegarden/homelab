@@ -1,7 +1,7 @@
 ---
-- name: deploy-dockhand | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
+# - name: deploy-dockhand | Ensure modern version of Docker is available on host
+#   ansible.builtin.include_tasks:
+#     file: tasks/hosts-dependency-check-docker-version.yaml
 
 ####### DOCKHAND SECTION
 
@@ -23,7 +23,7 @@
 
 - name: deploy-dockhand | Set Dockhand aggregated facts
   ansible.builtin.set_fact:
-    dockhand_fqdn: "{{ dockhand_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    dockhand_fqdn: "{{ dockhand_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-dockhand | Set Dockhand service facts
   ansible.builtin.set_fact:

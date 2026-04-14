@@ -28,7 +28,7 @@
 
 - name: deploy-stirling-pdf | Set Stirling-PDF aggregated facts
   ansible.builtin.set_fact:
-    stirling_pdf_fqdn: "{{ stirling_pdf_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    stirling_pdf_fqdn: "{{ stirling_pdf_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-stirling-pdf | Set Stirling-PDF service facts
   ansible.builtin.set_fact:

@@ -31,7 +31,7 @@
 
 - name: deploy-mailrise | Set Mailrise aggregated facts
   ansible.builtin.set_fact:
-    mailrise_fqdn: "{{ mailrise_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    mailrise_fqdn: "{{ mailrise_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-mailrise | Set Mailrise service facts
   ansible.builtin.set_fact:

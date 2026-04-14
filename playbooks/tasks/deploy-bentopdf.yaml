@@ -24,7 +24,7 @@
 
 - name: deploy-bentopdf | Set BentoPDF aggregated facts
   ansible.builtin.set_fact:
-    bentopdf_fqdn: "{{ bentopdf_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    bentopdf_fqdn: "{{ bentopdf_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-bentopdf | Set BentoPDF service facts
   ansible.builtin.set_fact:

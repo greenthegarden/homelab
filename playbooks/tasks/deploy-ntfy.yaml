@@ -26,7 +26,7 @@
 
 - name: deploy-ntfy | Set Ntfy aggregated facts
   ansible.builtin.set_fact:
-    ntfy_fqdn: "{{ ntfy_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    ntfy_fqdn: "{{ ntfy_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-ntfy | Set Ntfy service facts
   ansible.builtin.set_fact:

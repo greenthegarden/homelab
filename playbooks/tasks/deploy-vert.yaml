@@ -25,7 +25,7 @@
 
 - name: deploy-vert | Set VERT aggregated facts
   ansible.builtin.set_fact:
-    vert_fqdn: "{{ vert_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    vert_fqdn: "{{ vert_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-vert | Set VERT service facts
   ansible.builtin.set_fact:

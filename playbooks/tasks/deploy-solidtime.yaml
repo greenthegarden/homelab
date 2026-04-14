@@ -25,7 +25,7 @@
 
 - name: deploy-solidtime | Set Solidtime aggregated facts
   ansible.builtin.set_fact:
-    solidtime_fqdn: "{{ solidtime_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    solidtime_fqdn: "{{ solidtime_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-solidtime | Set Solidtime service facts
   ansible.builtin.set_fact:

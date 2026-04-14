@@ -24,7 +24,7 @@
 
 - name: deploy-n8n | Set N8n aggregated facts
   ansible.builtin.set_fact:
-    n8n_fqdn: "{{ n8n_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    n8n_fqdn: "{{ n8n_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-n8n | Set N8n service facts
   ansible.builtin.set_fact:

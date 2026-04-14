@@ -1,8 +1,4 @@
 ---
-- name: deploy-dozzle-agent | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
-
 ####### DOZZLE AGENT SECTION
 
 # https://dozzle.dev/guide/agent
@@ -23,7 +19,7 @@
 
 - name: deploy-dozzle-agent | Set Dozzle Agent aggregated facts
   ansible.builtin.set_fact:
-    dozzle_agent_fqdn: "{{ dozzle_agent_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    dozzle_agent_fqdn: "{{ dozzle_agent_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-dozzle-agent | Set Dozzle Agent service facts
   ansible.builtin.set_fact:

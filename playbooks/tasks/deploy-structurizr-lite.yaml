@@ -24,7 +24,7 @@
 
 - name: deploy-structurizr-lite | Set Structurizr Lite aggregated facts
   ansible.builtin.set_fact:
-    structurizr_lite_fqdn: "{{ structurizr_lite_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    structurizr_lite_fqdn: "{{ structurizr_lite_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-structurizr-lite | Set Structurizr Lite service facts
   ansible.builtin.set_fact:

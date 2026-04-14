@@ -1,8 +1,4 @@
 ---
-- name: deploy-semaphore | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
-
 - name: deploy-semaphore | Ensure required Semaphore variables are set
   ansible.builtin.assert:
     that:
@@ -36,7 +32,7 @@
 
 - name: deploy-semaphore | Set Semaphore aggregated facts
   ansible.builtin.set_fact:
-    semaphore_fqdn: "{{ semaphore_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    semaphore_fqdn: "{{ semaphore_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-semaphore | Set Semaphore service facts
   ansible.builtin.set_fact:
@@ -182,14 +178,15 @@
         volumes: "{{ default_host_volumes + semaphore_volumes | default(omit) }}"
       register: semaphore_container_state
 
-- name: deploy-semaphore | Wait for Semaphore to accept connections
-  ansible.builtin.wait_for:
-    host: "{{ semaphore_fqdn }}"
-    port: 80
-    connect_timeout: 1
-    delay: 10
-    state: started
-    timeout: 30
-  register: semaphore_running
-  retries: 10
-  until: semaphore_running is success
+# - name: deploy-semaphore | Wait for Semaphore to accept connections
+#   when: 0
+#   ansible.builtin.wait_for:
+#     host: "{{ semaphore_fqdn }}"
+#     port: 80
+#     connect_timeout: 1
+#     delay: 10
+#     state: started
+#     timeout: 30
+#   register: semaphore_running
+#   retries: 10
+#   until: semaphore_running is success

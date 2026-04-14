@@ -28,7 +28,7 @@
 
 - name: deploy-kopia | Set Kopia aggregated facts
   ansible.builtin.set_fact:
-    kopia_fqdn: "{{ kopia_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    kopia_fqdn: "{{ kopia_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-kopia | Set Kopia service facts
   ansible.builtin.set_fact:

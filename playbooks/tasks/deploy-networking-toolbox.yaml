@@ -19,7 +19,7 @@
 
 - name: deploy-networking-toolbox | Set Networking Toolbox aggregated facts
   ansible.builtin.set_fact:
-    networking_toolbox_fqdn: "{{ networking_toolbox_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    networking_toolbox_fqdn: "{{ networking_toolbox_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-networking-toolbox | Set Networking Toolbox service facts
   ansible.builtin.set_fact:

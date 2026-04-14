@@ -34,7 +34,7 @@
 
 - name: deploy-mariadb | Set MariaDB aggregated facts
   ansible.builtin.set_fact:
-    mariadb_fqdn: "{{ mariadb_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    mariadb_fqdn: "{{ mariadb_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-mariadb | Set MariaDB service facts
   ansible.builtin.set_fact:

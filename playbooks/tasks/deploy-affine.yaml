@@ -36,7 +36,7 @@
 
 - name: deploy-affine | Set AFFiNE aggregated facts
   ansible.builtin.set_fact:
-    affine_fqdn: "{{ affine_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    affine_fqdn: "{{ affine_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-affine | Set AFFiNE service facts
   ansible.builtin.set_fact:

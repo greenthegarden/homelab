@@ -372,14 +372,20 @@ Host github.com
 To allow remote connection to controller node, add entry to DNS records on Ubiquity Controller.
 
 
-
-
 ### Ansible
 
 [Ansible] is used to define and automate the configuration of the Linux containers, including the installation of Docker, and deployment of the containerised applications. The
 Ansible files make up the majority of this repository, which is structured to work with [Semaphore UI][semaphoreui].
 
 The adoption of Ansible allows the configuration to be defined in code, and therefore version controlled in a source code repository.
+
+#### Ansible Facts
+
+To get ansible facts use
+
+```bash
+.venv/bin/ansible localhost -m ansible.builtin.setup
+```
 
 #### Ansible linting
 

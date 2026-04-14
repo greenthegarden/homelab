@@ -25,7 +25,7 @@
 
 - name: deploy-atlas | Set Atlas aggregated facts
   ansible.builtin.set_fact:
-    atlas_fqdn: "{{ ansible_hostname }}.localdomain"
+    atlas_fqdn: "{{ ansible_facts['hostname'] }}.localdomain"
 
 - name: deploy-atlas | Set Atlas service facts
   ansible.builtin.set_fact:

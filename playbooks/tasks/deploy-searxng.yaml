@@ -22,7 +22,7 @@
 
 - name: deploy-searxng | Set SearXNG aggregated facts
   ansible.builtin.set_fact:
-    searxng_fqdn: "{{ searxng_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    searxng_fqdn: "{{ searxng_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-searxng | Set SearXNG service facts
   ansible.builtin.set_fact:

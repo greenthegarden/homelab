@@ -1,25 +1,38 @@
 ---
 - name: Deploy Semaphore
 
-  hosts: ansible
+  hosts: lxc-controller
 
   vars:
 
     # Semaphore facts
     # renovate: datasource=docker depName=semaphoreui/semaphore
-    semaphore_image: semaphoreui/semaphore:v2.17.33
+    semaphore_image: semaphoreui/semaphore:v2.17.36
 
     semaphore_deploy_docker_volume_backup: false
 
+  pre_tasks:
+
+    - name: Ensure base environment is configured
+      ansible.builtin.include_tasks:
+        file: tasks/configure-containerised-base.yaml
+
   tasks:
 
-    - name: Load homelab vars
+    # Load environment variables applicable to the homelab environment
+    - name: homelab-deploy-support-services | Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 
     - name: Deploy a containerised instance of Semaphore
       ansible.builtin.include_tasks:
         file: tasks/deploy-semaphore.yaml
+
+    - name: Deploy a containerised instance of Dockhand
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-dockhand.yaml
+      vars:
+        dockhand_image: fnsys/dockhand:v1.0.18
 
     - name: Deploy a containerised instance of Docker Volume Backup
       when: semaphore_deploy_docker_volume_backup | default(false)

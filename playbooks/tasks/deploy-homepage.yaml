@@ -24,7 +24,7 @@
 
 - name: deploy-homepage | Set Homepage aggregated facts
   ansible.builtin.set_fact:
-    homepage_fqdn: "{{ homepage_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    homepage_fqdn: "{{ homepage_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-homepage | Set Homepage service facts
   ansible.builtin.set_fact:

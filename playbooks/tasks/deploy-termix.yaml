@@ -23,7 +23,7 @@
 
 - name: deploy-termix | Set Termix aggregated facts
   ansible.builtin.set_fact:
-    termix_fqdn: "{{ termix_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    termix_fqdn: "{{ termix_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-termix | Set Termix service facts
   ansible.builtin.set_fact:

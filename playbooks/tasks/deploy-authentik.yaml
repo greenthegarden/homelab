@@ -28,7 +28,7 @@
 
 - name: deploy-authentik | Set Authentik aggregated facts
   ansible.builtin.set_fact:
-    authentik_fqdn: "{{ authentik_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    authentik_fqdn: "{{ authentik_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-authentik | Set Authentik API facts
   ansible.builtin.set_fact:
@@ -85,7 +85,7 @@
     # https://github.com/brokenscripts/authentik_traefik/blob/traefik3/my-compose/authentik/compose.yaml
     - {
       "key": "traefik.http.routers.{{ authentik_service_name }}-output.rule",
-      "value": "HostRegexp(`{subdomain:[a-z0-9-]+}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}}`) && PathPrefix(`/outpost.goauthentik.io/`)",
+      "value": "HostRegexp(`{subdomain:[a-z0-9-]+}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}}`) && PathPrefix(`/outpost.goauthentik.io/`)",
     }
     - {
       "key": "traefik.http.routers.{{ authentik_service_name }}.service",

@@ -25,7 +25,7 @@
 
 - name: deploy-gotify | Set Gotify aggregated facts
   ansible.builtin.set_fact:
-    gotify_fqdn: "{{ gotify_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    gotify_fqdn: "{{ gotify_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-gotify | Set Gotify service facts
   ansible.builtin.set_fact:

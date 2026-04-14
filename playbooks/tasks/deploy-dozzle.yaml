@@ -23,7 +23,7 @@
 
 - name: deploy-dozzle | Set Dozzle aggregated facts
   ansible.builtin.set_fact:
-    dozzle_fqdn: "{{ dozzle_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    dozzle_fqdn: "{{ dozzle_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-dozzle | Set Dozzle service facts
   ansible.builtin.set_fact:

@@ -1,10 +1,4 @@
 ---
-- name: deploy-beszel-agent | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
-  tags: always
-
-####### BESZEL AGENT SECTION
 
 # https://beszel.dev/guide/agent
 
@@ -28,7 +22,7 @@
 
 - name: deploy-beszel-agent | Set Beszel Agent aggregated facts
   ansible.builtin.set_fact:
-    beszel_agent_fqdn: "{{ beszel_agent_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    beszel_agent_fqdn: "{{ beszel_agent_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
   tags: beszel
 
 - name: deploy-beszel-agent | Set Beszel Agent service facts

@@ -24,7 +24,7 @@
 
 - name: deploy-gitea | Set Gitea aggregated facts
   ansible.builtin.set_fact:
-    gitea_fqdn: "{{ gitea_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    gitea_fqdn: "{{ gitea_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-gitea | Set Gitea service facts
   ansible.builtin.set_fact:

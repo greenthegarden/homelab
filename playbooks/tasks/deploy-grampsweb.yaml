@@ -31,7 +31,7 @@
 
 - name: deploy-grampsweb | Set Grampsweb aggregated facts
   ansible.builtin.set_fact:
-    grampsweb_fqdn: "{{ grampsweb_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    grampsweb_fqdn: "{{ grampsweb_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-grampsweb | Set Grampsweb service facts
   ansible.builtin.set_fact:

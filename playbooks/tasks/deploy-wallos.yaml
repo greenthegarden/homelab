@@ -24,7 +24,7 @@
 
 - name: deploy-wallos | Set Wallos aggregated facts
   ansible.builtin.set_fact:
-    wallos_fqdn: "{{ wallos_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    wallos_fqdn: "{{ wallos_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-wallos | Set Wallos service facts
   ansible.builtin.set_fact:

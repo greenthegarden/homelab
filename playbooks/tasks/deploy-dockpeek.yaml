@@ -23,7 +23,7 @@
 
 - name: deploy-dockpeek | Set Dockpeek aggregated facts
   ansible.builtin.set_fact:
-    dockpeek_fqdn: "{{ dockpeek_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    dockpeek_fqdn: "{{ dockpeek_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-dockpeek | Set Dockpeek service facts
   ansible.builtin.set_fact:

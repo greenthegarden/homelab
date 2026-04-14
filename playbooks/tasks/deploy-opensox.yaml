@@ -34,7 +34,7 @@
 
 - name: deploy-opensox | Set Opensox aggregated facts
   ansible.builtin.set_fact:
-    opensox_fqdn: "{{ opensox_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    opensox_fqdn: "{{ opensox_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-opensox | Set Opensox service facts
   ansible.builtin.set_fact:

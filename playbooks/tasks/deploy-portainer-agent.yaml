@@ -1,8 +1,4 @@
 ---
-- name: deploy-portainer-agent | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
-
 ####### PORTAINER AGENT SECTION
 
 # https://docs.portainer.io/admin/environments/add/docker/agent
@@ -23,7 +19,7 @@
 
 - name: deploy-portainer-agent | Set Portainer Agent aggregated facts
   ansible.builtin.set_fact:
-    portainer_agent_fqdn: "{{ portainer_agent_service_name }}.{{ ansible_hostname }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    portainer_agent_fqdn: "{{ portainer_agent_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 - name: deploy-portainer-agent | Set Portainer Agent service facts
   ansible.builtin.set_fact:
