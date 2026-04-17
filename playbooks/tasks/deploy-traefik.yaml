@@ -42,6 +42,10 @@
     socket_proxy_service_port: 2375
     socket_proxy_network_name: "socket-proxy-{{ traefik_service_name }}"
     socket_proxy_network_internal: true
+    socket_proxy_command_service:
+      - '-allowfrom=traefik'
+      - '-allowGET=/v1\..{1,2}/(version|containers/.*|events.*)' # this regexp allows readonly access only for requests that traefik needs
+      - '-allowHEAD=/_ping'
 
 # https://github.com/karvounis/traefik-tutorial-docker-compose-files/blob/master/standalone/advanced/docker-compose.ping.yml
 # https://github.com/ChristianLempa/homelab/blob/main/traefik/traefik-demo-1/config/traefik.yaml

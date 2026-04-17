@@ -44,14 +44,24 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-socket-proxy.yaml
   vars:
-    socket_proxy_service_name: "{{ socket_proxy_external_network_name }}"
-    # socket_proxy_service_port: 2378
-    socket_proxy_network_name: "{{ socket_proxy_external_network_name }}"
+    socket_proxy_service_name: "{{ 'socket-proxy-' + item.name }}"
+    socket_proxy_service_port: "{{ item.port }}"
+    socket_proxy_network_name: "{{ 'socket-proxy-' + item.name }}"
     socket_proxy_network_internal: false
+    socket_proxy_command_service: "{{ item.command }}"
   loop:
-    - { name: homepage, port: , config: {} }
-    - { name: uptimekuma, port: , config: {} }
-    - { name: wud, port: , config: {} }
+    - { name: homepage,
+        port: 2376,
+        command: [ '-allowfrom=homepage', '-allowGET=/v1\..{2}/(containers/.*|events|info)' ]
+      }
+    - { name: uptimekuma,
+        port: 2377,
+        command: [ '-allowfrom=uptimekuma', '-allowGET=/v1\..{2}/(containers/.*|events|info)' ]
+      }
+    - { name: wud,
+        port: 2378,
+        command: [ '-allowfrom=wud', '-allowGET=/v1\..{2}/(containers/.*|events|info)' ]
+      }
 
 # Use Traefik as a reverse proxy to manage access to web services with SSL via Let's Encrypt
 

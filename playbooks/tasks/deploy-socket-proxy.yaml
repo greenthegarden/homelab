@@ -23,31 +23,27 @@
   ansible.builtin.set_fact:
     socket_proxy_fqdn: "{{ socket_proxy_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
-# - name: deploy-socket-proxy | Set Socker Proxy default command facts
-#   ansible.builtin.set_fact:
-#     socket_proxy_command_default:
-#       - '-loglevel=info'
-#       # - '-allowfrom=dozzle' # allow only the dozzle container
-#       - '-listenip=0.0.0.0'
-#       - '-allowGET=/v1\..{2}/(containers/.*|events|info)'
-#       - '-allowHEAD=/_ping'
-#       - '-watchdoginterval=3600'
-#       - '-stoponwatchdog'
-#       - '-shutdowngracetime=10'
+- name: deploy-socket-proxy | Set Socket Proxy command base
+  ansible.builtin.set_fact:
+    socket_proxy_command_base:
+      - '-loglevel=debug'
+      - '-listenip=0.0.0.0'
+      - '-allowGET=/v1\..{2}/(containers/.*|events|info)'
+      - '-watchdoginterval=3600'
+      - '-stoponwatchdog'
+      - '-shutdowngracetime=10'
+
+- name: deploy-socket-proxy | debug
+  ansible.builtin.debug:
+    msg: "{{ socket_proxy_command_base | type_debug }}"
+
+- name: deploy-socket-proxy | debug
+  ansible.builtin.debug:
+    msg: "{{ socket_proxy_command_service | type_debug }}"
 
 - name: deploy-socket-proxy | Set Socket Proxy service facts
   ansible.builtin.set_fact:
-    socket_proxy_command:
-      - '-loglevel=debug'
-      - '-allowfrom=traefik'
-      - '-listenip=0.0.0.0'
-      - '-allowGET=/v1\..{1,2}/(version|containers/.*|events.*)' # this regexp allows readonly access only for requests that traefik needs
-      - '-allowHEAD=/_ping'
-      - '-shutdowngracetime=5'
-      - '-watchdoginterval=600'
-      - '-stoponwatchdog'
-      # - '-proxysocketendpoint=/socket/traefik.sock'
-      # - '-proxysocketendpointfilemode=0600'
+    socket_proxy_command: "{{ socket_proxy_command_base + socket_proxy_command_service | default(omit) }}"
     socket_proxy_memory: "64M"
     socket_proxy_networks:
       - { name: "{{ socket_proxy_network_name }}", internal: "{{ socket_proxy_network_internal }}" }
