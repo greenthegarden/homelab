@@ -1,22 +1,28 @@
 ---
 - name: Deploy Ollama
 
-  hosts: ollama
+  hosts: lxc-llm
 
   vars:
 
     # Ollama facts
     # renovate: datasource=docker depName=ollama/ollama
-    ollama_image: ollama/ollama:0.20.4
+    ollama_image: ollama/ollama:0.21.0
 
     # SearXNG facts
     # renovate: datasource=docker depName=searxng/searxng
-    searxng_image: searxng/searxng:2026.4.7-08ef7a63d
+    searxng_image: searxng/searxng:2026.4.17-e8299a4c3
 
     # Open WebUI facts
     # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
     open_webui_image: ghcr.io/open-webui/open-webui:0.8.12-slim
     open_webui_network_name: open-webui
+
+  pre_tasks:
+
+      - name: Ensure base environment is configured
+        ansible.builtin.include_tasks:
+          file: tasks/configure-containerised-base.yaml
 
   tasks:
 
