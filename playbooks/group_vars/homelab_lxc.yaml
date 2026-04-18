@@ -36,7 +36,7 @@ docker_socket_proxy_image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.2
 docker_volume_backup_image: offen/docker-volume-backup:v2.47.2
 # Dozzle Agent facts
 # renovate: datasource=docker depName=amir20/dozzle
-dozzle_agent_image: amir20/dozzle:v10.3.2
+dozzle_agent_image: amir20/dozzle:v10.4.1
 # Node Exporter facts
 # renovate: datasource=docker depName=prom/node-exporter
 node_exporter_image: prom/node-exporter:v1.11.0
@@ -79,7 +79,7 @@ default_host_volumes:
   # Local paths to mount into the container
   # local path:container path
   - /etc/localtime:/etc/localtime:ro
-  - /etc/timezone:/etc/timezone:ro
+  # - /etc/timezone:/etc/timezone:ro
 
 docker_host_volume:
   # Local paths to mount into the container

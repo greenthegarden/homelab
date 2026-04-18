@@ -139,7 +139,7 @@
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ searxng_volumes | default(omit) }}"
+        volumes: "{{ default_host_volumes + searxng_volumes | default(omit) }}"
       register: searxng_container_state
 
 - name: deploy-searxng | Wait for SearXNG to accept connections
