@@ -1,7 +1,7 @@
 ---
 - name: Deploy Ollama
 
-  hosts: lxc-llm
+  hosts: ollama
 
   vars:
 
