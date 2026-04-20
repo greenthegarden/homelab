@@ -1,7 +1,7 @@
 ---
 - name: Deploy Beszel
 
-  hosts: dozzle
+  hosts: monitor
 
   vars:
 

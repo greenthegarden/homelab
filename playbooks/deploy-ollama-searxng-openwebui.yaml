@@ -1,7 +1,7 @@
 ---
-- name: Deploy Ollama
+- name: Deploy LLM stack
 
-  hosts: ollama
+  hosts: lxc-llm
 
   vars:
 
@@ -44,7 +44,7 @@
 
     # Open WebUI is configured to use Ollama as its backend LLM provider
     # and SearXNG as its search engine provider.
-    # Expects Ollama and SearXNG to be running on the same host.
+    # Expects Ollama and SearXNG to be running on the same network.
     - name: Deploy a containerised instance of Open WebUI
       ansible.builtin.include_tasks:
         file: tasks/deploy-open-webui.yaml

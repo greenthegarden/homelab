@@ -1,7 +1,4 @@
 ---
-- name: deploy-dozzle | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
 
 ####### DOZZLE SECTION
 

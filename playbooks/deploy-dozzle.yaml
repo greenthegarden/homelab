@@ -27,7 +27,7 @@
   # The playbook is designed to be run on a host with a modern version of Docker
   # installed and configured, as it relies on Docker to deploy the services.
 
-  hosts: dozzle
+  hosts: monitor
 
   vars:
 
@@ -36,6 +36,12 @@
     # TODO: Ensure variables set here are used in group_vars
     # renovate: datasource=docker depName=amir20/dozzle
     dozzle_image: amir20/dozzle:v10.4.1
+
+  pre_tasks:
+
+      - name: Ensure base environment is configured
+        ansible.builtin.include_tasks:
+          file: tasks/configure-containerised-base.yaml
 
   tasks:
 
