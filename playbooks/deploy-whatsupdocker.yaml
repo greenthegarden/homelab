@@ -9,6 +9,12 @@
     # renovate: datasource=docker depName=getwud/wud
     whatsupdocker_image: getwud/wud:8.2.2
 
+  pre_tasks:
+
+      - name: Ensure base environment is configured
+        ansible.builtin.include_tasks:
+          file: tasks/configure-containerised-base.yaml
+
   tasks:
 
     - name: Load homelab vars

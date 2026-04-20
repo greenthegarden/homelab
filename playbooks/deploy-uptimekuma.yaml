@@ -11,6 +11,12 @@
 
     uptimekuma_deploy_docker_volume_backup: false
 
+  pre_tasks:
+
+      - name: Ensure base environment is configured
+        ansible.builtin.include_tasks:
+          file: tasks/configure-containerised-base.yaml
+
   tasks:
 
     - name: Load homelab vars

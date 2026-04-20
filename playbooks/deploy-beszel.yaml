@@ -9,6 +9,12 @@
     # renovate: datasource=docker depName=henrygd/beszel
     beszel_image: henrygd/beszel:0.18.7
 
+  pre_tasks:
+
+      - name: Ensure base environment is configured
+        ansible.builtin.include_tasks:
+          file: tasks/configure-containerised-base.yaml
+
   tasks:
 
     - name: Load homelab vars
