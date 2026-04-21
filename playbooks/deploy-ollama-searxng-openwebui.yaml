@@ -1,7 +1,7 @@
 ---
 - name: Deploy LLM stack
 
-  hosts: lxc-llm
+  hosts: ollama
 
   vars:
 
