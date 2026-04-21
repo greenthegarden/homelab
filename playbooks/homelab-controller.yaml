@@ -1,13 +1,13 @@
 ---
 - name: Deploy Homelab Controller Node
 
-  hosts: lxc-controller
+  hosts: controller
 
   vars:
 
     # Dockhand facts
     # renovate: datasource=docker depName=fnsys/dockhand
-    dockhand_image: fnsys/dockhand:v1.0.18
+    dockhand_image: fnsys/dockhand:v1.0.26
 
     # Semaphore facts
     # renovate: datasource=docker depName=semaphoreui/semaphore
