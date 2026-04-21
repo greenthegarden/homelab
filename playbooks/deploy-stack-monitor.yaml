@@ -1,7 +1,7 @@
 ---
 - name: Deploy Monitor stack
 
-  hosts: lxc-monitor
+  hosts: monitor
 
   vars:
 
