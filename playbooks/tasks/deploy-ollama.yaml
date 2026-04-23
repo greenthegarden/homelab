@@ -126,8 +126,15 @@
         image: "{{ ollama_image }}"
         detach: true
         env:
+          OLLAMA_MAX_LOADED_MODELS: "1"
+          OLLAMA_NUM_PARALLEL: "1"
+          OLLAMA_KEEP_ALIVE: 5m
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ ollama_container_labels | default(omit) }}"
+        memory: "24g"
+        memory_reservation: "12g"
+        memory_swap: "24g"  # Same as memory = no swap usage
+        memory_swappiness: 0  # Further discourage swap usage
         networks_cli_compatible: true
         networks: "{{ ollama_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
         restart: true
