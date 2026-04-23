@@ -28,9 +28,6 @@ atlas_image: keinstien/atlas:3.3.4
 # Beszel Agent facts
 # renovate: datasource=docker depName=henrygd/beszel-agent
 beszel_agent_image: henrygd/beszel-agent:0.18.7
-# Docker Socket Proxy service facts
-# renovate: datasource=docker depName=ghcr.io/tecnativa/docker-socket-proxy
-docker_socket_proxy_image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.2
 # Docker Volume Backup facts
 # renovate: datasource=docker depName=offen/docker-volume-backup
 docker_volume_backup_image: offen/docker-volume-backup:v2.47.2
@@ -54,7 +51,7 @@ socket_proxy_image: wollomatic/socket-proxy:1.11.4
 tinyauth_image: ghcr.io/steveiliop56/tinyauth:v5.0.6
 # Traefik facts
 # renovate: datasource=docker depName=traefik
-traefik_image: traefik:3.6.13
+traefik_image: traefik:3.6.14
 traefik_entrypoint_insecure_name: web
 traefik_entrypoint_secure_name: "{{ traefik_entrypoint_insecure_name | default('web') }}secure"
 # What's Up Docker facts
