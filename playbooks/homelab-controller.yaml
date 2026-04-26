@@ -7,7 +7,7 @@
 
     # Dockhand facts
     # renovate: datasource=docker depName=fnsys/dockhand
-    dockhand_image: fnsys/dockhand:v1.0.26
+    dockhand_image: fnsys/dockhand:v1.0.27
 
     # Semaphore facts
     # renovate: datasource=docker depName=semaphoreui/semaphore
@@ -27,7 +27,7 @@
   tasks:
 
     # Load environment variables applicable to the homelab environment
-    - name: homelab-deploy-support-services | Load homelab vars
+    - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 
