@@ -124,7 +124,7 @@
         detach: true
         labels: "{{ nextcloud_aio_mastercontainer_container_labels | default(omit) }}"
         networks_cli_compatible: true
-        networks: "{{ nextcloud_aio_mastercontainer_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        # networks: "{{ nextcloud_aio_mastercontainer_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         security_opts:
