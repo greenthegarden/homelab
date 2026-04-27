@@ -47,10 +47,10 @@
       - "Ollama ports: {{ nextcloud_aio_mastercontainer_ports | default(omit) }}"
       - "Ollama volumes: {{ nextcloud_aio_mastercontainer_volumes | default(omit) }}"
 
-- name: deploy-nextcloud-aio-mastercontainer | Create Nextcloud All-in-One container labels
-  ansible.builtin.set_fact:
-    nextcloud_aio_mastercontainer_container_labels: "{{ nextcloud_aio_mastercontainer_container_labels | default({}) | combine({item.key: item.value}) }}"
-  with_items:
+# - name: deploy-nextcloud-aio-mastercontainer | Create Nextcloud All-in-One container labels
+#   ansible.builtin.set_fact:
+#     nextcloud_aio_mastercontainer_container_labels: "{{ nextcloud_aio_mastercontainer_container_labels | default({}) | combine({item.key: item.value}) }}"
+#   with_items:
     # ---------------------------------------------------------------
     # Traefik labels
     # - { "key": "traefik.enable", "value": "true" }
