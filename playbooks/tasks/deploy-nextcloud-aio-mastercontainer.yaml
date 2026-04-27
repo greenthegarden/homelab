@@ -126,15 +126,8 @@
         image: "{{ nextcloud_aio_mastercontainer_image }}"
         detach: true
         env:
-          nextcloud_aio_mastercontainer_MAX_LOADED_MODELS: "1"
-          nextcloud_aio_mastercontainer_NUM_PARALLEL: "1"
-          nextcloud_aio_mastercontainer_KEEP_ALIVE: 5m
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ nextcloud_aio_mastercontainer_container_labels | default(omit) }}"
-        memory: "24g"
-        memory_reservation: "12g"
-        memory_swap: "24g"  # Same as memory = no swap usage
-        memory_swappiness: 0  # Further discourage swap usage
         networks_cli_compatible: true
         networks: "{{ nextcloud_aio_mastercontainer_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
         restart: true
@@ -142,7 +135,7 @@
         security_opts:
           - "no-new-privileges:true"
         state: started
-        volumes: "{{ default_host_volumes + nextcloud_aio_mastercontainer_volumes | default(omit) }}"
+        volumes: "{{ docker_host_volume + default_host_volumes + nextcloud_aio_mastercontainer_volumes | default(omit) }}"
       register: nextcloud_aio_mastercontainer_container_state
 
 - name: deploy-nextcloud-aio-mastercontainer | Wait for Nextcloud All-in-One to accept connections
