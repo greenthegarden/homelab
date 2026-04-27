@@ -1,0 +1,158 @@
+---
+
+####### NEXTCLOUD ALL-IN-ONE SECTION
+
+# https://heiden.io/2023/11/27/setting-up-nextcloud-all-in-one-aio-with-a-traefik-v3-reverse-proxy/
+
+- name: deploy-nextcloud-aio-mastercontainer | Set Nextcloud All-in-One facts
+  ansible.builtin.set_fact:
+    nextcloud_aio_mastercontainer_image: "{{ nextcloud_aio_mastercontainer_image | default('nextcloud/all-in-one:latest') }}"
+    nextcloud_aio_mastercontainer_service_name: "{{ nextcloud_aio_mastercontainer_service_name | default('nextcloud-aio-mastercontainer') }}"
+    nextcloud_aio_mastercontainer_service_port: "{{ nextcloud_aio_mastercontainer_service_port | default(8080) }}"
+
+- name: deploy-nextcloud-aio-mastercontainer | Set Nextcloud All-in-One network facts
+  ansible.builtin.set_fact:
+    nextcloud_aio_mastercontainer_network_name: "{{ nextcloud_aio_mastercontainer_network_name | default(nextcloud_aio_mastercontainer_service_name) }}"
+
+- name: deploy-nextcloud-aio-mastercontainer | Set Nextcloud All-in-One volume facts
+  ansible.builtin.set_fact:
+    nextcloud_aio_mastercontainer_volume_name: "{{ nextcloud_aio_mastercontainer_volume_name | default(nextcloud_aio_mastercontainer_service_name) }}"
+
+- name: deploy-nextcloud-aio-mastercontainer | Set Nextcloud All-in-One aggregated facts
+  ansible.builtin.set_fact:
+    nextcloud_aio_mastercontainer_fqdn: "{{ nextcloud_aio_mastercontainer_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-nextcloud-aio-mastercontainer | Set Nextcloud All-in-One service facts
+  ansible.builtin.set_fact:
+    nextcloud_aio_mastercontainer_networks:
+      - { name: "{{ nextcloud_aio_mastercontainer_network_name }}" }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    nextcloud_aio_mastercontainer_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ nextcloud_aio_mastercontainer_service_port }}:8080"
+    nextcloud_aio_mastercontainer_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ nextcloud_aio_mastercontainer_volume_name }}:/mnt/docker-aio-config"
+
+- name: deploy-nextcloud-aio-mastercontainer | Log Nextcloud All-in-One configuration
+  ansible.builtin.debug:
+    msg:
+      - "Ollama image: {{ nextcloud_aio_mastercontainer_image }}"
+      - "Ollama service name: {{ nextcloud_aio_mastercontainer_service_name }}"
+      - "Ollama FQDN: {{ nextcloud_aio_mastercontainer_fqdn }}"
+      - "Ollama networks: {{ nextcloud_aio_mastercontainer_networks | default(omit) }}"
+      - "Ollama ports: {{ nextcloud_aio_mastercontainer_ports | default(omit) }}"
+      - "Ollama volumes: {{ nextcloud_aio_mastercontainer_volumes | default(omit) }}"
+
+- name: deploy-nextcloud-aio-mastercontainer | Create Nextcloud All-in-One container labels
+  ansible.builtin.set_fact:
+    nextcloud_aio_mastercontainer_container_labels: "{{ nextcloud_aio_mastercontainer_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Docker Volume Backup labels
+    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ nextcloud_aio_mastercontainer_service_name }}.entrypoints",
+      "value": "websecure",
+    }
+    - {
+      "key": "traefik.http.routers.{{ nextcloud_aio_mastercontainer_service_name }}.rule",
+      "value": "Host(`{{ nextcloud_aio_mastercontainer_fqdn }}`)",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - {
+      "key": "wud.link.template",
+      "value": "https://github.com/ollama/ollama/releases/tag/v${major}.${minor}.${patch}",
+    }
+
+- name: deploy-nextcloud-aio-mastercontainer | Create Nextcloud All-in-One networks
+  when: nextcloud_aio_mastercontainer_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ nextcloud_aio_mastercontainer_networks }}"
+
+- name: deploy-nextcloud-aio-mastercontainer | Create Ollama volume
+  when: nextcloud_aio_mastercontainer_volume_name is defined
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ nextcloud_aio_mastercontainer_volume_name }}"
+
+- name: deploy-nextcloud-aio-mastercontainer | Check if Nextcloud All-in-One is running
+  community.docker.docker_container_info:
+    name: "{{ nextcloud_aio_mastercontainer_service_name }}"
+  register: nextcloud_aio_mastercontainer_state
+
+- name: deploy-nextcloud-aio-mastercontainer | Update Nextcloud All-in-One container if changing version
+  when:
+    - nextcloud_aio_mastercontainer_state.exists
+    - (nextcloud_aio_mastercontainer_image | split(':') | last) != (nextcloud_aio_mastercontainer_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-nextcloud-aio-mastercontainer | Stop and remove existing Nextcloud All-in-One container
+      community.docker.docker_container:
+        name: "{{ nextcloud_aio_mastercontainer_service_name }}"
+        state: absent
+
+    - name: deploy-nextcloud-aio-mastercontainer | Set update Nextcloud All-in-One
+      ansible.builtin.set_fact:
+        nextcloud_aio_mastercontainer_update: true
+
+- name: deploy-nextcloud-aio-mastercontainer | Deploy Ollama if not running
+  when: not nextcloud_aio_mastercontainer_state.exists or (nextcloud_aio_mastercontainer_update | default(false))
+  block:
+
+    - name: deploy-nextcloud-aio-mastercontainer | Pull Nextcloud All-in-One image
+      community.docker.docker_image:
+        name: "{{ nextcloud_aio_mastercontainer_image }}"
+        source: pull
+
+    # docker run -d -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama
+    - name: deploy-nextcloud-aio-mastercontainer | Deploy Nextcloud All-in-One
+      community.docker.docker_container:
+        name: "{{ nextcloud_aio_mastercontainer_service_name }}"
+        image: "{{ nextcloud_aio_mastercontainer_image }}"
+        detach: true
+        env:
+          nextcloud_aio_mastercontainer_MAX_LOADED_MODELS: "1"
+          nextcloud_aio_mastercontainer_NUM_PARALLEL: "1"
+          nextcloud_aio_mastercontainer_KEEP_ALIVE: 5m
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ nextcloud_aio_mastercontainer_container_labels | default(omit) }}"
+        memory: "24g"
+        memory_reservation: "12g"
+        memory_swap: "24g"  # Same as memory = no swap usage
+        memory_swappiness: 0  # Further discourage swap usage
+        networks_cli_compatible: true
+        networks: "{{ nextcloud_aio_mastercontainer_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        security_opts:
+          - "no-new-privileges:true"
+        state: started
+        volumes: "{{ default_host_volumes + nextcloud_aio_mastercontainer_volumes | default(omit) }}"
+      register: nextcloud_aio_mastercontainer_container_state
+
+- name: deploy-nextcloud-aio-mastercontainer | Wait for Nextcloud All-in-One to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ nextcloud_aio_mastercontainer_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: whatsupdocker_running
+  retries: 10
+  until: whatsupdocker_running is success

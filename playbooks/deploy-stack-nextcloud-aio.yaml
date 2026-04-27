@@ -1,0 +1,26 @@
+---
+- name: Deploy Nextcloud AIO stack
+
+  hosts: nextcloud
+
+  vars:
+
+    # Nextcloud All-in-One facts
+    # renovate: datasource=docker depName=nextcloud/all-in-one
+    nextcloud_aio_mastercontainer_image: nextcloud/all-in-one:latest
+
+  pre_tasks:
+
+      - name: Ensure base environment is configured
+        ansible.builtin.include_tasks:
+          file: tasks/configure-containerised-base.yaml
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Nextcloud All-in-One
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-nextcloud-aio-mastercontainer.yaml
