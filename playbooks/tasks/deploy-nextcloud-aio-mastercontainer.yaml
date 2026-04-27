@@ -24,10 +24,10 @@
 
 - name: deploy-nextcloud-aio-mastercontainer | Set Nextcloud All-in-One service facts
   ansible.builtin.set_fact:
-    nextcloud_aio_mastercontainer_networks:
-      - { name: "{{ nextcloud_aio_mastercontainer_network_name }}" }
-      # Reverse Proxy  network is used to expose applications via Traefik
-      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    # nextcloud_aio_mastercontainer_networks:
+      # - { name: "{{ nextcloud_aio_mastercontainer_network_name }}" }
+      # # Reverse Proxy  network is used to expose applications via Traefik
+      # - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     nextcloud_aio_mastercontainer_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -52,26 +52,23 @@
     nextcloud_aio_mastercontainer_container_labels: "{{ nextcloud_aio_mastercontainer_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # ---------------------------------------------------------------
-    # Docker Volume Backup labels
-    - { "key": "docker-volume-backup.stop-during-backup", "value": "true" }
-    # ---------------------------------------------------------------
     # Traefik labels
-    - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.routers.{{ nextcloud_aio_mastercontainer_service_name }}.entrypoints",
-      "value": "websecure",
-    }
-    - {
-      "key": "traefik.http.routers.{{ nextcloud_aio_mastercontainer_service_name }}.rule",
-      "value": "Host(`{{ nextcloud_aio_mastercontainer_fqdn }}`)",
-    }
+    # - { "key": "traefik.enable", "value": "true" }
+    # - {
+    #   "key": "traefik.http.routers.{{ nextcloud_aio_mastercontainer_service_name }}.entrypoints",
+    #   "value": "websecure",
+    # }
+    # - {
+    #   "key": "traefik.http.routers.{{ nextcloud_aio_mastercontainer_service_name }}.rule",
+    #   "value": "Host(`{{ nextcloud_aio_mastercontainer_fqdn }}`)",
+    # }
     # ---------------------------------------------------------------
     # What's up Docker? labels
-    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/ollama/ollama/releases/tag/v${major}.${minor}.${patch}",
-    }
+    # - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    # - {
+    #   "key": "wud.link.template",
+    #   "value": "https://github.com/ollama/ollama/releases/tag/v${major}.${minor}.${patch}",
+    # }
 
 - name: deploy-nextcloud-aio-mastercontainer | Create Nextcloud All-in-One networks
   when: nextcloud_aio_mastercontainer_networks is defined
@@ -82,7 +79,7 @@
     state: present
   loop: "{{ nextcloud_aio_mastercontainer_networks }}"
 
-- name: deploy-nextcloud-aio-mastercontainer | Create Ollama volume
+- name: deploy-nextcloud-aio-mastercontainer | Create Nextcloud All-in-One volume
   when: nextcloud_aio_mastercontainer_volume_name is defined
   community.docker.docker_volume:
     name: "{{ item }}"
