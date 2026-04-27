@@ -125,8 +125,6 @@
         name: "{{ nextcloud_aio_mastercontainer_service_name }}"
         image: "{{ nextcloud_aio_mastercontainer_image }}"
         detach: true
-        env:
-          TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ nextcloud_aio_mastercontainer_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ nextcloud_aio_mastercontainer_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
@@ -135,7 +133,7 @@
         security_opts:
           - "no-new-privileges:true"
         state: started
-        volumes: "{{ docker_host_volume + default_host_volumes + nextcloud_aio_mastercontainer_volumes | default(omit) }}"
+        volumes: "{{ docker_host_volume + nextcloud_aio_mastercontainer_volumes | default(omit) }}"
       register: nextcloud_aio_mastercontainer_container_state
 
 - name: deploy-nextcloud-aio-mastercontainer | Wait for Nextcloud All-in-One to accept connections
