@@ -153,6 +153,6 @@
     delay: 10
     state: started
     timeout: 30
-  register: whatsupdocker_running
+  register: ollama_running
   retries: 10
-  until: whatsupdocker_running is success
+  until: ollama_running is success

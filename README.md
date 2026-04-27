@@ -379,6 +379,13 @@ Ansible files make up the majority of this repository, which is structured to wo
 
 The adoption of Ansible allows the configuration to be defined in code, and therefore version controlled in a source code repository.
 
+#### Naming conventions
+
+Follows https://www.techchorus.net/posts/ansible-naming-conventions/
+
+* Role names: use lowercase letters and hyphens to separate words
+* Task names: use lowercase letters and underscores to separate words
+
 #### Ansible Facts
 
 To get ansible facts use
