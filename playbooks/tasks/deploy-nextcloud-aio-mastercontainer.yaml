@@ -139,6 +139,7 @@
       register: nextcloud_aio_mastercontainer_container_state
 
 - name: deploy-nextcloud-aio-mastercontainer | Wait for Nextcloud All-in-One to accept connections
+  when: 0
   ansible.builtin.wait_for:
     host: "{{ nextcloud_aio_mastercontainer_fqdn }}"
     port: 80
