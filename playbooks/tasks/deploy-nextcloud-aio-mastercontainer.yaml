@@ -16,7 +16,7 @@
 
 - name: deploy-nextcloud-aio-mastercontainer | Set Nextcloud All-in-One volume facts
   ansible.builtin.set_fact:
-    nextcloud_aio_mastercontainer_volume_name: "{{ nextcloud_aio_mastercontainer_volume_name | default(nextcloud_aio_mastercontainer_service_name) }}"
+    nextcloud_aio_mastercontainer_volume_name: "nextcloud_aio_mastercontainer"
 
 - name: deploy-nextcloud-aio-mastercontainer | Set Nextcloud All-in-One aggregated facts
   ansible.builtin.set_fact:
