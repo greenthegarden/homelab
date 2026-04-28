@@ -1,4 +1,11 @@
 ---
+
+# Attempts to deploy Nextcloud behind Traefik as a reverse proxy
+#
+# https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
+# https://heiden.io/2023/11/27/setting-up-nextcloud-all-in-one-aio-with-a-traefik-v3-reverse-proxy/
+
+
 - name: Deploy Nextcloud AIO stack
 
   hosts: nextcloud
@@ -6,8 +13,8 @@
   vars:
 
     # Nextcloud All-in-One facts
-    # renovate: datasource=docker depName=nextcloud/all-in-one
-    nextcloud_aio_mastercontainer_image: nextcloud/all-in-one:latest
+    # renovate: datasource=docker depName=ghcr.io/nextcloud-releases/all-in-one
+    nextcloud_aio_mastercontainer_image: ghcr.io/nextcloud-releases/all-in-one:latest
 
   pre_tasks:
 

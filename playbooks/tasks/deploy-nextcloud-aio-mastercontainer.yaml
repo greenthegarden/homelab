@@ -2,8 +2,6 @@
 
 ####### NEXTCLOUD ALL-IN-ONE SECTION
 
-# https://heiden.io/2023/11/27/setting-up-nextcloud-all-in-one-aio-with-a-traefik-v3-reverse-proxy/
-
 - name: deploy-nextcloud-aio-mastercontainer | Set Nextcloud All-in-One facts
   ansible.builtin.set_fact:
     nextcloud_aio_mastercontainer_image: "ghcr.io/nextcloud-releases/all-in-one:latest"
@@ -100,6 +98,8 @@
         name: "{{ nextcloud_aio_mastercontainer_service_name }}"
         image: "{{ nextcloud_aio_mastercontainer_image }}"
         detach: true
+        env:
+          SKIP_DOMAIN_VALIDATION: false
         init: true
         labels: "{{ nextcloud_aio_mastercontainer_container_labels | default(omit) }}"
         networks_cli_compatible: true
@@ -113,7 +113,7 @@
       register: nextcloud_aio_mastercontainer_container_state
 
 - name: deploy-nextcloud-aio-mastercontainer | Wait for Nextcloud All-in-One to accept connections
-  when: 0
+  when: false
   ansible.builtin.wait_for:
     host: "{{ nextcloud_aio_mastercontainer_fqdn }}"
     port: 80
