@@ -99,7 +99,7 @@
         image: "{{ nextcloud_aio_mastercontainer_image }}"
         detach: true
         env:
-          SKIP_DOMAIN_VALIDATION: "false" # "{{ false | quote }}"
+          SKIP_DOMAIN_VALIDATION: "true" # "{{ false | quote }}"
         init: true
         labels: "{{ nextcloud_aio_mastercontainer_container_labels | default(omit) }}"
         networks_cli_compatible: true
