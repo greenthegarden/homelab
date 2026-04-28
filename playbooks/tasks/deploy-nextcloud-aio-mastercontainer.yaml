@@ -17,9 +17,9 @@
     nextcloud_aio_mastercontainer_ports:
       # Published ports to expose outside the container
       # host port:container port
-      - 80:80
+      # - 80:80
       - 8080:8080
-      - 8443:8443
+      # - 8443:8443
     nextcloud_aio_mastercontainer_volumes:
       # Local paths to mount into the container
       # local path:container path
@@ -37,24 +37,24 @@
 #   ansible.builtin.set_fact:
 #     nextcloud_aio_mastercontainer_container_labels: "{{ nextcloud_aio_mastercontainer_container_labels | default({}) | combine({item.key: item.value}) }}"
 #   with_items:
-    # ---------------------------------------------------------------
-    # Traefik labels
-    # - { "key": "traefik.enable", "value": "true" }
-    # - {
-    #   "key": "traefik.http.routers.{{ nextcloud_aio_mastercontainer_service_name }}.entrypoints",
-    #   "value": "websecure",
-    # }
-    # - {
-    #   "key": "traefik.http.routers.{{ nextcloud_aio_mastercontainer_service_name }}.rule",
-    #   "value": "Host(`{{ nextcloud_aio_mastercontainer_fqdn }}`)",
-    # }
-    # ---------------------------------------------------------------
-    # What's up Docker? labels
-    # - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    # - {
-    #   "key": "wud.link.template",
-    #   "value": "https://github.com/ollama/ollama/releases/tag/v${major}.${minor}.${patch}",
-    # }
+#     # ---------------------------------------------------------------
+#     # Traefik labels
+#     - { "key": "traefik.enable", "value": "true" }
+#     - {
+#       "key": "traefik.http.routers.{{ nextcloud_aio_mastercontainer_service_name }}.entrypoints",
+#       "value": "websecure",
+#     }
+#     - {
+#       "key": "traefik.http.routers.{{ nextcloud_aio_mastercontainer_service_name }}.rule",
+#       "value": "Host(`{{ nextcloud_aio_mastercontainer_fqdn }}`)",
+#     }
+#     # ---------------------------------------------------------------
+#     # What's up Docker? labels
+#     # - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+#     # - {
+#     #   "key": "wud.link.template",
+#     #   "value": "https://github.com/ollama/ollama/releases/tag/v${major}.${minor}.${patch}",
+#     # }
 
 - name: deploy-nextcloud-aio-mastercontainer | Create Nextcloud All-in-One volume
   when: nextcloud_aio_mastercontainer_volume_name is defined
@@ -93,12 +93,16 @@
         name: "{{ nextcloud_aio_mastercontainer_image }}"
         source: pull
 
+    # https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
     - name: deploy-nextcloud-aio-mastercontainer | Deploy Nextcloud All-in-One
       community.docker.docker_container:
         name: "{{ nextcloud_aio_mastercontainer_service_name }}"
         image: "{{ nextcloud_aio_mastercontainer_image }}"
         detach: true
         env:
+          APACHE_PORT: 11000
+          APACHE_IP_BINDING: 127.0.0.1
+          APACHE_ADDITIONAL_NETWORK: ""
           SKIP_DOMAIN_VALIDATION: "true" # "{{ true | quote }}"
         init: true
         labels: "{{ nextcloud_aio_mastercontainer_container_labels | default(omit) }}"
