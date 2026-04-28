@@ -1,0 +1,52 @@
+http:
+  routers:
+    nextcloud:
+      rule: "Host(`nextcloud.nextcloud.homelab.greenthegarden.com`)"
+      entrypoints:
+        - "https"
+      service: nextcloud
+      middlewares:
+        - nextcloud-chain
+      tls:
+        certresolver: "letsencrypt"
+
+  services:
+    nextcloud:
+      failover:
+        service: nextcloud_setup
+        fallback: nextcloud_run
+    nextcloud_run:
+      loadBalancer:
+        servers:
+        - url: "http://nextcloud-aio-apache:11000"
+        passHostHeader: "true"
+    nextcloud_setup:
+      loadBalancer:
+        healthCheck:
+          path: /
+          interval: 5s
+          timeout: 2s
+        servers:
+        - url: "http://nextcloud-aio-domaincheck:11000"
+        passHostHeader: "true"
+
+  middlewares:
+    nextcloud-secure-headers:
+      headers:
+        hostsProxyHeaders:
+          - "X-Forwarded-Host"
+        referrerPolicy: "same-origin"
+        customResponseHeaders:
+          X-Robots-Tag:  "noindex, nofollow"
+
+    https-redirect:
+      redirectscheme:
+        scheme: "https"
+        permanent: "true"
+
+    nextcloud-chain:
+      chain:
+        middlewares:
+          # - ... (e.g. rate limiting middleware)
+          - https-redirect
+          - nextcloud-secure-headers
