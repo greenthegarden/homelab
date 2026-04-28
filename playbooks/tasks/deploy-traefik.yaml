@@ -247,8 +247,8 @@
   community.docker.docker_container:
     name: "{{ traefik_service_name }}"
     image: "{{ traefik_image }}"
-    cap_drop:
-      - ALL
+    # cap_drop:
+    #   - ALL
     command: "{{ traefik_command }}"
     detach: true
     env:
@@ -266,14 +266,14 @@
     memory: "2G"
     networks: "{{ traefik_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     published_ports: "{{ traefik_ports | default(omit) }}"
-    read_only: true
+    # read_only: true
     recreate: true # Recreate to ensure any configuration changes are used
     restart: true
     restart_policy: unless-stopped
     security_opts:
       - "no-new-privileges:true"
     state: started
-    user: "65530:65530"
+    # user: "65530:65530"
     volumes: "{{ default_host_volumes + traefik_volumes | default(omit) }}"
   register: traefik_container_state
 
