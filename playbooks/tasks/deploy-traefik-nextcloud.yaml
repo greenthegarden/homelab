@@ -18,7 +18,7 @@
 
 - name: deploy-traefik-nextcloud | Set Traefik network facts
   ansible.builtin.set_fact:
-    traefik_network_name: "{{ traefik_network_name | default(traefik_service_name) }}"
+    traefik_network_name: "{{ traefik_network_name | default(reverse_proxy_network_name) }}"
 
 - name: deploy-traefik-nextcloud | Set Traefik volume facts
   ansible.builtin.set_fact:
