@@ -108,9 +108,9 @@
       - "--entryPoints.{{ traefik_entrypoint_insecure_name }}.http.redirections.entryPoint.scheme=https"
       - "--entryPoints.{{ traefik_entrypoint_insecure_name }}.http.redirections.entrypoint.permanent=true"
       # Required for Nextcloud to correctly handle encoded URL characters (%2F, %3F and %25 in this case) in newer Traefik versions (v3.6.4+).
-      - "--entryPoints.{{ traefik_entrypoint_insecure_name }}.encodedCharacters.allowEncodedSlash=true"
-      - "--entryPoints.{{ traefik_entrypoint_insecure_name }}.encodedCharacters.allowEncodedQuestionMark=true"
-      - "--entryPoints.{{ traefik_entrypoint_insecure_name }}.encodedCharacters.allowEncodedPercent=true"
+      # - "--entryPoints.{{ traefik_entrypoint_insecure_name }}.http.encodedCharacters.allowEncodedSlash=true"
+      # - "--entryPoints.{{ traefik_entrypoint_insecure_name }}.http.encodedCharacters.allowEncodedQuestionMark=true"
+      # - "--entryPoints.{{ traefik_entrypoint_insecure_name }}.http.encodedCharacters.allowEncodedPercent=true"
       ## secure (https) entrypoints
       - "--entrypoints.{{ traefik_entrypoint_secure_name }}.address=:10443" # <== Define a secure entrypoint for port :443
       - "--entrypoints.{{ traefik_entrypoint_secure_name }}.asDefault=true" # <== Set secure entrypoint as the default
