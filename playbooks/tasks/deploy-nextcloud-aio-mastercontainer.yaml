@@ -100,8 +100,8 @@
         image: "{{ nextcloud_aio_mastercontainer_image }}"
         detach: true
         env:
-          APACHE_PORT: 11000
-          APACHE_IP_BINDING: 127.0.0.1
+          APACHE_PORT: "11000"
+          APACHE_IP_BINDING: "127.0.0.1"
           APACHE_ADDITIONAL_NETWORK: ""
           SKIP_DOMAIN_VALIDATION: "true" # "{{ true | quote }}"
         init: true
