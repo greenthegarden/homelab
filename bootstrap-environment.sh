@@ -22,7 +22,11 @@
 #   ./setup_host.sh
 #
 # Notes:
-#   -
+#   uv commands
+#
+#   'uv self update' <= update version of uv
+#   'uv lock --check' <= check if the lockfile is up-to-date
+#   'uv lock --upgrade' <= upgrade all packages
 
 # Use shellcheck for static analysis.
 
