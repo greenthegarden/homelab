@@ -4,7 +4,6 @@
   hosts: ollama
 
   vars:
-
     # Ollama facts
     # renovate: datasource=docker depName=ollama/ollama
     ollama_image: ollama/ollama:0.22.0
@@ -18,14 +17,16 @@
     open_webui_image: ghcr.io/open-webui/open-webui:0.9.2-slim
     open_webui_network_name: open-webui
 
-  pre_tasks:
+    # n8n facts
+    # renovate: datasource=docker depName=docker.n8n.io/n8nio/n8n
+    n8n_image: docker.n8n.io/n8nio/n8n:2.18.4
 
-      - name: Ensure base environment is configured
-        ansible.builtin.include_tasks:
-          file: tasks/configure-containerised-base.yaml
+  pre_tasks:
+    - name: Ensure base environment is configured
+      ansible.builtin.include_tasks:
+        file: tasks/configure-containerised-base.yaml
 
   tasks:
-
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
@@ -48,3 +49,7 @@
     - name: Deploy a containerised instance of Open WebUI
       ansible.builtin.include_tasks:
         file: tasks/deploy-open-webui.yaml
+
+    - name: Deploy a containerised instance of n8n
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-n8n.yaml
