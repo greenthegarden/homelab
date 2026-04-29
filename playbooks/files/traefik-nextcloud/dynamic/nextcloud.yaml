@@ -3,7 +3,7 @@ http:
     nextcloud:
       rule: "Host(`nextcloud.nextcloud.homelab.greenthegarden.com`)"
       entrypoints:
-        - "https"
+        - "websecure"
       service: nextcloud
       middlewares:
         - nextcloud-chain
