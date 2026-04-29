@@ -1,9 +1,4 @@
 ---
-
-- name: deploy-n8n | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
-
 ####### N8N SECTION
 
 # https://support.getn8n.com/self-managed/#what-is-self-hosted-n8n
@@ -70,21 +65,12 @@
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.routers.{{ n8n_service_name }}.entrypoints",
-      "value": "{{ traefik_entrypoint_secure_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ n8n_service_name }}.rule",
-      "value": "Host(`{{ n8n_fqdn }}`)",
-    }
+    - { "key": "traefik.http.routers.{{ n8n_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ n8n_service_name }}.rule", "value": "Host(`{{ n8n_fqdn }}`)" }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/n8n-io/n8n/releases/tag/n8n%40${major}.${minor}.${patch}",
-    }
+    - { "key": "wud.link.template", "value": "https://github.com/n8n-io/n8n/releases/tag/n8n%40${major}.${minor}.${patch}" }
 
 - name: deploy-n8n | Create N8n networks
   when: n8n_networks is defined
@@ -113,7 +99,6 @@
     - n8n_state.exists
     - (n8n_image | split(':') | last) != (n8n_state.container.Config.Image | split(':') | last)
   block:
-
     - name: deploy-n8n | Stop and remove existing N8n container
       community.docker.docker_container:
         name: "{{ n8n_service_name }}"
@@ -127,7 +112,6 @@
   when:
     - not n8n_state.exists or (n8n_update | default(false))
   block:
-
     - name: deploy-n8n | Pull N8n image
       community.docker.docker_image:
         name: "{{ n8n_image }}"
