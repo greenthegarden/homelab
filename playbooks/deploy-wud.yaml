@@ -4,23 +4,20 @@
   hosts: monitor
 
   vars:
-
     # What's up Docker? facts
     # renovate: datasource=docker depName=getwud/wud
-    whatsupdocker_image: getwud/wud:8.2.2
+    wud_image: getwud/wud:8.2.2
 
   pre_tasks:
-
-      - name: Ensure base environment is configured
-        ansible.builtin.include_tasks:
-          file: tasks/configure-containerised-base.yaml
+    - name: Ensure base environment is configured
+      ansible.builtin.include_tasks:
+        file: tasks/configure-containerised-base.yaml
 
   tasks:
-
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 
     - name: Deploy a containerised instance of What's up Docker?
       ansible.builtin.include_tasks:
-        file: tasks/deploy-whatsupdocker.yaml
+        file: tasks/deploy-wud.yaml
