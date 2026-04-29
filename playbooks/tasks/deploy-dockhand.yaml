@@ -25,9 +25,17 @@
   ansible.builtin.set_fact:
     dockhand_fqdn: "{{ dockhand_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
+# Defined in configure-containerised-base
+- name: deply-dockhand | Set Dockhand proxy facts
+  ansible.builtin.set_fact:
+    dockhand_socket_proxy_network_name: "socket-proxy-dockhand"
+    dockhand_socket_proxy_service_port: 2376
+
 - name: deploy-dockhand | Set Dockhand service facts
   ansible.builtin.set_fact:
     dockhand_networks:
+      # Socket Proxy provides access to exposed Docker APIs
+      - { name: "{{ socket_proxy_dockhand_network_name | default('socket-proxy-dockhand') }}" }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     dockhand_ports:
@@ -57,31 +65,19 @@
     # Homepage labels
     - { "key": "homepage.group", "value": "System" }
     - { "key": "homepage.name", "value": "Dockhand" }
-    - {
-      "key": "homepage.description",
-      "value": "Docker management you will like.",
-    }
+    - { "key": "homepage.description", "value": "Docker management you will like." }
     - { "key": "homepage.icon", "value": "dockhand.png" }
     - { "key": "homepage.href", "value": "https://{{ dockhand_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ dockhand_fqdn }}/" }
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.routers.{{ dockhand_service_name }}.entrypoints",
-      "value": "{{ traefik_entrypoint_secure_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ dockhand_service_name }}.rule",
-      "value": "Host(`{{ dockhand_fqdn }}`)",
-    }
+    - { "key": "traefik.http.routers.{{ dockhand_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ dockhand_service_name }}.rule", "value": "Host(`{{ dockhand_fqdn }}`)" }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/Finsys/dockhand/releases/tag/v${major}.${minor}.${patch}",
-    }
+    - { "key": "wud.link.template", "value": "https://github.com/Finsys/dockhand/releases/tag/v${major}.${minor}.${patch}" }
 
 - name: deploy-dockhand | Create Dockhand network
   when: dockhand_networks is defined

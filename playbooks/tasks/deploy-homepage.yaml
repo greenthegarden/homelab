@@ -1,8 +1,4 @@
 ---
-- name: deploy-homepage | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
-
 ####### HOMEPAGE SECTION
 
 # https://gethomepage.dev/installation/docker/
@@ -26,11 +22,17 @@
   ansible.builtin.set_fact:
     homepage_fqdn: "{{ homepage_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
+# Defined in configure-containerised-base
+- name: deply-homepage | Set Homepage proxy facts
+  ansible.builtin.set_fact:
+    homepage_socket_proxy_network_name: "socket-proxy-homepage"
+    homepage_socket_proxy_service_port: 2379
+
 - name: deploy-homepage | Set Homepage service facts
   ansible.builtin.set_fact:
     homepage_networks:
       # Docker Socket Proxy External provide access to exposed Docker APIs
-      - { name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy-external') }}" }
+      - { name: "{{ homepage_socket_proxy_network_name | default('socket-proxy-homepage') }}" }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     homepage_volumes:
@@ -63,21 +65,12 @@
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.routers.{{ homepage_service_name }}.entrypoints",
-      "value": "{{ traefik_entrypoint_secure_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ homepage_service_name }}.rule",
-      "value": "Host(`{{ homepage_fqdn }}`)",
-    }
+    - { "key": "traefik.http.routers.{{ homepage_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ homepage_service_name }}.rule", "value": "Host(`{{ homepage_fqdn }}`)" }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/gethomepage/homepage/releases/tag/v${major}.${minor}.${patch}",
-    }
+    - { "key": "wud.link.template", "value": "https://github.com/gethomepage/homepage/releases/tag/v${major}.${minor}.${patch}" }
 
 - name: deploy-homepage | Create Homepage networks
   when: homepage_networks is defined
@@ -91,7 +84,6 @@
 - name: deploy-homepage | Create Homepage configuration
   when: homepage_config_dir is defined
   block:
-
     - name: deploy-homepage | Create Homepage configuration directory
       ansible.builtin.file:
         path: "{{ homepage_config_dir }}"

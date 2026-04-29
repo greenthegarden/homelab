@@ -1,131 +1,120 @@
 ---
-
 ####### WHAT'S UP DOCKER SECTION
 
 # https://getwud.github.io/wud/#/quickstart/
 # https://getwud.github.io/wud/#/configuration/
 
-- name: deploy-whatsupdocker | Set What's up Docker? facts
+- name: deploy-wud | Set What's up Docker? facts
   ansible.builtin.set_fact:
-    whatsupdocker_image: "{{ whatsupdocker_image | default('getwud/wud:latest') }}"
-    whatsupdocker_service_name: "{{ whatsupdocker_service_name | default('whats-up-docker') }}"
-    whatsupdocker_service_port: "{{ whatsupdocker_service_port | default(3000) }}"
+    wud_image: "{{ wud_image | default('getwud/wud:latest') }}"
+    wud_service_name: "{{ wud_service_name | default('wud') }}"
+    wud_service_port: "{{ wud_service_port | default(3000) }}"
 
-- name: deploy-whatsupdocker | Set What's up Docker? network facts
+- name: deploy-wud | Set What's up Docker? network facts
   ansible.builtin.set_fact:
-    whatsupdocker_network_name: "{{ whatsupdocker_network_name | default(whatsupdocker_service_name) }}"
+    wud_network_name: "{{ wud_network_name | default(wud_service_name) }}"
 
-- name: deploy-whatsupdocker | Set What's up Docker? volume facts
+- name: deploy-wud | Set What's up Docker? volume facts
   ansible.builtin.set_fact:
-    whatsupdocker_volume_name: "{{ whatsupdocker_volume_name | default(whatsupdocker_service_name) }}"
+    wud_volume_name: "{{ wud_volume_name | default(wud_service_name) }}"
 
-- name: deploy-whatsupdocker | Set What's up Docker? aggregated facts
+- name: deploy-wud | Set What's up Docker? aggregated facts
   ansible.builtin.set_fact:
-    whatsupdocker_fqdn: "{{ whatsupdocker_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    wud_fqdn: "{{ wud_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
-- name: deploy-whatsupdocker | Set What's up Docker? service facts
+# Defined in configure-containerised-base
+- name: deply-wud | Set What's up Docker? proxy facts
   ansible.builtin.set_fact:
-    whatsupdocker_networks:
+    wud_socket_proxy_network_name: "socket-proxy-wud"
+    wud_socket_proxy_service_port: 2378
+
+- name: deploy-wud | Set What's up Docker? service facts
+  ansible.builtin.set_fact:
+    wud_networks:
+      # Socket Proxy provides access to exposed Docker APIs
+      - { name: "{{ wud_socket_proxy_network_name | default('socket-proxy-wud') }}" }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
-    whatsupdocker_ports:
+    wud_ports:
       # Published ports to expose outside the container
       # host port:container port
-      - "{{ whatsupdocker_service_port }}:3000"
-    whatsupdocker_volumes:
+      - "{{ wud_service_port }}:3000"
+    wud_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ whatsupdocker_volume_name }}:/store"
+      - "{{ wud_volume_name }}:/store"
 
-- name: deploy-whatsupdocker | Log What's up Docker? configuration
+- name: deploy-wud | Log What's up Docker? configuration
   ansible.builtin.debug:
     msg:
-      - "What's up Docker? image: {{ whatsupdocker_image }}"
-      - "What's up Docker? service name: {{ whatsupdocker_service_name }}"
-      - "What's up Docker? FQDN: {{ whatsupdocker_fqdn }}"
-      - "What's up Docker? networks: {{ whatsupdocker_networks | default(omit) }}"
-      - "What's up Docker? ports: {{ whatsupdocker_ports | default(omit) }}"
-      - "What's up Docker? volumes: {{ whatsupdocker_volumes | default(omit) }}"
+      - "What's up Docker? image: {{ wud_image }}"
+      - "What's up Docker? service name: {{ wud_service_name }}"
+      - "What's up Docker? FQDN: {{ wud_fqdn }}"
+      - "What's up Docker? networks: {{ wud_networks | default(omit) }}"
+      - "What's up Docker? ports: {{ wud_ports | default(omit) }}"
+      - "What's up Docker? volumes: {{ wud_volumes | default(omit) }}"
 
-- name: deploy-whatsupdocker | Create What's up Docker? container labels
+- name: deploy-wud | Create What's up Docker? container labels
   ansible.builtin.set_fact:
-    whatsupdocker_container_labels: "{{ whatsupdocker_container_labels | default({}) | combine({item.key: item.value}) }}"
+    wud_container_labels: "{{ wud_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
     # ---------------------------------------------------------------
     # Homepage labels
     - { "key": "homepage.group", "value": "System" }
     - { "key": "homepage.name", "value": "What's Up Docker" }
-    - {
-      "key": "homepage.description",
-      "value": "Which container images are out-of-date?",
-    }
+    - { "key": "homepage.description", "value": "Which container images are out-of-date?" }
     - { "key": "homepage.icon", "value": "whats-up-docker.png" }
-    - { "key": "homepage.href", "value": "https://{{ whatsupdocker_fqdn }}/" }
-    - {
-      "key": "homepage.siteMonitor",
-      "value": "https://{{ whatsupdocker_fqdn }}/",
-    }
-    - { "key": "homepage.widget.type", "value": "whatsupdocker" }
-    - {
-      "key": "homepage.widget.url",
-      "value": "https://{{ whatsupdocker_fqdn }}",
-    }
+    - { "key": "homepage.href", "value": "https://{{ wud_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ wud_fqdn }}/" }
+    - { "key": "homepage.widget.type", "value": "wud" }
+    - { "key": "homepage.widget.url", "value": "https://{{ wud_fqdn }}" }
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.entrypoints",
-      "value": "{{ traefik_entrypoint_secure_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.rule",
-      "value": "Host(`{{ whatsupdocker_fqdn }}`)",
-    }
+    - { "key": "traefik.http.routers.{{ wud_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ wud_service_name }}.rule", "value": "Host(`{{ wud_fqdn }}`)" }
     # - {
-    #   "key": "traefik.http.routers.{{ whatsupdocker_service_name }}.middlewares",
+    #   "key": "traefik.http.routers.{{ wud_service_name }}.middlewares",
     #   "value": "tinyauth",
     # }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/getwud/wud/releases/tag/${major}.${minor}.${patch}",
-    }
+    - { "key": "wud.link.template", "value": "https://github.com/getwud/wud/releases/tag/${major}.${minor}.${patch}" }
 
-- name: deploy-whatsupdocker | Create What's up Docker? networks
-  when: whatsupdocker_networks is defined
+- name: deploy-wud | Create What's up Docker? networks
+  when: wud_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
     driver: "{{ item.driver | default('bridge') }}"
     internal: "{{ item.internal | default(false) }}"
     state: present
-  loop: "{{ whatsupdocker_networks }}"
+  loop: "{{ wud_networks }}"
 
-- name: deploy-whatsupdocker | Create What's up Docker? volumes
-  when: whatsupdocker_volume_name is defined and (whatsupdocker_volumes | length > 0)
+- name: deploy-wud | Create What's up Docker? volumes
+  when: wud_volume_name is defined and (wud_volumes | length > 0)
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
   loop:
-    - "{{ whatsupdocker_volume_name }}"
+    - "{{ wud_volume_name }}"
 
-- name: deploy-whatsupdocker | Pull What's up Docker? image
+- name: deploy-wud | Pull What's up Docker? image
   community.docker.docker_image:
-    name: "{{ whatsupdocker_image }}"
+    name: "{{ wud_image }}"
     source: pull
 
-- name: deploy-whatsupdocker | Deploy What's up Docker?
+- name: deploy-wud | Deploy What's up Docker?
   community.docker.docker_container:
-    name: "{{ whatsupdocker_service_name }}"
-    image: "{{ whatsupdocker_image }}"
+    name: "{{ wud_service_name }}"
+    image: "{{ wud_image }}"
     detach: true
     env:
       TZ: "{{ homelab.timezone | default('UTC') }}"
       # Publish to MQTT broker when updates are available
       # WUD_TRIGGER_MQTT_MOSQUITTO_URL: "mqtt://{{ emqx.broker_address }}:{{ emqx.broker_port | default(1883) }}"
-      # WUD_TRIGGER_MQTT_MOSQUITTO_USER: "{{ whatsupdocker.broker_username }}"
-      # WUD_TRIGGER_MQTT_MOSQUITTO_PASSWORD: "{{ whatsupdocker.broker_password }}"
+      # WUD_TRIGGER_MQTT_MOSQUITTO_USER: "{{ wud.broker_username }}"
+      # WUD_TRIGGER_MQTT_MOSQUITTO_PASSWORD: "{{ wud.broker_password }}"
       # WUD_TRIGGER_MQTT_MOSQUITTO_HASS_ENABLED: "true"
       # # Local host to watch
       # WUD_WATCHER_DOCKER_HOST: "docker-socket-proxy-external"
@@ -133,48 +122,41 @@
       # WUD_WATCHER_DOCKER_SOCKET: "tcp://docker-socket-proxy-external"
       # Remote hosts to watch
       WUD_WATCHER_CONTROLLER_HOST: "lxc-controller.{{ lan_domain }}"
-      WUD_WATCHER_CONTROLLER_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_CONTROLLER_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
       WUD_WATCHER_LLM_HOST: "lxc-llm.{{ lan_domain }}"
-      WUD_WATCHER_LLM_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_LLM_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
       WUD_WATCHER_MONITOR_HOST: "lxc-monitor.{{ lan_domain }}"
-      WUD_WATCHER_MONITOR_PORT: "{{ whatsupdocker_docker_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_MONITOR_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
       # # Authentik integration
-      # WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ whatsupdocker.oauth_client_id | default('dummy') }}"
-      # WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ whatsupdocker.oauth_client_secret | default('dummy') }}"
+      # WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ wud.oauth_client_id | default('dummy') }}"
+      # WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ wud.oauth_client_secret | default('dummy') }}"
       # WUD_AUTH_OIDC_AUTHENTIK_DISCOVERY: "{{ authentik.url }}/application/o/wud/.well-known/openid-configuration"
       # WUD_AUTH_OIDC_AUTHENTIK_REDIRECT: "false" # Set to true to skip internal login page
     healthcheck:
-      test:
-        [
-          "curl",
-          "--fail",
-          "http://localhost:{{ whatsupdocker_service_port }}/health",
-          "||",
-          "exit 1"
-        ]
+      test: ["curl", "--fail", "http://localhost:{{ wud_service_port }}/health", "||", "exit 1"]
       interval: 30s
       start_period: 30s
       timeout: 30s
       retries: 3
-    labels: "{{ whatsupdocker_container_labels | default(omit) }}"
+    labels: "{{ wud_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks: "{{ whatsupdocker_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+    networks: "{{ wud_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     security_opts:
       - "no-new-privileges:true"
     state: started
-    volumes: "{{ default_host_volumes + whatsupdocker_volumes | default(omit) }}"
-  register: whatsupdocker_container_state
+    volumes: "{{ default_host_volumes + wud_volumes | default(omit) }}"
+  register: wud_container_state
 
-- name: deploy-whatsupdocker | Wait for What's up Docker? to accept connections
+- name: deploy-wud | Wait for What's up Docker? to accept connections
   ansible.builtin.wait_for:
-    host: "{{ whatsupdocker_fqdn }}"
+    host: "{{ wud_fqdn }}"
     port: 80
     connect_timeout: 1
     delay: 10
     state: started
     timeout: 30
-  register: whatsupdocker_running
+  register: wud_running
   retries: 10
-  until: whatsupdocker_running is success
+  until: wud_running is success

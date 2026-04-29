@@ -1,5 +1,4 @@
 ---
-
 # This playbook deploys support services for the homelab environment and are intended to be run on all Homelab LXC based servers.
 
 # The services include:
@@ -50,18 +49,10 @@
     socket_proxy_network_internal: false
     socket_proxy_command_service: "{{ item.command }}"
   loop:
-    - { name: homepage,
-        port: 2376,
-        command: [ '-allowfrom=homepage', '-allowGET=/v1\..{2}/(containers/.*|events|info)' ]
-      }
-    - { name: uptimekuma,
-        port: 2377,
-        command: [ '-allowfrom=uptimekuma', '-allowGET=/v1\..{2}/(containers/.*|events|info)' ]
-      }
-    - { name: wud,
-        port: 2378,
-        command: [ '-allowfrom=wud', '-allowGET=/v1\..{2}/(containers/.*|events|info)' ]
-      }
+    - { name: dockhand, port: 2376, command: ["-allowfrom=dockhand", '-allowGET=/v1\..{2}/(containers/.*|events|info)'] }
+    - { name: uptimekuma, port: 2377, command: ["-allowfrom=uptimekuma", '-allowGET=/v1\..{2}/(containers/.*|events|info)'] }
+    - { name: wud, port: 2378, command: ["-allowfrom=wud", '-allowGET=/v1\..{2}/(containers/.*|events|info)'] }
+    - { name: homepage, port: 2379, command: ["-allowfrom=homepage", '-allowGET=/v1\..{2}/(containers/.*|events|info)'] }
 
 # Use Traefik as a reverse proxy to manage access to web services with SSL via Let's Encrypt
 
@@ -81,9 +72,8 @@
 # Use Prometheus stack to monitor host metrics
 
 - name: homelab-deploy-support-services | Deploy Prometheus stack services
-  when: deploy_prometheus_stack | default(false)  # Disable for now as not needed with Dozzle
+  when: deploy_prometheus_stack | default(false) # Disable for now as not needed with Dozzle
   block:
-
     - name: homelab-deploy-support-services | Deploy a containerised instance of Node Exporter
       ansible.builtin.include_tasks:
         file: tasks/deploy-node-exporter.yaml
