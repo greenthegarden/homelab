@@ -69,6 +69,9 @@
     - { "key": "homepage.widget.type", "value": "wud" }
     - { "key": "homepage.widget.url", "value": "https://{{ wud_fqdn }}" }
     # ---------------------------------------------------------------
+    # Socket Proxy labels
+    - { "key": "socket-proxy.allow.get", "value": ".*" }
+    # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
     - { "key": "traefik.http.routers.{{ wud_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }

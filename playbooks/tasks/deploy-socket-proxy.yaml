@@ -1,5 +1,4 @@
 ---
-
 ####### SOCKET-PROXY SECTION
 
 # https://github.com/wollomatic/socket-proxy
@@ -26,12 +25,11 @@
 - name: deploy-socket-proxy | Set Socket Proxy command base
   ansible.builtin.set_fact:
     socket_proxy_command_base:
-      - '-loglevel=debug'
-      - '-listenip=0.0.0.0'
-      - '-allowGET=/v1\..{2}/(containers/.*|events|info)'
-      - '-watchdoginterval=3600'
-      - '-stoponwatchdog'
-      - '-shutdowngracetime=10'
+      - "-loglevel=debug"
+      - "-listenip=0.0.0.0"
+      - "-watchdoginterval=3600"
+      - "-stoponwatchdog"
+      - "-shutdowngracetime=10"
 
 - name: deploy-socket-proxy | debug
   ansible.builtin.debug:
@@ -74,10 +72,7 @@
   with_items:
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/wollomatic/socket-proxy/releases/tag/${major}.${minor}.${patch}",
-    }
+    - { "key": "wud.link.template", "value": "https://github.com/wollomatic/socket-proxy/releases/tag/${major}.${minor}.${patch}" }
 
 - name: deploy-socket-proxy | Create Socket Proxy network
   when: socket_proxy_networks is defined

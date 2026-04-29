@@ -51,7 +51,7 @@
   loop:
     - { name: dockhand, port: 2376, command: ["-allowfrom=dockhand", '-allowGET=/v1\..{2}/(containers/.*|events|info)'] }
     - { name: uptimekuma, port: 2377, command: ["-allowfrom=uptimekuma", '-allowGET=/v1\..{2}/(containers/.*|events|info)'] }
-    - { name: wud, port: 2378, command: ["-allowfrom=wud", '-allowGET=/v1\..{2}/(containers/.*|events|info)'] }
+    - { name: wud, port: 2378, command: ["-allowfrom=wud", "-allowGET=.*"] }
     - { name: homepage, port: 2379, command: ["-allowfrom=homepage", '-allowGET=/v1\..{2}/(containers/.*|events|info)'] }
 
 # Use Traefik as a reverse proxy to manage access to web services with SSL via Let's Encrypt
