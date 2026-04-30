@@ -6,7 +6,7 @@
   ansible.builtin.set_fact:
     traefik_manager_image: "{{ traefik_manager_image | default('ghcr.io/chr0nzz/traefik-manager:latest') }}"
     traefik_manager_service_name: "{{ traefik_manager_service_name | default('traefik-manager') }}"
-    traefik_manager_service_port_http: "{{ traefik_manager_service_port | default(5000) }}"
+    traefik_manager_service_port: "{{ traefik_manager_service_port | default(5000) }}"
 
 - name: deploy-traefik-manager | Set Traefik Manager network facts
   ansible.builtin.set_fact:
