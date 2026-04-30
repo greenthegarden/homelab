@@ -250,7 +250,7 @@
     - name: deploy-traefik-nextcloud | Create dynamic configuration file
       ansible.builtin.copy:
         src: files/traefik-nextcloud/dynamic/nextcloud.yaml
-        dest: "{{ traefik_config_dir }}/dynamic.yaml"
+        dest: "{{ traefik_config_dir }}/dynamic.yml"
         mode: "0644"
       register: dynamic_configuration_creation
 
