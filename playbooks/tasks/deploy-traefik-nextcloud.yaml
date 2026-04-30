@@ -272,7 +272,7 @@
         mode: "600"
       register: acme_configuration_creation
 
-- name: deploy-traefik-nextcloud | Pull image
+- name: deploy-traefik-nextcloud | Pull Traefik image
   community.docker.docker_image:
     name: "{{ traefik_image }}"
     source: pull

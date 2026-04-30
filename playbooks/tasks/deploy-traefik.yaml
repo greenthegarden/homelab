@@ -237,7 +237,7 @@
         mode: "600"
       register: acme_configuration_creation
 
-- name: deploy-traefik | Pull image
+- name: deploy-traefik | Pull Traefik image
   community.docker.docker_image:
     name: "{{ traefik_image }}"
     source: pull
