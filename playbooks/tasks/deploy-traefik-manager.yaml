@@ -16,7 +16,7 @@
   ansible.builtin.set_fact:
     traefik_manager_volume_config_name: "{{ traefik_manager_volume_config_name | default(traefik_manager_service_name + '_config') }}"
     traefik_manager_volume_backups_name: "{{ traefik_manager_volume_backups_name | default(traefik_manager_service_name + '_backups') }}"
-    traefik_config_file: "{{ traefik_config_file | default('/root/' + 'traefik' + 'dynamic.yaml') }}"
+    traefik_config_file: "{{ traefik_config_file | default('/root/' + 'traefik' + '/' + 'dynamic.yaml') }}"
 
 - name: deploy-traefik-manager | Set Traefik Manager aggregated facts
   ansible.builtin.set_fact:
