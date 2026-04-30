@@ -22,7 +22,7 @@
 
 - name: deploy-traefik-nextcloud | Set Traefik volume facts
   ansible.builtin.set_fact:
-    traefik_file_dir: "{{ traefik_file_dir | default('/root/' + 'traefik') }}"
+    traefik_config_dir: "{{ traefik_config_dir | default('/root/' + 'traefik') }}"
     traefik_letsencrypt_dir: "{{ traefik_letsencrypt_dir | default('/root/' + 'letsencrypt') }}"
 
 - name: deploy-traefik-nextcloud | Set Traefik aggregated facts
@@ -167,7 +167,7 @@
     traefik_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ traefik_file_dir }}:/dynamic:ro"
+      - "{{ traefik_config_dir }}:/dynamic:ro"
       - "{{ traefik_letsencrypt_dir }}:/letsencrypt:rw"
       # - socket/socket/:ro
 
@@ -250,7 +250,7 @@
     - name: deploy-traefik-nextcloud | Create dynamic configuration file
       ansible.builtin.copy:
         src: files/traefik-nextcloud/dynamic/nextcloud.yaml
-        dest: "{{ traefik_file_dir }}/nextcloud.yaml"
+        dest: "{{ traefik_config_dir }}/dynamic.yaml"
         mode: "0644"
       register: dynamic_configuration_creation
 
