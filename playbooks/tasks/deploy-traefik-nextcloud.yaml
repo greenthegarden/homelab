@@ -238,11 +238,11 @@
   loop: "{{ traefik_networks }}"
 
 - name: deploy-traefik-nextcloud | Create dynamic configuration
-  when: traefik_file_dir is defined
+  when: traefik_config_dir is defined
   block:
     - name: deploy-traefik-nextcloud | Create dynamic configuration directory
       ansible.builtin.file:
-        path: "{{ traefik_file_dir }}"
+        path: "{{ traefik_config_dir }}"
         mode: "644"
         state: directory
       register: dynamic_directory_creation
