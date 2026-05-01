@@ -1,8 +1,4 @@
 ---
-- name: deploy-node-exporter | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
-
 - name: deploy-node-exporter | Set Node Exporter facts
   ansible.builtin.set_fact:
     node_exporter_image: "{{ node_exporter_image | default('prom/node-exporter:latest') }}"

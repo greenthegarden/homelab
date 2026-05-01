@@ -1,8 +1,4 @@
 ---
-- name: deploy-fireflyiii | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
-
 ####### fireflyiii SECTION
 
 # https://fireflyiii.com/blog/2020/04/15/loki-quick-tip-how-to-use-a-loki-datasource-in-your-fireflyiii-dashboard/

@@ -1,8 +1,4 @@
 ---
-- name: deploy-opensox | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
-
 - name: deploy-opensox | Ensure required Opensox variables are set
   ansible.builtin.assert:
     that:

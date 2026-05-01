@@ -1,9 +1,5 @@
 ---
 
-- name: deploy-grist | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
-
 - name: deploy-grist | Ensure required Grist variables are set
   ansible.builtin.assert:
     that:

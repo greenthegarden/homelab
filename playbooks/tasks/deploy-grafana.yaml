@@ -1,9 +1,5 @@
 ---
 
-- name: deploy-grafana | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
-
 - name: deploy-grafana | Get status of Prometheus Docker container
   community.docker.docker_container_info:
     name: "{{ prometheus_service_name | default('prometheus') }}"

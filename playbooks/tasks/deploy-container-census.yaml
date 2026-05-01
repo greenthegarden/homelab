@@ -1,8 +1,4 @@
 ---
-- name: deploy-container-census | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
-
 ####### CONTAINER CENSUS SECTION
 
 # https://github.com/selfhosters-cc/container-census

@@ -1,8 +1,4 @@
 ---
-- name: deploy-prometheus | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
-
 # https://hub.docker.com/r/prom/prometheus
 # https://medium.com/platform-engineering/monitoring-traefik-with-grafana-1d037af5b952
 

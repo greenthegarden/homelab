@@ -1,8 +1,4 @@
 ---
-- name: deploy-plant_it |  Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
-
 ####### PLANT-IT SECTION
 
 # https://docs.plant-it.org/0.9.0/server-installation/#quickstart
