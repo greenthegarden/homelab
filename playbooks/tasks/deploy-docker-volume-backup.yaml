@@ -4,10 +4,6 @@
   when: docker_volume_backup_volume_to_backup is defined
   block:
 
-    - name: deploy-docker-volume-backup | Ensure modern version of Docker is available on host
-      ansible.builtin.include_tasks:
-        file: tasks/hosts-dependency-check-docker-version.yaml
-
     ####### DOCKER-VOLUME-BACKUP SECTION
 
     # https://offen.github.io/docker-volume-backup/

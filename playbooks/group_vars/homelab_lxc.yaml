@@ -30,7 +30,7 @@ atlas_image: keinstien/atlas:3.3.4
 beszel_agent_image: henrygd/beszel-agent:0.18.7
 # Docker Volume Backup facts
 # renovate: datasource=docker depName=offen/docker-volume-backup
-docker_volume_backup_image: offen/docker-volume-backup:v2.47.2
+docker_volume_backup_image: offen/docker-volume-backup:v2.48.0
 # Dozzle Agent facts
 # renovate: datasource=docker depName=amir20/dozzle
 dozzle_agent_image: amir20/dozzle:v10.5.0
