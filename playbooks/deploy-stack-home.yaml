@@ -1,0 +1,41 @@
+---
+- name: Deploy Home Stack
+
+  hosts: home
+
+  vars:
+
+    # Homepage facts
+    # renovate: datasource=docker depName=ghcr.io/gethomepage/homepage
+    homepage_image: ghcr.io/gethomepage/homepage:v1.12.3
+
+    # Vaultwarden facts
+    # renovate: datasource=docker depName=vaultwarden/server
+    vaultwarden_image: vaultwarden/server:1.35.8-alpine
+
+    vaultwarden_deploy_docker_volume_backup: true
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Homepage
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-homepage.yaml
+
+    - name: Deploy a containerised instance of Vaultwarden
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-vaultwarden.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      when: vaultwarden_deploy_docker_volume_backup | default(false)
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_service_name: "docker-volume-backup-{{ vaultwarden_service_name }}"
+        docker_volume_backup_volume_to_backup:
+          - "{{ vaultwarden_volume_name }}:/backup/{{ vaultwarden_service_name }}-backup:ro"
+        docker_volume_backup_backup_label: "{{ vaultwarden_service_name }}"
+        docker_volume_backup_backup_retention_days: 7

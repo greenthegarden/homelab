@@ -1,0 +1,40 @@
+---
+- name: Deploy Productivity Stack
+
+  hosts: productivity
+
+  vars:
+
+    # Affine facts
+    # renovate: datasource=docker depName=ghcr.io/toeverything/affine
+    affine_image: ghcr.io/toeverything/affine:0.26.6
+
+    # BentoPDF facts
+    # renovate: datasource=docker depName=ghcr.io/alam00000/bentopdf
+    bentopdf_image: ghcr.io/alam00000/bentopdf:2.8.4
+
+    # Grist facts
+    # renovate: datasource=docker depName=gristlabs/grist
+    grist_image: gristlabs/grist:1.7.13
+
+    grist_deploy_docker_volume_backup: true
+
+    # Tududi facts
+    # renovate: datasource=docker depName=chrisvel/tududi
+    tududi_image: chrisvel/tududi:1.0.0
+
+    tududi_deploy_docker_volume_backup: false
+
+  pre_tasks:
+    - name: Ensure base environment is configured
+      ansible.builtin.include_tasks:
+        file: tasks/configure-containerised-base.yaml
+
+  tasks:
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Homepage
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-homepage.yaml

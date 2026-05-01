@@ -1,0 +1,36 @@
+---
+- name: Deploy Inventories Stack
+
+  hosts: inventories
+
+  vars:
+
+    # Grocy facts
+    # renovate: datasource=docker depName=linuxserver/grocy
+    grocy_image: linuxserver/grocy:4.5.0
+
+    grocy_deploy_docker_volume_backup: true
+
+    # Homebox facts
+    # renovate: datasource=docker depName=ghcr.io/sysadminsmedia/homebox
+    homebox_image: ghcr.io/sysadminsmedia/homebox:0.24.2
+
+    homebox_deploy_docker_volume_backup: true
+
+    # Paperless-ngx facts
+    # renovate: datasource=docker depName=ghcr.io/paperless-ngx/paperless-ngx
+    paperless_ngx_image: ghcr.io/paperless-ngx/paperless-ngx:2.20.15
+
+  pre_tasks:
+    - name: Ensure base environment is configured
+      ansible.builtin.include_tasks:
+        file: tasks/configure-containerised-base.yaml
+
+  tasks:
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Homepage
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-homepage.yaml

@@ -11,12 +11,18 @@
 
     # Semaphore facts
     # renovate: datasource=docker depName=semaphoreui/semaphore
-    semaphore_image: semaphoreui/semaphore:v2.17.38
+    semaphore_image: semaphoreui/semaphore:v2.17.39
     semaphore_deploy_docker_volume_backup: false
 
     # Termix facts
     # renovate: datasource=docker depName=ghcr.io/lukegus/termix
     termix_image: ghcr.io/lukegus/termix:release-2.1.0
+
+    # IT-Tools facts
+    # renovate: datasource=docker depName=corentinth/it-tools
+    it_tools_image: corentinth/it-tools:2024.10.22-7ca5933
+
+    # HomeLabInfo
 
   pre_tasks:
 
@@ -53,3 +59,7 @@
           - "{{ semaphore_volume_data_name }}:/backup/{{ semaphore_service_name }}-backup:ro"
         docker_volume_backup_backup_label: "{{ semaphore_service_name }}"
         docker_volume_backup_backup_retention_days: 3
+
+    - name: Deploy a containerised instance of IT-Tools
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-it_tools.yaml
