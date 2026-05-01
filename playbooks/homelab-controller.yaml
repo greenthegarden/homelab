@@ -22,6 +22,10 @@
     # renovate: datasource=docker depName=corentinth/it-tools
     it_tools_image: corentinth/it-tools:2024.10.22-7ca5933
 
+    # Networking Toolbox facts
+    # renovate: datasource=docker depName=lissy93/networking-toolbox
+    networking_toolbox_image: lissy93/networking-toolbox:1.6.0
+
     # HomeLabInfo
 
   pre_tasks:
@@ -63,3 +67,7 @@
     - name: Deploy a containerised instance of IT-Tools
       ansible.builtin.include_tasks:
         file: tasks/deploy-it_tools.yaml
+
+    - name: Deploy a containerised instance of Networking Toolbox
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-networking-toolbox.yaml

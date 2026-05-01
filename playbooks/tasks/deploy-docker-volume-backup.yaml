@@ -126,6 +126,8 @@
       community.docker.docker_container:
         name: "{{ docker_volume_backup_service_name }}"
         image: "{{ docker_volume_backup_image }}"
+        env:
+          TZ: "Australia/Adelaide"
         env_file: "{{ docker_volume_backup_config_dir }}/docker-volume-backup.env"
         labels: "{{ docker_volume_backup_container_labels | default(omit) }}"
         networks: "{{ docker_volume_backup_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
@@ -135,5 +137,5 @@
         security_opts:
           - no-new-privileges=true
         state: started
-        volumes: "{{ default_host_volumes + docker_volume_backup_volumes | default(omit) }}"
+        volumes: "{{ docker_volume_backup_volumes | default(omit) }}"
       register: docker_volume_backup_container_state
