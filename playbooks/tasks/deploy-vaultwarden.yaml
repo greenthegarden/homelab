@@ -1,8 +1,4 @@
 ---
-- name: deploy-vaultwarden | Ensure modern version of Docker is available on host
-  ansible.builtin.include_tasks:
-    file: tasks/hosts-dependency-check-docker-version.yaml
-
 ####### VAULTWARDEN SECTION
 
 # https://www.techaddressed.com/tutorials/vaultwarden-docker-compose/
