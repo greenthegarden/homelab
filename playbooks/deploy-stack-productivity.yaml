@@ -16,13 +16,11 @@
     # Grist facts
     # renovate: datasource=docker depName=gristlabs/grist
     grist_image: gristlabs/grist:1.7.13
-
-    grist_deploy_docker_volume_backup: true
+    grist_deploy_docker_volume_backup: false
 
     # Tududi facts
     # renovate: datasource=docker depName=chrisvel/tududi
     tududi_image: chrisvel/tududi:1.0.0
-
     tududi_deploy_docker_volume_backup: false
 
   pre_tasks:
@@ -35,6 +33,40 @@
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 
-    - name: Deploy a containerised instance of Homepage
+    - name: Deploy a containerised instance of AFFiNE
       ansible.builtin.include_tasks:
-        file: tasks/deploy-homepage.yaml
+        file: tasks/deploy-affine.yaml
+
+    - name: Deploy a containerised instance of BentoPDF
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-bentopdf.yaml
+
+    - name: Deploy a containerised instance of Grist
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-grist.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      when: grist_deploy_docker_volume_backup | default(false)
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_service_name: "docker-volume-backup-{{ grist_service_name }}"
+        docker_volume_backup_volume_to_backup:
+          - "{{ grist_volume_name }}:/backup/{{ grist_service_name }}-backup:ro"
+        docker_volume_backup_backup_label: "{{ grist_service_name }}-db"
+        docker_volume_backup_backup_retention_days: 7
+
+    - name: Deploy a containerised instance of Tududi
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-tududi.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      when: tududi_deploy_docker_volume_backup | default(false)
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_service_name: "docker-volume-backup-{{ tududi_service_name }}"
+        docker_volume_backup_volume_to_backup:
+          - "{{ tududi_volume_data_name }}:/backup/{{ tududi_service_name }}-backup:ro"
+        docker_volume_backup_backup_label: "{{ tududi_service_name }}"
+        docker_volume_backup_backup_retention_days: 7

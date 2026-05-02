@@ -26,7 +26,11 @@
     # renovate: datasource=docker depName=lissy93/networking-toolbox
     networking_toolbox_image: lissy93/networking-toolbox:1.6.0
 
-    # HomeLabInfo
+    # TODO
+    #
+    # Add:
+      # HomeLabInfo
+      # Homelable
 
   pre_tasks:
 
