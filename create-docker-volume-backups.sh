@@ -5,7 +5,7 @@
 # -e: Exit on error
 # -u: Exit if a variable is undefined
 # -o pipefail: Prvent errors in a pipeline from being masked
-# set -euo pipefail
+set -euo pipefail
 
 log_info()  { echo -e "\033[0;32m[INFO]\033[0m  $1"; }
 log_warn()  { echo -e "\033[1;33m[WARN]\033[0m  $1"; }
