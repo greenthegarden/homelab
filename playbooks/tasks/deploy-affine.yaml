@@ -27,8 +27,8 @@
 
 - name: deploy-affine | Set AFFiNE volume facts
   ansible.builtin.set_fact:
-    affine_volume_config_name: "{{ affine_volume_config_name | default(affine_service_name + '-config') }}"
-    affine_volume_upload_name: "{{ affine_volume_upload_name | default(affine_service_name + '-upload') }}"
+    affine_volume_config_name: "{{ affine_volume_config_name | default(affine_service_name + '_config') }}"
+    affine_volume_upload_name: "{{ affine_volume_upload_name | default(affine_service_name + '_upload') }}"
 
 - name: deploy-affine | Set AFFiNE aggregated facts
   ansible.builtin.set_fact:
