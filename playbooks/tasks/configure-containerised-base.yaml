@@ -50,9 +50,9 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-socket-proxy.yaml
   vars:
-    socket_proxy_service_name: "{{ 'socket-proxy-' + item.name }}"
+    socket_proxy_service_name: "{{ 'socket-proxy_' + item.name }}"
     socket_proxy_service_port: "{{ item.port }}"
-    socket_proxy_network_name: "{{ 'socket-proxy-' + item.name }}"
+    socket_proxy_network_name: "{{ 'socket-proxy_' + item.name }}"
     socket_proxy_network_internal: false
     socket_proxy_command_service: "{{ item.command }}"
   loop:
