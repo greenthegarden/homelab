@@ -120,9 +120,9 @@
   vars:
     # renovate: datasource=docker depName=redis
     redis_image: redis:8.6.2-alpine
-    redis_service_name: "{{ affine_service_name }}-redis"
+    redis_service_name: "{{ affine_service_name }}_redis"
     redis_network_name: "{{ affine_network_name }}"
-    redis_volume_name: "{{ affine_service_name }}-redis"
+    redis_volume_name: "{{ affine_service_name }}_redis"
     redis_args:
       - "--save ''"
       - "--appendonly no"
@@ -135,9 +135,9 @@
     file: tasks/deploy-postgres.yaml
   vars:
     postgres_image: pgvector/pgvector:pg16
-    postgres_service_name: "{{ affine_service_name }}-postgres"
+    postgres_service_name: "{{ affine_service_name }}_postgres"
     postgres_network_name: "{{ affine_network_name }}"
-    postgres_volume_name: "{{ affine_service_name }}-postgres"
+    postgres_volume_name: "{{ affine_service_name }}_postgres"
     postgres_database: "{{ affine.postgres_database | default('affine') }}"
     postgres_user: "{{ affine.postgres_user | default('affine') }}"
     postgres_password: "{{ affine.postgres_password | default('dummy') }}"
