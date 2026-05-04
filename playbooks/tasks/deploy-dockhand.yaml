@@ -21,17 +21,17 @@
   ansible.builtin.set_fact:
     dockhand_fqdn: "{{ dockhand_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
-# Defined in configure-containerised-base
-- name: deply-dockhand | Set Dockhand proxy facts
-  ansible.builtin.set_fact:
-    dockhand_socket_proxy_network_name: "socket-proxy-dockhand"
-    dockhand_socket_proxy_service_port: 2376
+# # Defined in configure-containerised-base
+# - name: deply-dockhand | Set Dockhand proxy facts
+#   ansible.builtin.set_fact:
+#     dockhand_socket_proxy_network_name: "socket-proxy-dockhand"
+#     dockhand_socket_proxy_service_port: 2376
 
 - name: deploy-dockhand | Set Dockhand service facts
   ansible.builtin.set_fact:
     dockhand_networks:
       # Socket Proxy provides access to exposed Docker APIs
-      - { name: "{{ socket_proxy_dockhand_network_name | default('socket-proxy-dockhand') }}" }
+      - { name: "{{ dockhand_network_name }}" }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     dockhand_ports:

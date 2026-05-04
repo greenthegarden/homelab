@@ -25,7 +25,14 @@
     file: tasks/configure-docker-base.yaml
   tags: always
 
-# Use the following agents to monitor Docker services via host docker socket
+# Use the following agents to monitor Docker services via host docker socket (/var/run/docker.sock)
+
+- name: homelab-deploy-support-services | Deploy a containerised instance of a Hawser
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-hawser.yaml
+  tags:
+    - dockhand
+    - hawser
 
 - name: homelab-deploy-support-services | Deploy a containerised instance of a Beszel Agent
   ansible.builtin.include_tasks:
@@ -49,7 +56,6 @@
     socket_proxy_network_internal: false
     socket_proxy_command_service: "{{ item.command }}"
   loop:
-    - { name: dockhand, port: 2376, command: ["-allowfrom=dockhand", '-allowGET=/v1\..{2}/(containers/.*|events|info)'] }
     - { name: uptimekuma, port: 2377, command: ["-allowfrom=uptimekuma", '-allowGET=/v1\..{2}/(containers/.*|events|info)'] }
     - { name: wud, port: 2378, command: ["-allowfrom=wud", "-allowGET=.*"] }
     - { name: homepage, port: 2379, command: ["-allowfrom=homepage", '-allowGET=/v1\..{2}/(containers/.*|events|info)'] }
