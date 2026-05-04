@@ -25,7 +25,7 @@
 # Defined in configure-containerised-base
 - name: deply-homepage | Set Homepage proxy facts
   ansible.builtin.set_fact:
-    homepage_socket_proxy_network_name: "socket-proxy-homepage"
+    homepage_socket_proxy_network_name: "socket-proxy_homepage"
     homepage_socket_proxy_service_port: 2379
 
 - name: deploy-homepage | Set Homepage service facts

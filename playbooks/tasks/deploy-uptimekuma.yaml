@@ -25,7 +25,7 @@
 # Defined in configure-containerised-base
 - name: deply-uptimekuma | Set Uptime Kuma proxy facts
   ansible.builtin.set_fact:
-    uptimekuma_socket_proxy_network_name: "socket-proxy-uptimekuma"
+    uptimekuma_socket_proxy_network_name: "socket-proxy_uptimekuma"
     uptimekuma_socket_proxy_service_port: 2377
 
 - name: deploy-uptimekuma | Set Uptime Kuma service facts

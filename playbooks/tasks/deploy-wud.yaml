@@ -25,7 +25,7 @@
 # Defined in configure-containerised-base
 - name: deply-wud | Set What's up Docker? proxy facts
   ansible.builtin.set_fact:
-    wud_socket_proxy_network_name: "socket-proxy-wud"
+    wud_socket_proxy_network_name: "socket-proxy_wud"
     wud_socket_proxy_service_port: 2378
 
 - name: deploy-wud | Set What's up Docker? service facts
