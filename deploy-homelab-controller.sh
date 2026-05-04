@@ -6,12 +6,24 @@
 set -euo pipefail
 
 
+# ============= Utility Variables =============
+#
+
+readonly RED="\033[0;31m"
+readonly GREEN="\033[0;32m"
+readonly YELLOW="\033[1;33m"
+readonly BLUE="\033[1;34m"
+readonly NC="\033[0m" # No colour
+
+
 # ============= Helper Functions =============
 #
 
-log_info()  { echo -e "\033[0;32m[INFO]\033[0m  $1"; }
-log_warn()  { echo -e "\033[1;33m[WARN]\033[0m  $1"; }
-log_error() { echo -e "\033[0;31m[ERROR]\033[0m $1" >&2; }
+
+log_info()    { echo -e "${GREEN}[INFO]${NC} $1"; }
+log_success() { echo -e "${BLUE}[SUCCESS]${NC} $1"; }
+log_warn()    { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error()   { echo -e "${RED}[ERROR]${NC} $1" >&2; }
 
 function check_file_exists {
   file=$1
@@ -56,11 +68,17 @@ PLAYBOOK_FILE="playbooks/homelab-controller.yaml"
 # ============= Main Functions =============
 #
 
+function ansible_info {
+  check_executable_exists ${ANSIBLE_BIN}
+  log_info "Using $(${ANSIBLE_BIN} --version)"
+}
+
 function ansible_install_dependencies {
   check_file_exists ${REQUIREMENTS_FILE}
   check_executable_exists ${ANSIBLE_GALAXY_BIN}
   log_info "Installing Ansible dependencies from ${REQUIREMENTS_FILE}"
   ${ANSIBLE_GALAXY_BIN} install -r ${REQUIREMENTS_FILE}
+  log_success "Ansible dependencies installed"
 }
 
 function ansible_run_playbook {
@@ -69,17 +87,29 @@ function ansible_run_playbook {
   check_file_exists ${VAULT_FILE}
   check_file_exists ${PLAYBOOK_FILE}
   log_info "Running Ansible Playbook ${PLAYBOOK_FILE}"
-  # ${ANSIBLE_PLAYBOOK_BIN} \
-  #   --inventory ${INVENTORY_FILE} \
-  #   --vault-password-file ${VAULT_FILE} \
-  #   ${PLAYBOOK_FILE}
+  ${ANSIBLE_PLAYBOOK_BIN} \
+    --inventory ${INVENTORY_FILE} \
+    --vault-password-file ${VAULT_FILE} \
+    ${PLAYBOOK_FILE}
+  log_success "Playbook ${PLAYBOOK_FILE} run"
 }
 
 function main {
-  check_executable_exists ${ANSIBLE_BIN}
-  log_info "Using $(${ANSIBLE_BIN} --version)"
+  # Start message
+  log_info "Running ${0} to deploy Homelab controller"
+  echo
+
+  # Ansible version info
+  ansible_info
+  echo
+
+  # Install dependencies via Ansible Glaxaxy
   ansible_install_dependencies
+  echo
+
+  # Run playbook
   ansible_run_playbook
+  echo
 }
 
 
