@@ -33,6 +33,8 @@
 - name: deploy-affine | Set AFFiNE aggregated facts
   ansible.builtin.set_fact:
     affine_fqdn: "{{ affine_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+    affine_redis_service_name: "{{ affine_service_name }}_redis"
+    affine_postgress_service_name: "{{ affine_service_name }}_postgres"
 
 - name: deploy-affine | Set AFFiNE service facts
   ansible.builtin.set_fact:
@@ -120,9 +122,9 @@
   vars:
     # renovate: datasource=docker depName=redis
     redis_image: redis:8.6.2-alpine
-    redis_service_name: "{{ affine_service_name }}_redis"
+    redis_service_name: "{{ affine_redis_service_name | default(affine_service_name + '_redis') }}"
     redis_network_name: "{{ affine_network_name }}"
-    redis_volume_name: "{{ affine_service_name }}_redis"
+    redis_volume_name: "{{ affine_redis_service_name | default(affine_service_name + '_redis') }}"
     redis_args:
       - "--save ''"
       - "--appendonly no"
@@ -135,12 +137,23 @@
     file: tasks/deploy-postgres.yaml
   vars:
     postgres_image: pgvector/pgvector:pg16
-    postgres_service_name: "{{ affine_service_name }}_postgres"
+    postgres_service_name: "{{ affine_postgress_service_name | default(affine_service_name + '_postgres') }}"
     postgres_network_name: "{{ affine_network_name }}"
-    postgres_volume_name: "{{ affine_service_name }}_postgres"
+    postgres_volume_name: "{{ affine_postgress_service_name | default(affine_service_name + '_postgres') }}"
     postgres_database: "{{ affine.postgres_database | default('affine') }}"
     postgres_user: "{{ affine.postgres_user | default('affine') }}"
     postgres_password: "{{ affine.postgres_password | default('dummy') }}"
+
+- name: deploy-affine | Set AFFiNE database facts
+  ansible.builtin.set_fact:
+    affine_postgres_url: "postgresql://{{ affine.postgres_user }}:{{ affine.postgres_password }}@{{ affine_postgress_service_name }}:5432/{{ affine.postgres_database }}"
+    affine_redis_host: "{{ affine_redis_service_name }}"
+
+- name: deploy-affine | Log AFFiNE database configuration
+  ansible.builtin.debug:
+    msg:
+      - "AFFiNE Postgres URL: {{ affine_postgres_url }}"
+      - "AFFiNE Redis host: {{ affine_redis_host }}"
 
 - name: deploy-affine | Check if AFFiNE is running
   community.docker.docker_container_info:
@@ -175,14 +188,14 @@
     - name: deploy-affine | Deploy AFFiNE migration container
       when: affine_migration_required | default(true)
       community.docker.docker_container:
-        name: "{{ affine_service_name }}-migration"
+        name: "{{ affine_service_name }}_migration"
         image: "{{ affine_image }}"
         command: ['sh', '-c', 'node ./scripts/self-host-predeploy.js']
         detach: true
         env:
           AFFINE_INDEXER_ENABLED: "false"
-          DATABASE_URL: "postgresql://{{ affine.postgres_user }}:{{ affine.postgres_password }}@{{ affine_service_name }}-postgres:5432/{{ affine.postgres_database }}?schema=public"
-          REDIS_SERVER_HOST: "{{ affine_service_name }}-redis"
+          DATABASE_URL: "{{ affine_postgres_url }}?schema=public"
+          REDIS_SERVER_HOST: "{{ affine_redis_host }}"
           TZ: "{{ homelab.timezone | default('UTC') }}"
         networks_cli_compatible: true
         networks:
@@ -190,7 +203,7 @@
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ default_host_volumes + affine_volumes | default(omit) }}"
+        volumes: "{{ affine_volumes | default(omit) }}"
       register: affine_container_state
 
     - name: deploy-affine | Deploy AFFiNE
@@ -200,8 +213,8 @@
         detach: true
         env:
           AFFINE_INDEXER_ENABLED: "false"
-          DATABASE_URL: "postgresql://{{ affine.postgres_user }}:{{ affine.postgres_password }}@{{ affine_service_name }}-postgres:5432/{{ affine.postgres_database }}?schema=public"
-          REDIS_SERVER_HOST: "{{ affine_service_name }}-redis"
+          DATABASE_URL: "{{ affine_postgres_url }}?schema=public"
+          REDIS_SERVER_HOST: "{{ affine_redis_host }}"
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ affine_container_labels | default(omit) }}"
         networks_cli_compatible: true
@@ -209,7 +222,7 @@
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ default_host_volumes + affine_volumes | default(omit) }}"
+        volumes: "{{ affine_volumes | default(omit) }}"
       register: affine_container_state
 
 - name: deploy-affine | Wait for AFFiNE to accept connections
