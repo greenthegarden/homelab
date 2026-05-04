@@ -11,8 +11,7 @@ log_info()  { echo -e "\033[0;32m[INFO]\033[0m  $1"; }
 log_warn()  { echo -e "\033[1;33m[WARN]\033[0m  $1"; }
 log_error() { echo -e "\033[0;31m[ERROR]\033[0m $1" >&2; }
 
-readonly DOCKER_VOLUME_BACKUP_IMAGE="offen/docker-volume-backup"
-readonly DOCKER_VOLUME_BACKUP_TAG="v2.48.0"
+readonly DOCKER_VOLUME_BACKUP_IMAGE="offen/docker-volume-backup:v2.48.0"
 
 usage () {
   echo "Usage: $(basename $0) [-v] [-f folder] [-c container] volumes ..."
@@ -123,8 +122,8 @@ function create_backup_from_volume {
     -v ${volume}:/backup/${volume}:ro \
     -v /var/run/docker.sock:/var/run/docker.sock:ro \
     -v ${folder}/:/archive/ \
-    ${DOCKER_VOLUME_BACKUP_IMAGE}:${DOCKER_VOLUME_BACKUP_TAG}
-  # If error occures remove backup folder
+    ${DOCKER_VOLUME_BACKUP_IMAGE}
+  # If error occures remove backup folder and restart container
   trap 'remove_backup_folder' ERR
   trap 'start_container' ERR
 }
