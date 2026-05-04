@@ -107,7 +107,7 @@
   loop: "{{ affine_networks }}"
 
 - name: deploy-affine | Create AFFiNE volumes
-  when: affine_volume_name is defined
+  when: (affine_volume_name or affine_volumes) is defined
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present

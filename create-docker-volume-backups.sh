@@ -24,6 +24,7 @@ usage () {
 }
 
 # Default vars
+VERBOSE=false
 
 function parse_args {
   # if [[ $# -lt 2 ]]; then
