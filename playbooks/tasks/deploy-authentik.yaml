@@ -146,8 +146,7 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-redis.yaml
   vars:
-    # renovate: datasource=docker depName=redis
-    redis_image: redis:8.6.1-alpine
+    redis_image: "{{ redis_image | default('redis:latest-alpine') }}"
     redis_service_name: "{{ authentik_service_name }}-redis"
     redis_network_name: "{{ authentik_network_name }}"
     redis_volume_name: "{{ authentik_service_name }}-redis"
