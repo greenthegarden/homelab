@@ -146,7 +146,7 @@
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ default_host_volumes + grocy_volumes | default(omit) }}"
+        volumes: "{{ grocy_volumes | default(omit) }}"
       register: grocy_container_state
 
 - name: deploy-grocy | Wait for Grocy to accept connections

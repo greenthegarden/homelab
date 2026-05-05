@@ -26,6 +26,12 @@ The following uses of the script are specific to various hosted services.
   ./create-docker-volume-backups.sh -f ${HOME}/local-backups -c homebox homebox
   ```
 
+* Homebox
+
+  ```bash
+  ./create-docker-volume-backups.sh -f ${HOME}/local-backups -c paperless-ngx paperless-ngx-data paperless-ngx-media paperless-ngx-redis
+  ```
+
 * Semaphore
 
   ```bash
@@ -127,6 +133,28 @@ docker start affine_migration
 docker start affine
 ```
 
+#### Grocy
+
+```bash
+# Stop existing container which will use volume
+docker stop gricy
+# Extract grocy backup to /tmp
+tar -C /tmp -xvf backup-grocy-2026-05-05T21-05-32.tar.gz
+# Ensure all files have correct uid:gid
+chown -R root:root /tmp/backup
+# Create temporary container with destination volumes mounted
+docker run -d --name temp_restore_container -v grocy:/grocy_backup_restore alpine
+# Copy local files to destination volume within temporary container keeping uid:gid
+docker cp -a /tmp/backup/grocy/. temp_restore_container:/grocy_backup_restore
+# Check contents of destination volumes
+docker run --rm -it -v grocy:/volume alpine /bin/sh
+# Stop and remove temporary container
+docker stop temp_restore_container
+docker rm temp_restore_container
+# Restart container
+docker start homebox
+```
+
 #### Homebox
 
 ```bash
@@ -147,6 +175,38 @@ docker stop temp_restore_container
 docker rm temp_restore_container
 # Restart container
 docker start homebox
+```
+
+#### Paperless-ngx
+
+```bash
+# Stop existing container which will use volume
+docker stop paperless-ngx paperless-ngx_redis
+# Extract paperless-ngx backup to /tmp
+tar -C /tmp -xvf backup-paperless-ngx-data-2026-05-05T21-38-04.tar.gz
+tar -C /tmp -xvf backup-paperless-ngx-media-2026-05-05T21-38-06.tar.gz
+tar -C /tmp -xvf backup-paperless-ngx-redis-2026-05-05T21-38-27.tar.gz
+# Ensure all files have correct uid:gid
+chown -R root:root /tmp/backup
+# Create temporary container with destination volumes mounted
+docker run -d --name temp_restore_container \
+  -v paperless-ngx_data:/paperless-ngx_data_backup_restore \
+  -v paperless-ngx_media:/paperless-ngx_media_backup_restore \
+  -v paperless-ngx_redis:/paperless-ngx_redis_backup_restore \
+  alpine
+# Copy local files to destination volume within temporary container keeping uid:gid
+docker cp -a /tmp/backup/paperless-ngx-data/. temp_restore_container:/paperless-ngx_data_backup_restore
+docker cp -a /tmp/backup/paperless-ngx-media/. temp_restore_container:/paperless-ngx_media_backup_restore
+docker cp -a /tmp/backup/paperless-ngx-redis/. temp_restore_container:/paperless-ngx_redis_backup_restore
+# Check contents of destination volumes
+docker run --rm -it -v paperless-ngx_data:/volume alpine /bin/sh
+docker run --rm -it -v paperless-ngx_media:/volume alpine /bin/sh
+docker run --rm -it -v paperless-ngx_redis:/volume alpine /bin/sh
+# Stop and remove temporary container
+docker stop temp_restore_container
+docker rm temp_restore_container
+# Restart container
+docker start paperless-ngx_redis paperless-ngx
 ```
 
 #### Tududi
@@ -173,6 +233,28 @@ docker stop temp_restore_container
 docker rm temp_restore_container
 # Restart Tududi
 docker start tududi
+```
+
+#### Vaultwarden
+
+```bash
+# Stop existing container which will use volume
+docker stop vaultwarden
+# Extract vaultwarden backup to /tmp
+tar -C /tmp -xvf backup-vaultwarden-2026-05-05T21-20-37.tar.gz
+# Ensure all files have correct uid:gid
+chown -R root:root /tmp/backup
+# Create temporary container with destination volumes mounted
+docker run -d --name temp_restore_container -v vaultwarden:/vaultwarden_backup_restore alpine
+# Copy local files to destination volume within temporary container keeping uid:gid
+docker cp -a /tmp/backup/vaultwarden/. temp_restore_container:/vaultwarden_backup_restore
+# Check contents of destination volumes
+docker run --rm -it -v vaultwarden:/volume alpine /bin/sh
+# Stop and remove temporary container
+docker stop temp_restore_container
+docker rm temp_restore_container
+# Restart container
+docker start homebox
 ```
 
 #### Wallos
