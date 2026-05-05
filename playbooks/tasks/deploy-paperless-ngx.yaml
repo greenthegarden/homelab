@@ -22,8 +22,8 @@
 
 - name: deploy-paperless-ngx | Set Paperless-ngx volume facts
   ansible.builtin.set_fact:
-    paperless_ngx_volume_data_name: "{{ paperless_ngx_volume_name | default(paperless_ngx_service_name + '-data') }}"
-    paperless_ngx_volume_media_name: "{{ paperless_ngx_volume_name | default(paperless_ngx_service_name + '-media') }}"
+    paperless_ngx_volume_data_name: "{{ paperless_ngx_volume_name | default(paperless_ngx_service_name + '_data') }}"
+    paperless_ngx_volume_media_name: "{{ paperless_ngx_volume_name | default(paperless_ngx_service_name + '_media') }}"
 
 - name: deploy-paperless-ngx | Set paperless_ngx aggregated facts
   ansible.builtin.set_fact:
@@ -39,13 +39,16 @@
       # Published ports to expose outside the container
       # host port:container port
       - "{{ paperless_ngx_service_port }}:8000"
-    paperless_ngx_volumes:
+    paperless_ngx_mounts:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ paperless_ngx_volume_data_name }}:/usr/src/paperless/data"
-      - "{{ paperless_ngx_volume_media_name }}:/usr/src/paperless/media"
       - "{{ paperless_ngx_export_dir }}:/usr/src/paperless/export"
       - "{{ paperless_ngx_consume_dir }}:/usr/src/paperless/consume"
+    paperless_ngx_volumes:
+      # Volumes to mount into the container
+      # volume:container path
+      - "{{ paperless_ngx_volume_data_name }}:/usr/src/paperless/data"
+      - "{{ paperless_ngx_volume_media_name }}:/usr/src/paperless/media"
 
 - name: deploy-paperless-ngx | Log Paperless-ngx configuration
   ansible.builtin.debug:
@@ -55,6 +58,7 @@
       - "Paperless-ngx FQDN: {{ paperless_ngx_fqdn }}"
       - "Paperless-ngx networks: {{ paperless_ngx_networks | default(omit) }}"
       - "Paperless-ngx ports: {{ paperless_ngx_ports | default(omit) }}"
+      - "Paperless-ngx mounts: {{ paperless_ngx_mounts | default(omit) }}"
       - "Paperless-ngx volumes: {{ paperless_ngx_volumes | default(omit) }}"
 
 - name: deploy-paperless-ngx | Create Paperless-ngx container labels
@@ -96,16 +100,14 @@
   loop: "{{ paperless_ngx_networks }}"
 
 - name: deploy-paperless-ngx | Create Paperless-ngx volumes
-  when: paperless_ngx_volume_data_name is defined and paperless_ngx_volume_media_name is defined
+  when: paperless_ngx_volumes is defined
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
-  loop:
-    - "{{ paperless_ngx_volume_data_name }}"
-    - "{{ paperless_ngx_volume_media_name }}"
+  loop: "{{ paperless_ngx_volumes }}"
 
 - name: deploy-paperless-ngx | Create Paperless-ngx mounts
-  when: paperless_ngx_export_dir is defined and paperless_ngx_consume_dir is defined
+  when: paperless_ngx_mounts
   block:
 
     - name: deploy-paperless-ngx | Create Paperless-ngx mount directories
@@ -113,9 +115,7 @@
         path: "{{ item }}"
         state: directory
         mode: "0666"
-      loop:
-        - "{{ paperless_ngx_export_dir }}"
-        - "{{ paperless_ngx_consume_dir }}"
+      loop: "{{ paperless_ngx_mounts }}"
 
 - name: deploy-paperless-ngx | Deploy Redis for Paperless-ngx
   when: paperless_ngx_redis_create | default(true)
@@ -124,10 +124,10 @@
   vars:
     # renovate: datasource=docker depName=redis
     redis_image: docker.io/library/redis:8.6.2-alpine
-    redis_service_name: "{{ paperless_ngx_service_name }}-redis"
+    redis_service_name: "{{ paperless_ngx_service_name }}_redis"
     redis_service_port: 6379
     redis_network_name: "{{ paperless_ngx_network_name }}"
-    redis_volume_name: "{{ paperless_ngx_service_name }}-redis"
+    redis_volume_name: "{{ paperless_ngx_service_name }}_redis"
 
 - name: deploy-paperless-ngx | Check if Paperless-ngx is running
   community.docker.docker_container_info:
@@ -198,7 +198,7 @@
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ default_host_volumes + paperless_ngx_volumes | default(omit) }}"
+        volumes: "{{ paperless_ngx_mounts + paperless_ngx_volumes | default(omit) }}"
       register: paperless_ngx_container_state
 
 - name: deploy-paperless-ngx | Wait for Paperless-ngx to accept connections
