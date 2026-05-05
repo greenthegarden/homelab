@@ -15,7 +15,7 @@
 
 - name: deploy-postgres | Set Postgres facts
   ansible.builtin.set_fact:
-    postgres_image: "{{ postgres_image | default('postgres:latest') }}"
+    postgres_image: "{{ postgres_image | default('postgres:16-alpine') }}"
     postgres_service_name: "{{ postgres_service_name | default('postgres') }}"
     postgres_service_port: "{{ postgres_service_port | default(5432) }}"
 

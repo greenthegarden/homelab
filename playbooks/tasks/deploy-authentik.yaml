@@ -162,8 +162,8 @@
     file: tasks/deploy-postgres.yaml
   vars:
     # renovate: datasource=docker depName=docker.io/library/postgres
-    postgres_image: docker.io/library/postgres:16.8-alpine
-    postgres_service_name: "{{ authentik_service_name }}-postgres"
+    postgres_image: "{{ postgres_image | default('postgres:16-alpine') }}"
+    postgres_service_name: "{{ authentik_postgress_service_name | default(authentik_service_name + '_postgres') }}"
     postgres_network_name: "{{ authentik_network_name }}"
     postgres_volume_name: "{{ authentik_service_name }}-postgres"
     postgres_database: "{{ authentik.db_name | default('authentik') }}"

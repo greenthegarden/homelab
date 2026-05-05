@@ -110,7 +110,7 @@
     file: tasks/deploy-postgres.yaml
   vars:
     postgres_image: postgres:15-alpine
-    postgres_service_name: "{{ opensox_service_name }}-postgres"
+    postgres_service_name: "{{ opensox_postgress_service_name | default(opensox_service_name + '_postgres') }}"
     postgres_network_name: "{{ opensox_network_name }}"
     postgres_volume_name: "{{ opensox_service_name }}-postgres"
     postgres_database: "{{ opensox.postgres_database | default('opensox') }}"
