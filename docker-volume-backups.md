@@ -8,6 +8,24 @@ To manually create a backup use the script [create-docker-volume-backups.sh](./c
 
 The following uses of the script are specific to various hosted services.
 
+* AFFiNE
+
+  ```bash
+  ./create-docker-volume-backups.sh -f ${HOME}/local-backups -c affine affine_config affine_upload affine_redis affine_postgres
+  ```
+
+* Grocy
+
+  ```bash
+  ./create-docker-volume-backups.sh -f ${HOME}/local-backups -c grocy grocy
+  ```
+
+* Homebox
+
+  ```bash
+  ./create-docker-volume-backups.sh -f ${HOME}/local-backups -c homebox homebox
+  ```
+
 * Semaphore
 
   ```bash
@@ -20,10 +38,16 @@ The following uses of the script are specific to various hosted services.
   ./create-docker-volume-backups.sh -f ${HOME}/local-backups -c tududi tududi_data tududi_uploads
   ```
 
-* AFFiNE
+* Vaultwarden
 
   ```bash
-  ./create-docker-volume-backups.sh -f ${HOME}/local-backups -c affine affine_config affine_upload affine_redis affine_postgres
+  ./create-docker-volume-backups.sh -f ${HOME}/local-backups -c vaultwarden vaultwarden
+  ```
+
+* Wallos
+
+  ```bash
+  ./create-docker-volume-backups.sh -f ${HOME}/local-backups -c wallos wallos-data wallos-logos
   ```
 
 Can check the contents of the archived file using, for example
@@ -35,6 +59,12 @@ tar -tvf ${HOME}/archive/backup-beszel-agent-2026-05-02T12-34-57.tar.gz
 ## Restoring form a Backup
 
 To [restore from a backup](https://offen.github.io/docker-volume-backup/how-tos/restore-volumes-from-backup.html)
+
+Copy the backup from remote host using
+
+```bash
+scp user@host:${HOME}/local-backups/<service>/*.tar.gz .
+```
 
 * Stop the container(s) that are using the volume
 * Untar the backup you want to restore
@@ -54,32 +84,6 @@ To [restore from a backup](https://offen.github.io/docker-volume-backup/how-tos/
 * Restart the container(s) that are using the volume
 
 ### Service specific
-
-#### Tududi
-
-```bash
-# Stop existing container which will use volume
-docker stop tududi
-# Extract tududi_data backup to /tmp
-tar -C /tmp -xvf  backup-tududi_data-2026-05-02T12-50-44.tar.gz
-# Extract tududi_uploads backup to /tmp
-tar -C /tmp -xvf  backup-tududi_uploads-2026-05-02T12-50-44.tar.gz
-# Ensure all files have correct uid:gid
-chown -R root:root /tmp/backup
-# Create temporary container with destination volumes mounted
-docker run -d --name temp_restore_container -v tududi_data:/tududi_data_backup_restore -v tududi_uploads:/tududi_uploads_backup_restore alpine
-# Copy local files to destination volume within temporary container keeping uid:gid
-docker cp -a /tmp/backup/tududi_data/. temp_restore_container:/tududi_data_backup_restore
-docker cp -a /tmp/backup/tududi_uploads/. temp_restore_container:/tududi_uploads_backup_restore
-# Check contents of destination volumes
-docker run --rm -it -v tududi_data:/volume alpine /bin/sh
-docker run --rm -it -v tududi_uploads:/volume alpine /bin/sh
-# Stop and remove temporary container
-docker stop temp_restore_container
-docker rm temp_restore_container
-# Restart Tududi
-docker start tududi
-```
 
 #### AFFiNE
 
@@ -121,4 +125,77 @@ docker start affine_redis
 docker start affine_postgres
 docker start affine_migration
 docker start affine
+```
+
+#### Homebox
+
+```bash
+# Stop existing container which will use volume
+docker stop homebox
+# Extract homebox backup to /tmp
+tar -C /tmp -xvf backup-homebox-2026-05-02T12-50-44.tar.gz
+# Ensure all files have correct uid:gid
+chown -R root:root /tmp/backup
+# Create temporary container with destination volumes mounted
+docker run -d --name temp_restore_container -v homebox:/homebox_backup_restore alpine
+# Copy local files to destination volume within temporary container keeping uid:gid
+docker cp -a /tmp/backup/homebox/. temp_restore_container:/homebox_backup_restore
+# Check contents of destination volumes
+docker run --rm -it -v homebox:/volume alpine /bin/sh
+# Stop and remove temporary container
+docker stop temp_restore_container
+docker rm temp_restore_container
+# Restart container
+docker start homebox
+```
+
+#### Tududi
+
+```bash
+# Stop existing container which will use volume
+docker stop tududi
+# Extract tududi_data backup to /tmp
+tar -C /tmp -xvf  backup-tududi_data-2026-05-02T12-50-44.tar.gz
+# Extract tududi_uploads backup to /tmp
+tar -C /tmp -xvf  backup-tududi_uploads-2026-05-02T12-50-44.tar.gz
+# Ensure all files have correct uid:gid
+chown -R root:root /tmp/backup
+# Create temporary container with destination volumes mounted
+docker run -d --name temp_restore_container -v tududi_data:/tududi_data_backup_restore -v tududi_uploads:/tududi_uploads_backup_restore alpine
+# Copy local files to destination volume within temporary container keeping uid:gid
+docker cp -a /tmp/backup/tududi_data/. temp_restore_container:/tududi_data_backup_restore
+docker cp -a /tmp/backup/tududi_uploads/. temp_restore_container:/tududi_uploads_backup_restore
+# Check contents of destination volumes
+docker run --rm -it -v tududi_data:/volume alpine /bin/sh
+docker run --rm -it -v tududi_uploads:/volume alpine /bin/sh
+# Stop and remove temporary container
+docker stop temp_restore_container
+docker rm temp_restore_container
+# Restart Tududi
+docker start tududi
+```
+
+#### Wallos
+
+```bash
+# Stop existing container which will use volume
+docker stop wallos
+# Extract homebox backup to /tmp
+tar -C /tmp -xf backup-wallos-data-2026-05-05T10-10-44.tar.gz
+tar -C /tmp -xf backup-wallos-logos-2026-05-05T10-10-59.tar.gz
+# Ensure all files have correct uid:gid
+chown -R root:root /tmp/backup
+# Create temporary container with destination volumes mounted
+docker run -d --name temp_restore_container -v wallos_data:/wallos_data_backup_restore -v wallos_logos:/wallos_logos_backup_restore alpine
+# Copy local files to destination volume within temporary container keeping uid:gid
+docker cp -a /tmp/backup/wallos-data/. temp_restore_container:/wallos_data_backup_restore
+docker cp -a /tmp/backup/wallos-logos/. temp_restore_container:/wallos_logos_backup_restore
+# Check contents of destination volumes
+docker run --rm -it -v wallos_data:/volume alpine /bin/sh
+docker run --rm -it -v wallos_logos:/volume alpine /bin/sh
+# Stop and remove temporary container
+docker stop temp_restore_container
+docker rm temp_restore_container
+# Restart container
+docker start wallos
 ```

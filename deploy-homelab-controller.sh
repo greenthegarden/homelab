@@ -68,6 +68,14 @@ PLAYBOOK_FILE="playbooks/homelab-controller.yaml"
 # ============= Main Functions =============
 #
 
+function uv_update {
+  uv self update
+}
+
+function uv_upgrade_dependencies {
+  uv sync --upgrade
+}
+
 function ansible_info {
   check_executable_exists ${ANSIBLE_BIN}
   log_info "Using $(${ANSIBLE_BIN} --version)"
@@ -98,6 +106,10 @@ function main {
   # Start message
   log_info "Running ${0} to deploy Homelab controller"
   echo
+
+  # Update uv and dependencies
+  uv_update
+  uv_upgrade_dependencies
 
   # Ansible version info
   ansible_info

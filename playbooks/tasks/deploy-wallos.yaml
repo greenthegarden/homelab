@@ -15,8 +15,8 @@
 
 - name: deploy-wallos | Set Wallos volume facts
   ansible.builtin.set_fact:
-    wallos_volume_data_name: "{{ wallos_volume_data_name | default(wallos_service_name + '-data') }}"
-    wallos_volume_logos_name: "{{ wallos_volume_logos_name | default(wallos_service_name + '-logos') }}"
+    wallos_volume_data_name: "{{ wallos_volume_data_name | default(wallos_service_name + '_data') }}"
+    wallos_volume_logos_name: "{{ wallos_volume_logos_name | default(wallos_service_name + '_logos') }}"
 
 - name: deploy-wallos | Set Wallos aggregated facts
   ansible.builtin.set_fact:
@@ -91,13 +91,11 @@
   loop: "{{ wallos_networks }}"
 
 - name: deploy-wallos | Create volume for Wallos
-  when: wallos_volume_data_name is defined and wallos_volume_logos_name is defined and (wallos_volumes | length > 0)
+  when: wallos_volumes is defined and (wallos_volumes | length > 0)
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
-  loop:
-    - "{{ wallos_volume_data_name }}"
-    - "{{ wallos_volume_logos_name }}"
+  loop: "{{ wallos_volumes }}"
 
 - name: deploy-wallos | Pull Wallos image
   community.docker.docker_image:
@@ -117,7 +115,7 @@
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ default_host_volumes + wallos_volumes | default(omit) }}"
+    volumes: "{{ wallos_volumes | default(omit) }}"
   register: wallos_container_state
 
 - name: deploy-wallos | Wait for Wallos to accept connections
