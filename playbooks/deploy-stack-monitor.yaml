@@ -34,10 +34,12 @@
         file: vars/homelab_env.yaml
 
     - name: Deploy a containerised instance of Beszel
+      when: deploy_beszel | default(false)
       ansible.builtin.include_tasks:
         file: tasks/deploy-beszel.yaml
 
     - name: Deploy a containerised instance of Dozzle
+      when: deploy_dozzle | default(false)
       ansible.builtin.include_tasks:
         file: tasks/deploy-dozzle.yaml
 
