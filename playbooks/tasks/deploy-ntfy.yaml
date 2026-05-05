@@ -17,7 +17,7 @@
 
 - name: deploy-ntfy | Set Ntfy volume facts
   ansible.builtin.set_fact:
-    ntfy_volume_cache_name: "{{ ntfy_volume_cache_name | default(ntfy_service_name + '-cache') }}"
+    ntfy_volume_cache_name: "{{ ntfy_volume_cache_name | default(ntfy_service_name + '_cache') }}"
     # ntfy_volume_config_name: "{{ ntfy_volume_cache_name | default(ntfy_service_name + '-config') }}"
 
 - name: deploy-ntfy | Set Ntfy aggregated facts
@@ -109,7 +109,7 @@
   loop: "{{ ntfy_networks }}"
 
 - name: deploy-ntfy | Create Ntfy volumes
-  when: ntfy_volume_cache_name is defined and ntfy_volume_config_name is defined and (ntfy_volumes | length > 0)
+  when: ntfy_volumes is defined and (ntfy_volumes | length > 0)
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
