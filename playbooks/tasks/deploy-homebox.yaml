@@ -151,7 +151,7 @@
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ default_host_volumes + homebox_volumes | default(omit) }}"
+        volumes: "{{ homebox_volumes | default(omit) }}"
       register: homebox_container_state
 
 - name: deploy-homebox | Wait for Homebox to accept connections
