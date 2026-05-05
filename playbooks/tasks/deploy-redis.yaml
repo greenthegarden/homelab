@@ -7,7 +7,7 @@
 
 - name: deploy-redis | Set Redis facts
   ansible.builtin.set_fact:
-    redis_image: "{{ redis_image | default('redis:latest') }}"
+    redis_image: "{{ redis_image | default('redis:alpine') }}"
     redis_service_name: "{{ redis_service_name | default('redis') }}"
     redis_service_port: "{{ redis_service_port | default(6379) }}"
 
