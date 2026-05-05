@@ -2,6 +2,7 @@
 # This playbook deploys support services for the homelab environment and are intended to be run on all Homelab LXC based servers.
 
 # The services include:
+# - Hawser (Dockhand Agent)
 # - Beszel Agent
 # - Dozzle Agent
 # - Portainer Agent
@@ -35,11 +36,13 @@
     - hawser
 
 - name: homelab-deploy-support-services | Deploy a containerised instance of a Beszel Agent
+  when: deploy_beszel_agent | default(false)
   ansible.builtin.include_tasks:
     file: tasks/deploy-beszel-agent.yaml
   tags: beszel
 
 - name: homelab-deploy-support-services | Deploy a containerised instance of a Dozzle Agent
+  when: deploy_dozzle_agent | default(false)
   ansible.builtin.include_tasks:
     file: tasks/deploy-dozzle-agent.yaml
   tags: dozzle

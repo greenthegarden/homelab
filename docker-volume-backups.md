@@ -14,6 +14,18 @@ The following uses of the script are specific to various hosted services.
   ./create-docker-volume-backups.sh -f ${HOME}/local-backups -c affine affine_config affine_upload affine_redis affine_postgres
   ```
 
+* Firefly III
+
+  ```bash
+  ./create-docker-volume-backups.sh -f ${HOME}/local-backups -c affine affine_config affine_upload affine_redis affine_postgres
+  ```
+
+* Grist
+
+  ```bash
+  ./create-docker-volume-backups.sh -f ${HOME}/local-backups -c grist grist
+  ```
+
 * Grocy
 
   ```bash

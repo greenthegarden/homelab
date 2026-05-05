@@ -19,8 +19,8 @@
 
 - name: deploy-emqx | Set EMQX volume facts
   ansible.builtin.set_fact:
-    emqx_volume_data_name: "{{ emqx_volume_data_name | default(emqx_service_name + '-data') }}"
-    emqx_volume_logs_name: "{{ emqx_volume_logs_name | default(emqx_service_name + '-logs') }}"
+    emqx_volume_data_name: "{{ emqx_volume_data_name | default(emqx_service_name + '_data') }}"
+    emqx_volume_logs_name: "{{ emqx_volume_logs_name | default(emqx_service_name + '_logs') }}"
 
 - name: deploy-emqx | Set EMQX aggregated facts
   ansible.builtin.set_fact:
@@ -137,7 +137,7 @@
   loop: "{{ emqx_networks }}"
 
 - name: deploy-emqx | Create EMQX volumes
-  when: emqx_volume_data_name is defined and emqx_volume_logs_name is defined
+  when: emqx_volumes is defined and (emqx_volumes | length > 0)
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
