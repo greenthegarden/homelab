@@ -18,9 +18,9 @@
 
   pre_tasks:
 
-      # - name: Ensure base environment is configured
-      #   ansible.builtin.include_tasks:
-      #     file: tasks/configure-containerised-base.yaml
+    - name: Ensure base environment is configured
+      ansible.builtin.include_tasks:
+        file: tasks/configure-containerised-base.yaml
 
   tasks:
 
@@ -39,9 +39,9 @@
       vars:
         traefik_network_name: "{{ reverse_proxy_network_name }}"
 
-    - name: Deploy a containerised instance of Traefik Manager
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-traefik-manager.yaml
+    # - name: Deploy a containerised instance of Traefik Manager
+    #   ansible.builtin.include_tasks:
+    #     file: tasks/deploy-traefik-manager.yaml
 
     - name: Deploy a containerised instance of Nextcloud All-in-One
       ansible.builtin.include_tasks:
