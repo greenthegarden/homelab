@@ -5,11 +5,15 @@
 
   vars:
 
+
+    # Firefly III facts
+    # Values are set in templates/fireflyiii/docker-compose.yaml.j2
+    fireflyiii_deploy_docker_volume_backup: false
+
     # Wallos facts
     # renovate: datasource=docker depName=walloslabs/wallos
     wallos_image: bellamy/wallos:4.8.4
-
-    wallos_deploy_docker_volume_backup: true
+    wallos_deploy_docker_volume_backup: false
 
   pre_tasks:
     - name: Ensure base environment is configured
@@ -21,10 +25,7 @@
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 
-    - name: Deploy a containerised instance of Homepage
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-homepage.yaml
-
+    ########### Deploy Firefly III
     - name: Deploy a containerised instance of Firefly III
       ansible.builtin.include_tasks:
         file: tasks/deploy-fireflyiii.yaml
@@ -37,9 +38,10 @@
         docker_volume_backup_service_name: "docker-volume-backup-{{ fireflyiii_service_name }}"
         docker_volume_backup_volume_to_backup:
           - "{{ fireflyiii_db_backup_volume_name }}:/backup/{{ fireflyiii_service_name }}_db-backup:ro"
-        docker_volume_backup_backup_label: "{{ fireflyiii_service_name }}-db"
+        docker_volume_backup_backup_label: "{{ fireflyiii_service_name }}_db"
         docker_volume_backup_backup_retention_days: 7
 
+    ########### Deploy Wallos
     - name: Deploy a containerised instance of Wallos
       ansible.builtin.include_tasks:
         file: tasks/deploy-wallos.yaml
@@ -51,6 +53,6 @@
       vars:
         docker_volume_backup_service_name: "docker-volume-backup-{{ wallos_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ wallos_volume_data_name }}:/backup/{{ wallos_service_name }}-backup:ro"
-        docker_volume_backup_backup_label: "{{ wallos_service_name }}-db"
+          - "{{ wallos_volume_data_name }}:/backup/{{ wallos_service_name }}_backup:ro"
+        docker_volume_backup_backup_label: "{{ wallos_service_name }}_db"
         docker_volume_backup_backup_retention_days: 7
