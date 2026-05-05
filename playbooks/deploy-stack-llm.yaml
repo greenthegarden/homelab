@@ -10,7 +10,7 @@
 
     # SearXNG facts
     # renovate: datasource=docker depName=searxng/searxng
-    searxng_image: searxng/searxng:2026.4.28-ed5955a5c
+    searxng_image: searxng/searxng:2026.5.2-aefc3c316
 
     # Open WebUI facts
     # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
@@ -19,7 +19,7 @@
 
     # n8n facts
     # renovate: datasource=docker depName=docker.n8n.io/n8nio/n8n
-    n8n_image: docker.n8n.io/n8nio/n8n:2.18.4
+    n8n_image: docker.n8n.io/n8nio/n8n:2.18.7
 
   pre_tasks:
     - name: Ensure base environment is configured
