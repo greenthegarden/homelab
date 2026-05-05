@@ -90,12 +90,12 @@
     state: present
   loop: "{{ wallos_networks }}"
 
-- name: deploy-wallos | Create volume for Wallos
-  when: wallos_volumes is defined and (wallos_volumes | length > 0)
-  community.docker.docker_volume:
-    name: "{{ item }}"
-    state: present
-  loop: "{{ wallos_volumes }}"
+# - name: deploy-wallos | Create volume for Wallos
+#   when: wallos_volumes is defined and (wallos_volumes | length > 0)
+#   community.docker.docker_volume:
+#     name: "{{ item }}"
+#     state: present
+#   loop: "{{ wallos_volumes }}"
 
 - name: deploy-wallos | Pull Wallos image
   community.docker.docker_image:
