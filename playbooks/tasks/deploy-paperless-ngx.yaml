@@ -100,11 +100,13 @@
   loop: "{{ paperless_ngx_networks }}"
 
 - name: deploy-paperless-ngx | Create Paperless-ngx volumes
-  when: paperless_ngx_volumes is defined
+  when: paperless_ngx_volumes is defined and (paperless_ngx_volumes | length > 0)
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
-  loop: "{{ paperless_ngx_volumes }}"
+  loop:
+    - "{{ paperless_ngx_volume_data_name }}"
+    - "{{ paperless_ngx_volume_media_name }}"
 
 - name: deploy-paperless-ngx | Create Paperless-ngx mounts
   when: paperless_ngx_mounts
