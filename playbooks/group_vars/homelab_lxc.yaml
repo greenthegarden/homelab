@@ -48,7 +48,7 @@ portainer_agent_image: portainer/agent:2.40.0-alpine
 prometheus_image: prom/prometheus:v3.11.0
 # Redis facts
 # renovate: datasource=docker depName=redis
-redis_image: redis:8.6.2-alpine
+redis_image: redis:8.6.3-alpine
 # Socket Proxy facts
 # renovate: datasource=docker depName=wollomatic/socket-proxy
 socket_proxy_image: wollomatic/socket-proxy:1.12.0
