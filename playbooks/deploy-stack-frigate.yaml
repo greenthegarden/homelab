@@ -1,0 +1,69 @@
+---
+- name: Deploy Frigate Stack
+
+  hosts: frigate
+
+  vars:
+
+    # Frigate facts
+    # renovate: datasource=docker depName=ghcr.io/blakeblackshear/frigate
+    frigate_image: ghcr.io/blakeblackshear/frigate:0.17.1
+
+  pre_tasks:
+    - name: Ensure base environment is configured
+      ansible.builtin.include_tasks:
+        file: tasks/configure-containerised-base.yaml
+
+  tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    ########### Deploy Frigate
+    - name: Deploy a containerised instance of Frigate
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-frigate.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      when: frigate_deploy_docker_volume_backup | default(false)
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_service_name: "docker-volume-backup-{{ frigate_service_name }}"
+        docker_volume_backup_volume_to_backup:
+          - "{{ frigate_volume_data_name }}:/backup/{{ frigate_service_name }}-backup:ro"
+        docker_volume_backup_backup_label: "{{ frigate_service_name }}"
+        docker_volume_backup_backup_retention_days: 3
+
+    ########### Deploy Gotify
+    - name: Deploy a containerised instance of Gotify
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-gotify.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      when: gotify_deploy_docker_volume_backup | default(false)
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_service_name: "docker-volume-backup-{{ gotify_service_name }}"
+        docker_volume_backup_volume_to_backup:
+          - "{{ gotify_volume_name }}:/backup/{{ gotify_service_name }}-backup:ro"
+        docker_volume_backup_backup_label: "{{ gotify_service_name }}"
+        docker_volume_backup_backup_retention_days: 7
+
+    ########### Deploy Ntfy
+    - name: Deploy a containerised instance of Ntfy
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-ntfy.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      when: ntfy_deploy_docker_volume_backup | default(false)
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_service_name: "docker-volume-backup-{{ ntfy_service_name }}"
+        docker_volume_backup_volume_to_backup:
+          - "{{ ntfy_volume_name }}:/backup/{{ ntfy_service_name }}-backup:ro"
+        docker_volume_backup_backup_label: "{{ ntfy_service_name }}"
+        docker_volume_backup_backup_retention_days: 7
