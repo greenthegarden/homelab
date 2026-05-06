@@ -27,9 +27,11 @@
     socket_proxy_command_base:
       - "-loglevel=debug"
       - "-listenip=0.0.0.0"
+      - "-shutdowngracetime=10"
+      - "-allowHEAD=/_ping"
+      # check socket connection every hour and stop the proxy if it fails (will then be restarted by docker):
       - "-watchdoginterval=3600"
       - "-stoponwatchdog"
-      - "-shutdowngracetime=10"
 
 - name: deploy-socket-proxy | debug
   ansible.builtin.debug:
@@ -111,7 +113,7 @@
     # volumes:
     #   - /var/run/docker.sock:/var/run/docker.sock:ro
     #   # - socket:/socket/
-    volumes: "{{ default_host_volumes + docker_host_volume + socket_proxy_volumes | default(omit) }}"
+    volumes: "{{ docker_host_volume + socket_proxy_volumes | default(omit) }}"
   register: socket_proxy_container_state
 
 - name: deploy-socket-proxy | Wait for Socket Proxy to accept connections
