@@ -11,12 +11,12 @@
 
     # Semaphore facts
     # renovate: datasource=docker depName=semaphoreui/semaphore
-    semaphore_image: semaphoreui/semaphore:v2.17.39
+    semaphore_image: semaphoreui/semaphore:v2.18.1
     semaphore_deploy_docker_volume_backup: false
 
     # Termix facts
     # renovate: datasource=docker depName=ghcr.io/lukegus/termix
-    termix_image: ghcr.io/lukegus/termix:release-2.1.0
+    termix_image: ghcr.io/lukegus/termix:release-2.2.0
 
     # IT-Tools facts
     # renovate: datasource=docker depName=corentinth/it-tools
