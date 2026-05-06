@@ -17,7 +17,7 @@ The following uses of the script are specific to various hosted services.
 * Firefly III
 
   ```bash
-  ./create-docker-volume-backups.sh -f ${HOME}/local-backups -c affine affine_config affine_upload affine_redis affine_postgres
+  ./create-docker-volume-backups.sh -f ${HOME}/local-backups -c firefly_iii fireflyiii_firefly_iii_db fireflyiii_firefly_iii_upload
   ```
 
 * Grist
@@ -106,11 +106,7 @@ scp user@host:${HOME}/local-backups/<service>/*.tar.gz .
 #### AFFiNE
 
 ```bash
-# Stop existing container which will use volume
-docker stop affine
-docker stop affine_migration
-docker stop affine_redis
-docker stop affine_postgres
+# Stop and remove containers using volume(s), and then remove volume(s)
 # Extract backups to /tmp
 tar -C /tmp -xvf backup-affine-config-2026-05-04T12-55-15.tar.gz
 tar -C /tmp -xvf backup-affine-postgres-2026-05-04T12-55-18.tar.gz
@@ -138,40 +134,36 @@ docker run --rm -it -v affine_redis:/volume alpine /bin/sh
 # Stop and remove temporary container
 docker stop temp_restore_container
 docker rm temp_restore_container
-# Restart Tududi
-docker start affine_redis
-docker start affine_postgres
-docker start affine_migration
-docker start affine
+# Redeploy service
 ```
 
 #### Firefly III
 
 ```bash
-# Stop existing container which will use volume
-docker stop fireflyiii-core
-# Extract grocy backup to /tmp
-tar -C /tmp -xvf backup-grist-2026-05-06T10-18-15.tar.gz
+# Stop and remove containers using volume(s), and then remove volume(s)
+# Extract firefly iii backup to /tmp
+tar -C /tmp -xvf backup-fireflyiii_firefly_iii_db-2026-05-06T11-58-26.tar.gz
+tar -C /tmp -xvf backup-fireflyiii_firefly_iii_upload-2026-05-06T11-58-33.tar.gz
 # Ensure all files have correct uid:gid
 chown -R root:root /tmp/backup
 # Create temporary container with destination volumes mounted
-docker run -d --name temp_restore_container -v grist:/grist_backup_restore alpine
+docker run -d --name temp_restore_container -v fireflyiii_firefly_iii_db:/firefly_db_restore -v fireflyiii_firefly_iii_upload:/firefly_upload_restore alpine
 # Copy local files to destination volume within temporary container keeping uid:gid
-docker cp -a /tmp/backup/grist/. temp_restore_container:/grist_backup_restore
+docker cp -a /tmp/backup/fireflyiii_firefly_iii_db/. temp_restore_container:/firefly_db_restore
+docker cp -a /tmp/backup/fireflyiii_firefly_iii_upload/. temp_restore_container:/firefly_upload_restore
 # Check contents of destination volumes
-docker run --rm -it -v grist:/volume alpine /bin/sh
+docker run --rm -it -v fireflyiii_firefly_iii_db:/volume alpine /bin/sh
+docker run --rm -it -v fireflyiii_firefly_iii_upload:/volume alpine /bin/sh
 # Stop and remove temporary container
 docker stop temp_restore_container
 docker rm temp_restore_container
-# Restart container
-docker start homebox
+# Redeploy service
 ```
 
 #### Grist
 
 ```bash
-# Stop existing container which will use volume
-docker stop grist
+# Stop and remove containers using volume(s), and then remove volume(s)
 # Extract grocy backup to /tmp
 tar -C /tmp -xvf backup-grist-2026-05-06T10-18-15.tar.gz
 # Ensure all files have correct uid:gid
@@ -185,15 +177,13 @@ docker run --rm -it -v grist:/volume alpine /bin/sh
 # Stop and remove temporary container
 docker stop temp_restore_container
 docker rm temp_restore_container
-# Restart container
-docker start homebox
+# Redeploy service
 ```
 
 #### Grocy
 
 ```bash
-# Stop existing container which will use volume
-docker stop gricy
+# Stop and remove containers using volume(s), and then remove volume(s)
 # Extract grocy backup to /tmp
 tar -C /tmp -xvf backup-grocy-2026-05-05T21-05-32.tar.gz
 # Ensure all files have correct uid:gid
@@ -207,15 +197,13 @@ docker run --rm -it -v grocy:/volume alpine /bin/sh
 # Stop and remove temporary container
 docker stop temp_restore_container
 docker rm temp_restore_container
-# Restart container
-docker start homebox
+# Redeploy service
 ```
 
 #### Homebox
 
 ```bash
-# Stop existing container which will use volume
-docker stop homebox
+# Stop and remove containers using volume(s), and then remove volume(s)
 # Extract homebox backup to /tmp
 tar -C /tmp -xvf backup-homebox-2026-05-02T12-50-44.tar.gz
 # Ensure all files have correct uid:gid
@@ -229,15 +217,13 @@ docker run --rm -it -v homebox:/volume alpine /bin/sh
 # Stop and remove temporary container
 docker stop temp_restore_container
 docker rm temp_restore_container
-# Restart container
-docker start homebox
+# Redeploy service
 ```
 
 #### Paperless-ngx
 
 ```bash
-# Stop existing container which will use volume
-docker stop paperless-ngx paperless-ngx_redis
+# Stop and remove containers using volume(s), and then remove volume(s)
 # Extract paperless-ngx backup to /tmp
 tar -C /tmp -xvf backup-paperless-ngx-data-2026-05-05T21-38-04.tar.gz
 tar -C /tmp -xvf backup-paperless-ngx-media-2026-05-05T21-38-06.tar.gz
@@ -261,15 +247,13 @@ docker run --rm -it -v paperless-ngx_redis:/volume alpine /bin/sh
 # Stop and remove temporary container
 docker stop temp_restore_container
 docker rm temp_restore_container
-# Restart container
-docker start paperless-ngx_redis paperless-ngx
+# Redeploy service
 ```
 
 #### Tududi
 
 ```bash
-# Stop existing container which will use volume
-docker stop tududi
+# Stop and remove containers using volume(s), and then remove volume(s)
 # Extract tududi_data backup to /tmp
 tar -C /tmp -xvf  backup-tududi_data-2026-05-02T12-50-44.tar.gz
 # Extract tududi_uploads backup to /tmp
@@ -287,15 +271,13 @@ docker run --rm -it -v tududi_uploads:/volume alpine /bin/sh
 # Stop and remove temporary container
 docker stop temp_restore_container
 docker rm temp_restore_container
-# Restart Tududi
-docker start tududi
+# Redeploy service
 ```
 
 #### Vaultwarden
 
 ```bash
-# Stop existing container which will use volume
-docker stop vaultwarden
+# Stop and remove containers using volume(s), and then remove volume(s)
 # Extract vaultwarden backup to /tmp
 tar -C /tmp -xvf backup-vaultwarden-2026-05-05T21-20-37.tar.gz
 # Ensure all files have correct uid:gid
@@ -309,15 +291,13 @@ docker run --rm -it -v vaultwarden:/volume alpine /bin/sh
 # Stop and remove temporary container
 docker stop temp_restore_container
 docker rm temp_restore_container
-# Restart container
-docker start homebox
+# Redeploy service
 ```
 
 #### Wallos
 
 ```bash
-# Stop existing container which will use volume
-docker stop wallos
+# Stop and remove containers using volume(s), and then remove volume(s)
 # Extract homebox backup to /tmp
 tar -C /tmp -xf backup-wallos-data-2026-05-05T10-10-44.tar.gz
 tar -C /tmp -xf backup-wallos-logos-2026-05-05T10-10-59.tar.gz
@@ -334,6 +314,5 @@ docker run --rm -it -v wallos_logos:/volume alpine /bin/sh
 # Stop and remove temporary container
 docker stop temp_restore_container
 docker rm temp_restore_container
-# Restart container
-docker start wallos
+# Redeploy service
 ```

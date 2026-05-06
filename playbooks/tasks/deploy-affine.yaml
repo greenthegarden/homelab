@@ -120,7 +120,6 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-redis.yaml
   vars:
-    # redis_image: "{{ redis_image | default('redis:alpine') }}"
     redis_service_name: "{{ affine_redis_service_name | default(affine_service_name + '_redis') }}"
     redis_network_name: "{{ affine_network_name }}"
     redis_volume_name: "{{ affine_redis_service_name | default(affine_service_name + '_redis') }}"

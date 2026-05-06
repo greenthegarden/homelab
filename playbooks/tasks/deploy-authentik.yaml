@@ -146,7 +146,6 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-redis.yaml
   vars:
-    # redis_image: "{{ redis_image | default('redis:alpine') }}"
     redis_service_name: "{{ authentik_service_name }}-redis"
     redis_network_name: "{{ authentik_network_name }}"
     redis_volume_name: "{{ authentik_service_name }}-redis"
