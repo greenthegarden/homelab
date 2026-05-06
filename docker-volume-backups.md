@@ -145,6 +145,50 @@ docker start affine_migration
 docker start affine
 ```
 
+#### Firefly III
+
+```bash
+# Stop existing container which will use volume
+docker stop fireflyiii-core
+# Extract grocy backup to /tmp
+tar -C /tmp -xvf backup-grist-2026-05-06T10-18-15.tar.gz
+# Ensure all files have correct uid:gid
+chown -R root:root /tmp/backup
+# Create temporary container with destination volumes mounted
+docker run -d --name temp_restore_container -v grist:/grist_backup_restore alpine
+# Copy local files to destination volume within temporary container keeping uid:gid
+docker cp -a /tmp/backup/grist/. temp_restore_container:/grist_backup_restore
+# Check contents of destination volumes
+docker run --rm -it -v grist:/volume alpine /bin/sh
+# Stop and remove temporary container
+docker stop temp_restore_container
+docker rm temp_restore_container
+# Restart container
+docker start homebox
+```
+
+#### Grist
+
+```bash
+# Stop existing container which will use volume
+docker stop grist
+# Extract grocy backup to /tmp
+tar -C /tmp -xvf backup-grist-2026-05-06T10-18-15.tar.gz
+# Ensure all files have correct uid:gid
+chown -R root:root /tmp/backup
+# Create temporary container with destination volumes mounted
+docker run -d --name temp_restore_container -v grist:/grist_backup_restore alpine
+# Copy local files to destination volume within temporary container keeping uid:gid
+docker cp -a /tmp/backup/grist/. temp_restore_container:/grist_backup_restore
+# Check contents of destination volumes
+docker run --rm -it -v grist:/volume alpine /bin/sh
+# Stop and remove temporary container
+docker stop temp_restore_container
+docker rm temp_restore_container
+# Restart container
+docker start homebox
+```
+
 #### Grocy
 
 ```bash
