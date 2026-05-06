@@ -14,7 +14,7 @@
   ansible.builtin.set_fact:
     homepage_network_name: "{{ homepage_network_name | default(homepage_service_name) }}"
 
-- name: deploy-homepage | Set Homepage volume facts
+- name: deploy-homepage | Set Homepage mount facts
   ansible.builtin.set_fact:
     homepage_config_dir: "{{ homepage_config_dir | default('/root/' + homepage_service_name + '/config') }}"
 
@@ -35,10 +35,13 @@
       - { name: "{{ homepage_socket_proxy_network_name | default('socket-proxy-homepage') }}" }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
-    homepage_volumes:
-      # Local paths to mount into the container
-      # local path:container path
-      - "{{ homepage_config_dir }}:/app/config"
+    homepage_mounts:
+        # Local paths to mount into the container
+        # local path:container path
+        - "{{ homepage_config_dir }}:/app/config"
+    homepage_volumes: []
+      # Volumes to mount into the container
+      # volume:container path
 
 - name: deploy-homepage | Log Homepage configuration
   ansible.builtin.debug:
@@ -48,6 +51,7 @@
       - "Homepage FQDN: {{ homepage_fqdn }}"
       - "Homepage networks: {{ homepage_networks | default(omit) }}"
       - "Homepage ports: {{ homepage_ports | default(omit) }}"
+      - "Homepage mounts: {{ homepage_mounts | default(omit) }}"
       - "Homepage volumes: {{ homepage_volumes | default(omit) }}"
 
 - name: deploy-homepage | Create Homepage container labels
@@ -106,7 +110,7 @@
         mode: "0644"
       loop:
         - docker
-        # - services
+        - services
         - widgets
 
 - name: deploy-homepage | Pull Homepage image
@@ -127,7 +131,7 @@
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ default_host_volumes + homepage_volumes | default(omit) }}"
+    volumes: "{{ homepage_mounts | default(omit) }}"
   register: homepage_container_state
 
 - name: deploy-homepage | Wait for Homepage to accept connections
