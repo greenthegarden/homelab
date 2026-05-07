@@ -72,21 +72,12 @@
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.routers.{{ docmost_service_name }}.entrypoints",
-      "value": "{{ traefik_entrypoint_secure_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ docmost_service_name }}.rule",
-      "value": "Host(`{{ docmost_fqdn }}`)",
-    }
+    - { "key": "traefik.http.routers.{{ docmost_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ docmost_service_name }}.rule", "value": "Host(`{{ docmost_fqdn }}`)" }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/docmost/docmost/releases/tag/v${major}.${minor}.${patch}",
-    }
+    - { "key": "wud.link.template", "value": "https://github.com/docmost/docmost/releases/tag/v${major}.${minor}.${patch}" }
 
 - name: deploy-docmost | Create Docmost networks
   when: docmost_networks is defined
@@ -124,7 +115,6 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-postgres.yaml
   vars:
-    postgres_image: "{{ postgres_image | default('postgres:16-alpine') }}"
     postgres_service_name: "{{ docmost_postgress_service_name | default(docmost_service_name + '_postgres') }}"
     postgres_network_name: "{{ docmost_network_name }}"
     postgres_volume_name: "{{ docmost_service_name }}-postgres"
@@ -142,7 +132,6 @@
     - docmost_state.exists
     - (docmost_image | split(':') | last) != (docmost_state.container.Config.Image | split(':') | last)
   block:
-
     - name: deploy-docmost | Stop and remove existing Docmost container
       community.docker.docker_container:
         name: "{{ docmost_service_name }}"
@@ -156,7 +145,6 @@
   when:
     - not docmost_state.exists or (docmost_update | default(false))
   block:
-
     - name: deploy-docmost | Pull Docmost image
       community.docker.docker_image:
         name: "{{ docmost_image }}"

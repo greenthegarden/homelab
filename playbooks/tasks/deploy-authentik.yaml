@@ -69,35 +69,20 @@
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.routers.{{ authentik_service_name }}.entrypoints",
-      "value": "{{ traefik_entrypoint_secure_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ authentik_service_name }}.rule",
-      "value": "Host(`{{ authentik_fqdn }}`)",
-    }
+    - { "key": "traefik.http.routers.{{ authentik_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ authentik_service_name }}.rule", "value": "Host(`{{ authentik_fqdn }}`)" }
     ## Individual Application forwardAuth regex (catch any subdomain using individual application forwardAuth)
     # https://github.com/brokenscripts/authentik_traefik/blob/traefik3/my-compose/authentik/compose.yaml
     - {
-      "key": "traefik.http.routers.{{ authentik_service_name }}-output.rule",
-      "value": "HostRegexp(`{subdomain:[a-z0-9-]+}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}}`) && PathPrefix(`/outpost.goauthentik.io/`)",
-    }
-    - {
-      "key": "traefik.http.routers.{{ authentik_service_name }}.service",
-      "value": "{{ authentik_service_name }}",
-    }
-    - {
-      "key": "traefik.http.services.{{ authentik_service_name }}.loadbalancer.server.port",
-      "value": "{{ authentik_service_port_http | quote }}",
-    }
+        "key": "traefik.http.routers.{{ authentik_service_name }}-output.rule",
+        "value": "HostRegexp(`{subdomain:[a-z0-9-]+}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}}`) && PathPrefix(`/outpost.goauthentik.io/`)",
+      }
+    - { "key": "traefik.http.routers.{{ authentik_service_name }}.service", "value": "{{ authentik_service_name }}" }
+    - { "key": "traefik.http.services.{{ authentik_service_name }}.loadbalancer.server.port", "value": "{{ authentik_service_port_http | quote }}" }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/getauthentik/authentik/releases/tag/v${major}.${minor}.${patch}",
-    }
+    - { "key": "wud.link.template", "value": "https://github.com/getauthentik/authentik/releases/tag/v${major}.${minor}.${patch}" }
 
 - name: deploy-authentik | Create Authentik DB container labels
   ansible.builtin.set_fact:
@@ -106,21 +91,15 @@
     # ---------------------------------------------------------------
     # Docker Volume Backup labels
     - {
-      "key": "docker-volume-backup.archive-pre",
-      "value": "/bin/sh -c 'PGPASSWORD={{ authentik.db_password }} pg_dump -U {{ authentik.db_user }} {{ authentik.db_name }} > /tmp/dumps/dump.sql'",
-    }
+        "key": "docker-volume-backup.archive-pre",
+        "value": "/bin/sh -c 'PGPASSWORD={{ authentik.db_password }} pg_dump -U {{ authentik.db_user }} {{ authentik.db_name }} > /tmp/dumps/dump.sql'",
+      }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     # Fix WUD to version 16 for PostgreSQL
     - { "key": "wud.tag.include", "value": '^16+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.watch.digest",
-      "value": "true"
-    }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/postgres/postgres/releases/tag/REL_${major}_${minor}",
-    }
+    - { "key": "wud.watch.digest", "value": "true" }
+    - { "key": "wud.link.template", "value": "https://github.com/postgres/postgres/releases/tag/REL_${major}_${minor}" }
 
 - name: deploy-authentik | Create Authentik networks
   when: authentik_networks is defined
@@ -160,8 +139,6 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-postgres.yaml
   vars:
-    # renovate: datasource=docker depName=docker.io/library/postgres
-    postgres_image: "{{ postgres_image | default('postgres:16-alpine') }}"
     postgres_service_name: "{{ authentik_postgress_service_name | default(authentik_service_name + '_postgres') }}"
     postgres_network_name: "{{ authentik_network_name }}"
     postgres_volume_name: "{{ authentik_service_name }}-postgres"
