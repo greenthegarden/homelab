@@ -65,16 +65,8 @@
         port: 2377,
         command: ["-allowfrom=uptimekuma.lxc-monitor.homelab.greenthegarden.com", '-allowGET=/v1\..{2}/(containers/.*|events|info)'],
       }
-    - {
-        name: wud,
-        port: 2378,
-        command: ["-allowfrom=wud.lxc-monitor.homelab.greenthegarden.com", '-allowGET=/_ping|/(v1\..{1,2}/)?((info|version)$|containers/(json$|.*/json$))'],
-      }
-    - {
-        name: homepage,
-        port: 2379,
-        command: ["-allowfrom=homepage,192.168.1.31", '-allowGET=/_ping|/(v1\..{1,2}/)?((info|version)$|containers/(json$|.*/json$))'],
-      }
+    - { name: wud, port: 2378, command: ["-allowfrom=wud.lxc-monitor.homelab.greenthegarden.com", '-allowGET=/v1\..{2}/(containers/.*|images/.*)'] }
+    - { name: homepage, port: 2379, command: ["-allowfrom=homepage.lxc-home.homelab.greenthegarden.com", '-allowGET=/v1\..{2}/(containers/(json$|.*/json$))'] }
 
 # Use Traefik as a reverse proxy to manage access to web services with SSL via Let's Encrypt
 
