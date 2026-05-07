@@ -48,6 +48,7 @@
   tags: dozzle
 
 # Use the following socket proxies to provide controlled access to the Docker socket for services that require it
+# Consider also https://blog.foxxmd.dev/posts/restricting-socket-proxy-by-container/
 
 - name: homelab-deploy-support-services | Deploy an exposed containerised instance of Socket Proxy configured for use by Homepage and Uptime Kuma
   ansible.builtin.include_tasks:
@@ -59,9 +60,13 @@
     socket_proxy_network_internal: false
     socket_proxy_command_service: "{{ item.command }}"
   loop:
-    - { name: uptimekuma, port: 2377, command: ["-allowfrom=uptimekuma", '-allowGET=/v1\..{2}/(containers/.*|events|info)'] }
-    - { name: wud, port: 2378, command: ["-allowfrom=wud,", "-allowGET=.*"] }
-    - { name: homepage, port: 2379, command: ["-allowfrom=homepage,192.168.1.31", "-allowGET=.*"] }
+    - { name: uptimekuma, port: 2377, command: ["-allowfrom=uptimekuma,192.168.1.163", '-allowGET=/v1\..{2}/(containers/.*|events|info)'] }
+    - { name: wud, port: 2378, command: ["-allowfrom=wud,192.168.1.163", '-allowGET=/_ping|/(v1\..{1,2}/)?((info|version)$|containers/(json$|.*/json$))'] }
+    - {
+        name: homepage,
+        port: 2379,
+        command: ["-allowfrom=homepage,192.168.1.31", '-allowGET=/_ping|/(v1\..{1,2}/)?((info|version)$|containers/(json$|.*/json$))'],
+      }
 
 # Use Traefik as a reverse proxy to manage access to web services with SSL via Let's Encrypt
 
