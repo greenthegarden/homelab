@@ -125,9 +125,9 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-redis.yaml
   vars:
-    redis_service_name: "{{ authentik_service_name }}-redis"
+    redis_service_name: "{{ authentik_service_name }}_redis"
     redis_network_name: "{{ authentik_network_name }}"
-    redis_volume_name: "{{ authentik_service_name }}-redis"
+    redis_volume_name: "{{ authentik_service_name }}_redis"
     redis_args:
       - "--save ''"
       - "--appendonly no"
@@ -141,7 +141,7 @@
   vars:
     postgres_service_name: "{{ authentik_postgress_service_name | default(authentik_service_name + '_postgres') }}"
     postgres_network_name: "{{ authentik_network_name }}"
-    postgres_volume_name: "{{ authentik_service_name }}-postgres"
+    postgres_volume_name: "{{ authentik_service_name }}_postgres"
     postgres_database: "{{ authentik.db_name | default('authentik') }}"
     postgres_user: "{{ authentik.db_user | default('authentik') }}"
     postgres_password: "{{ authentik.db_password | default('dummy') }}"
