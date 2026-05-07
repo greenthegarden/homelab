@@ -104,6 +104,7 @@
     networks: "{{ socket_proxy_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     published_ports: "{{ socket_proxy_ports if not socket_proxy_network_internal else omit }}"
     read_only: true
+    recreate: true # Recreate to ensure any configuration changes are used
     restart: true
     restart_policy: unless-stopped
     security_opts:
