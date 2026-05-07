@@ -109,7 +109,7 @@
     - "{{ paperless_ngx_volume_media_name }}"
 
 - name: deploy-paperless-ngx | Create Paperless-ngx mounts
-  when: paperless_ngx_mounts
+  when: paperless_ngx_mounts is defined and (paperless_ngx_mounts | length > 0)
   block:
 
     - name: deploy-paperless-ngx | Create Paperless-ngx mount directories
@@ -117,7 +117,9 @@
         path: "{{ item }}"
         state: directory
         mode: "0666"
-      loop: "{{ paperless_ngx_mounts }}"
+      loop:
+        - "{{ paperless_ngx_export_dir }}"
+        - "{{ paperless_ngx_consume_dir }}"
 
 - name: deploy-paperless-ngx | Deploy Redis for Paperless-ngx
   when: paperless_ngx_redis_create | default(true)
