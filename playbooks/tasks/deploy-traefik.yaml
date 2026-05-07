@@ -1,5 +1,4 @@
 ---
-
 ####### TRAEFIK SECTION
 
 # https://stackoverflow.com/questions/58554731/traefik-v2-0-metrics-with-prometheus
@@ -38,14 +37,14 @@
   ansible.builtin.include_tasks:
     file: tasks/deploy-socket-proxy.yaml
   vars:
-    socket_proxy_service_name: "socket-proxy-{{ traefik_service_name }}"
+    socket_proxy_service_name: "socket-proxy_{{ traefik_service_name }}"
     socket_proxy_service_port: 2375
-    socket_proxy_network_name: "socket-proxy-{{ traefik_service_name }}"
+    socket_proxy_network_name: "socket-proxy_{{ traefik_service_name }}"
     socket_proxy_network_internal: true
     socket_proxy_command_service:
-      - '-allowfrom=traefik'
+      - "-allowfrom=traefik"
       - '-allowGET=/v1\..{1,2}/(version|containers/.*|events.*)' # this regexp allows readonly access only for requests that traefik needs
-      - '-allowHEAD=/_ping'
+      - "-allowHEAD=/_ping"
 
 # https://github.com/karvounis/traefik-tutorial-docker-compose-files/blob/master/standalone/advanced/docker-compose.ping.yml
 # https://github.com/ChristianLempa/homelab/blob/main/traefik/traefik-demo-1/config/traefik.yaml
@@ -53,7 +52,6 @@
 
 - name: deploy-traefik | Set Traefik service facts
   ansible.builtin.set_fact:
-
     traefik_command:
       #### These are the CLI commands that will configure Traefik and tell it how to work! ####
 
@@ -171,22 +169,10 @@
     # ---------------------------------------------------------------
     # Traefik configuration labels to override default static configuration
     - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.middlewares.traefik-auth.basicauth.users",
-      "value": "{{ traefik.dashboard_credentials }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ traefik_service_name }}.entrypoints",
-      "value": "{{ traefik_entrypoint_secure_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ traefik_service_name }}.rule",
-      "value": "Host(`{{ traefik_fqdn }}`)",
-    }
-    - {
-      "key": "traefik.http.routers.{{ traefik_service_name }}.service",
-      "value": "api@internal",
-    }
+    - { "key": "traefik.http.middlewares.traefik-auth.basicauth.users", "value": "{{ traefik.dashboard_credentials }}" }
+    - { "key": "traefik.http.routers.{{ traefik_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ traefik_service_name }}.rule", "value": "Host(`{{ traefik_fqdn }}`)" }
+    - { "key": "traefik.http.routers.{{ traefik_service_name }}.service", "value": "api@internal" }
     # ---------------------------------------------------------------
     # Traefik metrics router configuration
     # - {
@@ -205,10 +191,7 @@
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/traefik/traefik/releases/tag/${major}.${minor}.${patch}",
-    }
+    - { "key": "wud.link.template", "value": "https://github.com/traefik/traefik/releases/tag/${major}.${minor}.${patch}" }
 
 - name: deploy-traefik | Create Traefik networks
   when: traefik_networks is defined
@@ -222,7 +205,6 @@
 - name: deploy-traefik | Create acme configuration
   when: traefik_letsencrypt_dir is defined
   block:
-
     - name: deploy-traefik | Create acme configuration directory
       ansible.builtin.file:
         path: "{{ traefik_letsencrypt_dir }}"

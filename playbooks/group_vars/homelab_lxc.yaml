@@ -1,8 +1,6 @@
 ---
-
 # The variables file used by the playbooks in the homelab_lxc group.
 # These don't have to be explicitly imported by vars_files: they are autopopulated.
-
 
 # Docker Networks
 
@@ -18,7 +16,6 @@ reverse_proxy_network_name: reverse-proxy
 # Socker Proxy External is an external network which services that connect to Docker APIs on external hosts need to be on
 # Services include Homepage, Uptime Kuma and What's Up Docker?
 socket_proxy_external_network_name: socket-proxy-external
-
 
 # Containerised service facts
 
@@ -60,7 +57,7 @@ socket_proxy_image: wollomatic/socket-proxy:1.12.0
 tinyauth_image: ghcr.io/steveiliop56/tinyauth:v5.0.6
 # Traefik facts
 # renovate: datasource=docker depName=traefik
-traefik_image: traefik:3.6.15
+traefik_image: traefik:3.7.0
 traefik_entrypoint_insecure_name: web
 traefik_entrypoint_secure_name: "{{ traefik_entrypoint_insecure_name | default('web') }}secure"
 # What's Up Docker facts
@@ -76,7 +73,6 @@ whatsupdocker_docker_socket_proxy_env:
   TASKS: "1"
   # VERSION: "1"
   VOLUMES: "1"
-
 
 # Global definition of backup directory on hosts
 local_backups_dir: /root/backups
