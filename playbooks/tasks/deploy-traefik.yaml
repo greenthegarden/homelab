@@ -33,7 +33,7 @@
 
 # Deploy Docker Socket Proxy at this stage to ensure vars are set correctly
 # To check proxy and port is open use `nc -zv docker-socket-proxy-traefik 2375`
-- name: deploy-traefik | Deploy a containerised instance of Docker Socket Proxy configured for Traefik
+- name: deploy-traefik | Deploy a containerised instance of Socket Proxy configured for Traefik
   ansible.builtin.include_tasks:
     file: tasks/deploy-socket-proxy.yaml
   vars:
@@ -42,7 +42,7 @@
     socket_proxy_network_name: "socket-proxy_{{ traefik_service_name }}"
     socket_proxy_network_internal: true
     socket_proxy_command_service:
-      - "-allowfrom=traefik"
+      - "-allowfrom={{ traefik_service_name }}"
       - '-allowGET=/v1\..{1,2}/(version|containers/.*|events.*)' # this regexp allows readonly access only for requests that traefik needs
       - "-allowHEAD=/_ping"
 
