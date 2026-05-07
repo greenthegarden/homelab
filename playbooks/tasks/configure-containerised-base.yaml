@@ -60,8 +60,16 @@
     socket_proxy_network_internal: false
     socket_proxy_command_service: "{{ item.command }}"
   loop:
-    - { name: uptimekuma, port: 2377, command: ["-allowfrom=uptimekuma,192.168.1.163", '-allowGET=/v1\..{2}/(containers/.*|events|info)'] }
-    - { name: wud, port: 2378, command: ["-allowfrom=wud,192.168.1.163", '-allowGET=/_ping|/(v1\..{1,2}/)?((info|version)$|containers/(json$|.*/json$))'] }
+    - {
+        name: uptimekuma,
+        port: 2377,
+        command: ["-allowfrom=uptimekuma.lxc-monitor.homelab.greenthegarden.com", '-allowGET=/v1\..{2}/(containers/.*|events|info)'],
+      }
+    - {
+        name: wud,
+        port: 2378,
+        command: ["-allowfrom=wud.lxc-monitor.homelab.greenthegarden.com", '-allowGET=/_ping|/(v1\..{1,2}/)?((info|version)$|containers/(json$|.*/json$))'],
+      }
     - {
         name: homepage,
         port: 2379,
