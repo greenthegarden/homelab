@@ -2,14 +2,13 @@
 
 - name: Deploy Wallos
 
-  hosts: fireflyiii
+  hosts: finance
 
   vars:
 
     # Wallos facts
     # renovate: datasource=docker depName=walloslabs/wallos
     wallos_image: bellamy/wallos:4.8.0
-
     wallos_deploy_docker_volume_backup: true
 
   tasks:
@@ -29,6 +28,6 @@
       vars:
         docker_volume_backup_service_name: "docker-volume-backup-{{ wallos_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ wallos_volume_data_name }}:/backup/{{ wallos_service_name }}-backup:ro"
-        docker_volume_backup_backup_label: "{{ wallos_service_name }}-db"
+          - "{{ wallos_volume_data_name }}:/backup/{{ wallos_service_name }}_backup:ro"
+        docker_volume_backup_backup_label: "{{ wallos_service_name }}_db"
         docker_volume_backup_backup_retention_days: 7
