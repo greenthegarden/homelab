@@ -50,9 +50,9 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
-        docker_volume_backup_service_name: "docker-volume-backup-{{ grist_service_name }}"
+        docker_volume_backup_service_name: "docker-volume-backup_{{ grist_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ grist_volume_name }}:/backup/{{ grist_service_name }}-backup:ro"
+          - "{{ grist_volume_name }}:/backup/{{ grist_service_name }}_backup:ro"
         docker_volume_backup_backup_label: "{{ grist_service_name }}-db"
         docker_volume_backup_backup_retention_days: 7
 
@@ -65,8 +65,8 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
-        docker_volume_backup_service_name: "docker-volume-backup-{{ tududi_service_name }}"
+        docker_volume_backup_service_name: "docker-volume-backup_{{ tududi_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ tududi_volume_data_name }}:/backup/{{ tududi_service_name }}-backup:ro"
+          - "{{ tududi_volume_data_name }}:/backup/{{ tududi_service_name }}_backup:ro"
         docker_volume_backup_backup_label: "{{ tududi_service_name }}"
         docker_volume_backup_backup_retention_days: 7

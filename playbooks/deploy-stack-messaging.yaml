@@ -38,9 +38,9 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
-        docker_volume_backup_service_name: "docker-volume-backup-{{ emqx_service_name }}"
+        docker_volume_backup_service_name: "docker-volume-backup_{{ emqx_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ emqx_volume_data_name }}:/backup/{{ emqx_service_name }}-backup:ro"
+          - "{{ emqx_volume_data_name }}:/backup/{{ emqx_service_name }}_backup:ro"
         docker_volume_backup_backup_label: "{{ emqx_service_name }}"
         docker_volume_backup_backup_retention_days: 3
 
@@ -54,9 +54,9 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
-        docker_volume_backup_service_name: "docker-volume-backup-{{ gotify_service_name }}"
+        docker_volume_backup_service_name: "docker-volume-backup_{{ gotify_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ gotify_volume_name }}:/backup/{{ gotify_service_name }}-backup:ro"
+          - "{{ gotify_volume_name }}:/backup/{{ gotify_service_name }}_backup:ro"
         docker_volume_backup_backup_label: "{{ gotify_service_name }}"
         docker_volume_backup_backup_retention_days: 7
 
@@ -70,8 +70,8 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
-        docker_volume_backup_service_name: "docker-volume-backup-{{ ntfy_service_name }}"
+        docker_volume_backup_service_name: "docker-volume-backup_{{ ntfy_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ ntfy_volume_name }}:/backup/{{ ntfy_service_name }}-backup:ro"
+          - "{{ ntfy_volume_name }}:/backup/{{ ntfy_service_name }}_backup:ro"
         docker_volume_backup_backup_label: "{{ ntfy_service_name }}"
         docker_volume_backup_backup_retention_days: 7

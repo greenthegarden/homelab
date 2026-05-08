@@ -39,8 +39,8 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
-        docker_volume_backup_service_name: "docker-volume-backup-{{ semaphore_service_name }}"
+        docker_volume_backup_service_name: "docker-volume-backup_{{ semaphore_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ semaphore_volume_data_name }}:/backup/{{ semaphore_service_name }}-backup:ro"
+          - "{{ semaphore_volume_data_name }}:/backup/{{ semaphore_service_name }}_backup:ro"
         docker_volume_backup_backup_label: "{{ semaphore_service_name }}"
         docker_volume_backup_backup_retention_days: 3

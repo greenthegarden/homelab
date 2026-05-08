@@ -24,8 +24,8 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
-        docker_volume_backup_service_name: "docker-volume-backup-{{ emqx_service_name }}"
+        docker_volume_backup_service_name: "docker-volume-backup_{{ emqx_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ emqx_volume_data_name }}:/backup/{{ emqx_service_name }}-backup:ro"
+          - "{{ emqx_volume_data_name }}:/backup/{{ emqx_service_name }}_backup:ro"
         docker_volume_backup_backup_label: "{{ emqx_service_name }}"
         docker_volume_backup_backup_retention_days: 3

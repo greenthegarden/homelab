@@ -40,7 +40,7 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
-        docker_volume_backup_service_name: "docker-volume-backup-{{ grocy_service_name }}"
+        docker_volume_backup_service_name: "docker-volume-backup_{{ grocy_service_name }}"
         docker_volume_backup_volume_to_backup:
           - "{{ grocy_volume_name }}:/backup/{{ grocy_service_name }}_backup:ro"
         docker_volume_backup_backup_label: "{{ grocy_service_name }}"
@@ -56,7 +56,7 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
-        docker_volume_backup_service_name: "docker-volume-backup-{{ homebox_service_name }}"
+        docker_volume_backup_service_name: "docker-volume-backup_{{ homebox_service_name }}"
         docker_volume_backup_volume_to_backup:
           - "{{ homebox_volume_name }}:/backup/{{ homebox_service_name }}_backup:ro"
         docker_volume_backup_backup_label: "{{ homebox_service_name }}"
@@ -72,7 +72,7 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
-        docker_volume_backup_service_name: "docker-volume-backup-{{ paperless_ngx_service_name }}"
+        docker_volume_backup_service_name: "docker-volume-backup_{{ paperless_ngx_service_name }}"
         docker_volume_backup_volume_to_backup:
           - "{{ paperless_ngx_volume_name }}:/backup/{{ paperless_ngx_service_name }}_backup:ro"
         docker_volume_backup_backup_label: "{{ paperless_ngx_service_name }}"

@@ -30,8 +30,8 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
-        docker_volume_backup_service_name: "docker-volume-backup-{{ frigate_service_name }}"
+        docker_volume_backup_service_name: "docker-volume-backup_{{ frigate_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ frigate_volume_data_name }}:/backup/{{ frigate_service_name }}-backup:ro"
+          - "{{ frigate_volume_data_name }}:/backup/{{ frigate_service_name }}_backup:ro"
         docker_volume_backup_backup_label: "{{ frigate_service_name }}"
         docker_volume_backup_backup_retention_days: 3

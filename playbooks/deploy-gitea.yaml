@@ -24,8 +24,8 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
-        docker_volume_backup_service_name: "docker-volume-backup-{{ gitea_service_name }}"
+        docker_volume_backup_service_name: "docker-volume-backup_{{ gitea_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ gitea_volume_name }}:/backup/{{ gitea_service_name }}-backup:ro"
+          - "{{ gitea_volume_name }}:/backup/{{ gitea_service_name }}_backup:ro"
         docker_volume_backup_backup_label: "{{ gitea_service_name }}"
         docker_volume_backup_backup_retention_days: 7

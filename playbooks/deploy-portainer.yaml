@@ -26,8 +26,8 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
       vars:
-        docker_volume_backup_service_name: "docker-volume-backup-{{ portainer_service_name }}"
+        docker_volume_backup_service_name: "docker-volume-backup_{{ portainer_service_name }}"
         docker_volume_backup_volume_to_backup:
-          - "{{ portainer_volume_name }}:/backup/{{ portainer_service_name }}-backup:ro"
+          - "{{ portainer_volume_name }}:/backup/{{ portainer_service_name }}_backup:ro"
         docker_volume_backup_backup_label: "{{ portainer_service_name }}"
         docker_volume_backup_backup_retention_days: 1
