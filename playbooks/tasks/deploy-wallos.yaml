@@ -62,6 +62,9 @@
     - { "key": "homepage.icon", "value": "wallos.png" }
     - { "key": "homepage.href", "value": "https://{{ wallos_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ wallos_fqdn }}/" }
+    - { "key": "homepage.widget.type", "value": "wallos" }
+    - { "key": "homepage.widget.url", "value": "https://{{ wallos_fqdn }}" }
+    - { "key": "homepage.widget.key", "value": "{{ wallos.key }}" }
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }

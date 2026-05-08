@@ -65,6 +65,11 @@
     - { "key": "homepage.icon", "value": "dockhand.png" }
     - { "key": "homepage.href", "value": "https://{{ dockhand_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ dockhand_fqdn }}/" }
+    - { "key": "homepage.widget.type", "value": "dockhand" }
+    - { "key": "homepage.widget.url", "value": "https://{{ dockhand_fqdn }}" }
+    - { "key": "homepage.widget.username", "value": "{{ dockhand.username }}" }
+    - { "key": "homepage.widget.password", "value": "{{ dockhand.password }}" }
+
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }

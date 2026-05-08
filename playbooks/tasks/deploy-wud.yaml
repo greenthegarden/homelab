@@ -66,7 +66,7 @@
     - { "key": "homepage.icon", "value": "whats-up-docker.png" }
     - { "key": "homepage.href", "value": "https://{{ wud_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ wud_fqdn }}/" }
-    - { "key": "homepage.widget.type", "value": "wud" }
+    - { "key": "homepage.widget.type", "value": "whatsupdocker" }
     - { "key": "homepage.widget.url", "value": "https://{{ wud_fqdn }}" }
     # ---------------------------------------------------------------
     # Socket Proxy labels
