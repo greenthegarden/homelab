@@ -1,13 +1,14 @@
 ---
 - name: Deploy Paperless-ngx
 
-  hosts: productivity
+  hosts: inventories
 
   vars:
 
     # Paperless-ngx facts
     # renovate: datasource=docker depName=ghcr.io/paperless-ngx/paperless-ngx
-    paperless_ngx_image: ghcr.io/paperless-ngx/paperless-ngx:2.20.13
+    paperless_ngx_image: ghcr.io/paperless-ngx/paperless-ngx:2.20.15
+    paperless_ngx_deploy_docker_volume_backup: false
 
   tasks:
 
@@ -18,3 +19,14 @@
     - name: Deploy a containerised instance of Paperless-ngx
       ansible.builtin.include_tasks:
         file: tasks/deploy-paperless-ngx.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      when: paperless_ngx_deploy_docker_volume_backup | default(false)
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_service_name: "docker-volume-backup_{{ paperless_ngx_service_name }}"
+        docker_volume_backup_volume_to_backup:
+          - "{{ paperless_ngx_volume_name }}:/backup/{{ paperless_ngx_service_name }}_backup:ro"
+        docker_volume_backup_backup_label: "{{ paperless_ngx_service_name }}"
+        docker_volume_backup_backup_retention_days: 7
