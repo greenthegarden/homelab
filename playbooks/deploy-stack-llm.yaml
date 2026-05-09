@@ -6,20 +6,20 @@
   vars:
     # Ollama facts
     # renovate: datasource=docker depName=ollama/ollama
-    ollama_image: ollama/ollama:0.23.0
+    ollama_image: ollama/ollama:0.23.2
 
     # SearXNG facts
     # renovate: datasource=docker depName=searxng/searxng
-    searxng_image: searxng/searxng:2026.5.2-aefc3c316
+    searxng_image: searxng/searxng:2026.5.9-0cba32c15
 
     # Open WebUI facts
     # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
-    open_webui_image: ghcr.io/open-webui/open-webui:0.9.2-slim
+    open_webui_image: ghcr.io/open-webui/open-webui:0.9.4-slim
     open_webui_network_name: open-webui
 
     # n8n facts
     # renovate: datasource=docker depName=docker.n8n.io/n8nio/n8n
-    n8n_image: docker.n8n.io/n8nio/n8n:2.18.7
+    n8n_image: docker.n8n.io/n8nio/n8n:2.19.5
 
   pre_tasks:
     - name: Ensure base environment is configured
