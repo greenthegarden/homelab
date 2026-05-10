@@ -114,6 +114,8 @@
     detach: true
     env:
       TZ: "{{ homelab.timezone | default('UTC') }}"
+      # Add Registries
+      # By default supports: 'Docker Hub (HUB)', 'Github (GHCR)'
       # Publish to MQTT broker when updates are available
       # WUD_TRIGGER_MQTT_MOSQUITTO_URL: "mqtt://{{ emqx.broker_address }}:{{ emqx.broker_port | default(1883) }}"
       # WUD_TRIGGER_MQTT_MOSQUITTO_USER: "{{ wud.broker_username }}"
@@ -161,7 +163,7 @@
     security_opts:
       - "no-new-privileges:true"
     state: started
-    volumes: "{{ default_host_volumes + wud_volumes | default(omit) }}"
+    volumes: "{{ wud_volumes | default(omit) }}"
   register: wud_container_state
 
 - name: deploy-wud | Wait for What's up Docker? to accept connections

@@ -20,7 +20,7 @@
 
     # n8n facts
     # renovate: datasource=docker depName=docker.n8n.io/n8nio/n8n
-    n8n_image: docker.n8n.io/n8nio/n8n:2.19.5
+    n8n_image: n8nio/n8n:2.19.5
 
   pre_tasks:
     - name: Ensure base environment is configured
