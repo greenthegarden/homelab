@@ -74,7 +74,7 @@
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - {
       "key": "wud.link.template",
-      "value": "https://github.com/termix/termix/releases/tag/v${major}.${minor}.${patch}",
+      "value": "https://github.com/Termix-SSH/Termix/releases/tag/release-${major}.${minor}.${patch}-tag",
     }
 
 - name: deploy-termix | Create Termix networks

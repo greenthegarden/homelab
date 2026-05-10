@@ -7,11 +7,12 @@
 
     # SearXNG facts
     # renovate: datasource=docker depName=searxng/searxng
-    searxng_image: searxng/searxng:2026.4.22-74f1ca203
+    searxng_image: searxng/searxng:2026.5.10-df1f24fb7
 
   pre_tasks:
 
     - name: Ensure base environment is configured
+      when: false
       ansible.builtin.include_tasks:
         file: tasks/configure-containerised-base.yaml
 
