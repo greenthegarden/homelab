@@ -18,12 +18,15 @@
 
 - name: deploy-traefik-nextcloud | Set Traefik network facts
   ansible.builtin.set_fact:
-    traefik_network_name: "{{ traefik_network_name | default(reverse_proxy_network_name) }}"
+    traefik_network_name: "{{ traefik_network_name | default(traefik_service_name) }}"
 
-- name: deploy-traefik-nextcloud | Set Traefik volume facts
+- name: deploy-traefik-nextcloud | Set Traefik mount facts
   ansible.builtin.set_fact:
     traefik_config_dir: "{{ traefik_config_dir | default('/root/' + 'traefik') }}"
     traefik_letsencrypt_dir: "{{ traefik_letsencrypt_dir | default('/root/' + 'letsencrypt') }}"
+
+- name: deploy-traefik-nextcloud | Set Traefik volume facts
+  ansible.builtin.set_fact: []
 
 - name: deploy-traefik-nextcloud | Set Traefik aggregated facts
   ansible.builtin.set_fact:
@@ -164,11 +167,15 @@
       - "{{ traefik_service_port_http }}:10080"
       - "{{ traefik_service_port_https }}:10443"
 
-    traefik_volumes:
+    traefik_mounts:
       # Local paths to mount into the container
       # local path:container path
       - "{{ traefik_config_dir }}:/dynamic:ro"
       - "{{ traefik_letsencrypt_dir }}:/letsencrypt:rw"
+
+    traefik_volumes: []
+      # Volumes to mount into the container
+      # volume:container path
       # - socket/socket/:ro
 
 - name: deploy-traefik-nextcloud | Log Traefik configuration
@@ -180,6 +187,7 @@
       - "Traefik command: {{ traefik_command | default(omit) }}"
       - "Traefik networks: {{ traefik_networks | default(omit) }}"
       - "Traefik ports: {{ traefik_ports | default(omit) }}"
+      - "Traefik mounts: {{ traefik_mounts | default(omit) }}"
       - "Traefik volumes: {{ traefik_volumes | default(omit) }}"
 
 - name: deploy-traefik-nextcloud | Create Traefik container labels
@@ -309,7 +317,7 @@
       - "no-new-privileges:true"
     state: started
     # user: "65530:65530"
-    volumes: "{{ default_host_volumes + traefik_volumes | default(omit) }}"
+    volumes: "{{ traefik_mounts +  traefik_volumes | default(omit) }}"
   register: traefik_container_state
 
 - name: deploy-traefik-nextcloud | Wait for Traefik to accept connections

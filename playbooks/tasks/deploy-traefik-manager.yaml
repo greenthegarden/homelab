@@ -10,13 +10,16 @@
 
 - name: deploy-traefik-manager | Set Traefik Manager network facts
   ansible.builtin.set_fact:
-    traefik_manager_network_name: "{{ traefik_manager_network_name | default(reverse_proxy_network_name) }}"
+    traefik_manager_network_name: "{{ traefik_manager_network_name | default('traefik') }}"
+
+- name: deploy-traefik-manager | Set Traefik Manager mount facts
+  ansible.builtin.set_fact:
+    traefik_config_file: "{{ traefik_config_file | default('/root/traefik/dynamic.yml') }}"
 
 - name: deploy-traefik-manager | Set Traefik Manager volume facts
   ansible.builtin.set_fact:
     traefik_manager_volume_config_name: "{{ traefik_manager_volume_config_name | default(traefik_manager_service_name + '_config') }}"
     traefik_manager_volume_backups_name: "{{ traefik_manager_volume_backups_name | default(traefik_manager_service_name + '_backups') }}"
-    traefik_config_file: "{{ traefik_config_file | default('/root/traefik/dynamic.yml') }}"
 
 - name: deploy-traefik-manager | Set Traefik Manager aggregated facts
   ansible.builtin.set_fact:
@@ -25,6 +28,7 @@
 - name: deploy-traefik-manager | Set Traefik Manager service facts
   ansible.builtin.set_fact:
     traefik_manager_networks:
+      - { name: "{{ traefik_manager_network_name }}", internal: true }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     traefik_manager_ports:
@@ -33,12 +37,15 @@
       # use high ports inside the container so
       # we don't need to be root to bind the ports
       - "{{ traefik_manager_service_port }}:5000"
-    traefik_manager_volumes:
+    traefik_manager_mounts:
       # Local paths to mount into the container
       # local path:container path
+      - "{{ traefik_config_file }}:/app/config/dynamic.yml:rw"
+    traefik_manager_volumes:
+      # Volumes to mount into the container
+      # volume:container path
       - "{{ traefik_manager_volume_config_name }}:/app/config"
       - "{{ traefik_manager_volume_backups_name }}:/app/backups"
-      - "{{ traefik_config_file }}:/app/config/dynamic.yml:rw"
 
 - name: deploy-traefik-manager | Log Traefik Manager configuration
   ansible.builtin.debug:
@@ -48,6 +55,7 @@
       - "Traefik Manager FQDN: {{ traefik_manager_fqdn }}"
       - "Traefik Manager networks: {{ traefik_manager_networks | default(omit) }}"
       - "Traefik Manager ports: {{ traefik_manager_ports | default(omit) }}"
+      - "Traefik Manager mounts: {{ traefik_manager_mounts | default(omit) }}"
       - "Traefik Manager volumes: {{ traefik_manager_volumes | default(omit) }}"
 
 - name: deploy-traefik-manager | Create Traefik Manager container labels
@@ -83,12 +91,25 @@
   loop: "{{ traefik_manager_networks }}"
 
 - name: deploy-traefik-manager | Create Traefik Manager volumes
+  when: traefik_manager_volumes is defined and (traefik_manager_volumes | length > 0)
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
   loop:
     - "{{ traefik_manager_volume_config_name }}"
     - "{{ traefik_manager_volume_backups_name }}"
+
+- name: deploy-traefik-manager | Create Traefik Manager mounts
+  when: traefik_manager_mounts is defined and (traefik_manager_mounts | length > 0)
+  block:
+
+    - name: deploy-traefik-manager | Create Traefik Manager mount files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: touch
+        mode: "0644"
+      loop:
+        - "{{ traefik_config_file }}"
 
 - name: deploy-traefik-manager | Pull Traefik Manager image
   community.docker.docker_image:
@@ -109,7 +130,7 @@
     security_opts:
       - "no-new-privileges:true"
     state: started
-    volumes: "{{ default_host_volumes + traefik_manager_volumes | default(omit) }}"
+    volumes: "{{ traefik_manager_mounts + traefik_manager_volumes | default(omit) }}"
   register: traefik_manager_container_state
 
 - name: deploy-traefik-manager | Wait for Traefik Manager to accept connections

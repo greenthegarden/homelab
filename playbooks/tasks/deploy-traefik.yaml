@@ -132,6 +132,7 @@
       # - "--metrics.prometheus.addEntryPointsLabels=true"
 
     traefik_networks:
+      - { name: "{{ traefik_network_name }}", internal: true }
       - { name: "{{ socket_proxy_network_name }}", internal: true }
       # - { name: "{{ monitoring_network_name | default('monitoring') }}" # not needed without prometheus }
       # Reverse Proxy  network is used to expose applications via Traefik

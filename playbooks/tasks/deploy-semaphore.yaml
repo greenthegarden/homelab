@@ -107,6 +107,7 @@
   loop: "{{ semaphore_networks }}"
 
 - name: deploy-semaphore | Create Semaphore volumes
+  when: semaphore_volumes is defined
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present

@@ -36,12 +36,10 @@
     - name: Deploy a containerised instance of Traefik for Nextcloud
       ansible.builtin.include_tasks:
         file: tasks/deploy-traefik-nextcloud.yaml
-      vars:
-        traefik_network_name: "{{ reverse_proxy_network_name }}"
 
-    # - name: Deploy a containerised instance of Traefik Manager
-    #   ansible.builtin.include_tasks:
-    #     file: tasks/deploy-traefik-manager.yaml
+    - name: Deploy a containerised instance of Traefik Manager
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-traefik-manager.yaml
 
     - name: Deploy a containerised instance of Nextcloud All-in-One
       ansible.builtin.include_tasks:
