@@ -134,3 +134,14 @@
   register: wallos_running
   until: wallos_running is success
   retries: 10
+
+- name: deploy-wallos | Deploy a containerised instance of Docker Volume Backup
+  when: wallos_deploy_docker_volume_backup | default(false)
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-docker-volume-backup.yaml
+  vars:
+    docker_volume_backup_service_name: "docker-volume-backup_{{ wallos_service_name }}"
+    docker_volume_backup_volume_to_backup:
+      - "{{ wallos_volume_data_name }}:/backup/{{ wallos_service_name }}_backup:ro"
+    docker_volume_backup_backup_label: "{{ wallos_service_name }}_db"
+    docker_volume_backup_backup_retention_days: 7

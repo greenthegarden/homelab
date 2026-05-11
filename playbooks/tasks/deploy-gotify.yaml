@@ -152,3 +152,14 @@
   register: gotify_running
   retries: 10
   until: gotify_running is success
+
+- name: deploy-gotify | Deploy a containerised instance of Docker Volume Backup
+  when: gotify_deploy_docker_volume_backup | default(false)
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-docker-volume-backup.yaml
+  vars:
+    docker_volume_backup_service_name: "docker-volume-backup_{{ gotify_service_name }}"
+    docker_volume_backup_volume_to_backup:
+      - "{{ gotify_volume_name }}:/backup/{{ gotify_service_name }}_backup:ro"
+    docker_volume_backup_backup_label: "{{ gotify_service_name }}"
+    docker_volume_backup_backup_retention_days: 7

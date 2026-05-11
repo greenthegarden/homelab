@@ -13,7 +13,7 @@
     # Homebox facts
     # renovate: datasource=docker depName=ghcr.io/sysadminsmedia/homebox
     homebox_image: ghcr.io/sysadminsmedia/homebox:0.25.0
-    homebox_deploy_docker_volume_backup: false
+    homebox_deploy_docker_volume_backup: true
 
     # Paperless-ngx facts
     # renovate: datasource=docker depName=ghcr.io/paperless-ngx/paperless-ngx
@@ -35,45 +35,12 @@
       ansible.builtin.include_tasks:
         file: tasks/deploy-grocy.yaml
 
-    - name: Deploy a containerised instance of Docker Volume Backup
-      when: grocy_deploy_docker_volume_backup | default(false)
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-docker-volume-backup.yaml
-      vars:
-        docker_volume_backup_service_name: "docker-volume-backup_{{ grocy_service_name }}"
-        docker_volume_backup_volume_to_backup:
-          - "{{ grocy_volume_name }}:/backup/{{ grocy_service_name }}_backup:ro"
-        docker_volume_backup_backup_label: "{{ grocy_service_name }}"
-        docker_volume_backup_backup_retention_days: 7
-
     ########### Deploy Homebox
     - name: Deploy a containerised instance of Homebox
       ansible.builtin.include_tasks:
         file: tasks/deploy-homebox.yaml
 
-    - name: Deploy a containerised instance of Docker Volume Backup
-      when: homebox_deploy_docker_volume_backup | default(false)
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-docker-volume-backup.yaml
-      vars:
-        docker_volume_backup_service_name: "docker-volume-backup_{{ homebox_service_name }}"
-        docker_volume_backup_volume_to_backup:
-          - "{{ homebox_volume_name }}:/backup/{{ homebox_service_name }}_backup:ro"
-        docker_volume_backup_backup_label: "{{ homebox_service_name }}"
-        docker_volume_backup_backup_retention_days: 7
-
     ########### Deploy Paperless-ngx
     - name: Deploy a containerised instance of Paperless-ngx
       ansible.builtin.include_tasks:
         file: tasks/deploy-paperless-ngx.yaml
-
-    - name: Deploy a containerised instance of Docker Volume Backup
-      when: paperless_ngx_deploy_docker_volume_backup | default(false)
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-docker-volume-backup.yaml
-      vars:
-        docker_volume_backup_service_name: "docker-volume-backup_{{ paperless_ngx_service_name }}"
-        docker_volume_backup_volume_to_backup:
-          - "{{ paperless_ngx_volume_name }}:/backup/{{ paperless_ngx_service_name }}_backup:ro"
-        docker_volume_backup_backup_label: "{{ paperless_ngx_service_name }}"
-        docker_volume_backup_backup_retention_days: 7

@@ -1,7 +1,7 @@
 ---
 - name: Deploy Grocy
 
-  hosts: grocy
+  hosts: inventories
 
   vars:
 
@@ -20,14 +20,3 @@
     - name: Deploy a containerised instance of Grocy
       ansible.builtin.include_tasks:
         file: tasks/deploy-grocy.yaml
-
-    - name: Deploy a containerised instance of Docker Volume Backup
-      when: grocy_deploy_docker_volume_backup | default(false)
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-docker-volume-backup.yaml
-      vars:
-        docker_volume_backup_service_name: "docker-volume-backup_{{ grocy_service_name }}"
-        docker_volume_backup_volume_to_backup:
-          - "{{ grocy_volume_name }}:/backup/{{ grocy_service_name }}_backup:ro"
-        docker_volume_backup_backup_label: "{{ grocy_service_name }}"
-        docker_volume_backup_backup_retention_days: 7

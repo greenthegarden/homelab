@@ -132,3 +132,14 @@
       - fireflyiii.env
       - fireflyiii_importer.env
   register: output
+
+- name: deploy-fireflyiii | Deploy a containerised instance of Docker Volume Backup
+  when: fireflyiii_deploy_docker_volume_backup | default(false)
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-docker-volume-backup.yaml
+  vars:
+    docker_volume_backup_service_name: "docker-volume-backup_{{ fireflyiii_service_name }}"
+    docker_volume_backup_volume_to_backup:
+      - "{{ fireflyiii_db_backup_volume_name }}:/backup/{{ fireflyiii_service_name }}_db_backup:ro"
+    docker_volume_backup_backup_label: "{{ fireflyiii_service_name }}_db"
+    docker_volume_backup_backup_retention_days: 7

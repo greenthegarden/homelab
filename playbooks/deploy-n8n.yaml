@@ -2,7 +2,7 @@
 
 - name: Deploy n8n
 
-  hosts: ansible
+  hosts: ollama
 
   vars:
 
@@ -19,14 +19,3 @@
     - name: Deploy a containerised instance of n8n
       ansible.builtin.include_tasks:
         file: tasks/deploy-n8n.yaml
-
-    - name: Deploy a containerised instance of Docker Volume Backup
-      when: n8n_deploy_docker_volume_backup | default(false)
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-docker-volume-backup.yaml
-      vars:
-        docker_volume_backup_service_name: "docker-volume-backup_{{ n8n_service_name }}"
-        docker_volume_backup_volume_to_backup:
-          - "{{ n8n_volume_name }}:/backup/{{ n8n_service_name }}_backup:ro"
-        docker_volume_backup_backup_label: "{{ n8n_service_name }}-db"
-        docker_volume_backup_backup_retention_days: 7

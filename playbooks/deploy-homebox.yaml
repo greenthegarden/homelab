@@ -1,7 +1,7 @@
 ---
 - name: Deploy Homebox
 
-  hosts: homebox
+  hosts: inventories
 
   vars:
 
@@ -20,14 +20,3 @@
     - name: Deploy a containerised instance of Homebox
       ansible.builtin.include_tasks:
         file: tasks/deploy-homebox.yaml
-
-    - name: Deploy a containerised instance of Docker Volume Backup
-      when: homebox_deploy_docker_volume_backup | default(false)
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-docker-volume-backup.yaml
-      vars:
-        docker_volume_backup_service_name: "docker-volume-backup_{{ homebox_service_name }}"
-        docker_volume_backup_volume_to_backup:
-          - "{{ homebox_volume_name }}:/backup/{{ homebox_service_name }}_backup:ro"
-        docker_volume_backup_backup_label: "{{ homebox_service_name }}"
-        docker_volume_backup_backup_retention_days: 7

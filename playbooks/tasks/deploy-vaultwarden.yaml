@@ -152,3 +152,14 @@
   register: vaultwarden_running
   retries: 10
   until: vaultwarden_running is success
+
+- name: deploy-vaultwarden | Deploy a containerised instance of Docker Volume Backup
+  when: vaultwarden_deploy_docker_volume_backup | default(false)
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-docker-volume-backup.yaml
+  vars:
+    docker_volume_backup_service_name: "docker-volume-backup_{{ vaultwarden_service_name }}"
+    docker_volume_backup_volume_to_backup:
+      - "{{ vaultwarden_volume_name }}:/backup/{{ vaultwarden_service_name }}_backup:ro"
+    docker_volume_backup_backup_label: "{{ vaultwarden_service_name }}"
+    docker_volume_backup_backup_retention_days: 7

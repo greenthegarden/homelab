@@ -62,7 +62,7 @@ readonly ANSIBLE_PLAYBOOK_BIN="${BIN_PATH}/ansible-playbook"
 REQUIREMENTS_FILE="requirements.yaml"
 INVENTORY_FILE="inventory-homelab_lxc.yaml"
 VAULT_FILE="vault.pass"
-PLAYBOOK_FILE="playbooks/homelab-controller.yaml"
+PLAYBOOK_FILE="playbooks/deploy-stack-controller.yaml"
 
 
 # ============= Main Functions =============

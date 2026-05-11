@@ -24,14 +24,3 @@
     - name: Deploy a containerised instance of Frigate
       ansible.builtin.include_tasks:
         file: tasks/deploy-frigate.yaml
-
-    - name: Deploy a containerised instance of Docker Volume Backup
-      when: frigate_deploy_docker_volume_backup | default(false)
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-docker-volume-backup.yaml
-      vars:
-        docker_volume_backup_service_name: "docker-volume-backup_{{ frigate_service_name }}"
-        docker_volume_backup_volume_to_backup:
-          - "{{ frigate_volume_data_name }}:/backup/{{ frigate_service_name }}_backup:ro"
-        docker_volume_backup_backup_label: "{{ frigate_service_name }}"
-        docker_volume_backup_backup_retention_days: 3
