@@ -37,10 +37,10 @@
       # use high ports inside the container so
       # we don't need to be root to bind the ports
       - "{{ traefik_manager_service_port }}:5000"
-    traefik_manager_mounts:
-      # Local paths to mount into the container
-      # local path:container path
-      - "{{ traefik_config_file }}:/app/config/dynamic.yml:rw"
+    # traefik_manager_mounts:
+    #   # Local paths to mount into the container
+    #   # local path:container path
+    #   - "{{ traefik_config_file }}:/app/config/dynamic.yml:rw"
     traefik_manager_volumes:
       # Volumes to mount into the container
       # volume:container path
@@ -99,17 +99,17 @@
     - "{{ traefik_manager_volume_config_name }}"
     - "{{ traefik_manager_volume_backups_name }}"
 
-- name: deploy-traefik-manager | Create Traefik Manager mounts
-  when: traefik_manager_mounts is defined and (traefik_manager_mounts | length > 0)
-  block:
+# - name: deploy-traefik-manager | Create Traefik Manager mounts
+#   when: traefik_manager_mounts is defined and (traefik_manager_mounts | length > 0)
+#   block:
 
-    - name: deploy-traefik-manager | Create Traefik Manager mount files
-      ansible.builtin.file:
-        path: "{{ item }}"
-        state: touch
-        mode: "0644"
-      loop:
-        - "{{ traefik_config_file }}"
+#     - name: deploy-traefik-manager | Create Traefik Manager mount files
+#       ansible.builtin.file:
+#         path: "{{ item }}"
+#         state: touch
+#         mode: "0644"
+#       loop:
+#         - "{{ traefik_config_file }}"
 
 - name: deploy-traefik-manager | Pull Traefik Manager image
   community.docker.docker_image:
@@ -130,7 +130,7 @@
     security_opts:
       - "no-new-privileges:true"
     state: started
-    volumes: "{{ traefik_manager_mounts + traefik_manager_volumes | default(omit) }}"
+    volumes: "{{ traefik_manager_volumes | default(omit) }}"
   register: traefik_manager_container_state
 
 - name: deploy-traefik-manager | Wait for Traefik Manager to accept connections
