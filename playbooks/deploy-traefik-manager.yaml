@@ -16,12 +16,6 @@
     # renovate: datasource=docker depName=ghcr.io/chr0nzz/traefik-manager
     traefik_manager_image: ghcr.io/chr0nzz/traefik-manager:1.0.4
 
-  pre_tasks:
-
-    - name: Ensure base environment is configured
-      ansible.builtin.include_tasks:
-        file: tasks/configure-containerised-base.yaml
-
   tasks:
 
     - name: Load homelab vars
