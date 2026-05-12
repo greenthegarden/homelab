@@ -2,7 +2,7 @@
 
 - name: Deploy Authentik
 
-  hosts: ansible
+  hosts: home
 
   vars:
 
