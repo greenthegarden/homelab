@@ -39,6 +39,18 @@
           password: {{ proxmox.password }}
           fields: ["vms", "lxc", "resources.cpu", "resources.mem"]
 
+    - Homelab Server:
+        href: {{ proxmox_homelab.url }}
+        description: Homelab server
+        icon: proxmox.png
+        siteMonitor: {{ proxmox_homelab.url }}
+        widget:
+          type: proxmox
+          url: {{ proxmox_homelab.url }}
+          username: {{ proxmox_homelab.username }}
+          password: {{ proxmox_homelab.password }}
+          fields: ["vms", "lxc", "resources.cpu", "resources.mem"]
+
     - Network Storage:
         href: {{ truenas.url }}
         description: TrueNAS SCALE
