@@ -46,7 +46,7 @@ log_error() { echo -e "\033[0;31m[ERROR]\033[0m $1" >&2; }
 
 # Set versions
 PYTHON_VERSION=3.14
-PREK_VERSION=v0.3.8
+PREK_VERSION=v0.3.13
 
 # Based on https://github.com/ralish/bash-script-template/blob/main/template.sh
 
@@ -202,6 +202,7 @@ install_ansible_dev_via_uv () {
     uv tool upgrade ansible-dev-tools
 
 install_prec () {
+    PREK_VERSION=v0.3.13
     curl --proto '=https' --tlsv1.2 -LsSf https://github.com/j178/prek/releases/download/${PREK_VERSION}/prek-installer.sh | sh
 }
 
