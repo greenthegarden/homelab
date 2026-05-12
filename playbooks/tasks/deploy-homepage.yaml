@@ -23,7 +23,7 @@
     homepage_fqdn: "{{ homepage_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 # Defined in configure-containerised-base
-- name: deply-homepage | Set Homepage proxy facts
+- name: deploy-homepage | Set Homepage proxy facts
   ansible.builtin.set_fact:
     homepage_socket_proxy_network_name: "socket-proxy_homepage"
     homepage_socket_proxy_service_port: 2379
@@ -36,9 +36,9 @@
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     homepage_mounts:
-        # Local paths to mount into the container
-        # local path:container path
-        - "{{ homepage_config_dir }}:/app/config"
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ homepage_config_dir }}:/app/config"
     homepage_volumes: []
       # Volumes to mount into the container
       # volume:container path

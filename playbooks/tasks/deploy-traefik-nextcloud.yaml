@@ -1,5 +1,10 @@
 ---
 
+- name: deploy-traefik-nextcloud | Ensure a containerised instance of Traefik is not present
+  community.docker.docker_container:
+    name: traefik
+    state: absent
+
 ####### TRAEFIK SECTION
 
 # https://stackoverflow.com/questions/58554731/traefik-v2-0-metrics-with-prometheus
@@ -25,8 +30,8 @@
     traefik_config_dir: "{{ traefik_config_dir | default('/root/' + 'traefik') }}"
     traefik_letsencrypt_dir: "{{ traefik_letsencrypt_dir | default('/root/' + 'letsencrypt') }}"
 
-- name: deploy-traefik-nextcloud | Set Traefik volume facts
-  ansible.builtin.set_fact: []
+# - name: deploy-traefik-nextcloud | Set Traefik volume facts
+#   ansible.builtin.set_fact: []
 
 - name: deploy-traefik-nextcloud | Set Traefik aggregated facts
   ansible.builtin.set_fact:
@@ -317,7 +322,7 @@
       - "no-new-privileges:true"
     state: started
     # user: "65530:65530"
-    volumes: "{{ traefik_mounts +  traefik_volumes | default(omit) }}"
+    volumes: "{{ traefik_mounts + traefik_volumes | default(omit) }}"
   register: traefik_container_state
 
 - name: deploy-traefik-nextcloud | Wait for Traefik to accept connections

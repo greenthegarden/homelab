@@ -20,7 +20,7 @@
   tasks:
 
     # Load environment variables applicable to the homelab environment
-    - name: homelab-deploy-support-services | Load homelab vars
+    - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 

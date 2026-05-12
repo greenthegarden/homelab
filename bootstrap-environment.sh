@@ -28,27 +28,30 @@
 #   'uv lock --check' <= check if the lockfile is up-to-date
 #   'uv lock --upgrade' <= upgrade all packages
 
+# Based on https://github.com/ralish/bash-script-template/blob/main/template.sh
+
 # Use shellcheck for static analysis.
 
-log_info()  { echo -e "\033[0;32m[INFO]\033[0m  $1"; }
-log_warn()  { echo -e "\033[1;33m[WARN]\033[0m  $1"; }
-log_error() { echo -e "\033[0;31m[ERROR]\033[0m $1" >&2; }
+# ============= Utility Variables =============
+#
 
-# if command -v tput >/dev/null && [[ $(tput colors) -ge 8 ]]; then
-#     RED='\033[0;31m'
-#     GREEN='\033[0;32m'
-# else
-#     RED=''; GREEN=''; NC=''
-# fi
+readonly RED="\033[0;31m"
+readonly GREEN="\033[0;32m"
+readonly YELLOW="\033[1;33m"
+readonly BLUE="\033[1;34m"
+readonly NC="\033[0m" # No colour
+
+# ============= Helper Functions =============
+#
+
+log_info()    { echo -e "${GREEN}[INFO]${NC} $1"; }
+log_success() { echo -e "${BLUE}[SUCCESS]${NC} $1"; }
+log_warn()    { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error()   { echo -e "${RED}[ERROR]${NC} $1" >&2; }
+
 
 # log_file="/var/log/setup_host.log"
 # echo "$(date) - Script started" >> "$log_file"
-
-# Set versions
-PYTHON_VERSION=3.14
-PREK_VERSION=v0.3.13
-
-# Based on https://github.com/ralish/bash-script-template/blob/main/template.sh
 
 # Enable xtrace if the DEBUG environment variable is set
 if [[ ${DEBUG-} =~ ^1|yes|true$ ]]; then
@@ -67,53 +70,32 @@ fi
 # Enable errtrace or the error trap handler will not work as expected
 set -o errtrace         # Ensure the error trap handler is inherited
 
-R='\033[0;31m'   #'0;31' is Red's ANSI color code
-# G='\033[0;32m'   #'0;32' is Green's ANSI color code
-# Y='\033[1;33m'   #'1;33' is Yellow's ANSI color code
-B='\033[0;34m'   #'0;34' is Blue's ANSI color code
-NC='\033[0m'     # No Color
-
-# INFO="[${B}INFO${NC}]"
-# # ERROR="[${R}ERROR${NC}]"
-
-# error () {
-#     printf "${R}!!! %s${NC}\\n" "${*}" 1>&2
-# }
-
-main() {
-    parse_args "$@"
-    display_system_env
-    update_system
-    install_packages
-    install_uv
-    # monitor_connections
-}
-
 parse_args() {
     # parse CLI flags
     while getopts "vh" opt; do
         case $opt in
             v) echo "Verbose mode enabled" ;;
             h) echo "Usage: $0 [-v] [-h]"; exit 0 ;;
+            *) echo "Not a valid option"; exit 0 ;;
         esac
     done
 }
 
 display_system_env () {
     log_info "Environment details..."
-    echo -e "Running script: ${B}$(basename "$0")${NC}"
-    echo -e "Running in directory: ${B}$(pwd)${NC}"
-    echo -e "Running on host: ${B}$(hostname)${NC}"
-    echo -e "Running on OS: ${B}$(cat /etc/os-release | grep -E '^(PRETTY_NAME)')${NC}"
-    echo -e "Running on kernel: ${B}$(uname -r)${NC}"
-    echo -e "Running on architecture: ${B}$(uname -m)${NC}"
+    log_info "Running script: ${B}$(basename "$0")"
+    log_info "Running in directory: ${B}$(pwd)"
+    log_info "Running on host: ${B}$(hostname)"
+    log_info "Running on OS: ${B}$(cat /etc/os-release | grep -E '^(PRETTY_NAME)')${NC}"
+    log_info "Running on kernel: ${B}$(uname -r)"
+    log_info "Running on architecture: ${B}$(uname -m)"
     # shellcheck disable=SC2116,SC2086
-    echo -e "Running on shell: ${B}$(echo $SHELL)${NC}"
-    echo -e "Running on shell version: ${B}$(bash --version | head -n 1)${NC}"
-    # echo -e "Running on shell options: ${B}$(shopt)${NC}"
-    # echo -e "Running on shell options: ${B}$(set | grep -E 'DEBUG|PS1|PS2|PS4')${NC}"
-    # echo -e "Running on shell options: ${B}$(set | grep -E 'BASH|BASH_VERSION|BASH_ENV')${NC}"
-    # echo -e "Running on shell options: ${B}$(set | grep -E 'PROMPT_COMMAND|PS4')${NC}"
+    log_info "Running on shell: ${B}$(echo $SHELL)"
+    log_info "Running on shell version: ${B}$(bash --version | head -n 1)"
+    # log_info "Running on shell options: ${B}$(shopt)"
+    # log_info "Running on shell options: ${B}$(set | grep -E 'DEBUG|PS1|PS2|PS4')"
+    # log_info "Running on shell options: ${B}$(set | grep -E 'BASH|BASH_VERSION|BASH_ENV')"
+    # log_info "Running on shell options: ${B}$(set | grep -E 'PROMPT_COMMAND|PS4')"
 }
 
 update_system () {
@@ -122,31 +104,29 @@ update_system () {
 }
 
 install_packages () {
-# install required packages
-log_info "Installing required packages..."
-apt install -y \
-    curl \
-    git
+    log_info "Installing required packages..."
+    apt install -y \
+        curl \
+        git
 }
 
 install_packages_dev () {
-# install required packages
-echo -e "${INFO} Installing required packages...${NC}"
-apt install -y \
-    curl \
-    git \
-    software-properties-common \
-    apt-transport-https \
-    ca-certificates
+    log_info "Installing dev packages..."
+    apt install -y \
+        curl \
+        git \
+        software-properties-common \
+        apt-transport-https \
+        ca-certificates
 }
 
 install_oh_my_zsh () {
     # https://ohmyz.sh/
     if [ ! -d "${HOME}/.oh-my-zsh" ]; then
-        echo -e "${INFO} Installing oh-my-zsh...${NC}"
+        log_info "Installing oh-my-zsh..."
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" --unattended
     else
-        echo -e "${INFO} oh-my-zsh is already installed.${NC}"
+        log_warn "oh-my-zsh is already installed."
     fi
 }
 
@@ -154,9 +134,9 @@ install_oh_my_zsh () {
 # if [ ! -d "$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions" ]; then
 #     echo -e "${INFO} Installing zsh-autosuggestions plugin...${NC}"
 
-install_uv () {
+uv_install () {
     # https://docs.astral.sh/uv/getting-started/installation/
-    if ! command -v uvx &> /dev/null; then
+    if ! command -v uv &> /dev/null; then
         log_info "Installing uv ..."
         curl -LsSf https://astral.sh/uv/install.sh | sh
     else
@@ -166,70 +146,27 @@ install_uv () {
     fi
 }
 
-install_dependencies_via_uv () {
-  uv sync
+uv_install_dependencies () {
+    uv sync
 }
 
-create_local_bin () {
-    mkdir -p "${HOME}/.local/bin"
-    export PATH="$HOME/.local/bin:$PATH"
-    # export UVX_HOME="$HOME/.local/share/uvx"
-    # export UVX_CACHE="$HOME/.cache/uvx"
-    # export UVX_CONFIG="$HOME/.config/uvx"
+uv_update_dependencies () {
+    uv lock --upgrade
 }
-
-install_python () {
-    if ! uv python list | grep -q "python@${PYTHON_VERSION}"; then
-        echo -e "${INFO} Installing Python ${PYTHON_VERSION} via uv...${NC}"
-        uv python install ${PYTHON_VERSION}
-    else
-        echo -e "${INFO} Upgrading Python installations.${NC}"
-        uv python upgrade
-    fi
-}
-
-# install_docker () {
-#
-# }
-
-install_ansible_via_uv () {
-    uv tool install ansible-tools --python ${PYTHON_VERSION} --with-executables-from ansible,ansible-core,ansible-lint
-    uv tool upgrade ansible-tools
-}
-
-install_ansible_dev_via_uv () {
-    uv tool install ansible-dev-tools --python ${PYTHON_VERSION}  --with-executables-from ansible,ansible-builder,ansible-core,ansible-creator,ansible-dev-environment,ansible-galaxy,ansible-lint,ansible-sign,molecule,ansible-navigator
-    uv tool upgrade ansible-dev-tools
 
 install_prec () {
     PREK_VERSION=v0.3.13
     curl --proto '=https' --tlsv1.2 -LsSf https://github.com/j178/prek/releases/download/${PREK_VERSION}/prek-installer.sh | sh
+    prek install -f
 }
 
-install_pre_commit () {
-    # Install prec (as replacement for pre-commit)
-    # https://adamj.eu/tech/2025/05/07/pre-commit-install-uv/
-    uv tool install --python ${PYTHON_VERSION} pre-commit --with pre-commit-uv
+update_prek () {
+    prek self update
 }
 
 pre_commit_update () {
     prek auto-update
     prek cache gc
-}
-
-upgrade_uv_tools () {
-    # Upgrade tools
-    uv tool upgrade --all
-}
-
-install_git_hook_scripts () {
-    uvx --from pre-commit pre-commit install --hook-type pre-commit --hook-type pre-push
-    uvx --from pre-commit pre-commit autoupdate
-}
-
-clean_pre_commit () {
-    # Run pre-commit gc to clean up old hooks
-    uvx --from pre-commit pre-commit gc
 }
 
 # # Get Proxmox dynamic inventory plugin
@@ -244,63 +181,57 @@ clean_pre_commit () {
 # echo -e "${INFO} Checking disk usage with ncdu...${NC}"
 # ncdu --exclude .cache --exclude .local --exclude .config --exclude .vscode
 
-# uninstalled autopep8! ✨ 🌟 ✨
-# uninstalled jmespath! ✨ 🌟 ✨
-# uninstalled requests! ✨ 🌟 ✨
-# uninstalled pylint! ✨ 🌟 ✨
-# uninstalled ansible-lint! ✨ 🌟 ✨
-# uninstalled docker! ✨ 🌟 ✨
-# uninstalled flake8! ✨ 🌟 ✨
-# uninstalled yamllint! ✨ 🌟 ✨
-# uninstalled pycodestyle! ✨ 🌟 ✨
-# uninstalled molecule! ✨ 🌟 ✨
-# uninstalled black! ✨ 🌟 ✨
-
 add_aliases_to_zshrc () {
-    # add aliases to .zshrc
-    ZSHRC="$HOME/.zshrc"
-    if ! grep -q "alias uvx=" "$ZSHRC"; then
-        echo -e "${INFO} Adding aliases to .zshrc...${NC}"
+    ZSHRC="${HOME}/.zshrc"
+    if ! grep -q "alias uvx=" "${ZSHRC}"; then
+        log_info "Adding aliases to .zshrc..."
         {
             echo "alias ansible='uvx --from ansible-core ansible'"
             echo "alias ansible-lint='uvx --from ansible-lint ansible-lint'"
             echo "alias ansible-playbook='uvx --from ansible-core ansible-playbook'"
             echo "alias ansible-galaxy='uvx --from ansible-core ansible-galaxy'"
         } >> "$ZSHRC"
-        echo -e "${INFO} Aliases added to .zshrc.${NC}"
+        log_info "Aliases added to .zshrc."
     else
-        echo -e "${INFO} Aliases already exist in .zshrc.${NC}"
+        log_warn "Aliases already exist in .zshrc."
     fi
 }
 
-
 source_zshrc_to_apply_changes () {
+    ZSHRC="${HOME}/.zshrc"
     if [[ -f "$ZSHRC" ]]; then
-        echo -e "${INFO} Sourcing .zshrc to apply changes...${NC}"
+        log_info "Sourcing ${ZSHRC} to apply changes..."
         # shellcheck source=${HOME}/.zshrc
         # shellcheck disable=SC1090
         # shellcheck disable=SC1091
         source "$ZSHRC"
     else
-        echo -e "${INFO} .zshrc not found, skipping sourcing.${NC}"
+        log_warn "${ZSHRC} not found, skipping sourcing."
     fi
 }
 
 print_final_message () {
-    echo -e "${INFO} Development dependencies installed successfully!${NC}"
+    log_success "Development dependencies installed successfully!"
 }
 
-install_dev_components () {
-  display_system_env
-  update_system
-  install_packages
-  # install_oh_my_zsh
-  install_uv
-  create_local_bin
-  # install_python
-  install_ansible_via_uv
-  # install_prec
-  # pre_commit_update
+main() {
+    # Start message
+    log_info "Running ${0} to deploy bootstrap Homelab controller"
+    echo
+
+    parse_args "$@"
+
+    display_system_env
+    echo
+
+    update_system
+    echo
+
+    install_packages
+    echo
+
+    install_uv
 }
 
+# Execution starts here
 main "$@"

@@ -23,7 +23,7 @@
     wud_fqdn: "{{ wud_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 # Defined in configure-containerised-base
-- name: deply-wud | Set What's up Docker? proxy facts
+- name: deploy-wud | Set What's up Docker? proxy facts
   ansible.builtin.set_fact:
     wud_socket_proxy_network_name: "socket-proxy_wud"
     wud_socket_proxy_service_port: 2378

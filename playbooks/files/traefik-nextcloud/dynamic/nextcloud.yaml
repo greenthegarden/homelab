@@ -18,7 +18,7 @@ http:
     nextcloud_run:
       loadBalancer:
         servers:
-        - url: "http://nextcloud-aio-apache:11000"
+          - url: "http://nextcloud-aio-apache:11000"
         passHostHeader: "true"
     nextcloud_setup:
       loadBalancer:
@@ -27,7 +27,7 @@ http:
           interval: 5s
           timeout: 2s
         servers:
-        - url: "http://nextcloud-aio-domaincheck:11000"
+          - url: "http://nextcloud-aio-domaincheck:11000"
         passHostHeader: "true"
 
   middlewares:
@@ -37,7 +37,7 @@ http:
           - "X-Forwarded-Host"
         referrerPolicy: "same-origin"
         customResponseHeaders:
-          X-Robots-Tag:  "noindex, nofollow"
+          X-Robots-Tag: "noindex, nofollow"
 
     https-redirect:
       redirectscheme:

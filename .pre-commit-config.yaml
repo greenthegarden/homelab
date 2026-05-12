@@ -114,14 +114,14 @@ repos:
         stages: [pre-commit]
 
   ### PNG Images ###
-  - repo: https://github.com/shssoichiro/oxipng
-    rev: v10.1.1
-    hooks:
-      - id: oxipng
-        name: "🖼️ images · Optimize PNG files"
-        args: ["-o", "4", "--strip", "safe", "--alpha"]
-        exclude: (\.drawio.png)$
-        stages: [pre-commit]
+  # - repo: https://github.com/shssoichiro/oxipng
+  #   rev: v10.1.1
+  #   hooks:
+  #     - id: oxipng
+  #       name: "🖼️ images · Optimize PNG files"
+  #       args: ["-o", "4", "--strip", "safe", "--alpha"]
+  #       exclude: (\.drawio.png)$
+  #       stages: [pre-commit]
 
   ### Ansible ###
   - repo: https://github.com/ansible-community/ansible-lint

@@ -74,9 +74,9 @@
     ## Individual Application forwardAuth regex (catch any subdomain using individual application forwardAuth)
     # https://github.com/brokenscripts/authentik_traefik/blob/traefik3/my-compose/authentik/compose.yaml
     - {
-        "key": "traefik.http.routers.{{ authentik_service_name }}-output.rule",
-        "value": "HostRegexp(`{subdomain:[a-z0-9-]+}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}}`) && PathPrefix(`/outpost.goauthentik.io/`)",
-      }
+      "key": "traefik.http.routers.{{ authentik_service_name }}-output.rule",
+      "value": "HostRegexp(`{subdomain:[a-z0-9-]+}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}}`) && PathPrefix(`/outpost.goauthentik.io/`)",
+    }
     - { "key": "traefik.http.routers.{{ authentik_service_name }}.service", "value": "{{ authentik_service_name }}" }
     - { "key": "traefik.http.services.{{ authentik_service_name }}.loadbalancer.server.port", "value": "{{ authentik_service_port_http | quote }}" }
     # ---------------------------------------------------------------
@@ -91,9 +91,9 @@
     # ---------------------------------------------------------------
     # Docker Volume Backup labels
     - {
-        "key": "docker-volume-backup.archive-pre",
-        "value": "/bin/sh -c 'PGPASSWORD={{ authentik.db_password }} pg_dump -U {{ authentik.db_user }} {{ authentik.db_name }} > /tmp/dumps/dump.sql'",
-      }
+      "key": "docker-volume-backup.archive-pre",
+      "value": "/bin/sh -c 'PGPASSWORD={{ authentik.db_password }} pg_dump -U {{ authentik.db_user }} {{ authentik.db_name }} > /tmp/dumps/dump.sql'",
+    }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     # Fix WUD to version 16 for PostgreSQL

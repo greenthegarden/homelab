@@ -11,9 +11,9 @@
 
   pre_tasks:
 
-      - name: Ensure base environment is configured
-        ansible.builtin.include_tasks:
-          file: tasks/configure-containerised-base.yaml
+    - name: Ensure base environment is configured
+      ansible.builtin.include_tasks:
+        file: tasks/configure-containerised-base.yaml
 
   tasks:
 

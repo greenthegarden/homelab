@@ -33,11 +33,11 @@
       - "-watchdoginterval=3600"
       - "-stoponwatchdog"
 
-- name: deploy-socket-proxy | debug
+- name: deploy-socket-proxy | Debug
   ansible.builtin.debug:
     msg: "{{ socket_proxy_command_base | type_debug }}"
 
-- name: deploy-socket-proxy | debug
+- name: deploy-socket-proxy | Debug
   ansible.builtin.debug:
     msg: "{{ socket_proxy_command_service | type_debug }}"
 

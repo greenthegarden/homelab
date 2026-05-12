@@ -170,7 +170,7 @@
   retries: 10
   until: tududi_running is success
 
-- name: Deploy a containerised instance of Docker Volume Backup
+- name: deploy-tududi | Deploy a containerised instance of Docker Volume Backup
   when: tududi_deploy_docker_volume_backup | default(false)
   ansible.builtin.include_tasks:
     file: tasks/deploy-docker-volume-backup.yaml

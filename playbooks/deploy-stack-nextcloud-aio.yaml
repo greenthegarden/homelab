@@ -28,11 +28,6 @@
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 
-    - name: Ensure a containerised instance of Traefik is not present
-      community.docker.docker_container:
-        name: traefik
-        state: absent
-
     - name: Deploy a containerised instance of Traefik for Nextcloud
       ansible.builtin.include_tasks:
         file: tasks/deploy-traefik-nextcloud.yaml

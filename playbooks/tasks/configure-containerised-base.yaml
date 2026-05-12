@@ -15,33 +15,33 @@
 # - Atlas
 
 # Load environment variables applicable to the homelab environment
-- name: homelab-deploy-support-services | Load homelab vars
+- name: configure-containerised-base | Load homelab vars
   ansible.builtin.include_vars:
     file: vars/homelab_env.yaml
   tags: always
 
 # Ensure docker is installed and configured on the host
-- name: homelab-deploy-support-services | Configure Homelab Docker base
+- name: configure-containerised-base | Configure Homelab Docker base
   ansible.builtin.include_tasks:
     file: tasks/configure-docker-base.yaml
   tags: always
 
 # Use the following agents to monitor Docker services via host docker socket (/var/run/docker.sock)
 
-- name: homelab-deploy-support-services | Deploy a containerised instance of a Hawser
+- name: configure-containerised-base | Deploy a containerised instance of a Hawser
   ansible.builtin.include_tasks:
     file: tasks/deploy-hawser.yaml
   tags:
     - dockhand
     - hawser
 
-- name: homelab-deploy-support-services | Deploy a containerised instance of a Beszel Agent
+- name: configure-containerised-base | Deploy a containerised instance of a Beszel Agent
   when: deploy_beszel_agent | default(false)
   ansible.builtin.include_tasks:
     file: tasks/deploy-beszel-agent.yaml
   tags: beszel
 
-- name: homelab-deploy-support-services | Deploy a containerised instance of a Dozzle Agent
+- name: configure-containerised-base | Deploy a containerised instance of a Dozzle Agent
   when: deploy_dozzle_agent | default(false)
   ansible.builtin.include_tasks:
     file: tasks/deploy-dozzle-agent.yaml
@@ -50,7 +50,7 @@
 # Use the following socket proxies to provide controlled access to the Docker socket for services that require it
 # Consider also https://blog.foxxmd.dev/posts/restricting-socket-proxy-by-container/
 
-- name: homelab-deploy-support-services | Deploy an exposed containerised instance of Socket Proxy configured for use by Homepage and Uptime Kuma
+- name: configure-containerised-base | Deploy an exposed containerised instance of Socket Proxy configured for use by Homepage and Uptime Kuma
   ansible.builtin.include_tasks:
     file: tasks/deploy-socket-proxy.yaml
   vars:
@@ -66,7 +66,7 @@
 
 # Use Traefik as a reverse proxy to manage access to web services with SSL via Let's Encrypt
 
-- name: homelab-deploy-support-services | Deploy a containerised instance of Traefik
+- name: configure-containerised-base | Deploy a containerised instance of Traefik
   ansible.builtin.include_tasks:
     file: tasks/deploy-traefik.yaml
   vars:
@@ -74,27 +74,27 @@
 
 # Use Tinyauth to provide basic authentication for web services
 
-- name: homelab-deploy-support-services | Deploy a containerised instance of Tinyauth
+- name: configure-containerised-base | Deploy a containerised instance of Tinyauth
   when: deploy_tinyauth | default(false)
   ansible.builtin.include_tasks:
     file: tasks/deploy-tinyauth.yaml
 
 # Use Prometheus stack to monitor host metrics
 
-- name: homelab-deploy-support-services | Deploy Prometheus stack services
+- name: configure-containerised-base | Deploy Prometheus stack services
   when: deploy_prometheus_stack | default(false) # Disable for now as not needed with Dozzle
   block:
-    - name: homelab-deploy-support-services | Deploy a containerised instance of Node Exporter
+    - name: configure-containerised-base | Deploy a containerised instance of Node Exporter
       ansible.builtin.include_tasks:
         file: tasks/deploy-node-exporter.yaml
 
-    - name: homelab-deploy-support-services | Deploy a containerised instance of Prometheus
+    - name: configure-containerised-base | Deploy a containerised instance of Prometheus
       ansible.builtin.include_tasks:
         file: tasks/deploy-prometheus.yaml
 
 # Use Atlas to visualise Docker network topology
 
-- name: homelab-deploy-support-services | Deploy a containerised instance of Atlas
+- name: configure-containerised-base | Deploy a containerised instance of Atlas
   when: deploy_atlas | default(false)
   ansible.builtin.include_tasks:
     file: tasks/deploy-atlas.yaml

@@ -23,7 +23,7 @@
     uptimekuma_fqdn: "{{ uptimekuma_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
 # Defined in configure-containerised-base
-- name: deply-uptimekuma | Set Uptime Kuma proxy facts
+- name: deploy-uptimekuma | Set Uptime Kuma proxy facts
   ansible.builtin.set_fact:
     uptimekuma_socket_proxy_network_name: "socket-proxy_uptimekuma"
     uptimekuma_socket_proxy_service_port: 2377
