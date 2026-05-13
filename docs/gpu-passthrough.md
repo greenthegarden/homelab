@@ -10,9 +10,14 @@
   - [Container Software](#container-software)
 - [Steps](#steps)
   - [Step 1: Enable IOMMU](#step-1-enable-iommu)
-  - [Step 2: Install Build Tools](#step-2-install-build-tools)
-  - [Step 2](#step-2)
-- [Install Ollama](#install-ollama)
+  - [Step 2: Ensure Drivers Available](#step-2-ensure-drivers-available)
+  - [Step 3: Create an LXC Container](#step-3-create-an-lxc-container)
+  - [Step 4: Add Device Passthrough](#step-4-add-device-passthrough)
+  - [Step 5: Start Container](#step-5-start-container)
+  - [Step 6: Install Ollama](#step-6-install-ollama)
+  - [Step 7: Update Ollama config](#step-7-update-ollama-config)
+  - [Step 8: Run a model](#step-8-run-a-model)
+- [Unused content](#unused-content)
 - [Install ROCm](#install-rocm)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -67,28 +72,7 @@ Verify IOMMU is active using
 dmesg | grep -e DMAR -e IOMMU
 ```
 
-Create an LXC Container and
-
-- Download an Ubuntu 24.04 LXC template from the template library
-- Create a new container: 4 cores, 8 GB RAM, 80 GB disk
-- Set the container to unprivileged: No (privileged) if you need GPU access — GPU passthrough in LXC requires a privileged container
-- Enable nesting under Features if you want Docker inside the container
-
-### Step 2: Install Build Tools
-
-```bash
-apt update && apt -y upgrade
-apt install -y build-essential make
-update-initramfs -u
-# install Proxmox VE headers
-apt install proxmox-headers-$(uname -r)
-```
-
-I did this but do not think required.
-
-**Do not follow instruction to install `firmware-amd-graphics`.**
-
-### Step 2
+### Step 2: Ensure Drivers Available
 
 On the Proxmox host shell, run `ls -l /dev/dri`, and check output is
 
@@ -100,50 +84,48 @@ crw-rw---- 1 root video  226,   0 May 13 18:17 card0
 crw-rw---- 1 root render 226, 128 May 13 18:17 renderD128
 ```
 
-Modify the file `/etc/pve/lxc/201.conf`
+### Step 3: Create an LXC Container
 
-Remove the line `unprivileged: 1`
+- Create a new Debian based LXC container:
+  - Cores: 4
+  - Memory: 8192 MB RAM (0 MB swap),
+  - Root Disk: 64 GB
 
-Add the following
+### Step 4: Add Device Passthrough
 
-```bash
-lxc.apparmor.profile: unconfined
-lxc.cgroup2.devices.allow: c 226:128 rwm
-lxc.mount.entry: /dev/dri/renderD128 dev/dri/renderD128 none bind,optional,create=file
-```
-
-Next, shut down the container, then go to Resources, and check if /dev/dri/card0 and /dev/renderD128 have already been passed through.
+Next, shut down the container, then go to Resources, and check if /dev/dri/card0 and /dev/dri/renderD128 have already been passed through.
 If they are, click each one, then click Edit, check Advanced at the bottom, and change the Mode to 0666. This gives complete read
 and write access to all users in the container. Then, in Resources still, click Add, Device passthrough, and type /dev/kfd with a
 mode of 0666 as well. This is the compute interface required for ROCm, and allows our container to use our GPU for
 computation when running a local LLM. Finally, you also need to give your Ollama container more storage for downloading your models
 and for installing ROCm.
 
-Install [AMD official][amdgpu] `amdgpu-install` script.
+### Step 5: Start Container
 
-[amdgpu]: https://amdgpu-install.readthedocs.io/
+From console get IP address using `ip a` and add entry into DNS
 
-## Install Ollama
+### Step 6: Install Ollama
 
 Install Ollama directly on the LXC host, using
 
 ```bash
+apt update && apt upgrade -y
 # Install zstd to extract Ollama archive
 apt install zstd
-# Install Ollama
+# Install Ollama (https://docs.ollama.com/linux)
 curl -fsSL https://ollama.com/install.sh | sh
 # Install AMD GPU ROCm package
-curl -L https://ollama.com/download/ollama-linux-amd64-rocm.tgz -o ollama-linux-amd64-rocm.tgz
-tar -C /usr -xzf ollama-linux-amd64-rocm.tgz
+curl -L https://ollama.com/download/ollama-linux-amd64-rocm.tar.zst -o ollama-linux-amd64-rocm.tar.zst
+tar -C /usr -xzf ollama-linux-amd64-rocm.tar.zst
 ```
 
-Add the following to `/etc/systemd/system/ollama.`, or use `systemctl edit ollama`.
+### Step 7: Update Ollama config
 
 From [Frame.work docs][frame-work]
 
 [frame-work]: https://community.frame.work/t/quickstart-guide-ollama-with-gpu-support-no-rocm-needed/79186
 
-Add the following to `/etc/systemd/system/ollama.service`
+Add the following to `/etc/systemd/system/ollama.service`, or use `systemctl edit ollama`.
 
 ```bash
 [Service]
@@ -165,6 +147,22 @@ Check Ollama
 ```bash
 journalctl -e -u ollama
 ```
+
+### Step 8: Run a model
+
+Run the smallet [qwen3.5](https://ollama.com/library/qwen3.5) model to test system
+
+```bash
+ollama run qwen3.5:0.8b
+```
+
+## Unused content
+
+Here for reference for what not to do!
+
+- Set the container to unprivileged
+  - No (privileged) if you need GPU access — GPU passthrough in LXC requires a privileged container
+- Enable nesting under Features if you want Docker inside the container
 
 ## Install ROCm
 
@@ -204,3 +202,29 @@ sudo usermod -aG render,video $USER
 # Reboot to apply
 sudo reboot
 ```
+
+For reference about not what was done.
+
+```bash
+apt update && apt -y upgrade
+apt install -y build-essential make
+update-initramfs -u
+# install Proxmox VE headers
+apt install proxmox-headers-$(uname -r)
+```
+
+I did this but do not think required.
+
+**Do not follow instruction to install `firmware-amd-graphics`.**
+
+Add the following
+
+```bash
+lxc.apparmor.profile: unconfined
+lxc.cgroup2.devices.allow: c 226:128 rwm
+lxc.mount.entry: /dev/dri/renderD128 dev/dri/renderD128 none bind,optional,create=file
+```
+
+Install [AMD official][amdgpu] `amdgpu-install` script.
+
+[amdgpu]: https://amdgpu-install.readthedocs.io/
