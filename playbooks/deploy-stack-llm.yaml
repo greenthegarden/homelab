@@ -6,7 +6,7 @@
   vars:
     # Ollama facts
     # renovate: datasource=docker depName=ollama/ollama
-    ollama_image: ollama/ollama:0.23.2
+    ollama_image: ollama/ollama:0.23.3
 
     # SearXNG facts
     # renovate: datasource=docker depName=searxng/searxng
