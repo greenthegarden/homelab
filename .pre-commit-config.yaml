@@ -110,7 +110,8 @@ repos:
       - id: bashate
         name: "🐚 shell · Check shell script code style"
         args:
-          - --ignore=E006
+          - --ignore=E003 # E003: ensure all indents are a multiple of 4 spaces
+          - --ignore=E006 # E006: check for lines longer than 79 columns
         stages: [pre-commit]
 
   ### PNG Images ###

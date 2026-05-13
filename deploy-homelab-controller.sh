@@ -9,20 +9,20 @@ set -euo pipefail
 # ============= Utility Variables =============
 #
 
-readonly RED="\033[0;31m"
+readonly NF="\033[0m" # No format
+# readonly BOLD="\033[1m"
+readonly RED_BOLD="\033[1;31m"
 readonly GREEN="\033[0;32m"
-readonly YELLOW="\033[1;33m"
-readonly BLUE="\033[1;34m"
-readonly NC="\033[0m" # No colour
-
+readonly YELLOW_BOLD="\033[1;33m"
+readonly BLUE_BOLD="\033[1;34m"
 
 # ============= Helper Functions =============
 #
 
-log_info()    { echo -e "${GREEN}[INFO]${NC} $1"; }
-log_success() { echo -e "${BLUE}[SUCCESS]${NC} $1"; }
-log_warn()    { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error()   { echo -e "${RED}[ERROR]${NC} $1" >&2; }
+log_info()    { echo -e "${GREEN}[INFO]${NF} $1"; }
+log_success() { echo -e "${BLUE_BOLD}[SUCCESS]${NF} $1"; }
+log_warn()    { echo -e "${YELLOW_BOLD}[WARN]${NF} $1"; }
+log_error()   { echo -e "${RED_BOLD}[ERROR]${NF} $1" >&2; }
 
 function check_file_exists {
     file=$1

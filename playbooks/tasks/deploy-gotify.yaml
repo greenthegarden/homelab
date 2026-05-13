@@ -138,7 +138,7 @@
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ default_host_volumes + gotify_volumes | default(omit) }}"
+        volumes: "{{ gotify_volumes | default(omit) }}"
       register: gotify_container_state
 
 - name: deploy-gotify | Wait for Gotify to accept connections

@@ -35,23 +35,73 @@
 # ============= Utility Variables =============
 #
 
-readonly RED="\033[0;31m"
+readonly NF="\033[0m" # No format
+readonly BOLD="\033[1m"
+readonly RED_BOLD="\033[1;31m"
 readonly GREEN="\033[0;32m"
-readonly YELLOW="\033[1;33m"
-readonly BLUE="\033[1;34m"
-readonly NC="\033[0m" # No colour
+readonly YELLOW_BOLD="\033[1;33m"
+readonly BLUE_BOLD="\033[1;34m"
 
 # ============= Helper Functions =============
 #
 
-log_info()    { echo -e "${GREEN}[INFO]${NC} $1"; }
-log_success() { echo -e "${BLUE}[SUCCESS]${NC} $1"; }
-log_warn()    { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error()   { echo -e "${RED}[ERROR]${NC} $1" >&2; }
+log_info()    { echo -e "${GREEN}[INFO]${NF} $1"; }
+log_success() { echo -e "${BLUE_BOLD}[SUCCESS]${NF} $1"; }
+log_warn()    { echo -e "${YELLOW_BOLD}[WARN]${NF} $1"; }
+log_error()   { echo -e "${RED_BOLD}[ERROR]${NF} $1" >&2; }
 
+die() {
+    log_error "$*"
+    exit 1
+}
 
-# log_file="/var/log/setup_host.log"
-# echo "$(date) - Script started" >> "$log_file"
+check_command () {
+    command -v "$1" >/dev/null 2>&1
+}
+
+need_command () {
+    if ! check_command "$1";
+    then
+        die "Required command $1 not found"
+    fi
+}
+
+display_system_env () {
+    log_info "Environment details..."
+    log_info "Running script: ${BOLD}$(basename "$0")"
+    log_info "Running in directory: ${BOLD}$(pwd)"
+    log_info "Running on host: ${BOLD}$(hostname)"
+    log_info "Running on OS: ${BOLD}$(cat /etc/os-release | grep -E '^(PRETTY_NAME)')"
+    log_info "Running on kernel: ${BOLD}$(uname -r)"
+    log_info "Running on architecture: ${BOLD}$(uname -m)"
+    # shellcheck disable=SC2116,SC2086
+    log_info "Running on shell: ${BOLD}$(echo $SHELL)"
+    log_info "Running on shell version: ${BOLD}$(bash --version | head -n 1)"
+    # log_info "Running on shell options: ${B}$(shopt)"
+    # log_info "Running on shell options: ${B}$(set | grep -E 'DEBUG|PS1|PS2|PS4')"
+    # log_info "Running on shell options: ${B}$(set | grep -E 'BASH|BASH_VERSION|BASH_ENV')"
+    # log_info "Running on shell options: ${B}$(set | grep -E 'PROMPT_COMMAND|PS4')"
+    log_info "PATH is set to: ${BOLD}${PATH}"
+}
+
+update_system () {
+    log_info 'Updating system packages...'
+    apt update && apt -y upgrade
+}
+
+set_path () {
+    if [[ ":${PATH}:" != *":${INSTALL_DIR}:"* ]]; then
+        log_warn "${INSTALL_DIR} is not in PATH"
+        export PATH="${INSTALL_DIR}:${PATH}"
+        log_info "Added ${INSTALL_DIR} to current session PATH"
+        log_info "PATH: ${PATH}"
+
+        echo "export PATH=\"${INSTALL_DIR}:\${PATH}\"" >> "${BASHRC_FILE}"
+        log_info "Added ${INSTALL_DIR} to PATH in ${BASHRC_FILE}"
+    else
+        log_info "${INSTALL_DIR} already in current session PATH"
+    fi
+}
 
 # Enable xtrace if the DEBUG environment variable is set
 if [[ ${DEBUG-} =~ ^1|yes|true$ ]]; then
@@ -70,6 +120,12 @@ fi
 # Enable errtrace or the error trap handler will not work as expected
 set -o errtrace         # Ensure the error trap handler is inherited
 
+
+# ============= Main Variables =============
+#
+readonly BASHRC_FILE=${HOME}/.bashrc
+readonly INSTALL_DIR=${HOME}/.local/bin
+
 parse_args() {
     # parse CLI flags
     while getopts "vh" opt; do
@@ -79,28 +135,6 @@ parse_args() {
             *) echo "Not a valid option"; exit 0 ;;
         esac
     done
-}
-
-display_system_env () {
-    log_info "Environment details..."
-    log_info "Running script: ${B}$(basename "$0")"
-    log_info "Running in directory: ${B}$(pwd)"
-    log_info "Running on host: ${B}$(hostname)"
-    log_info "Running on OS: ${B}$(cat /etc/os-release | grep -E '^(PRETTY_NAME)')${NC}"
-    log_info "Running on kernel: ${B}$(uname -r)"
-    log_info "Running on architecture: ${B}$(uname -m)"
-    # shellcheck disable=SC2116,SC2086
-    log_info "Running on shell: ${B}$(echo $SHELL)"
-    log_info "Running on shell version: ${B}$(bash --version | head -n 1)"
-    # log_info "Running on shell options: ${B}$(shopt)"
-    # log_info "Running on shell options: ${B}$(set | grep -E 'DEBUG|PS1|PS2|PS4')"
-    # log_info "Running on shell options: ${B}$(set | grep -E 'BASH|BASH_VERSION|BASH_ENV')"
-    # log_info "Running on shell options: ${B}$(set | grep -E 'PROMPT_COMMAND|PS4')"
-}
-
-update_system () {
-    log_info 'Updating system packages...'
-    apt update && apt -y upgrade
 }
 
 install_packages () {
@@ -154,7 +188,7 @@ uv_update_dependencies () {
     uv lock --upgrade
 }
 
-install_prec () {
+install_prek () {
     PREK_VERSION=v0.3.13
     curl --proto '=https' --tlsv1.2 -LsSf https://github.com/j178/prek/releases/download/${PREK_VERSION}/prek-installer.sh | sh
     prek install -f
@@ -216,12 +250,15 @@ print_final_message () {
 
 main() {
     # Start message
-    log_info "Running ${0} to deploy bootstrap Homelab controller"
+    log_info "Running ${0} to configure Homelab controller"
     echo
 
     parse_args "$@"
 
     display_system_env
+    echo
+
+    set_path
     echo
 
     update_system
@@ -230,7 +267,10 @@ main() {
     install_packages
     echo
 
-    install_uv
+    # install_uv
+
+    print_final_message
+    echo
 }
 
 # Execution starts here
