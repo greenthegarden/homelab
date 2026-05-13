@@ -1,16 +1,15 @@
 ---
 roles:
+  # To install Docker
+  # https://github.com/geerlingguy/ansible-role-docker
   - name: geerlingguy.docker
     scm: git
     src: git+https://github.com/geerlingguy/ansible-role-docker
     version: 8.0.0
 
 collections:
-  # required to use Docker
+  # To use Docker
+  # https://docs.ansible.com/projects/ansible/latest/collections/community/docker/index.html
   - name: community.docker
-    version: 5.1.0
+    version: 5.2.0
     type: galaxy
-
-  # - name: ansible.utils
-  #   version: 6.0.1
-  #   type: galaxy
