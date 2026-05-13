@@ -18,9 +18,9 @@
 
 - name: deploy-authentik | Set Authentik volume facts
   ansible.builtin.set_fact:
-    authentik_volume_certs_name: "{{ authentik_volume_certs_name | default(authentik_service_name + '-certs') }}"
-    authentik_volume_media_name: "{{ authentik_volume_media_name | default(authentik_service_name + '-media') }}"
-    authentik_volume_templates_name: "{{ authentik_volume_templates_name | default(authentik_service_name + '-templates') }}"
+    authentik_volume_certs_name: "{{ authentik_volume_certs_name | default(authentik_service_name + '_certs') }}"
+    authentik_volume_media_name: "{{ authentik_volume_media_name | default(authentik_service_name + '_media') }}"
+    authentik_volume_templates_name: "{{ authentik_volume_templates_name | default(authentik_service_name + '_templates') }}"
 
 - name: deploy-authentik | Set Authentik aggregated facts
   ansible.builtin.set_fact:
@@ -180,7 +180,7 @@
 
 - name: deploy-authentik | Deploy Authentik worker
   community.docker.docker_container:
-    name: "{{ authentik_service_name }}-worker"
+    name: "{{ authentik_service_name }}_worker"
     image: "{{ authentik_image }}"
     command: worker
     detach: true
