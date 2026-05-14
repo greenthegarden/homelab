@@ -116,7 +116,7 @@ apt install zstd
 curl -fsSL https://ollama.com/install.sh | sh
 # Install AMD GPU ROCm package
 curl -L https://ollama.com/download/ollama-linux-amd64-rocm.tar.zst -o ollama-linux-amd64-rocm.tar.zst
-tar -C /usr -xzf ollama-linux-amd64-rocm.tar.zst
+tar -C /usr -xf ollama-linux-amd64-rocm.tar.zst
 ```
 
 ### Step 7: Update Ollama config

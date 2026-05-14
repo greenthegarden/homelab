@@ -1,12 +1,12 @@
 ---
-- name: Deploy LLM stack
+- name: Deploy AI stack
 
-  hosts: ollama
+  hosts: ai
 
   vars:
-    # Ollama facts
-    # renovate: datasource=docker depName=ollama/ollama
-    ollama_image: ollama/ollama:0.23.3
+
+    # Assumes Ollama is already deployed
+    ollama_base_url: "http://lxc-ollama-cpu.localdomain:11434"
 
     # SearXNG facts
     # renovate: datasource=docker depName=searxng/searxng
@@ -30,12 +30,6 @@
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
-
-    # - name: Deploy a containerised instance of Ollama
-    #   ansible.builtin.include_tasks:
-    #     file: tasks/deploy-ollama.yaml
-    #   vars:
-    #     ollama_network_name: "{{ open_webui_network_name }}"
 
     - name: Deploy a containerised instance of SearXNG
       ansible.builtin.include_tasks:
