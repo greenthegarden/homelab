@@ -73,6 +73,13 @@ Verify IOMMU is active using
 dmesg | grep -e DMAR -e IOMMU
 ```
 
+Expected output is
+
+```less
+[    0.346111] pci 0000:00:00.2: AMD-Vi: IOMMU performance counters supported
+[    0.548479] perf/amd_iommu: Detected AMD IOMMU #0 (2 banks, 4 counters/bank).
+```
+
 ### Step 2: Ensure Drivers Available
 
 On the Proxmox host shell, run `ls -l /dev/dri`, and check output is
@@ -157,7 +164,7 @@ To see environment variable use `ollama serve --help`.
 
 Restart Ollama
 
-```bashs
+```bash
 systemctl daemon-reload
 systemctl restart ollama
 ```
