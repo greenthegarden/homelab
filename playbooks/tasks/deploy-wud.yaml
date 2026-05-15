@@ -126,6 +126,8 @@
       # WUD_WATCHER_DOCKER_PORT: "2375"
       # WUD_WATCHER_DOCKER_SOCKET: "tcp://docker-socket-proxy-external"
       # Remote hosts to watch
+      WUD_WATCHER_AI_HOST: "lxc-ai.{{ lan_domain }}"
+      WUD_WATCHER_AI_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
       WUD_WATCHER_CONTROLLER_HOST: "lxc-controller.{{ lan_domain }}"
       WUD_WATCHER_CONTROLLER_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
       WUD_WATCHER_FINANCE_HOST: "lxc-finance.{{ lan_domain }}"
@@ -136,8 +138,6 @@
       WUD_WATCHER_HOME_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
       WUD_WATCHER_INVENTORIES_HOST: "lxc-inventories.{{ lan_domain }}"
       WUD_WATCHER_INVENTORIES_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
-      WUD_WATCHER_LLM_HOST: "lxc-llm.{{ lan_domain }}"
-      WUD_WATCHER_LLM_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
       WUD_WATCHER_MESSAGING_HOST: "lxc-messaging.{{ lan_domain }}"
       WUD_WATCHER_MESSAGING_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
       WUD_WATCHER_MONITOR_HOST: "lxc-monitor.{{ lan_domain }}"
