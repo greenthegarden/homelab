@@ -17,8 +17,9 @@
   - [Step 6: Install Ollama](#step-6-install-ollama)
   - [Step 7: Update Ollama config](#step-7-update-ollama-config)
   - [Step 8: Run a model](#step-8-run-a-model)
+- [FIxes](#fixes)
 - [Unused content](#unused-content)
-- [Install ROCm](#install-rocm)
+  - [Install ROCm](#install-rocm)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -86,10 +87,23 @@ crw-rw---- 1 root render 226, 128 May 13 18:17 renderD128
 
 ### Step 3: Create an LXC Container
 
-- Create a new Debian based LXC container:
-  - Cores: 4
-  - Memory: 8192 MB RAM (0 MB swap),
-  - Root Disk: 64 GB
+Create a new Debian based LXC container:
+
+- Set the container to unprivileged
+  - No (privileged) if you need GPU access — GPU passthrough in LXC requires a privileged container
+- **Unprivelged: NO**
+- Cores: 4
+- Memory: 8192 MB RAM (0 MB swap),
+- Root Disk: 64 GB
+
+Once created switch on nesting within Options.
+
+From Proxmox host Shell add the following to `/etc/pve/lxc/<container number>.conf`
+
+```bash
+lxc.cgroup.devices.allow: c 226:* rwm
+lxc.mount.entry: /dev/dri dev/dri none bind,optional,create=dir
+```
 
 ### Step 4: Add Device Passthrough
 
@@ -110,8 +124,10 @@ Install Ollama directly on the LXC host, using
 
 ```bash
 apt update && apt upgrade -y
+# Install gpu test tools
+apt install -y radeontop vainfo
 # Install zstd to extract Ollama archive
-apt install zstd
+apt install -y curl zstd
 # Install Ollama (https://docs.ollama.com/linux)
 curl -fsSL https://ollama.com/install.sh | sh
 # Install AMD GPU ROCm package
@@ -129,15 +145,19 @@ Add the following to `/etc/systemd/system/ollama.service`, or use `systemctl edi
 
 ```bash
 [Service]
+Environment="OLLAMA_DEBUG=1"
 Environment="OLLAMA_HOST=0.0.0.0:11434"
 Environment="OLLAMA_VULKAN=1"
+Environment="OLLAMA_NO_CLOUD=1"
 Environment="OLLAMA_FLASH_ATTENTION=1"
-Environment="OLLAMA_CONTEXT_LENGTH=32768"
+#Environment="OLLAMA_CONTEXT_LENGTH=32768"
 ```
+
+To see environment variable use `ollama serve --help`.
 
 Restart Ollama
 
-```bash
+```bashs
 systemctl daemon-reload
 systemctl restart ollama
 ```
@@ -145,7 +165,7 @@ systemctl restart ollama
 Check Ollama
 
 ```bash
-journalctl -e -u ollama
+journalctl -u ollama --no-pager --follow --pager-end
 ```
 
 ### Step 8: Run a model
@@ -153,18 +173,72 @@ journalctl -e -u ollama
 Run the smallet [qwen3.5](https://ollama.com/library/qwen3.5) model to test system
 
 ```bash
-ollama run qwen3.5:0.8b
+ollama run qwen3.5:0.8b --think=false "Where should I visit in Utrecht?"
+```
+
+## FIxes
+
+see [test](https://markaicode.com/fix-ollama-gpu-detection-driver-configuration/)
+
+Run ollama with verbose
+
+```bash
+ollama run llama2 --verbose
+```
+
+```bash
+apt install pciutils
+
+# 1. Confirm the OS sees your GPU
+lspci | grep -i "vga\|nvidia\|amd"
+
+# 2. Check if drivers are loaded
+lsmod | grep nvidia      # NVIDIA
+lsmod | grep amdgpu      # AMD
+
+# 3. Driver-level GPU status
+nvidia-smi               # NVIDIA
+rocm-smi                 # AMD (if ROCm installed)
+
+# 4. CUDA availability
+nvcc --version
+
+# 5. Verbose Ollama output
+ollama serve --verbose
+
+
+# Install ROCm
+
+Based on [official instructions](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/install-methods/package-manager/package-manager-debian.html)
+
+```bash
+# Install dependencies
+apt install gpg
+# Package signing key
+mkdir --parents --mode=0755 /etc/apt/keyrings
+wget https://repo.radeon.com/rocm/rocm.gpg.key -O - | gpg --dearmor | tee /etc/apt/keyrings/rocm.gpg > /dev/null
+
+# Register ROCm packages
+tee /etc/apt/sources.list.d/rocm.list << EOF
+deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/7.2.3 noble main
+deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/graphics/7.2.3/ubuntu noble main
+EOF
+
+tee /etc/apt/preferences.d/rocm-pin-600 << EOF
+Package: *
+Pin: release o=repo.radeon.com
+Pin-Priority: 600
+EOF
+apt update
+
+apt install amdgpu-lib
 ```
 
 ## Unused content
 
 Here for reference for what not to do!
 
-- Set the container to unprivileged
-  - No (privileged) if you need GPU access — GPU passthrough in LXC requires a privileged container
-- Enable nesting under Features if you want Docker inside the container
-
-## Install ROCm
+### Install ROCm
 
 Following [rocm][rocm] official instructions
 
@@ -224,7 +298,3 @@ lxc.apparmor.profile: unconfined
 lxc.cgroup2.devices.allow: c 226:128 rwm
 lxc.mount.entry: /dev/dri/renderD128 dev/dri/renderD128 none bind,optional,create=file
 ```
-
-Install [AMD official][amdgpu] `amdgpu-install` script.
-
-[amdgpu]: https://amdgpu-install.readthedocs.io/
