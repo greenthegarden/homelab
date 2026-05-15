@@ -6,6 +6,10 @@ docker-local:
   host: socket-proxy_homepage
   port: 2379
 
+docker-lxc-ai:
+  host: lxc-ai.{{ lan_domain }}
+  port: 2379
+
 docker-lxc-controller:
   host: lxc-controller.{{ lan_domain }}
   port: 2379
@@ -24,10 +28,6 @@ docker-lxc-home:
 
 docker-lxc-inventories:
   host: lxc-inventories.{{ lan_domain }}
-  port: 2379
-
-docker-lxc-llm:
-  host: lxc-llm.{{ lan_domain }}
   port: 2379
 
 docker-lxc-messaging:
