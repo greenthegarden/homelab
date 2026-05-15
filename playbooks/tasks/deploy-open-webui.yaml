@@ -132,7 +132,7 @@
         image: "{{ open_webui_image }}"
         detach: true
         env:
-          OLLAMA_BASE_URL: "{{ ollama_base_url | default('http://lxc-llm.localdomain:11434') }}"
+          OLLAMA_BASE_URL: "{{ ollama_base_url | default('http://lxc-ollama-cpu.localdomain:11434') }}"
           ENABLE_RAG_WEB_SEARCH: "True"
           RAG_WEB_SEARCH_ENGINE: "searxng"
           RAG_WEB_SEARCH_RESULT_COUNT: "3"

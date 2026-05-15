@@ -6,7 +6,7 @@
   vars:
 
     # Assumes Ollama is already deployed
-    ollama_base_url: "{{ ollama_base_url | default('http://lxc-ollama-cpu.localdomain:11434') }}"
+    # ollama_base_url: "{{ ollama_base_url | default('http://lxc-ollama-cpu.localdomain:11434') }}"
 
     # SearXNG facts
     # renovate: datasource=docker depName=searxng/searxng
