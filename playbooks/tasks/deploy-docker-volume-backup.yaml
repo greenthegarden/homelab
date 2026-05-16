@@ -35,7 +35,7 @@
         docker_volume_backup_networks:
           - { name: "{{ docker_volume_backup_network_name }}", internal: true }
         # Bridge to allow access to external network for uploads to remote storage
-          - { name: "docker-volume-backup-bridge", internal: false }
+          - { name: "docker-volume-backup_external", internal: false }
         docker_volume_backup_mounts:
           - "{{ docker_volume_backup_local_backups_dir }}:/archive"
 
