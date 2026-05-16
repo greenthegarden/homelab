@@ -234,3 +234,25 @@
   register: affine_running
   retries: 10
   until: affine_running is success
+
+- name: deploy-affine | Deploy a containerised instance of Docker Volume Backup
+  when: affine_deploy_docker_volume_backup | default(false)
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-docker-volume-backup.yaml
+  vars:
+    docker_volume_backup_service_name: "docker-volume-backup_{{ affine_volume_upload_name }}"
+    docker_volume_backup_volume_to_backup:
+      - "{{ affine_volume_upload_name }}:/backup/{{ affine_volume_upload_name }}_backup:ro"
+    docker_volume_backup_backup_label: "{{ affine_volume_upload_name }}"
+    docker_volume_backup_backup_retention_days: 7
+
+- name: deploy-affine | Deploy a containerised instance of Docker Volume Backup
+  when: affine_deploy_docker_volume_backup | default(false)
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-docker-volume-backup.yaml
+  vars:
+    docker_volume_backup_service_name: "docker-volume-backup_{{ postgres_volume_name }}"
+    docker_volume_backup_volume_to_backup:
+      - "{{ postgres_volume_name }}:/backup/{{ postgres_volume_name }}_backup:ro"
+    docker_volume_backup_backup_label: "{{ postgres_volume_name }}"
+    docker_volume_backup_backup_retention_days: 7
