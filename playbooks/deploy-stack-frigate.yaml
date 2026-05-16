@@ -8,6 +8,7 @@
     # Frigate facts
     # renovate: datasource=docker depName=ghcr.io/blakeblackshear/frigate
     frigate_image: ghcr.io/blakeblackshear/frigate:0.17.1
+    mqtt_broker: "emqx.lxc-messaging.{{ lan_domain }}"
 
   pre_tasks:
     - name: Ensure base environment is configured

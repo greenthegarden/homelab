@@ -1,13 +1,15 @@
 ---
+{% if mqtt_broker is defined %}
 mqtt:
   enabled: true
-  host: emqx.broker.{{ lan_domain }}
+  host: {{ mqtt_broker }}
   port: 1883
   user: {{ frigate.mqtt_username }}
   password: {{ frigate.mqtt_password }}
   topic_prefix: frigate
   client_id: frigate
   stats_interval: 60
+{% endif %}
 
 # Optional: logger verbosity settings
 logger:
