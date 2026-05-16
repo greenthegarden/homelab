@@ -1,7 +1,7 @@
 ---
 - name: Deploy Tududi
 
-  hosts: inventories
+  hosts: productivity
 
   vars:
 

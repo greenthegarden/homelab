@@ -112,8 +112,21 @@ Run the smallet [qwen3.5](https://ollama.com/library/qwen3.5) model to test syst
 ```bash
 ollama run qwen3.5:0.8b --think=false "Where should I visit in Utrecht?"
 ollama run qwen3.5:9b --think=false "Where should I visit in Utrecht?"
+ollama run qwen2.5-coder:7b --think=false "Create Hello, World app in Python"
 ollama run qwen3.5:0.8b --think "Where should I visit in Utrecht?"
 ```
+
+[Models to run](https://www.deployhq.com/blog/running-generative-ai-models-with-ollama-and-open-webui-using-deployhq):
+
+- General: qwen3.5:9b, llama3.18b
+- Coding: qwen2.5-coder:7b
+- RAG over documents: llama3.1:8b
+
+To stop thinking for qwen models, in Open-WebUI:
+
+- clone the model (Admin Panel -> Settings -> Models) - More -> Clone
+- Within `Advanced Params -> Show` set `think (Ollama)` to `Off`
+- Save model
 
 ### Trouble Shooting
 

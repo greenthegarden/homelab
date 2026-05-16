@@ -144,11 +144,13 @@
         image: "{{ tududi_image }}"
         detach: true
         env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
           TUDUDI_USER_EMAIL: "{{ tududi.admin_email | default('admin@' + tududi_fqdn) }}"
           TUDUDI_USER_PASSWORD: "{{ tududi.admin_password | default('dummy') }}"
           TUDUDI_SESSION_SECRET: "{{ tududi.session_secret | default('dummy') }}"
+          # Variables specified in https://github.com/chrisvel/tududi
           TUDUDI_ALLOWED_ORIGINS: "http://{{ tududi_fqdn }},https://{{ tududi_fqdn }}"
-          TZ: "{{ homelab.timezone | default('UTC') }}"
+          TUDUDI_TRUST_PROXY: 'true'
         labels: "{{ tududi_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ tududi_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"

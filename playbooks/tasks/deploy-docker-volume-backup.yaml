@@ -70,13 +70,13 @@
         state: present
       loop: "{{ docker_volume_backup_networks }}"
 
-    - name: deploy-docker-volume-backup | Deploy a containerised instance of Socket Proxy configured for Docker Volume Backup
+    - name: deploy-docker-volume-backup | Deploy a containerised instance of Socket Proxy configured for Docker Volume Backup on same network
       ansible.builtin.include_tasks:
         file: tasks/deploy-socket-proxy.yaml
       vars:
         socket_proxy_service_name: "socket-proxy_{{ docker_volume_backup_service_name }}"
         socket_proxy_service_port: 2380
-        socket_proxy_network_name: "socket-proxy_{{ docker_volume_backup_service_name }}"
+        socket_proxy_network_name: "{{ docker_volume_backup_network_name }}"
         socket_proxy_network_internal: true
         socket_proxy_command_service:
           - "-allowfrom={{ docker_volume_backup_service_name }}"
