@@ -13,7 +13,8 @@
   - [Step 2: Start Container](#step-2-start-container)
   - [Step 3: Install Ollama](#step-3-install-ollama)
   - [Step 4: Update Ollama config](#step-4-update-ollama-config)
-  - [Step 5: Run a model](#step-5-run-a-model)
+  - [Step 5: Install llmfit](#step-5-install-llmfit)
+  - [Step 6: Run a model](#step-6-run-a-model)
   - [Trouble Shooting](#trouble-shooting)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -105,7 +106,17 @@ Check Ollama
 journalctl -u ollama --no-pager --follow --pager-end
 ```
 
-### Step 5: Run a model
+### Step 5: Install llmfit
+
+The [llmfit project][llmfit] provides a tool which assist identifying models suitable for the system. Install using
+
+```bash
+curl -fsSL https://llmfit.axjns.dev/install.sh | sh
+```
+
+[llmfit]: https://github.com/AlexsJones/llmfit
+
+### Step 6: Run a model
 
 Run the smallet [qwen3.5](https://ollama.com/library/qwen3.5) model to test system
 
