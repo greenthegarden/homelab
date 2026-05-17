@@ -2,7 +2,7 @@
 
 - name: Deploy Grist
 
-  hosts: fireflyiii
+  hosts: productivity
 
   vars:
 
