@@ -6,6 +6,8 @@
 
 - [Creating Keys Pairs](#creating-keys-pairs)
 - [Copying Public Keys to Hosts](#copying-public-keys-to-hosts)
+- [Specific Keys](#specific-keys)
+  - [Github](#github)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -20,7 +22,7 @@
 Use the following
 
 ```bash
-ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_<name>
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_<name> -C <comment>
 ```
 
 ## Copying Public Keys to Hosts
@@ -43,4 +45,21 @@ Test the key using
 
 ```bash
 ssh -i ~/.ssh/id_ed25519_<name> user@host
+```
+
+## Specific Keys
+
+### Github
+
+To create a key for [Github](https://github.com), use
+
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_github -c "Github push"
+```
+
+Add the following to the file `~/.ssh/config`
+
+```bash
+Host github.com
+  IdentityFile ~/.ssh/id_ed25519_github
 ```
