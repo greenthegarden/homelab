@@ -7,7 +7,6 @@
     hawser_image: "{{ hawser_image | default('ghcr.io/finsys/hawser:latest') }}"
     hawser_service_name: "{{ hawser_service_name | default('hawser') }}"
     hawser_service_port: "{{ hawser_service_port | default(2376) }}"
-    hawser_stacks_dir: /opt/hawser-stacks
   tags: hawser
 
 - name: deploy-hawser | Set Hawser network facts
@@ -17,7 +16,7 @@
 
 - name: deploy-hawser | Set Hawser volume facts
   ansible.builtin.set_fact:
-    hawser_stacks_dir: "{{ hawser_stacks_dir | default('/opt/hawser-stacks') }}"
+    hawser_volume_name: "{{ hawser_volume_name | default(hawser_service_name + '_stacks') }}"
   tags: hawser
 
 - name: deploy-hawser | Set Hawser aggregated facts
@@ -32,7 +31,7 @@
     hawser_ports:
       - "{{ hawser_service_port }}:2376"
     hawser_volumes:
-      - "{{ hawser_stacks_dir }}:/opt/hawser-stacks"
+      - "{{ hawser_volume_name }}:/data/stacks"
   tags: hawser
 
 - name: deploy-hawser | Log Hawser configuration
@@ -43,7 +42,7 @@
       - "Hawser FQDN: {{ hawser_fqdn }}"
       - "Hawser networks: {{ hawser_networks | default(omit) }}"
       - "Hawser ports: {{ hawser_ports | default(omit) }}"
-      - "Hawser volumes: {{ hawser_volumes | default(omit) }}"
+      - "Hawser mounts: {{ hawser_volumes | default(omit) }}"
   tags: hawser
 
 - name: deploy-hawser | Create Hawser container labels
@@ -68,28 +67,14 @@
   loop: "{{ hawser_networks }}"
   tags: hawser
 
-# - name: deploy-hawser | Create volume for Hawser Agent
-#   when: hawser_volume_name is defined and (hawser_volumes | length > 0)
-#   community.docker.docker_volume:
-#     name: "{{ item }}"
-#     state: present
-#   loop:
-#     - "{{ hawser_volume_name }}"
-#   tags: hawser
-
-# - name: deploy-hawser | Create Hawser configuration directory
-#   ansible.builtin.file:
-#     path: "{{ hawser_config_dir }}"
-#     mode: "0644"
-#     state: directory
-#   register: hawser_configuration_creation
-
-# - name: deploy-hawser | Create Hawser configuration
-#   ansible.builtin.template:
-#     src: templates/hawser/hawser.env.j2
-#     dest: "{{ hawser_config_dir }}/hawser.env"
-#     mode: "0644"
-#   register: hawser_configuration_creation
+- name: deploy-hawser | Create volume for Hawser Agent
+  when: hawser_volumes is defined and (hawser_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ hawser_volume_name }}"
+  tags: hawser
 
 - name: deploy-hawser | Pull Hawser image
   community.docker.docker_image:
@@ -102,9 +87,6 @@
     name: "{{ hawser_service_name }}"
     image: "{{ hawser_image }}"
     detach: true
-    # env_file: "{{ hawser_config_dir }}/hawser.env"
-    env:
-      STACKS_DIR: "{{ hawser_stacks_dir }}"
     labels: "{{ hawser_container_labels | default(omit) }}"
     networks_cli_compatible: true
     networks: "{{ hawser_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
@@ -112,6 +94,6 @@
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ default_host_volumes + docker_host_volume + hawser_volumes | default(omit) }}"
+    volumes: "{{ docker_host_volume + hawser_volumes | default(omit) }}"
   register: hawser_container_state
   tags: hawser
