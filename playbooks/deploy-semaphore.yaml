@@ -1,21 +1,14 @@
 ---
 - name: Deploy Semaphore
 
-  hosts: lxc-controller
+  hosts: controller
 
   vars:
 
     # Semaphore facts
     # renovate: datasource=docker depName=semaphoreui/semaphore
-    semaphore_image: semaphoreui/semaphore:v2.17.36
-
-    semaphore_deploy_docker_volume_backup: false
-
-  pre_tasks:
-
-    - name: Ensure base environment is configured
-      ansible.builtin.include_tasks:
-        file: tasks/configure-containerised-base.yaml
+    semaphore_image: semaphoreui/semaphore:v2.18.4
+    semaphore_deploy_docker_volume_backup: true
 
   tasks:
 

@@ -1,13 +1,14 @@
 ---
 - name: Deploy Ntfy
 
-  hosts: broker
+  hosts: messaging
 
   vars:
 
     # Ntfy facts
     # renovate: datasource=docker depName=binwiederhier/ntfy
-    ntfy_image: binwiederhier/ntfy:v2.21.0
+    ntfy_image: binwiederhier/ntfy:v2.23.0
+    ntfy_deploy_docker_volume_backup: true
 
   tasks:
 
@@ -18,14 +19,3 @@
     - name: Deploy a containerised instance of Ntfy
       ansible.builtin.include_tasks:
         file: tasks/deploy-ntfy.yaml
-
-    - name: Deploy a containerised instance of Docker Volume Backup
-      when: ntfy_deploy_docker_volume_backup | default(false)
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-docker-volume-backup.yaml
-      vars:
-        docker_volume_backup_service_name: "docker-volume-backup_{{ ntfy_service_name }}"
-        docker_volume_backup_volume_to_backup:
-          - "{{ ntfy_volume_name }}:/backup/{{ ntfy_service_name }}_backup:ro"
-        docker_volume_backup_backup_label: "{{ ntfy_service_name }}"
-        docker_volume_backup_backup_retention_days: 7

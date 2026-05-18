@@ -8,6 +8,8 @@
   - [Host](#host)
   - [Host Software](#host-software)
   - [Container Software](#container-software)
+- [Create a shared folder for models](#create-a-shared-folder-for-models)
+  - [Create directory on host](#create-directory-on-host)
 - [Steps](#steps)
   - [Step 1: Create an LXC Container](#step-1-create-an-lxc-container)
   - [Step 2: Start Container](#step-2-start-container)
@@ -51,6 +53,32 @@ Started without having made any modifications to Proxmox host, and found that dr
 
 - LXC Kernel: 7.0.2-2-pve
 - OS: Debian 13
+
+## Create a shared folder for models
+
+### Create directory on host
+
+To share models between multiple instances of Ollama, use a [shared folder on the Proxmox host][mounts-guide].
+
+[mounts-guide]: https://blog.kreativhub.tech/mastering-mounts-and-storage-permissions-in-proxmox-lxc-a-guide-to-uid-gid-mapping/
+[pve-docs-bind_mount]: https://pve.proxmox.com/pve-docs/pve-admin-guide.html#_bind_mount_points
+
+Should use /mnt for as [host point][pve-docs-bind_mount]:
+
+```bash
+# Via Proxmox server shell
+mkdir -p /mnt/lxc-shares/ollama_models
+chmod -R 755 /mnt/lxc-shares
+```
+
+Add mount to containers via LXC config files, for example, `/etc/pve/lxc/201.conf`, add the ling
+
+```bash
+# host path, container mount point
+mp0: /mnt/lxc-shares/ollama_models,mp=/mnt/ollama/models
+```
+
+With unproveliged containers this results in permission issues. Have not continued with the configuration.
 
 ## Steps
 

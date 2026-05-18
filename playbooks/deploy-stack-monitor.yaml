@@ -4,20 +4,10 @@
   hosts: monitor
 
   vars:
-    # Beszel facts
-    # renovate: datasource=docker depName=henrygd/beszel
-    beszel_image: henrygd/beszel:0.18.7
-
-    # Dozzle facts
-    # Ensure values are also set in group_vars/homelab_lxc_docker.yaml.
-    # TODO: Ensure variables set here are used in group_vars
-    # renovate: datasource=docker depName=amir20/dozzle
-    dozzle_image: amir20/dozzle:v10.5.1
-
     # Uptime Kuma facts
     # renovate: datasource=docker depName=louislam/uptime-kuma
-    uptimekuma_image: louislam/uptime-kuma:2.2.1-slim
-    uptimekuma_deploy_docker_volume_backup: false
+    uptimekuma_image: louislam/uptime-kuma:2.3.2-slim
+    uptimekuma_deploy_docker_volume_backup: true
 
     # What's up Docker? facts
     # renovate: datasource=docker depName=getwud/wud
@@ -32,16 +22,6 @@
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
-
-    - name: Deploy a containerised instance of Beszel
-      when: deploy_beszel | default(false)
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-beszel.yaml
-
-    - name: Deploy a containerised instance of Dozzle
-      when: deploy_dozzle | default(false)
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-dozzle.yaml
 
     - name: Deploy a containerised instance of Uptime Kuma
       ansible.builtin.include_tasks:

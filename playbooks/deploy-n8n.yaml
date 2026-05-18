@@ -2,7 +2,7 @@
 
 - name: Deploy n8n
 
-  hosts: ollama
+  hosts: ai
 
   vars:
 
@@ -10,11 +10,13 @@
     # renovate: datasource=docker depName=n8nio/n8n
     n8n_image: n8nio/n8n:2.21.0
 
-  tasks:
+  pre_tasks:
 
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     - name: Deploy a containerised instance of n8n
       ansible.builtin.include_tasks:
