@@ -14,6 +14,8 @@
 # https://docs.affine.pro/
 # https://github.com/toeverything/AFFiNE
 # https://hub.docker.com/r/affine/affine
+# Latest docker-compose: https://github.com/toeverything/affine/releases/latest/download/docker-compose.yml
+# Latest .env file: https://github.com/toeverything/affine/releases/latest/download/default.env.example
 
 - name: deploy-affine | Set AFFiNE facts
   ansible.builtin.set_fact:
