@@ -12,7 +12,7 @@
 
     # Wallos facts
     # renovate: datasource=docker depName=walloslabs/wallos
-    wallos_image: bellamy/wallos:4.8.4
+    wallos_image: bellamy/wallos:4.9.0
     wallos_deploy_docker_volume_backup: false
 
   pre_tasks:

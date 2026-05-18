@@ -13,3 +13,9 @@ collections:
   - name: community.docker
     version: 5.2.0
     type: galaxy
+
+  # To use Timezone
+  # https://docs.ansible.com/projects/ansible/latest/collections/community/general/index.html
+  - name: community.general
+    version: 12.6.0
+    type: galaxy

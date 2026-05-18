@@ -7,7 +7,7 @@
 
     # Dockhand facts
     # renovate: datasource=docker depName=fnsys/dockhand
-    dockhand_image: fnsys/dockhand:v1.0.28
+    dockhand_image: fnsys/dockhand:v1.0.29
 
     # Semaphore facts
     # renovate: datasource=docker depName=semaphoreui/semaphore
@@ -25,7 +25,7 @@
     # Networking Toolbox facts
     # renovate: datasource=docker depName=lissy93/networking-toolbox
     networking_toolbox_image: lissy93/networking-toolbox:1.6.0
-    homelabinfo_toolbox_image:
+
     # TODO
     #
     # Add:
