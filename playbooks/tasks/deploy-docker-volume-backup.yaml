@@ -3,10 +3,11 @@
   when: docker_volume_backup_volume_to_backup is defined
   block:
 
-    ####### DOCKER-VOLUME-BACKUP SECTION
-
     # https://offen.github.io/docker-volume-backup/
     # https://github.com/offen/docker-volume-backup
+
+
+    # ============= Variable definitions =============
 
     - name: deploy-docker-volume-backup | Set Docker Volume Backup facts
       ansible.builtin.set_fact:
@@ -25,6 +26,8 @@
     - name: deploy-docker-volume-backup | Set Docker Volume Backup mount facts
       ansible.builtin.set_fact:
         docker_volume_backup_local_backups_dir: "{{ docker_volume_backup_local_backups_dir | default(local_backups_dir) }}"
+
+    # ============= Deployment Steps =============
 
     - name: deploy-docker-volume-backup | Set Docker Volume Backup aggregated facts
       ansible.builtin.set_fact:
@@ -48,7 +51,8 @@
           - "Docker Volume Backup networks: {{ docker_volume_backup_networks | default(omit) }}"
           - "Docker Volume Backup ports: {{ docker_volume_backup_ports | default(omit) }}"
           - "Docker Volume Backup mounts: {{ docker_volume_backup_mounts }}"
-          - "Docker Volume Backup Volume to Backup: {{ docker_volume_backup_volume_to_backup }}"
+          - "Docker Volume Backup env_file: {{ docker_volume_backup_env_file_dir }}"
+          - "Docker Volume Backup volume to backup: {{ docker_volume_backup_volume_to_backup }}"
 
     - name: deploy-docker-volume-backup | Create Docker Volume Backup container labels
       ansible.builtin.set_fact:
@@ -80,9 +84,10 @@
         socket_proxy_network_internal: true
         socket_proxy_command_service:
           - "-allowfrom={{ docker_volume_backup_service_name }}"
-          - '-allowGET=/v1\..{2}/(containers/.*|images/.*)'
-          - '-allowPOST=/v1\..{2}/(containers/.*|images/.*)'
+          - '-allowGET=.*'
+          - '-allowPOST=.*'
           - "-allowHEAD=/_ping"
+          # - '-allowPOST=/v1\..{2}/(containers/.*|images/.*)'
         # docker_socket_proxy_service_name: "docker-socket-proxy-{{ docker_volume_backup_service_name }}"
         # docker_socket_proxy_service_port: 2375
         # docker_socket_proxy_network_name: "{{ docker_volume_backup_network_name }}"

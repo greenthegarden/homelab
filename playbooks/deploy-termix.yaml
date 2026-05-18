@@ -8,6 +8,8 @@
     # Termix facts
     # renovate: datasource=docker depName=ghcr.io/lukegus/termix
     termix_image: ghcr.io/lukegus/termix:release-2.2.1
+    termix_deploy_docker_volume_backup: true
+
 
   tasks:
 

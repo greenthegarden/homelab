@@ -19,31 +19,31 @@ readonly BLUE_BOLD="\033[1;34m"
 # ============= Helper Functions =============
 #
 
-log_info()    { echo -e "${GREEN}[INFO]${NF} $1"; }
-log_success() { echo -e "${BLUE_BOLD}[SUCCESS]${NF} $1"; }
-log_warn()    { echo -e "${YELLOW_BOLD}[WARN]${NF} $1"; }
-log_error()   { echo -e "${RED_BOLD}[ERROR]${NF} $1" >&2; }
+print_info()    { printf "  ${GREEN}[INFO]${NF} %s\n" "$*"; }
+print_success() { printf "  ${BLUE_BOLD}[SUCCESS]${NF} %s\n" "$*"; }
+print_warn()    { printf "  ${YELLOW_BOLD}[WARN]${NF} %s\n" "$*"; }
+print_error()   { printf "  ${RED_BOLD}[ERROR]${NF} %s\n" "$*" >&2; }
 
 function check_file_exists {
-    file=$1
-    if [[ ! -f ${file} ]]; then
-        log_error "File ${file} not found"
+    file="$1"
+    if [[ ! -f "${file}" ]]; then
+        print_error "File ${file} not found"
         exit 1
     fi
 }
 
 function check_executable_exists {
-    executable=$1
-    if [[ ! -x ${executable} ]]; then
-        log_error "Executable ${executable} not found"
+    executable="$1"
+    if [[ ! -x "${executable}" ]]; then
+        print_error "Executable ${executable} not found"
         exit 1
     fi
 }
 
 function check_directory_exists {
-    directory=$1
-    if [[ ! -d ${directory} ]]; then
-        log_error "Directory ${directory} not found"
+    directory="$1"
+    if [[ ! -d "${directory}" ]]; then
+        print_error "Directory ${directory} not found"
         exit 1
     fi
 }
@@ -53,7 +53,7 @@ function check_directory_exists {
 #
 
 readonly BIN_PATH=".venv/bin"
-check_directory_exists ${BIN_PATH}
+check_directory_exists "${BIN_PATH}"
 readonly ANSIBLE_BIN="${BIN_PATH}/ansible"
 readonly ANSIBLE_GALAXY_BIN="${BIN_PATH}/ansible-galaxy"
 readonly ANSIBLE_PLAYBOOK_BIN="${BIN_PATH}/ansible-playbook"
@@ -66,6 +66,21 @@ PLAYBOOK_FILE="playbooks/deploy-stack-controller.yaml"
 
 # ============= Main Functions =============
 #
+function parse_args {
+    # parse CLI flags
+    while getopts "p:vh" opt ; do
+        case "${opt}" in
+            p)
+                PLAYBOOK_FILE="${OPTARG}"
+                print_info "Running playbook '${OPTARG}'"
+                ;;
+            v) print_info "Verbose mode enabled" ;;
+            h) print_success "Usage: $0 [-p 'playbook'] [-v] [-h]"; exit 0 ;;
+            *) print_error "Not a valid option"; exit 1 ;;
+        esac
+    done
+}
+
 
 function uv_update {
     uv self update
@@ -76,35 +91,38 @@ function uv_upgrade_dependencies {
 }
 
 function ansible_info {
-    check_executable_exists ${ANSIBLE_BIN}
-    log_info "Using $(${ANSIBLE_BIN} --version)"
+    check_executable_exists "${ANSIBLE_BIN}"
+    print_info "Using $(${ANSIBLE_BIN} --version)"
 }
 
 function ansible_install_dependencies {
-    check_file_exists ${REQUIREMENTS_FILE}
-    check_executable_exists ${ANSIBLE_GALAXY_BIN}
-    log_info "Installing Ansible dependencies from ${REQUIREMENTS_FILE}"
-    ${ANSIBLE_GALAXY_BIN} install -r ${REQUIREMENTS_FILE}
-    log_success "Ansible dependencies installed"
+    check_file_exists "${REQUIREMENTS_FILE}"
+    check_executable_exists "${ANSIBLE_GALAXY_BIN}"
+    print_info "Installing Ansible dependencies from ${REQUIREMENTS_FILE}"
+    "${ANSIBLE_GALAXY_BIN}" install -r "${REQUIREMENTS_FILE}"
+    print_success "Ansible dependencies installed"
 }
 
 function ansible_run_playbook {
-    check_executable_exists ${ANSIBLE_PLAYBOOK_BIN}
-    check_file_exists ${INVENTORY_FILE}
-    check_file_exists ${VAULT_FILE}
-    check_file_exists ${PLAYBOOK_FILE}
-    log_info "Running Ansible Playbook ${PLAYBOOK_FILE}"
-    ${ANSIBLE_PLAYBOOK_BIN} \
-        --inventory ${INVENTORY_FILE} \
-        --vault-password-file ${VAULT_FILE} \
-        ${PLAYBOOK_FILE}
-    log_success "Playbook ${PLAYBOOK_FILE} run"
+    check_executable_exists "${ANSIBLE_PLAYBOOK_BIN}"
+    check_file_exists "${INVENTORY_FILE}"
+    check_file_exists "${VAULT_FILE}"
+    check_file_exists "${PLAYBOOK_FILE}"
+    print_info "Running Ansible Playbook ${PLAYBOOK_FILE}"
+    "${ANSIBLE_PLAYBOOK_BIN}" \
+        --inventory "${INVENTORY_FILE}" \
+        --vault-password-file "${VAULT_FILE}" \
+        "${PLAYBOOK_FILE}"
+    print_success "Playbook ${PLAYBOOK_FILE} run"
 }
 
 function main {
     # Start message
-    log_info "Running ${0} to deploy Homelab controller"
+    print_info "Running ${0} to deploy Homelab controller"
     echo
+
+    # Parse any arguments
+    parse_args "$@"
 
     # Update uv and dependencies
     uv_update
@@ -127,4 +145,5 @@ function main {
 # ============= Script Execution =============
 #
 
-main
+# Execution starts here
+main "$@"

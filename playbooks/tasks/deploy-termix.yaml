@@ -151,3 +151,57 @@
   register: termix_running
   retries: 10
   until: termix_running is success
+
+- name: deploy-termix | Deploy a containerised instance of Docker Volume Backup
+  when: termix_deploy_docker_volume_backup | default(false)
+  vars:
+    docker_volume_backup_service_name: "docker-volume-backup_{{ termix_volume_name }}"
+    docker_volume_backup_volume_to_backup:
+      - "{{ termix_volume_name }}:/backup/{{ termix_volume_name }}_backup:ro"
+    docker_volume_backup_backup_label: "{{ termix_volume_name }}"
+    docker_volume_backup_backup_retention_days: 7
+  block:
+
+    # Run here to create configuration
+    - name: deploy-termix | Deploy a containerised instance of Docker Volume Backup
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+
+    # docker run --rm \
+    #   -v termix:/backup/data \
+    #   -v /root/backups:/archive \
+    #   --env-file /root/docker-volume-backup_termix/docker-volume-backup.env \
+    #   --entrypoint backup \
+    #   --network=name=docker-volume-backup_termix \
+    #   offen/docker-volume-backup:v2.48.0
+
+    # Remove container to be able to run test using same container name
+    # as required for socket-proxy
+    - name: deploy-termix | Remove Docker Volume Backup container
+      community.docker.docker_container:
+        name: "{{ docker_volume_backup_service_name }}"
+        state: absent
+
+    # Test socket connection and docker-volume-backup config
+    - name: deploy-termix | Test Docker Volume Backup
+      community.docker.docker_container:
+        name: "{{ docker_volume_backup_service_name }}"
+        image: "{{ docker_volume_backup_image }}"
+        auto_remove: true
+        entrypoint: "backup"
+        env:
+          TZ: "Australia/Adelaide"
+        env_file: "{{ docker_volume_backup_env_file }}"
+        networks: "{{ docker_volume_backup_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        security_opts:
+          - no-new-privileges=true
+        state: started
+        volumes: "{{ docker_volume_backup_mounts + docker_volume_backup_volume_to_backup }}"
+      register: docker_volume_backup_test_container_state
+
+    # TODO: Add assert that files are created
+
+    # Rerun to recreate container
+    - name: deploy-termix | Deploy a containerised instance of Docker Volume Backup
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
