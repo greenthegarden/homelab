@@ -14,7 +14,8 @@
 
 - name: deploy-searxng | Set SearXNG volume facts
   ansible.builtin.set_fact:
-    searxng_volume_name: "{{ searxng_volume_name | default(searxng_service_name) }}"
+    searxng_volume_cache_name: "{{ searxng_volume_cache_name | default(searxng_service_name + '_cache') }}"
+    searxng_volume_data_name: "{{ searxng_volume_data_name | default(searxng_service_name + '_data') }}"
 
 - name: deploy-searxng | Set SearXNG aggregated facts
   ansible.builtin.set_fact:
@@ -33,7 +34,8 @@
     searxng_volumes:
       # Local paths to mount into the container
       # local path:container path
-      - "{{ searxng_volume_name }}:/etc/searxng"
+      - "{{ searxng_volume_cache_name }}:/var/cache/searxng"
+      - "{{ searxng_volume_data_name }}:/etc/searxng"
 
 - name: deploy-searxng | Log SearXNG configuration
   ansible.builtin.debug:
@@ -92,12 +94,13 @@
   loop: "{{ searxng_networks }}"
 
 - name: deploy-searxng | Create SearXNG volume
-  when: searxng_volume_name is defined
+  when: searxng_volumes is defined and (searxng_volumes | length > 0)
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
   loop:
-    - "{{ searxng_volume_name }}"
+    - "{{ searxng_volume_cache_name }}"
+    - "{{ searxng_volume_data_name }}"
 
 - name: deploy-searxng | Check if SearXNG is running
   community.docker.docker_container_info:
@@ -139,7 +142,7 @@
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ default_host_volumes + searxng_volumes | default(omit) }}"
+        volumes: "{{ searxng_volumes | default(omit) }}"
       register: searxng_container_state
 
 - name: deploy-searxng | Wait for SearXNG to accept connections
