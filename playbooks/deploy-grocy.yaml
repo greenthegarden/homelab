@@ -8,14 +8,15 @@
     # Grocy facts
     # renovate: datasource=docker depName=linuxserver/grocy
     grocy_image: linuxserver/grocy:4.5.0
-
     grocy_deploy_docker_volume_backup: true
 
-  tasks:
+  pre_tasks:
 
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     - name: Deploy a containerised instance of Grocy
       ansible.builtin.include_tasks:

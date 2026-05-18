@@ -38,12 +38,12 @@
       ansible.builtin.include_tasks:
         file: tasks/configure-containerised-base.yaml
 
-  tasks:
-
     # Load environment variables applicable to the homelab environment
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     - name: Deploy a containerised instance of Dockhand
       ansible.builtin.include_tasks:

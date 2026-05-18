@@ -1,7 +1,7 @@
 ---
 - name: Deploy Networking Toolbox
 
-  hosts: ansible
+  hosts: controller
 
   vars:
 
@@ -9,11 +9,13 @@
     # renovate: datasource=docker depName=lissy93/networking-toolbox
     networking_toolbox_image: lissy93/networking-toolbox:1.6.0
 
-  tasks:
+  pre_tasks:
 
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     - name: Deploy a containerised instance of Networking Toolbox
       ansible.builtin.include_tasks:

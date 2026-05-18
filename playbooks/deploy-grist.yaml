@@ -1,5 +1,4 @@
 ---
-
 - name: Deploy Grist
 
   hosts: productivity
@@ -11,11 +10,13 @@
     grist_image: gristlabs/grist:1.7.13
     grist_deploy_docker_volume_backup: true
 
-  tasks:
+  pre_tasks:
 
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     - name: Deploy a containerised instance of Grist
       ansible.builtin.include_tasks:

@@ -10,12 +10,13 @@
     uptimekuma_image: louislam/uptime-kuma:2.3.2-slim
     uptimekuma_deploy_docker_volume_backup: true
 
-  tasks:
+  pre_tasks:
 
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 
+  tasks:
     - name: Deploy a containerised instance of Uptime Kuma
       ansible.builtin.include_tasks:
         file: tasks/deploy-uptimekuma.yaml

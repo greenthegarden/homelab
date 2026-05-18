@@ -15,7 +15,7 @@
 
     # SearXNG facts
     # renovate: datasource=docker depName=searxng/searxng
-    searxng_image: searxng/searxng:2026.5.10-df1f24fb7
+    searxng_image: searxng/searxng:2026.5.17-d7e8b7cd1
 
     # Vaultwarden facts
     # renovate: datasource=docker depName=vaultwarden/server

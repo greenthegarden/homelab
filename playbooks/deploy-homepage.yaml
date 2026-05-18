@@ -9,11 +9,13 @@
     # renovate: datasource=docker depName=ghcr.io/gethomepage/homepage
     homepage_image: ghcr.io/gethomepage/homepage:v1.13.1
 
-  tasks:
+  pre_tasks:
 
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     - name: Deploy a containerised instance of Homepage
       ansible.builtin.include_tasks:

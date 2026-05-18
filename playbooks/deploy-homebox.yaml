@@ -10,11 +10,13 @@
     homebox_image: ghcr.io/sysadminsmedia/homebox:0.25.0
     homebox_deploy_docker_volume_backup: true
 
-  tasks:
+  pre_tasks:
 
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     - name: Deploy a containerised instance of Homebox
       ansible.builtin.include_tasks:

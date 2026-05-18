@@ -4,17 +4,16 @@
   hosts: broker
 
   vars:
-
     # Gotify facts
     # renovate: datasource=docker depName=gotify/server
     gotify_image: gotify/server:2.9.1
 
-  tasks:
-
+  pre_tasks:
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 
+  tasks:
     - name: Deploy a containerised instance of Gotify
       ansible.builtin.include_tasks:
         file: tasks/deploy-gotify.yaml

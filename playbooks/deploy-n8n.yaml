@@ -1,5 +1,4 @@
 ---
-
 - name: Deploy n8n
 
   hosts: ai

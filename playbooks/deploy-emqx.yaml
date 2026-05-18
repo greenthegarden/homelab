@@ -9,23 +9,14 @@
     # renovate: datasource=docker depName=emqx/emqx
     emqx_image: emqx/emqx:6.2.0
 
-  tasks:
+  pre_tasks:
 
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 
+  tasks:
+
     - name: Deploy a containerised instance of EMQX
       ansible.builtin.include_tasks:
         file: tasks/deploy-emqx.yaml
-
-    - name: Deploy a containerised instance of Docker Volume Backup
-      when: emqx_deploy_docker_volume_backup | default(false)
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-docker-volume-backup.yaml
-      vars:
-        docker_volume_backup_service_name: "docker-volume-backup_{{ emqx_service_name }}"
-        docker_volume_backup_volume_to_backup:
-          - "{{ emqx_volume_data_name }}:/backup/{{ emqx_service_name }}_backup:ro"
-        docker_volume_backup_backup_label: "{{ emqx_service_name }}"
-        docker_volume_backup_backup_retention_days: 3

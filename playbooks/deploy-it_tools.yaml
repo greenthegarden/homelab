@@ -1,7 +1,7 @@
 ---
 - name: Deploy IT-Tools
 
-  hosts: dozzle
+  hosts: controller
 
   vars:
 
@@ -9,11 +9,13 @@
     # renovate: datasource=docker depName=corentinth/it-tools
     it_tools_image: corentinth/it-tools:2024.10.22-7ca5933
 
-  tasks:
+  pre_tasks:
 
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     - name: Deploy a containerised instance of IT-Tools
       ansible.builtin.include_tasks:

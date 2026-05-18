@@ -11,12 +11,12 @@
     wallos_image: bellamy/wallos:4.9.0
     wallos_deploy_docker_volume_backup: true
 
-  tasks:
-
+  pre_tasks:
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 
+  tasks:
     - name: Deploy a containerised instance of Wallos
       ansible.builtin.include_tasks:
         file: tasks/deploy-wallos.yaml

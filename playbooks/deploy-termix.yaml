@@ -10,13 +10,12 @@
     termix_image: ghcr.io/lukegus/termix:release-2.2.1
     termix_deploy_docker_volume_backup: true
 
-
-  tasks:
-
+  pre_tasks:
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 
+  tasks:
     - name: Deploy a containerised instance of Termix
       ansible.builtin.include_tasks:
         file: tasks/deploy-termix.yaml

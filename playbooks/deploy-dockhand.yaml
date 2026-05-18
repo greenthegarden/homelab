@@ -9,11 +9,13 @@
     # renovate: datasource=docker depName=fnsys/dockhand
     dockhand_image: fnsys/dockhand:v1.0.29
 
-  tasks:
+  pre_tasks:
 
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     - name: Deploy a containerised instance of Dockhand
       ansible.builtin.include_tasks:

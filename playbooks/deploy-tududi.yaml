@@ -10,23 +10,12 @@
     tududi_image: chrisvel/tududi:1.0.0
     tududi_deploy_docker_volume_backup: true
 
-  tasks:
-
+  pre_tasks:
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 
+  tasks:
     - name: Deploy a containerised instance of Tududi
       ansible.builtin.include_tasks:
         file: tasks/deploy-tududi.yaml
-
-    - name: Deploy a containerised instance of Docker Volume Backup
-      when: tududi_deploy_docker_volume_backup | default(false)
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-docker-volume-backup.yaml
-      vars:
-        docker_volume_backup_service_name: "docker-volume-backup_{{ tududi_service_name }}"
-        docker_volume_backup_volume_to_backup:
-          - "{{ tududi_volume_data_name }}:/backup/{{ tududi_service_name }}_backup:ro"
-        docker_volume_backup_backup_label: "{{ tududi_service_name }}"
-        docker_volume_backup_backup_retention_days: 7

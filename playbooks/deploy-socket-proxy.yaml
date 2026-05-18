@@ -9,11 +9,13 @@
     # renovate: datasource=docker depName=wollomatic/socket-proxy
     vert_image: wollomatic/socket-proxy:1.10.0
 
-  tasks:
+  pre_tasks:
 
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     - name: Deploy an exposed containerised instance of Socket Proxy configured for use by Homepage and Uptime Kuma
       ansible.builtin.include_tasks:

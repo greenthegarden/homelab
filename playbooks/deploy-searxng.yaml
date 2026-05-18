@@ -1,26 +1,21 @@
 ---
 - name: Deploy SearXNG
 
-  hosts: ollama
+  hosts: home
 
   vars:
 
     # SearXNG facts
     # renovate: datasource=docker depName=searxng/searxng
-    searxng_image: searxng/searxng:2026.5.10-df1f24fb7
+    searxng_image: searxng/searxng:2026.5.17-d7e8b7cd1
 
   pre_tasks:
-
-    - name: Ensure base environment is configured
-      when: false
-      ansible.builtin.include_tasks:
-        file: tasks/configure-containerised-base.yaml
-
-  tasks:
 
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     - name: Deploy a containerised instance of SearXNG
       ansible.builtin.include_tasks:
