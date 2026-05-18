@@ -196,10 +196,7 @@
           REDIS_SERVER_HOST: "{{ affine_redis_host }}"
           TZ: "{{ homelab.timezone | default('UTC') }}"
         networks_cli_compatible: true
-        networks:
-          - { name: "{{ affine_network_name }}" }
-        restart: true
-        restart_policy: unless-stopped
+        networks: "{{ affine_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
         state: started
         volumes: "{{ affine_volumes | default(omit) }}"
       register: affine_container_state
