@@ -164,36 +164,14 @@
 
 - name: deploy-grist | Deploy a containerised instance of Docker Volume Backup
   when: grist_deploy_docker_volume_backup | default(false)
+  vars:
+    docker_volume_backup_service_name: "docker-volume-backup_{{ grist_volume_name }}"
+    docker_volume_backup_volume_to_backup:
+      - "{{ grist_volume_name }}:/backup/{{ grist_volume_name }}_backup:ro"
+    docker_volume_backup_backup_label: "{{ grist_volume_name }}"
+    docker_volume_backup_backup_retention_days: 7
   block:
 
     - name: deploy-grist | Deploy a containerised instance of Docker Volume Backup
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
-      vars:
-        docker_volume_backup_service_name: "docker-volume-backup_{{ grist_volume_name }}"
-        docker_volume_backup_volume_to_backup:
-          - "{{ grist_volume_name }}:/backup/{{ grist_volume_name }}_backup:ro"
-        docker_volume_backup_backup_label: "{{ grist_volume_name }}"
-        docker_volume_backup_backup_retention_days: 7
-
-    - name: deploy-grist | Test Docker Volume Backup
-      community.docker.docker_container:
-        name: "docker-volume-backup_grist_test"
-        image: "{{ docker_volume_backup_image }}"
-        auto_remove: true
-        entrypoint: "backup"
-        env:
-          TZ: "Australia/Adelaide"
-        env_file: "{{ docker_volume_backup_env_file }}"
-        labels: "{{ docker_volume_backup_container_labels | default(omit) }}"
-        networks: "{{ docker_volume_backup_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
-        restart: true
-        restart_policy: unless-stopped
-        security_opts:
-          - no-new-privileges=true
-        state: started
-        volumes: "{{ docker_volume_backup_mounts + docker_volume_backup_volume_to_backup }}"
-      vars:
-        docker_volume_backup_mounts:
-          - "/root/backup-test:/archive"
-      register: docker_volume_backup_test_container_state
