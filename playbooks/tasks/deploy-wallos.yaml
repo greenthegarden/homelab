@@ -143,5 +143,5 @@
     docker_volume_backup_service_name: "docker-volume-backup_{{ wallos_volume_data_name }}"
     docker_volume_backup_volume_to_backup:
       - "{{ wallos_volume_data_name }}:/backup/{{ wallos_volume_data_name }}_backup:ro"
-    docker_volume_backup_backup_label: "{{ wallos_volume_data_name }}_db"
+    docker_volume_backup_backup_label: "{{ wallos_volume_data_name }}"
     docker_volume_backup_backup_retention_days: 7

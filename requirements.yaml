@@ -14,7 +14,7 @@ collections:
     version: 5.2.0
     type: galaxy
 
-  # To use Timezone
+  # To configure timezone using 'community.general.timezone'
   # https://docs.ansible.com/projects/ansible/latest/collections/community/general/index.html
   - name: community.general
     version: 12.6.0
