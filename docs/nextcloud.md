@@ -34,30 +34,49 @@ Ex: 192.168.1.254(sec=sys,rw)
 
 ## Mounting NFS Share to an Unprivileged LXC
 
-Following [one][bobcares-nfs], [two][itsembedded], [three][cr0x.net] guides, mount the NFS share directly without using the Proxmox GUI.
+Following [Jeff's Garage guide][youtube-jeff-garage-nas]
+
+[youtube-jeff-garage-nas]: https://www.youtube.com/watch?v=DMPetY4mX-c
+
+- Creata a group on the LXC to match the GID of the LXC root user to the LCX user on the host
+
+  ```bash
+  groupadd -g 10000 lxc_shares # group name can be anything but is same as in next step
+  usermod -aG lxc_shares root # assumes username is root
+  ```
+
+- Shutdown LXC
 
 - Create a mount point on the Proxmox node for the share:
 
   ```bash
   # Via Proxmox server shell
-  mkdir /mnt/truenas/nextcloud_data
+  mkdir -p /mnt/lxc_shares/truenas/nextcloud_data
   ```
 
-- Edit `fstab` so that the share mounts automatically when the Proxmox Datacentre is rebooted
+- Edit `fstab` so that the share mounts automatically when the Proxmox Datacentre is rebooted. Examples for
+  TrueNAS docs:
 
   ```bash
   # Via Proxmox server shell
   vi /etc/fstab
   # add the line
-  truenas.localdomain:/mnt/nextcloud_data/ /mnt/truenas/nextcloud_data nfs defaults 0 0
+  # {IPaddressOfTrueNASsystem}:{path/to/nfsShare} {localMountPoint} {options}
+  truenas.localdomain:/mnt/homelab-backup/nextcloud-data/ /mnt/lxc_shares/truenas/nextcloud_data nfs defaults 0 0
   ```
 
-- Reload systemd and mount
+- Mount the share manually
 
   ```bash
-  # Via Proxmox server shell
   systemctl daemon-reload
   mount -a
+  ```
+
+- Verify mount status using
+
+  ```bash
+  df -h # will show all mounted file systems
+  touch /mnt/lxc_shares/truenas/nextcloud_data/testfile
   ```
 
 - Map the mount to the Container
@@ -82,10 +101,6 @@ Following [one][bobcares-nfs], [two][itsembedded], [three][cr0x.net] guides, mou
 - Verify Permissions
   - Create a file in the mount point: `touch foobar`
   - Attempt to delete the file from another machine
-
-[bobcares-nfs]: https://bobcares.com/blog/guide-to-mounting-nfs-share-to-an-unprivileged-lxc-container/
-[itsembedded]: https://www.itsembedded.com/sysadmin/proxmox_bind_unprivileged_lxc/
-[cr0x.net]: https://cr0x.net/en/proxmox-lxc-bind-mount-permissions/
 
 ## Illustrating Permissions
 

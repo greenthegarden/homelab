@@ -1,4 +1,4 @@
-# Ollama Unpriveliged LXC Installation
+# Ollama Unprivileged LXC Installation
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -16,9 +16,10 @@
   - [Step 2: Install Ollama](#step-2-install-ollama)
 - [GPU Passthrough](#gpu-passthrough)
   - [Step 1: Enable IOMMU](#step-1-enable-iommu)
-  - [Step 2: Create an LXC Container](#step-2-create-an-lxc-container)
-  - [Step 3: Manage Group IDs](#step-3-manage-group-ids)
-  - [Step 3: Install Ollama](#step-3-install-ollama)
+  - [Create an LXC Container](#create-an-lxc-container)
+  - [Simple configuration for GPU passthrough](#simple-configuration-for-gpu-passthrough)
+  - [Complex configuration for GPU passthrough](#complex-configuration-for-gpu-passthrough)
+    - [Manage Group IDs](#manage-group-ids)
 - [Configuring and Running Ollama](#configuring-and-running-ollama)
   - [Update Ollama config](#update-ollama-config)
   - [Install llmfit](#install-llmfit)
@@ -47,7 +48,7 @@ Started without having made any modifications to Proxmox host, and found that dr
 [Minisforum MS-A2](https://www.minisforum.com/products/minisforum-ms-a2)
 
 - CPU: AMD RYZEN 9 9955HX (Zen 5, 16 cores, 32 threads, 64M L3 cache, Mx Boost clock up to 5.4GHz)
-- GPU: AMD Radeon 610M
+- GPU: AMD Radeon 610M (gfx1036)
 - RAM: 64GB DDR5-5600 (SO-DIMM x2)
 
 ### Host Software
@@ -75,8 +76,8 @@ Should use /mnt for as [host point][pve-docs-bind_mount]:
 
 ```bash
 # Via Proxmox server shell
-mkdir -p /mnt/lxc-shared/ollama_models
-chmod -R 755 /mnt/lxc-shared
+mkdir -p /mnt/lxc-shares/ollama_models
+chmod -R 755 /mnt/lxc-shares
 ```
 
 Add mount to containers via LXC config files, for example, `/etc/pve/lxc/201.conf`, add the line
@@ -115,11 +116,6 @@ curl -fsSL https://ollama.com/install.sh | sh
 
 ## GPU Passthrough
 
-Based on instructions from Jim's Garage via [YouTube][youtube-jims-garage-gpu] and [Github][github-jims-garage-gpu]:
-
-[youtube-jims-garage-gpu]: https://www.youtube.com/watch?v=0ZDr5h52OOE
-[github-jims-garage-gpu]: https://github.com/JamesTurland/JimsGarage/tree/main/GPU_passthrough
-
 ### Step 1: Enable IOMMU
 
 Ensure IOMMU is enabled on the host, by checking the following line
@@ -152,7 +148,7 @@ crw-rw---- 1 root video  226,   0 May 13 18:17 card0
 crw-rw---- 1 root render 226, 128 May 13 18:17 renderD128
 ```
 
-### Step 2: Create an LXC Container
+### Create an LXC Container
 
 Container can have minimal resources as using the GPU for processing
 
@@ -161,7 +157,49 @@ Container can have minimal resources as using the GPU for processing
   - Memory: 4096 MB RAM (0 MB swap),
   - Root Disk: 8 GB
 
-### Step 3: Manage Group IDs
+### Simple configuration for GPU passthrough
+
+Guidance from [psmarchin.dev][psmarchin-dev] is much simpler
+
+[psmarchin-dev]: https://psmarcin.dev/posts/how-to-configure-gpu-passthrough-for-linux-containers-on-proxmox/
+
+Use UI to add device pass through
+
+- renderD128
+  - device path: `/dev/dri/renderD128`
+  - GID in CT: 992 (found using `cat /etc/group | grep render` from container)
+  - Access mode in CT: 0660
+- card0
+  - device path: `/dev/dri/card0`
+  - GID in CT: 44 (found using `cat /etc/group | grep video` from container)
+  - Access mode in CT: 0660
+-
+
+Check access using
+
+```bash
+ls -lah /dev/dri
+```
+
+Installed Ollama directly on LXC using the following, and install script automatically detected GPU
+available and install ROCm package.
+
+```bash
+apt update && apt upgrade -y
+# Install Ollama dependencies
+apt install -y curl zstd
+# Install Ollama (https://docs.ollama.com/linux)
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+### Complex configuration for GPU passthrough
+
+Based on instructions from Jim's Garage via [YouTube][youtube-jims-garage-gpu] and [Github][github-jims-garage-gpu]:
+
+[youtube-jims-garage-gpu]: https://www.youtube.com/watch?v=0ZDr5h52OOE
+[github-jims-garage-gpu]: https://github.com/JamesTurland/JimsGarage/tree/main/GPU_passthrough
+
+#### Manage Group IDs
 
 From Proxmox Host Shell
 
@@ -234,27 +272,62 @@ unprivileged: 1
 lxc.cgroup2.devices.allow: c 266:0 rwm
 lxc.cgroup2.devices.allow: c 266:128 rwm
 lxc.mount.entry: /dev/dri/renderD128 dev/dri/renderD128 none bind,optional,create=file
-
+lxc.idmap: u 0 100000 65536
+lxc.idmap: g 0 100000 44
+lxc.idmap: g 44 44 1
+lxc.idmap: g 45 100045 948
+lxc.idmap: g 993 993 1
+lxc.idmap: g 994 100994 65428
 ```
 
 Where `lxc.cgroup2.devices` are the devices attached to the host, at `/dev/dri`, with the group IDs.
 
 The lines `lxc.cgroup2.devices.allow` passthrough the device, and `lxc.mount.entry` create the mount point.
 
+Recall
+
+```bash
+video:x:44:
+render:x:993:
+```
+
 The lines `lxc.idmap` are as follows:
 
 - `lxc.idmap: u 0 100000 65536`: map UIDs 0-65535 (LXC namespace) to 100000-165535 (host namespace)
 - `lxc.idmap: g 0 100000 44`: map GIDs 0-43 (LXC namespace) to 100000-100043 (host namespace)
 - `lxc.idmap: g 44 44 1`: map GID 44 to be the same in both namespaces
-- `lxc.idmap: g 45 100045 62`: map GIDs 45-106 (LXC namespace) to 100045-100106 (host namespace)
-  - 106 is the group before the render group (107) in LXC namespace
-  - 62 = 107 (render group in LXC) - 45 (start group for this mapping)
-- `lxc.idmap: g 107 103 1`: map GID 107 (render in LXC) to 103 (render in host)
-- `lxc.idmap: g 108 100108 65428`: map GIDs 45-106 (LXC namespace) to 100045-100106 (host namespace)
-  - 1098 is the group after the render group (107) in LXC namespace
-  - 65428 = 65536 (max gid) - 108 (start group for this mapping)
+- `lxc.idmap: g 45 100045 948`: map GIDs 45-992 (LXC namespace) to 100045-100992 (host namespace)
+  - 992 is the group before the render group (993) in LXC namespace
+  - 948 = 993 (render group in LXC) - 45 (start group for this mapping)
+- `lxc.idmap: g 993 993 1`: map GID 993 (render in LXC) to 107 (render in host)
+- `lxc.idmap: g 994 100994 65428`: map GIDs 994-65536 (LXC namespace) to 100994-165535 (host namespace)
+  - 994 is the group after the render group (993) in LXC namespace
+  - 64542 = 65536 (max gid) - 994 (start group for this mapping)
 
-### Step 3: Install Ollama
+Change group assignment on the Proxmox host for the render and video groups
+
+```bash
+usermod -aG render,video root
+```
+
+Start the container and check, the device is found
+
+```bash
+# From the container console
+ls -l /dev/dri
+# See that `renderD128` is present
+# TO find GID
+stat -c '%g' /dev/dri/renderD128
+```
+
+Use lspci
+
+```bash
+# From the container console
+apt update && apt install -y pciutils
+lspci
+# See the VGA is present
+```
 
 Start the LXC and install Ollama directly on the LXC host, using
 
@@ -287,6 +360,7 @@ Environment="OLLAMA_VULKAN=1"
 Environment="OLLAMA_NO_CLOUD=1"
 Environment="OLLAMA_FLASH_ATTENTION=1"
 #Environment="OLLAMA_CONTEXT_LENGTH=32768"
+Environment="HSA_OVERRIDE_GFX_VERSION=10.3.0"
 ```
 
 To see the list of supported environment variables use `ollama serve --help`.
@@ -320,6 +394,9 @@ Run the smallet [qwen3.5](https://ollama.com/library/qwen3.5) model to test syst
 
 ```bash
 ollama run qwen3.5:0.8b --think=false "Where should I visit in Utrecht?"
+```
+
+```bash
 ollama run qwen3.5:9b --think=false "Where should I visit in Utrecht?"
 ollama run qwen2.5-coder:7b --think=false "Create Hello, World app in Python"
 ollama run qwen3.5:0.8b --think "Where should I visit in Utrecht?"
