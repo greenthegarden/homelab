@@ -31,7 +31,7 @@
     authentik_networks:
       - { name: "{{ authentik_network_name }}", internal: true }
       # Docker Socket Proxy External provide access to exposed Docker APIs
-      - { name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy-external') }}" }
+      - { name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy_external') }}" }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     authentik_ports:
