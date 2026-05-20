@@ -26,14 +26,24 @@
   ansible.builtin.set_fact:
     authentik_fqdn: "{{ authentik_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
-- name: deploy-authentik | Set Authentik API facts
+# TODO: Should be a better way to get these attributes
+# Must match what is defined in configure-containerised-base
+- name: deploy-authentik | Set Authentik proxy facts
+  ansible.builtin.set_fact:
+    authentik_socket_proxy_service_name: "socket-proxy_authentik"
+    authentik_socket_proxy_network_name: "socket-proxy_authentik"
+    authentik_socket_proxy_service_port: "{{ (socket_proxy_ports.authentik | default(2379)) | int }}"
+
+- name: deploy-authentik | Set Authentik service facts
   ansible.builtin.set_fact:
     authentik_networks:
       - { name: "{{ authentik_network_name }}", internal: true }
-      # Docker Socket Proxy External provide access to exposed Docker APIs
-      - { name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy_external') }}" }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    authentik_worker_networks:
+      - { name: "{{ authentik_network_name }}", internal: true }
+      # Socket Proxy External provide access to exposed Docker APIs
+      - { name: "{{ authentik_socket_proxy_network_name }}" }
     authentik_ports:
       - "{{ authentik_service_port_http }}:9000"
     authentik_volumes:
@@ -53,6 +63,7 @@
       - "Authentik networks: {{ authentik_networks | default(omit) }}"
       - "Authentik ports: {{ authentik_ports | default(omit) }}"
       - "Authentik volumes: {{ authentik_volumes | default(omit) }}"
+      - "Authentik Worker networks: {{ authentik_networks | default(omit) }}"
 
 - name: deploy-authentik | Create Authentik container labels
   ansible.builtin.set_fact:
@@ -102,16 +113,18 @@
     - { "key": "wud.link.template", "value": "https://github.com/postgres/postgres/releases/tag/REL_${major}_${minor}" }
 
 - name: deploy-authentik | Create Authentik networks
-  when: authentik_networks is defined
+  when: authentik_networks is defined and authentik_worker_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
     driver: "{{ item.driver | default('bridge') }}"
     internal: "{{ item.internal | default(false) }}"
     state: present
-  loop: "{{ authentik_networks }}"
+  loop:
+    - "{{ authentik_networks }}"
+    - "{{ authentik_worker_networks }}"
 
 - name: deploy-authentik | Create Authentik volumes
-  when: authentik_volume_name is defined
+  when: authentik_volume_name is defined and (authentik_volumes | length > 0)
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
@@ -169,9 +182,10 @@
       AUTHENTIK_SECRET_KEY: "{{ authentik.secret_key | default('dummy') }}"
     labels: "{{ authentik_container_labels | default(omit) }}"
     networks_cli_compatible: true
-    networks:
-      - name: "{{ authentik_network_name }}"
-      - name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}"
+    networks: "{{ authentik_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+    # networks:
+    #   - name: "{{ authentik_network_name }}"
+    #   - name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}"
     restart: true
     restart_policy: unless-stopped
     state: started
@@ -185,7 +199,7 @@
     command: worker
     detach: true
     env:
-      DOCKER_HOST: "tcp://docker-socket-proxy-external:2375"
+      DOCKER_HOST: "tcp://{{ socket_proxy_service_name }}:{{ socket_proxy_service_port }}"
       AUTHENTIK_REDIS__HOST: "{{ redis_service_name }}"
       AUTHENTIK_POSTGRESQL__HOST: "{{ postgres_service_name }}"
       AUTHENTIK_POSTGRESQL__NAME: "{{ authentik.db_name | default('authentik') }}"
@@ -194,9 +208,7 @@
       AUTHENTIK_LOG_LEVEL: warning # debug, info, warning, error, trace
       AUTHENTIK_SECRET_KEY: "{{ authentik.secret_key | default('dummy') }}"
     networks_cli_compatible: true
-    networks:
-      - name: "{{ authentik_network_name }}"
-      - name: "{{ docker_socket_proxy_external_network_name | default('docker-socket-proxy-external') }}"
+    networks: "{{ authentik_worker_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
     state: started

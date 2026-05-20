@@ -22,7 +22,8 @@
   ansible.builtin.set_fact:
     homepage_fqdn: "{{ homepage_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
-# Defined in configure-containerised-base
+# TODO: Should be a better way to get these attributes
+# Must match what is defined in configure-containerised-base
 - name: deploy-homepage | Set Homepage proxy facts
   ansible.builtin.set_fact:
     homepage_socket_proxy_network_name: "socket-proxy_homepage"

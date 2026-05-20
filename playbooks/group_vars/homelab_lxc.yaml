@@ -61,6 +61,13 @@ traefik_image: traefik:3.7.1
 traefik_entrypoint_insecure_name: web
 traefik_entrypoint_secure_name: "{{ traefik_entrypoint_insecure_name | default('web') }}secure"
 
+socket_proxy_ports:
+  traefik: 2375
+  uptimekuma: 2377
+  wud: 2378
+  homepage: 2379
+  authentik: 2380
+
 # Global definition of backup directory on hosts
 local_backups_dir: /root/backups/
 

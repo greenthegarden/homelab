@@ -22,17 +22,18 @@
   ansible.builtin.set_fact:
     wud_fqdn: "{{ wud_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
-# Defined in configure-containerised-base
+# TODO: Should be a better way to get these attributes
+# Must match what is defined in configure-containerised-base
 - name: deploy-wud | Set What's up Docker? proxy facts
   ansible.builtin.set_fact:
     wud_socket_proxy_network_name: "socket-proxy_wud"
-    wud_socket_proxy_service_port: 2378
+    wud_socket_proxy_service_port: "{{ (socket_proxy_ports.wud | default(2378)) | int }}"
 
 - name: deploy-wud | Set What's up Docker? service facts
   ansible.builtin.set_fact:
     wud_networks:
       # Socket Proxy provides access to exposed Docker APIs
-      - { name: "{{ wud_socket_proxy_network_name | default('socket-proxy-wud') }}" }
+      - { name: "{{ wud_socket_proxy_network_name }}" }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     wud_ports:
@@ -127,23 +128,23 @@
       # WUD_WATCHER_DOCKER_SOCKET: "tcp://docker-socket-proxy-external"
       # Remote hosts to watch
       WUD_WATCHER_AI_HOST: "lxc-ai.{{ lan_domain }}"
-      WUD_WATCHER_AI_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_AI_PORT: "{{ wud_socket_proxy_service_port | quote }}"
       WUD_WATCHER_CONTROLLER_HOST: "lxc-controller.{{ lan_domain }}"
-      WUD_WATCHER_CONTROLLER_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_CONTROLLER_PORT: "{{ wud_socket_proxy_service_port | quote }}"
       WUD_WATCHER_FINANCE_HOST: "lxc-finance.{{ lan_domain }}"
-      WUD_WATCHER_FINANCE_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_FINANCE_PORT: "{{ wud_socket_proxy_service_port | quote }}"
       WUD_WATCHER_FRIGATE_HOST: "lxc-frigate.{{ lan_domain }}"
-      WUD_WATCHER_FRIGATE_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_FRIGATE_PORT: "{{ wud_socket_proxy_service_port | quote }}"
       WUD_WATCHER_HOME_HOST: "lxc-home.{{ lan_domain }}"
-      WUD_WATCHER_HOME_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_HOME_PORT: "{{ wud_socket_proxy_service_port | quote }}"
       WUD_WATCHER_INVENTORIES_HOST: "lxc-inventories.{{ lan_domain }}"
-      WUD_WATCHER_INVENTORIES_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_INVENTORIES_PORT: "{{ wud_socket_proxy_service_port | quote }}"
       WUD_WATCHER_MESSAGING_HOST: "lxc-messaging.{{ lan_domain }}"
-      WUD_WATCHER_MESSAGING_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_MESSAGING_PORT: "{{ wud_socket_proxy_service_port | quote }}"
       WUD_WATCHER_MONITOR_HOST: "lxc-monitor.{{ lan_domain }}"
-      WUD_WATCHER_MONITOR_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_MONITOR_PORT: "{{ wud_socket_proxy_service_port | quote }}"
       WUD_WATCHER_PRODUCTIVITY_HOST: "lxc-productivity.{{ lan_domain }}"
-      WUD_WATCHER_PRODUCTIVITY_PORT: "{{ wud_socket_proxy_service_port | default(2375) | quote }}"
+      WUD_WATCHER_PRODUCTIVITY_PORT: "{{ wud_socket_proxy_service_port | quote }}"
       # # Authentik integration
       # WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ wud.oauth_client_id | default('dummy') }}"
       # WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ wud.oauth_client_secret | default('dummy') }}"
