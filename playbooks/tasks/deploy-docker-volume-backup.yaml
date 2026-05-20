@@ -15,9 +15,10 @@
         docker_volume_backup_service_name: "{{ docker_volume_backup_service_name | default('docker-volume-backup') }}"
         docker_volume_backup_backup_label: "{{ docker_volume_backup_backup_label | default('') }}"
 
+    # Do not use a default here, as if not reset will use a previous name which causes issues if running multiple times.
     - name: deploy-docker-volume-backup | Set Docker Volume Backup network facts
       ansible.builtin.set_fact:
-        docker_volume_backup_network_name: "{{ docker_volume_backup_network_name | default(docker_volume_backup_service_name) }}"
+        docker_volume_backup_network_name: "{{ docker_volume_backup_service_name }}"
 
     - name: deploy-docker-volume-backup | Set Docker Volume Backup env_file facts
       ansible.builtin.set_fact:
