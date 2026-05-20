@@ -42,7 +42,7 @@
   with_items:
     # ---------------------------------------------------------------
     # Homepage labels
-    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.group", "value": "System" }
     - { "key": "homepage.name", "value": "IT-Tools" }
     - {
       "key": "homepage.description",

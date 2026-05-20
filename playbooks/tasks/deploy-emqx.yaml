@@ -98,7 +98,7 @@
   with_items:
     # ---------------------------------------------------------------
     # Homepage labels
-    - { "key": "homepage.group", "value": "System" }
+    - { "key": "homepage.group", "value": "Messaging" }
     - { "key": "homepage.name", "value": "Broker" }
     - { "key": "homepage.description", "value": "MQTT Broker" }
     - { "key": "homepage.icon", "value": "emqx.png" }

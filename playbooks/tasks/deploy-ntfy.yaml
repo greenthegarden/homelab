@@ -74,7 +74,7 @@
   with_items:
     # ---------------------------------------------------------------
     # Homepage labels
-    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.group", "value": "Messaging" }
     - { "key": "homepage.name", "value": "Ntfy" }
     - { "key": "homepage.description", "value": "Send push notifications to your phone or desktops" }
     - { "key": "homepage.icon", "value": "ntfy.png" }

@@ -56,7 +56,7 @@
   with_items:
     # ---------------------------------------------------------------
     # Homepage labels
-    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.group", "value": "AI" }
     - { "key": "homepage.name", "value": "N8n" }
     - { "key": "homepage.description", "value": "A workflow automation platform" }
     - { "key": "homepage.icon", "value": "n8n.png" }

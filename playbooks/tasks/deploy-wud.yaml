@@ -60,7 +60,7 @@
   with_items:
     # ---------------------------------------------------------------
     # Homepage labels
-    - { "key": "homepage.group", "value": "System" }
+    - { "key": "homepage.group", "value": "Monitoring" }
     - { "key": "homepage.name", "value": "What's Up Docker" }
     - { "key": "homepage.description", "value": "Which container images are out-of-date?" }
     - { "key": "homepage.icon", "value": "whats-up-docker.png" }

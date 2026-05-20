@@ -80,6 +80,18 @@ layout:
       initiallyCollapsed: false
       style: row
       columns: 2
+  - AI:
+      tab: Applications
+      header: false
+      initiallyCollapsed: true
+      style: row
+      columns: 2
+  - Messaging:
+      tab: Applications
+      header: false
+      initiallyCollapsed: true
+      style: row
+      columns: 2
   - System:
       tab: Applications
       header: true

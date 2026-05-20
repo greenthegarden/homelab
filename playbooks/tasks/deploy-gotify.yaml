@@ -53,7 +53,7 @@
   with_items:
     # ---------------------------------------------------------------
     # Homepage labels
-    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.group", "value": "Messaging" }
     - { "key": "homepage.name", "value": "Gotify" }
     - { "key": "homepage.description", "value": "A simple server for sending and receiving messages" }
     - { "key": "homepage.icon", "value": "gotify.png" }
