@@ -8,22 +8,24 @@
 
     # Firefly III facts
     # Values are set in templates/fireflyiii/docker-compose.yaml.j2
-    fireflyiii_deploy_docker_volume_backup: false
+    fireflyiii_deploy_docker_volume_backup: true
 
     # Wallos facts
     # renovate: datasource=docker depName=walloslabs/wallos
     wallos_image: bellamy/wallos:4.9.0
-    wallos_deploy_docker_volume_backup: false
+    wallos_deploy_docker_volume_backup: true
 
   pre_tasks:
+
     - name: Ensure base environment is configured
       ansible.builtin.include_tasks:
         file: tasks/configure-containerised-base.yaml
 
-  tasks:
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     ########### Deploy Firefly III
     - name: Deploy a containerised instance of Firefly III

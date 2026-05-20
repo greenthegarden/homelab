@@ -9,6 +9,7 @@
   - [Host](#host)
   - [Host Software](#host-software)
   - [Container Software](#container-software)
+  - [Utilities to check system resources](#utilities-to-check-system-resources)
 - [Create a shared folder for models](#create-a-shared-folder-for-models)
   - [Create directory on host](#create-directory-on-host)
 - [CPU Only - no GPU Passthrough](#cpu-only---no-gpu-passthrough)
@@ -62,6 +63,65 @@ Started without having made any modifications to Proxmox host, and found that dr
 
 - LXC Kernel: 7.0.2-4-pve
 - OS: Debian 13
+
+### Utilities to check system resources
+
+- `free`: provides a concise summary of total, used, free, and available memory (including swap)
+
+  - run using:
+
+    ```bash
+    free -h
+    ```
+
+  - Example output
+
+    ```bash
+    # Example output with 8192MB memory allocated
+                    total        used        free      shared  buff/cache   available
+    Mem:           8.0Gi       340Mi       442Mi        92Ki       7.2Gi       7.7Gi
+    Swap:             0B          0B          0B
+    ```
+
+    ```bash
+    # Example output with 16384MB memort allocated
+                    total        used        free      shared  buff/cache   available
+    Mem:            16Gi       321Mi       8.5Gi        92Ki       7.2Gi        15Gi
+    Swap:             0B          0B          0B
+    ```
+
+  - Key Columns:
+    - total: Total installed RAM/swap.
+    - used: Memory actively used by applications.
+    - free: Unused memory (not including buffers/cache).
+    - shared: Memory shared between processes (e.g., libraries).
+    - buff/cache: Combined buffers and cache (can be reclaimed).
+    - available: Estimated memory available for new apps (most useful metric for end-users).
+
+- `htop`: enhanced, user-friendly alternative to `top`  with color coding and mouse support
+
+  - `htop` adds:
+    - Color-coded interface with scrollable process lists.
+    - Use arrow keys to navigate, F6 to sort by %MEM, and F10 to quit.
+
+  - install using:
+
+    ```bash
+    # Install using
+    apt install htop
+    ```
+
+  - run using:
+
+    ```bash
+    htop
+    ```
+
+  - Output relevant to memory
+    - %MEM: Percentage of RAM used by the process.
+    - VIRT: Total virtual memory allocated (including swap and unused memory).
+    - RES: Resident Set Size (physical RAM used by the process, not swapped).
+    - SHR: Shared memory (e.g., libraries used by multiple processes).
 
 ## Create a shared folder for models
 
@@ -153,9 +213,9 @@ crw-rw---- 1 root render 226, 128 May 13 18:17 renderD128
 Container can have minimal resources as using the GPU for processing
 
 - Create a new Debian based LXC container:
-  - Cores: 4
-  - Memory: 4096 MB RAM (0 MB swap),
-  - Root Disk: 8 GB
+  - Cores: 8
+  - Memory: 8192 MB RAM (0 MB swap),
+  - Root Disk: 64 GB
 
 ### Simple configuration for GPU passthrough
 
@@ -173,7 +233,9 @@ Use UI to add device pass through
   - device path: `/dev/dri/card0`
   - GID in CT: 44 (found using `cat /etc/group | grep video` from container)
   - Access mode in CT: 0660
--
+- kfd
+  - device path: `/dev/kfd`
+  - Access mode in CT: 0666
 
 Check access using
 

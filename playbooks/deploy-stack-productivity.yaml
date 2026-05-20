@@ -8,6 +8,7 @@
     # Affine facts
     # renovate: datasource=docker depName=ghcr.io/toeverything/affine
     affine_image: ghcr.io/toeverything/affine:0.26.6
+    affine_deploy_docker_volume_backup: true
 
     # BentoPDF facts
     # renovate: datasource=docker depName=ghcr.io/alam00000/bentopdf
@@ -24,14 +25,16 @@
     tududi_deploy_docker_volume_backup: true
 
   pre_tasks:
+
     - name: Ensure base environment is configured
       ansible.builtin.include_tasks:
         file: tasks/configure-containerised-base.yaml
 
-  tasks:
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     - name: Deploy a containerised instance of AFFiNE
       ansible.builtin.include_tasks:

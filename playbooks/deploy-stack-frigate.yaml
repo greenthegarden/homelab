@@ -11,15 +11,16 @@
     mqtt_broker: "emqx.lxc-messaging.{{ lan_domain }}"
 
   pre_tasks:
+
     - name: Ensure base environment is configured
       ansible.builtin.include_tasks:
         file: tasks/configure-containerised-base.yaml
 
-  tasks:
-
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     ########### Deploy Frigate
     - name: Deploy a containerised instance of Frigate
