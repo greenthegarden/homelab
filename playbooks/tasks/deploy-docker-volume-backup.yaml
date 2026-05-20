@@ -26,7 +26,7 @@
 
     - name: deploy-docker-volume-backup | Set Docker Volume Backup mount facts
       ansible.builtin.set_fact:
-        docker_volume_backup_local_backups_dir: "{{ docker_volume_backup_local_backups_dir | default(local_backups_dir) }}"
+        docker_volume_backup_local_backups_dir: "{{ docker_volume_backup_local_backups_dir | default(local_backups_dir + docker_volume_backup_service_name) }}"
 
     # ============= Deployment Steps =============
 

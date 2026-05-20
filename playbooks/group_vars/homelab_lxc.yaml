@@ -60,22 +60,9 @@ tinyauth_image: ghcr.io/steveiliop56/tinyauth:v5.0.6
 traefik_image: traefik:3.7.1
 traefik_entrypoint_insecure_name: web
 traefik_entrypoint_secure_name: "{{ traefik_entrypoint_insecure_name | default('web') }}secure"
-# What's Up Docker facts
-whatsupdocker_docker_socket_proxy_service_port: 2377
-whatsupdocker_docker_socket_proxy_env:
-  CONTAINERS: "1"
-  # EVENTS: "1"
-  IMAGES: "1"
-  INFO: "1"
-  NETWORKS: "1"
-  # PING: "1"
-  SERVICES: "1"
-  TASKS: "1"
-  # VERSION: "1"
-  VOLUMES: "1"
 
 # Global definition of backup directory on hosts
-local_backups_dir: /root/backups
+local_backups_dir: /root/backups/
 
 default_host_volumes:
   # Local paths to mount into the container
