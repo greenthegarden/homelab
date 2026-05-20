@@ -404,9 +404,11 @@ ollama run qwen3.5:0.8b --think "Where should I visit in Utrecht?"
 
 [Models to run](https://www.deployhq.com/blog/running-generative-ai-models-with-ollama-and-open-webui-using-deployhq):
 
-- General: qwen3.5:9b, llama3.18b
-- Coding: qwen2.5-coder:7b
+- General: qwen3.5:9b (Alibaba), llama3.1:8b (Meta), phi3:3.8b (Microsoft)
+- Images: gemma4:e4b (Google Deepmind), llama3.2-vision:11b, gemma3:4b
+- Coding: qwen2.5-coder:7b, starcoder2:7b (Big) -> use for code completion (not generating code)
 - RAG over documents: llama3.1:8b
+- Home Assistant: Qwen 3 (1.7b), Gemma 3 (4b)
 
 To stop thinking for qwen models, in Open-WebUI:
 

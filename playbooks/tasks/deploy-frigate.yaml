@@ -2,6 +2,8 @@
 ####### FRIGATE SECTION
 
 # https://docs.frigate.video/frigate/installation#docker
+#
+# TODO: add GPU passthrough
 
 - name: deploy-frigate | Ensure required Frigate variables are set
   ansible.builtin.assert:
@@ -47,6 +49,7 @@
       - "{{ frigate_service_port_rtsp }}:8554"
       - "{{ frigate_service_port_webrtc }}:8555/tcp"
       - "{{ frigate_service_port_webrtc }}:8555/udp"
+    frigate_shm_size: 192M
     frigate_volumes:
       # Local paths to mount into the container
       # local path:container path
@@ -153,13 +156,13 @@
     env:
       FRIGATE_RTSP_PASSWORD: "{{ frigate.rtsp_password | default('dummy') }}"
     labels: "{{ frigate_container_labels | default(omit) }}"
-    mounts: "{{ frigate_mounts }}"
+    mounts: "{{ frigate_mounts | default(omit) }}"
     networks_cli_compatible: true
     networks: "{{ frigate_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     ports: "{{ frigate_ports | default(omit) }}"
     restart: true
     restart_policy: unless-stopped
-    shm_size: 64M
+    shm_size: "{{ frigate_shm_size | default('64M') }}"
     state: started
     stop_timeout: 30 # allow enough time to shut down the various services
     volumes: "{{ default_host_volumes + frigate_volumes | default(omit) }}"
