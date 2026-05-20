@@ -18,17 +18,19 @@
     # Paperless-ngx facts
     # renovate: datasource=docker depName=ghcr.io/paperless-ngx/paperless-ngx
     paperless_ngx_image: ghcr.io/paperless-ngx/paperless-ngx:2.20.15
-    paperless_ngx_deploy_docker_volume_backup: false
+    paperless_ngx_deploy_docker_volume_backup: true
 
   pre_tasks:
+
     - name: Ensure base environment is configured
       ansible.builtin.include_tasks:
         file: tasks/configure-containerised-base.yaml
 
-  tasks:
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     ########### Deploy Grocy
     - name: Deploy a containerised instance of Grocy
