@@ -206,7 +206,7 @@
     command: worker
     detach: true
     env:
-      DOCKER_HOST: "tcp://{{ socket_proxy_service_name }}:{{ socket_proxy_service_port }}"
+      DOCKER_HOST: "tcp://{{ authentik_socket_proxy_service_name }}:{{ authentik_socket_proxy_service_port | int }}"
       AUTHENTIK_REDIS__HOST: "{{ redis_service_name }}"
       AUTHENTIK_POSTGRESQL__HOST: "{{ postgres_service_name }}"
       AUTHENTIK_POSTGRESQL__NAME: "{{ authentik.db_name | default('authentik') }}"
