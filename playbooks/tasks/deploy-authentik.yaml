@@ -113,15 +113,22 @@
     - { "key": "wud.link.template", "value": "https://github.com/postgres/postgres/releases/tag/REL_${major}_${minor}" }
 
 - name: deploy-authentik | Create Authentik networks
-  when: authentik_networks is defined and authentik_worker_networks is defined
+  when: authentik_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
     driver: "{{ item.driver | default('bridge') }}"
     internal: "{{ item.internal | default(false) }}"
     state: present
-  loop:
-    - "{{ authentik_networks }}"
-    - "{{ authentik_worker_networks }}"
+  loop: "{{ authentik_networks }}"
+
+- name: deploy-authentik | Create Authentik Worker networks
+  when: authentik_worker_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ authentik_worker_networks }}"
 
 - name: deploy-authentik | Create Authentik volumes
   when: authentik_volume_name is defined and (authentik_volumes | length > 0)
