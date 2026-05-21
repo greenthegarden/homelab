@@ -30,7 +30,7 @@
 - name: deploy-dockhand | Set Dockhand service facts
   ansible.builtin.set_fact:
     dockhand_networks:
-      # Socket Proxy provides access to exposed Docker APIs
+      # External network that hawser (dockhand agents) are all required to be on
       - { name: "{{ dockhand_network_name }}" }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
@@ -113,7 +113,7 @@
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ docker_host_volume + dockhand_volumes | default(omit) }}"
+    volumes: "{{ dockhand_volumes | default(omit) }}"
   register: dockhand_container_state
 
 - name: deploy-dockhand | Wait for Dockhand to accept connections
