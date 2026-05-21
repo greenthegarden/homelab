@@ -63,10 +63,11 @@ traefik_entrypoint_secure_name: "{{ traefik_entrypoint_insecure_name | default('
 
 socket_proxy_ports:
   traefik: 2375
+  hawser: 2376
   uptimekuma: 2377
   wud: 2378
   homepage: 2379
-  authentik: 2380
+  authentik_worker: 2380
 
 # Global definition of backup directory on hosts
 local_backups_dir: /root/backups/

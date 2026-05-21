@@ -113,7 +113,7 @@
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ default_host_volumes + docker_host_volume + dockhand_volumes | default(omit) }}"
+    volumes: "{{ docker_host_volume + dockhand_volumes | default(omit) }}"
   register: dockhand_container_state
 
 - name: deploy-dockhand | Wait for Dockhand to accept connections

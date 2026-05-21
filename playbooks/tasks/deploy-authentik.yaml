@@ -28,11 +28,11 @@
 
 # TODO: Should be a better way to get these attributes
 # Must match what is defined in configure-containerised-base
-- name: deploy-authentik | Set Authentik proxy facts
+- name: deploy-authentik | Set Authentik Worker proxy facts
   ansible.builtin.set_fact:
-    authentik_socket_proxy_service_name: "socket-proxy_authentik"
-    authentik_socket_proxy_network_name: "socket-proxy_authentik"
-    authentik_socket_proxy_service_port: "{{ (socket_proxy_ports.authentik | default(2379)) | int }}"
+    authentik_worker_socket_proxy_service_name: "socket-proxy_authentik_worker"
+    authentik_worker_socket_proxy_network_name: "socket-proxy_authentik_worker"
+    authentik_worker_socket_proxy_service_port: "{{ (socket_proxy_ports.authentik_worker | default(2379)) | int }}"
 
 - name: deploy-authentik | Set Authentik service facts
   ansible.builtin.set_fact:
@@ -206,7 +206,7 @@
     command: worker
     detach: true
     env:
-      DOCKER_HOST: "tcp://{{ authentik_socket_proxy_service_name }}:{{ authentik_socket_proxy_service_port | int }}"
+      DOCKER_HOST: "tcp://{{ authentik_worker_socket_proxy_service_name }}:{{ authentik_worker_socket_proxy_service_port | int }}"
       AUTHENTIK_REDIS__HOST: "{{ redis_service_name }}"
       AUTHENTIK_POSTGRESQL__HOST: "{{ postgres_service_name }}"
       AUTHENTIK_POSTGRESQL__NAME: "{{ authentik.db_name | default('authentik') }}"

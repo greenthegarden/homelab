@@ -25,7 +25,7 @@
 - name: deploy-termix | Set Termix service facts
   ansible.builtin.set_fact:
     termix_networks:
-      # Reverse Proxy  network is used to expose applications via Traefik
+      # Reverse Proxy network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     termix_ports:
       # Published ports to expose outside the container

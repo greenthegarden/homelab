@@ -69,8 +69,8 @@
     - name: homepage
       port: "{{ (socket_proxy_ports.homepage | default(2379)) | int }}"
       command: ["-allowfrom=172.31.0.1/32,homepage,homepage.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}", "-allowGET=.*"]
-    - name: authentik
-      port: "{{ (socket_proxy_ports.authentik | default(2380)) | int }}"
+    - name: authentik_worker
+      port: "{{ (socket_proxy_ports.authentik_worker | default(2380)) | int }}"
       command: ["-allowfrom=authentik_worker,authentik_worker.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}", "-allowGET=.*"]
 
 # Use Traefik as a reverse proxy to manage access to web services with SSL via Let's Encrypt
@@ -78,8 +78,6 @@
 - name: configure-containerised-base | Deploy a containerised instance of Traefik
   ansible.builtin.include_tasks:
     file: tasks/deploy-traefik.yaml
-  vars:
-    traefik_network_name: "{{ reverse_proxy_network_name }}"
 
 # Use Tinyauth to provide basic authentication for web services
 
