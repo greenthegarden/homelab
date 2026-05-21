@@ -82,7 +82,7 @@
     - { "key": "homepage.widget.url", "value": "https://{{ frigate_fqdn }}/" }
     - {
       "key": "homepage.widget.fields",
-      "value": "['cameras', 'uptime', 'version'].",
+      "value": "['cameras', 'uptime', 'version']",
     }
     - { "key": "homepage.widget.enableRecentEvents", "value": "true" }
     # ---------------------------------------------------------------

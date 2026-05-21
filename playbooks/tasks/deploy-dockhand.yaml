@@ -21,6 +21,8 @@
   ansible.builtin.set_fact:
     dockhand_fqdn: "{{ dockhand_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
+# Requires connection to the host docker socket!!
+#
 # # Defined in configure-containerised-base
 # - name: deply-dockhand | Set Dockhand proxy facts
 #   ansible.builtin.set_fact:
@@ -113,7 +115,7 @@
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ dockhand_volumes | default(omit) }}"
+    volumes: "{{ docker_host_volume + dockhand_volumes | default(omit) }}"
   register: dockhand_container_state
 
 - name: deploy-dockhand | Wait for Dockhand to accept connections
