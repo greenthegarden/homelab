@@ -73,6 +73,7 @@
     - { "key": "homepage.icon", "value": "paperless-ngx.png" }
     - { "key": "homepage.href", "value": "https://{{ paperless_ngx_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ paperless_ngx_fqdn }}/" }
+    # https://gethomepage.dev/widgets/services/paperlessngx/
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }

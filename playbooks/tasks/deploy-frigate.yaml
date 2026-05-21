@@ -78,11 +78,12 @@
     - { "key": "homepage.icon", "value": "frigate.png" }
     - { "key": "homepage.href", "value": "https://{{ frigate_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ frigate_fqdn }}/" }
+    # https://gethomepage.dev/widgets/services/frigate/
     - { "key": "homepage.widget.type", "value": "frigate" }
     - { "key": "homepage.widget.url", "value": "https://{{ frigate_fqdn }}/" }
     - {
       "key": "homepage.widget.fields",
-      "value": "['cameras', 'uptime', 'version']",
+      "value": '["cameras", "uptime", "version"]',
     }
     - { "key": "homepage.widget.enableRecentEvents", "value": "true" }
     # ---------------------------------------------------------------

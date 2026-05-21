@@ -78,6 +78,7 @@
       "key": "homepage.siteMonitor",
       "value": "https://{{ fireflyiii_fqdn }}/",
     }
+    # https://gethomepage.dev/widgets/services/firefly/
     - { "key": "homepage.widget.type", "value": "firefly" }
     - { "key": "homepage.widget.url", "value": "https://{{ fireflyiii_fqdn }}" }
     - { "key": "homepage.widget.key", "value": "{{ fireflyiii.homepage_access_token }}" }

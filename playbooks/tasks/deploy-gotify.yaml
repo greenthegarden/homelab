@@ -59,6 +59,7 @@
     - { "key": "homepage.icon", "value": "gotify.png" }
     - { "key": "homepage.href", "value": "https://{{ gotify_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ gotify_fqdn }}/" }
+    # https://gethomepage.dev/widgets/services/gotify/
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }

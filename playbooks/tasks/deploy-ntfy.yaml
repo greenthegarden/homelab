@@ -80,6 +80,7 @@
     - { "key": "homepage.icon", "value": "ntfy.png" }
     - { "key": "homepage.href", "value": "https://{{ ntfy_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ ntfy_fqdn }}/" }
+    # https://gethomepage.dev/widgets/services/ntfy/
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }

@@ -61,6 +61,7 @@
       "key": "homepage.siteMonitor",
       "value": "https://{{ homebox_fqdn }}/",
     }
+    # https://gethomepage.dev/widgets/services/homebox/
     - { "key": "homepage.widget.type", "value": "homebox" }
     - {
       "key": "homepage.widget.url",
@@ -68,7 +69,7 @@
     }
     - { "key": "homepage.widget.username", "value": "{{ homebox.username }}" }
     - { "key": "homepage.widget.password", "value": "{{ homebox.password }}" }
-    - { "key": "homepage.widget.fields", "value": "['items', 'locations', 'totalValue']" }
+    - { "key": "homepage.widget.fields", "value": '["items", "locations", "totalValue"]' }
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }

@@ -66,7 +66,7 @@
     - { "key": "homepage.widget.type", "value": "wallos" }
     - { "key": "homepage.widget.url", "value": "https://{{ wallos_fqdn }}" }
     - { "key": "homepage.widget.key", "value": "{{ wallos.key }}" }
-    - { "key": "homepage.widget.fields", "value": "['activeSubscriptions', 'nextRenewingSubscription']" }
+    - { "key": "homepage.widget.fields", "value": '["activeSubscriptions", "nextRenewingSubscription"]' }
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }

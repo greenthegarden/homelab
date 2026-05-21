@@ -59,6 +59,7 @@
     - { "key": "homepage.icon", "value": "gitea.png" }
     - { "key": "homepage.href", "value": "https://{{ gitea_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ gitea_fqdn }}/" }
+    # https://gethomepage.dev/widgets/services/gitea/
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }

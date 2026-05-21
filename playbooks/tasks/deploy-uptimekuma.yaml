@@ -70,6 +70,7 @@
     - { "key": "homepage.icon", "value": "uptime-kuma.png" }
     - { "key": "homepage.href", "value": "https://{{ uptimekuma_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ uptimekuma_fqdn }}/" }
+    # https://gethomepage.dev/widgets/services/uptime-kuma/
     - { "key": "homepage.widget.type", "value": "uptimekuma" }
     - { "key": "homepage.widget.url", "value": "https://{{ uptimekuma_fqdn }}" }
     - { "key": "homepage.widget.slug", "value": "homelab" }
