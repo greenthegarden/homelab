@@ -62,7 +62,7 @@
   loop:
     - name: uptimekuma
       port: "{{ (socket_proxy_ports.uptimekuma | default(2377)) | int }}"
-      command: ["-allowfrom=uptimekuma.lxc-monitor.{{ homelab.certificate_domain | default('localdomain') }}", "-allowGET=.*"]
+      command: ["-allowfrom=uptimekuma,uptimekuma.lxc-monitor.{{ homelab.certificate_domain | default('localdomain') }}", "-allowGET=.*"]
     - name: wud
       port: "{{ (socket_proxy_ports.wud | default(2378)) | int }}"
       command: ["-allowfrom=wud,wud.lxc-monitor.{{ homelab.certificate_domain | default('localdomain') }}", "-allowGET=.*"]

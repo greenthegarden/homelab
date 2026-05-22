@@ -94,7 +94,7 @@
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - { "key": "wud.link.template", "value": "https://github.com/getauthentik/authentik/releases/tag/v${major}.${minor}.${patch}" }
+    - { "key": "wud.link.template", "value": "https://github.com/goauthentik/authentik/releases/tag/version%2F${major}.${minor}.${patch}" }
 
 - name: deploy-authentik | Create Authentik DB container labels
   ansible.builtin.set_fact:
@@ -215,6 +215,8 @@
       AUTHENTIK_POSTGRESQL__PASSWORD: "{{ authentik.db_password | default('dummy') }}"
       AUTHENTIK_LOG_LEVEL: warning # debug, info, warning, error, trace
       AUTHENTIK_SECRET_KEY: "{{ authentik.secret_key | default('dummy') }}"
+    labels:
+      wud.watch: false
     networks_cli_compatible: true
     networks: "{{ authentik_worker_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     restart: true

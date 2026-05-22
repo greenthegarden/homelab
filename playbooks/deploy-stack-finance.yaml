@@ -5,7 +5,6 @@
 
   vars:
 
-
     # Firefly III facts
     # Values are set in templates/fireflyiii/docker-compose.yaml.j2
     fireflyiii_deploy_docker_volume_backup: true

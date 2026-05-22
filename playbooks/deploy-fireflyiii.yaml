@@ -7,20 +7,16 @@
   vars:
 
     # Firefly III facts
-    # Ensure values are also set in templates/fireflyiii/docker-compose.yaml.j2
-    # TODO: Ensure variables set here are used in the docker-compose file
-    fireflyiii_image_tag: version-6.5.8
-    fireflyiii_service_name: fireflyiii
-    fireflyiii_service_port: 8080
-    fireflyiii_db_backup_volume_name: fireflyiii_db_backup
-
+    # Values are set in templates/fireflyiii/docker-compose.yaml.j2
     fireflyiii_deploy_docker_volume_backup: true
 
-  tasks:
+  pre_tasks:
 
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     - name: Deploy a containerised instance of Firefly III
       ansible.builtin.include_tasks:
