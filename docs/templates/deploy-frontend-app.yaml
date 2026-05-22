@@ -1,0 +1,143 @@
+---
+####### CHANGEME SECTION
+
+# Website: https://changeme.com/
+# Github: https://github.com/changeme/changeme
+# Docker:
+
+- name: deploy-changeme | Set ChangeMe facts
+  ansible.builtin.set_fact:
+    changeme_image: "{{ changeme_image | default('ghcr.io/changeme/changeme:latest') }}"
+    changeme_service_name: "{{ changeme_service_name | default('changeme') }}"
+    changeme_service_port: "{{ changeme_service_port | default(8080) }}"
+
+- name: deploy-changeme | Set ChangeMe network facts
+  ansible.builtin.set_fact:
+    changeme_network_name: "{{ changeme_network_name | default(changeme_service_name) }}"
+
+- name: deploy-changeme | Set ChangeMe volume facts
+  ansible.builtin.set_fact:
+    changeme_volume_name: "{{ changeme_volume_name | default(changeme_service_name) }}"
+
+- name: deploy-changeme | Set ChangeMe aggregated facts
+  ansible.builtin.set_fact:
+    changeme_fqdn: "{{ changeme_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-changeme | Set ChangeMe service facts
+  ansible.builtin.set_fact:
+    changeme_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    changeme_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ changeme_service_port }}:8080"
+    changeme_volumes: []
+      # Local paths to mount into the container
+      # local path:container path
+
+- name: deploy-changeme | Log ChangeMe configuration
+  ansible.builtin.debug:
+    msg:
+      - "ChangeMe image: {{ changeme_image }}"
+      - "ChangeMe service name: {{ changeme_service_name }}"
+      - "ChangeMe FQDN: {{ changeme_fqdn }}"
+      - "ChangeMe command: {{ changeme_command | default(omit) }}"
+      - "ChangeMe networks: {{ changeme_networks | default(omit) }}"
+      - "ChangeMe ports: {{ changeme_ports | default(omit) }}"
+      - "ChangeMe volumes: {{ changeme_volumes | default(omit) }}"
+
+- name: deploy-changeme | Create ChangeMe container labels
+  ansible.builtin.set_fact:
+    changeme_container_labels: "{{ changeme_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "ChangeMe" }
+    - { "key": "homepage.description", "value": "Description of ChangeMe" }
+    - { "key": "homepage.icon", "value": "changeme.png" }
+    - { "key": "homepage.href", "value": "https://{{ changeme_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ changeme_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.http.routers.{{ changeme_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ changeme_service_name }}.rule", "value": "Host(`{{ changeme_fqdn }}`)" }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - { "key": "wud.link.template", "value": "https://github.com/changeme/changeme/releases/tag/v${major}.${minor}.${patch}" }
+
+- name: deploy-changeme | Create ChangeMe networks
+  when: changeme_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ changeme_networks }}"
+
+- name: deploy-changeme | Create ChangeMe volumes
+  when: changeme_volume_cache_name is defined and changeme_volume_config_name is defined and (changeme_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ changeme_volume_name }}"
+
+- name: deploy-changeme | Check if ChangeMe is running
+  community.docker.docker_container_info:
+    name: "{{ changeme_service_name }}"
+  register: changeme_state
+
+- name: deploy-changeme | Remove ChangeMe container if changing version
+  when:
+    - changeme_state.exists
+    - (changeme_image | split(':') | last) != (changeme_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-changeme | Stop and remove existing ChangeMe container
+      community.docker.docker_container:
+        name: "{{ changeme_service_name }}"
+        state: absent
+
+    - name: deploy-changeme | Set update ChangeMe
+      ansible.builtin.set_fact:
+        changeme_update: true
+
+- name: deploy-changeme | Deploy ChangeMe if not running
+  when:
+    - not changeme_state.exists or (changeme_update | default(false))
+  block:
+    - name: deploy-changeme | Pull ChangeMe image
+      community.docker.docker_image:
+        name: "{{ changeme_image }}"
+        source: pull
+
+    - name: deploy-changeme | Deploy ChangeMe
+      community.docker.docker_container:
+        name: "{{ changeme_service_name }}"
+        image: "{{ changeme_image }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ changeme_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ changeme_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ changeme_volumes | default(omit) }}"
+      register: changeme_container_state
+
+- name: deploy-changeme | Wait for ChangeMe to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ changeme_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: changeme_running
+  retries: 10
+  until: changeme_running is success

@@ -1,0 +1,137 @@
+---
+####### CHANGEME SECTION
+
+# webpage: https://changeme.io/
+# github: https://github.com/changeme/changeme
+# docker: https://hub.docker.com/r/changeme/changeme
+
+- name: deploy-changeme | Set ChangeMe facts
+  ansible.builtin.set_fact:
+    changeme_image: "{{ changeme_image | default('changeme:latest') }}"
+    changeme_service_name: "{{ changeme_service_name | default('changeme') }}"
+    changeme_service_port: "{{ changeme_service_port | default(1234) }}"
+
+- name: deploy-changeme | Set ChangeMe network facts
+  ansible.builtin.set_fact:
+    changeme_network_name: "{{ changeme_network_name | default(changeme_service_name) }}"
+
+- name: deploy-changeme | Set ChangeMe volume facts
+  ansible.builtin.set_fact:
+    changeme_volume_name: "{{ changeme_volume_name | default(changeme_service_name) }}"
+
+- name: deploy-changeme | Set ChangeMe aggregated facts
+  ansible.builtin.set_fact:
+    changeme_fqdn: "{{ changeme_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-changeme | Set ChangeMe service facts
+  ansible.builtin.set_fact:
+    changeme_networks:
+      - name: "{{ changeme_network_name }}"
+    changeme_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ changeme_service_port }}:1234"
+    changeme_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      # set to '[]' is not volumes to be used
+      - "{{ changeme_volume_name }}:/data"
+
+- name: deploy-changeme | Log ChangeMe configuration
+  ansible.builtin.debug:
+    msg:
+      - "changeme image: {{ changeme_image }}"
+      - "changeme service name: {{ changeme_service_name }}"
+      - "changeme FQDN: {{ changeme_fqdn }}"
+      - "changeme args: {{ changeme_args | default(omit) }}"
+      - "changeme networks: {{ changeme_networks | default(omit) }}"
+      - "changeme ports: {{ changeme_ports | default(omit) }}"
+      - "changeme volumes: {{ changeme_volumes | default(omit) }}"
+
+- name: deploy-changeme | Create ChangeMe container labels
+  ansible.builtin.set_fact:
+    changeme_container_labels: "{{ changeme_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-alpine+$$' }
+    - { "key": "wud.link.template", "value": "https://github.com/changeme/changeme/releases/tag/${major}.${minor}.${patch}" }
+
+# Create required Docker networks
+- name: deploy-changeme | Create ChangeMe networks
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ changeme_networks }}"
+
+# Create required Docker volumes
+- name: deploy-changeme | Create ChangeMe volumes
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ changeme_volume_name }}"
+
+- name: deploy-changeme | Check if ChangeMe is running
+  community.docker.docker_container_info:
+    name: "{{ changeme_service_name }}"
+  register: changeme_state
+
+- name: deploy-changeme | Remove ChangeMe container if changing version
+  when:
+    - changeme_state.exists
+    - (changeme_image | split(':') | last) != (changeme_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-changeme | Stop and remove existing ChangeMe container
+      community.docker.docker_container:
+        name: "{{ changeme_service_name }}"
+        state: absent
+
+    - name: deploy-changeme | Set update ChangeMe
+      ansible.builtin.set_fact:
+        changeme_update: true
+
+- name: deploy-changeme | Deploy ChangeMe if not running
+  when:
+    - not changeme_state.exists or (changeme_update | default(false))
+  block:
+    - name: deploy-changeme | Pull ChangeMe image
+      community.docker.docker_image:
+        name: "{{ changeme_image }}"
+        source: pull
+
+    - name: deploy-changeme | Deploy ChangeMe
+      community.docker.docker_container:
+        name: "{{ changeme_service_name }}"
+        image: "{{ changeme_image }}"
+        cap_drop:
+          - ALL
+        command: "{{ changeme_args | default(omit) }}"
+        deploy:
+          resources:
+            limits:
+              cpus: "0.5"
+              memory: 128M
+        detach: true
+        environment:
+          - TZ=${VAULTWARDEN_URL}
+        healthcheck:
+          test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+          interval: 30s
+          retries: 3
+          timeout: 3s
+        labels: "{{ changeme_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ changeme_networks | default(omit) }}"
+        ports:
+          - "127.0.0.1:8080:8080"
+        read_only: true
+        restart: true
+        restart_policy: unless-stopped
+        security_opt:
+          - no-new-privileges:true
+        state: started
+        tmpfs:
+          - /tmp
+        volumes: "{{ changeme_volumes | default(omit) }}"
+      register: changeme_container_state

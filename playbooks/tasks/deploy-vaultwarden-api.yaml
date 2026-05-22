@@ -1,0 +1,136 @@
+---
+
+# github: https://github.com/Turbootzz/Vaultwarden-API
+
+- name: deploy-vaultwarden-api | Set Vaultwarden API facts
+  ansible.builtin.set_fact:
+    vaultwarden_api_image: "{{ vaultwarden_api_image | default('ghcr.io/turbootzz/vaultwarden-api:latest') }}"
+    vaultwarden_api_service_name: "{{ vaultwarden_api_service_name | default('vaultwarden-api') }}"
+    vaultwarden_api_service_port: "{{ vaultwarden_api_service_port | default(8080) }}"
+
+- name: deploy-vaultwarden-api | Set Vaultwarden API network facts
+  ansible.builtin.set_fact:
+    vaultwarden_api_network_name: "{{ vaultwarden_api_network_name | default('vaultwarden') }}"
+
+- name: deploy-vaultwarden-api | Set Vaultwarden API volume facts
+  ansible.builtin.set_fact:
+    vaultwarden_api_volume_name: "{{ vaultwarden_api_volume_name | default(vaultwarden_api_service_name) }}"
+
+- name: deploy-vaultwarden-api | Set Vaultwarden API aggregated facts
+  ansible.builtin.set_fact:
+    vaultwarden_api_fqdn: "{{ vaultwarden_api_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-vaultwarden-api | Set Vaultwarden API service facts
+  ansible.builtin.set_fact:
+    vaultwarden_api_networks:
+      - name: "{{ vaultwarden_api_network_name }}"
+    vaultwarden_api_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ vaultwarden_api_service_port }}:8080"
+    vaultwarden_api_volumes: []
+      # Local paths to mount into the container
+      # local path:container path
+      # set to '[]' is not volumes to be used
+
+- name: deploy-vaultwarden-api | Log Vaultwarden API configuration
+  ansible.builtin.debug:
+    msg:
+      - "vaultwarden_api image: {{ vaultwarden_api_image }}"
+      - "vaultwarden_api service name: {{ vaultwarden_api_service_name }}"
+      - "vaultwarden_api FQDN: {{ vaultwarden_api_fqdn }}"
+      - "vaultwarden_api args: {{ vaultwarden_api_args | default(omit) }}"
+      - "vaultwarden_api networks: {{ vaultwarden_api_networks | default(omit) }}"
+      - "vaultwarden_api ports: {{ vaultwarden_api_ports | default(omit) }}"
+      - "vaultwarden_api volumes: {{ vaultwarden_api_volumes | default(omit) }}"
+
+- name: deploy-vaultwarden-api | Create Vaultwarden API container labels
+  ansible.builtin.set_fact:
+    vaultwarden_api_container_labels: "{{ vaultwarden_api_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-alpine+$$' }
+    - { "key": "wud.link.template", "value": "https://github.com/vaultwarden_api/vaultwarden_api/releases/tag/${major}.${minor}.${patch}" }
+
+# Create required Docker networks
+- name: deploy-vaultwarden-api | Create Vaultwarden API networks
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ vaultwarden_api_networks }}"
+
+# Create required Docker volumes
+- name: deploy-vaultwarden-api | Create Vaultwarden API volumes
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ vaultwarden_api_volume_name }}"
+
+- name: deploy-vaultwarden-api | Check if Vaultwarden API is running
+  community.docker.docker_container_info:
+    name: "{{ vaultwarden_api_service_name }}"
+  register: vaultwarden_api_state
+
+- name: deploy-vaultwarden-api | Pull Vaultwarden API image
+  community.docker.docker_image:
+    name: "{{ vaultwarden_api_image }}"
+    source: pull
+
+- name: deploy-vaultwarden-api | Remove Vaultwarden API container if changing version
+  when:
+    - vaultwarden_api_state.exists
+    - (vaultwarden_api_image | split(':') | last) != (vaultwarden_api_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-vaultwarden-api | Stop and remove existing Vaultwarden API container
+      community.docker.docker_container:
+        name: "{{ vaultwarden_api_service_name }}"
+        state: absent
+
+    - name: deploy-vaultwarden-api | Set update Vaultwarden API
+      ansible.builtin.set_fact:
+        vaultwarden_api_update: true
+
+- name: deploy-vaultwarden-api | Deploy Vaultwarden API if not running
+  when:
+    - not vaultwarden_api_state.exists or (vaultwarden_api_update | default(false))
+  block:
+    - name: deploy-vaultwarden-api | Deploy Vaultwarden API
+      community.docker.docker_container:
+        name: "{{ vaultwarden_api_service_name }}"
+        image: "{{ vaultwarden_api_image }}"
+        cap_drop:
+          - ALL
+        deploy:
+          resources:
+            limits:
+              cpus: '0.5'
+              memory: 128M
+        detach: true
+        env:
+          VAULTWARDEN_URL: "http://vaultwarden:80"
+          VAULTWARDEN_EMAIL: "{{ vaultwarden.homelab.email | default('changeme') }}"
+          VAULTWARDEN_PASSWORD: "{{ vaultwarden.homelab.password | default('changeme') }}"
+          API_KEY: "{{ vaultwarden.homelab.api_key | default('changeme') }}"
+          ENVIRONMENT: "production"
+        healthcheck:
+          test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+          interval: 30s
+          retries: 3
+          timeout: 3s
+        labels: "{{ vaultwarden_api_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ vaultwarden_api_networks | default(omit) }}"
+        ports:
+          - "127.0.0.1:8080:8080"
+        read_only: true
+        restart: true
+        restart_policy: unless-stopped
+        security_opt:
+          - no-new-privileges:true
+        state: started
+        tmpfs:
+          - /tmp
+        volumes: "{{ vaultwarden_api_volumes | default(omit) }}"
+      register: vaultwarden_api_container_state

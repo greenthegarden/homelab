@@ -1,0 +1,143 @@
+---
+####### HOMELABLE SECTION
+
+# Website: https://homelable.net/
+# Github: https://github.com/Pouzor/homelable
+# Docker:
+
+- name: deploy-homelable | Set Homelable facts
+  ansible.builtin.set_fact:
+    homelable_image: "{{ homelable_image | default('ghcr.io/homelable/homelable:latest') }}"
+    homelable_service_name: "{{ homelable_service_name | default('homelable') }}"
+    homelable_service_port: "{{ homelable_service_port | default(8080) }}"
+
+- name: deploy-homelable | Set Homelable network facts
+  ansible.builtin.set_fact:
+    homelable_network_name: "{{ homelable_network_name | default(homelable_service_name) }}"
+
+- name: deploy-homelable | Set Homelable volume facts
+  ansible.builtin.set_fact:
+    homelable_volume_name: "{{ homelable_volume_name | default(homelable_service_name) }}"
+
+- name: deploy-homelable | Set Homelable aggregated facts
+  ansible.builtin.set_fact:
+    homelable_fqdn: "{{ homelable_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-homelable | Set Homelable service facts
+  ansible.builtin.set_fact:
+    homelable_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    homelable_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ homelable_service_port }}:8080"
+    homelable_volumes: []
+      # Local paths to mount into the container
+      # local path:container path
+
+- name: deploy-homelable | Log Homelable configuration
+  ansible.builtin.debug:
+    msg:
+      - "Homelable image: {{ homelable_image }}"
+      - "Homelable service name: {{ homelable_service_name }}"
+      - "Homelable FQDN: {{ homelable_fqdn }}"
+      - "Homelable command: {{ homelable_command | default(omit) }}"
+      - "Homelable networks: {{ homelable_networks | default(omit) }}"
+      - "Homelable ports: {{ homelable_ports | default(omit) }}"
+      - "Homelable volumes: {{ homelable_volumes | default(omit) }}"
+
+- name: deploy-homelable | Create Homelable container labels
+  ansible.builtin.set_fact:
+    homelable_container_labels: "{{ homelable_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Homelable" }
+    - { "key": "homepage.description", "value": "Description of Homelable" }
+    - { "key": "homepage.icon", "value": "homelable.png" }
+    - { "key": "homepage.href", "value": "https://{{ homelable_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ homelable_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.http.routers.{{ homelable_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ homelable_service_name }}.rule", "value": "Host(`{{ homelable_fqdn }}`)" }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - { "key": "wud.link.template", "value": "https://github.com/homelable/homelable/releases/tag/v${major}.${minor}.${patch}" }
+
+- name: deploy-homelable | Create Homelable networks
+  when: homelable_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ homelable_networks }}"
+
+- name: deploy-homelable | Create Homelable volumes
+  when: homelable_volume_cache_name is defined and homelable_volume_config_name is defined and (homelable_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ homelable_volume_name }}"
+
+- name: deploy-homelable | Check if Homelable is running
+  community.docker.docker_container_info:
+    name: "{{ homelable_service_name }}"
+  register: homelable_state
+
+- name: deploy-homelable | Remove Homelable container if changing version
+  when:
+    - homelable_state.exists
+    - (homelable_image | split(':') | last) != (homelable_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-homelable | Stop and remove existing Homelable container
+      community.docker.docker_container:
+        name: "{{ homelable_service_name }}"
+        state: absent
+
+    - name: deploy-homelable | Set update Homelable
+      ansible.builtin.set_fact:
+        homelable_update: true
+
+- name: deploy-homelable | Deploy Homelable if not running
+  when:
+    - not homelable_state.exists or (homelable_update | default(false))
+  block:
+    - name: deploy-homelable | Pull Homelable image
+      community.docker.docker_image:
+        name: "{{ homelable_image }}"
+        source: pull
+
+    - name: deploy-homelable | Deploy Homelable
+      community.docker.docker_container:
+        name: "{{ homelable_service_name }}"
+        image: "{{ homelable_image }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ homelable_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ homelable_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ homelable_volumes | default(omit) }}"
+      register: homelable_container_state
+
+- name: deploy-homelable | Wait for Homelable to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ homelable_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: homelable_running
+  retries: 10
+  until: homelable_running is success

@@ -1,0 +1,143 @@
+---
+####### CHANGE SECTION
+
+# https://mcpo.com/
+# https://github.com/alam00000/mcpo
+
+- name: deploy-mcpo | Set mcpo facts
+  ansible.builtin.set_fact:
+    mcpo_image: "{{ mcpo_image | default('ghcr.io/open-webui/mcpo:main') }}"
+    mcpo_service_name: "{{ mcpo_service_name | default('mcpo') }}"
+    mcpo_service_port: "{{ mcpo_service_port | default(8000) }}"
+
+- name: deploy-mcpo | Set mcpo network facts
+  ansible.builtin.set_fact:
+    mcpo_network_name: "{{ mcpo_network_name | default(mcpo_service_name) }}"
+
+- name: deploy-mcpo | Set mcpo volume facts
+  ansible.builtin.set_fact:
+    mcpo_volume_name: "{{ mcpo_volume_name | default(mcpo_service_name) }}"
+
+- name: deploy-mcpo | Set mcpo aggregated facts
+  ansible.builtin.set_fact:
+    mcpo_fqdn: "{{ mcpo_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-mcpo | Set mcpo service facts
+  ansible.builtin.set_fact:
+    mcpo_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    mcpo_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ mcpo_service_port }}:8080"
+    mcpo_volumes: []
+      # Local paths to mount into the container
+      # local path:container path
+
+- name: deploy-mcpo | Log mcpo configuration
+  ansible.builtin.debug:
+    msg:
+      - "mcpo image: {{ mcpo_image }}"
+      - "mcpo service name: {{ mcpo_service_name }}"
+      - "mcpo FQDN: {{ mcpo_fqdn }}"
+      - "mcpo command: {{ mcpo_command | default(omit) }}"
+      - "mcpo networks: {{ mcpo_networks | default(omit) }}"
+      - "mcpo ports: {{ mcpo_ports | default(omit) }}"
+      - "mcpo volumes: {{ mcpo_volumes | default(omit) }}"
+
+- name: deploy-mcpo | Create CHANGE container labels
+  ansible.builtin.set_fact:
+    mcpo_container_labels: "{{ mcpo_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "AI" }
+    - { "key": "homepage.name", "value": "mcpo" }
+    - { "key": "homepage.description", "value": "A simple, secure MCP-to-OpenAPI proxy server" }
+    - { "key": "homepage.icon", "value": "mcpo.png" }
+    - { "key": "homepage.href", "value": "https://{{ mcpo_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ mcpo_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.http.routers.{{ mcpo_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ mcpo_service_name }}.rule", "value": "Host(`{{ mcpo_fqdn }}`)" }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - { "key": "wud.link.template", "value": "https://github.com/open-webui/mcpo/releases/tag/v${major}.${minor}.${patch}" }
+
+- name: deploy-mcpo | Create mcpo networks
+  when: mcpo_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ mcpo_networks }}"
+
+- name: deploy-mcpo | Create mcpo volumes
+  when: mcpo_volume_cache_name is defined and mcpo_volume_config_name is defined and (mcpo_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ mcpo_volume_name }}"
+
+- name: deploy-mcpo | Check if mcpo is running
+  community.docker.docker_container_info:
+    name: "{{ mcpo_service_name }}"
+  register: mcpo_state
+
+- name: deploy-mcpo | Pull mcpo image
+  community.docker.docker_image:
+    name: "{{ mcpo_image }}"
+    source: pull
+
+- name: deploy-mcpo | Remove mcpo container if changing version
+  when:
+    - mcpo_state.exists
+    - (mcpo_image | split(':') | last) != (mcpo_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-mcpo | Stop and remove existing mcpo container
+      community.docker.docker_container:
+        name: "{{ mcpo_service_name }}"
+        state: absent
+
+    - name: deploy-mcpo | Set update mcpo
+      ansible.builtin.set_fact:
+        mcpo_update: true
+
+# docker run -p 8000:8000 ghcr.io/open-webui/mcpo:main --api-key "top-secret" -- your_mcp_server_command
+- name: deploy-mcpo | Deploy mcpo if not running
+  when:
+    - not mcpo_state.exists or (mcpo_update | default(false))
+  block:
+    - name: deploy-mcpo | Deploy mcpo
+      community.docker.docker_container:
+        name: "{{ mcpo_service_name }}"
+        image: "{{ mcpo_image }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ mcpo_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ mcpo_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ mcpo_volumes | default(omit) }}"
+      register: mcpo_container_state
+
+- name: deploy-mcpo | Wait for mcpo to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ mcpo_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: mcpo_running
+  retries: 10
+  until: mcpo_running is success

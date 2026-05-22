@@ -5,6 +5,7 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Services for consideration](#services-for-consideration)
+- [The Unofficial and Awesome Home Assistant MCP Server](#the-unofficial-and-awesome-home-assistant-mcp-server)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -30,3 +31,7 @@
 
 A privacy-first, locally-hosted medical record system for individuals,
   families, and small healthcare practices - featuring comprehensive patient management, lab result processing, and medication tracking with complete data sovereignty.
+
+## The Unofficial and Awesome Home Assistant MCP Server
+
+[Gihub](https://github.com/homeassistant-ai/ha-mcp)
