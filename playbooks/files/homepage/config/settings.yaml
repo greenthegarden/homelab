@@ -45,13 +45,6 @@ layout:
       header: false
       iconsOnly: true
       initiallyCollapsed: false
-#   - Home Assistant Home Dashboard:
-#       tab: Main
-#       style: row
-#       columns: 1
-#       header: false
-#       iconsOnly: false
-#       initiallyCollapsed: false
   - Home Assistant Dashboards:
       tab: Main
       style: row
@@ -59,13 +52,6 @@ layout:
       header: false
       iconsOnly: false
       initiallyCollapsed: false
-#   - Home Applications:
-#       tab: Main
-#       style: row
-#       columns: 2
-#       header: false
-#       iconsOnly: true
-#       initiallyCollapsed: false
   - Family:
       tab: Main
       style: row
@@ -82,13 +68,13 @@ layout:
       columns: 2
   - AI:
       tab: Applications
-      header: false
+      header: true
       initiallyCollapsed: true
       style: row
       columns: 2
   - Messaging:
       tab: Applications
-      header: false
+      header: true
       initiallyCollapsed: true
       style: row
       columns: 2
