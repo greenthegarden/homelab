@@ -42,7 +42,7 @@
     mcpo_networks:
       - { name: "{{ mcpo_open_webui_network_name }}", internal: true }
       # # Reverse Proxy  network is used to expose applications via Traefik
-      # - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     mcpo_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -68,6 +68,13 @@
   ansible.builtin.set_fact:
     mcpo_container_labels: "{{ mcpo_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.http.routers.{{ mcpo_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ mcpo_service_name }}.rule", "value": "Host(`{{ mcpo_fqdn }}`)" }
+    - { "key": "traefik.http.routers.{{ mcpo_service_name }}.service", "value": "{{ mcpo_service_name }}" }
+    - { "key": "traefik.http.services.{{ mcpo_service_name }}.loadbalancer.server.port", "value": "{{ mcpo_service_port | int }}" }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
