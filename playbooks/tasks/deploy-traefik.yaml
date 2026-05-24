@@ -6,6 +6,7 @@
 # https://medium.com/@joshuaavalon/setup-traefik-v2-step-by-step-fae44ed8f76d
 # https://github.com/scafer/traefik-duckdns-letsencrypt/tree/main
 # https://community.traefik.io/t/failing-to-get-certs-over-dns-challenge/25653
+# https://www.spad.uk/posts/practical-configuration-of-traefik-as-a-reverse-proxy-for-docker-updated-for-2023/
 
 - name: deploy-traefik | Set Traefik facts
   ansible.builtin.set_fact:
