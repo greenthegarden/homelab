@@ -117,11 +117,9 @@
         detach: true
         env:
           MCP_TRANSPORT: "http"
-          AFFINE_BASE_URL: "https://affine.lxc-productivity.homelab.greenthegarden.com"
-          AFFINE_EMAIL: "you@example.com"
-          AFFINE_PASSWORD:
-          AFFINE_MCP_AUTH_MODE: bearer
-          AFFINE_MCP_HTTP_TOKEN:
+          AFFINE_BASE_URL: "https://affine.lxc-productivity.{{ homelab.certificate_domain | default('localdomain') }}"
+          AFFINE_EMAIL: "{{ affine.user.email }}"
+          AFFINE_PASSWORD: "{{ affine.user.password }}"
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ affine_mcp_server_container_labels | default(omit) }}"
         networks_cli_compatible: true

@@ -1,6 +1,8 @@
 ---
 # Github: https://github.com/open-webui/mcpo
+# https://docs.openwebui.com/features/extensibility/plugin/tools/openapi-servers/mcp/
 # https://deepwiki.com/open-webui/mcpo/1.2-installation-and-quick-start
+# https://docs.openwebui.com/features/extensibility/plugin/tools/openapi-servers/open-webui
 
 - name: deploy-mcpo | Set mcpo facts
   ansible.builtin.set_fact:

@@ -6,6 +6,6 @@
   tasks:
 
     - name: Update and upgrade hosts using apt
-      when: ansible_pkg_mgr == 'apt'
+      when: pkg_mgr == 'apt'
       ansible.builtin.include_tasks:
         file: tasks/hosts-apt-update.yaml
