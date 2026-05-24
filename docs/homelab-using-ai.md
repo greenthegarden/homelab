@@ -130,7 +130,7 @@ Open WebUI Configuration
 - Click + (Add Server)
 - Enter:
   - Type: MCP Streamable HTTP
-  - Name: HomeAssistant
+  - Name: Home Assistant
   - ID: auto
   - Server URL: {{MCP_SERVER_URL}}
   - Auth: (configure if needed)

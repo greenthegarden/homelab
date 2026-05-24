@@ -2,26 +2,26 @@
 # https://homeassistant-ai.github.io/ha-mcp/setup/
 # https://github.com/homeassistant-ai/ha-mcp
 
-- name: deploy-ha-mcp | Set ha-mcp facts
+- name: deploy-ha-mcp | Set Home Assistant MCP facts
   ansible.builtin.set_fact:
     ha_mcp_image: "{{ ha_mcp_image | default('ghcr.io/homeassistant-ai/ha-mcp:latest') }}"
     ha_mcp_service_name: "{{ ha_mcp_service_name | default('ha-mcp') }}"
     ha_mcp_service_port: "{{ ha_mcp_service_port | default(8086) }}"
 
-- name: deploy-ha-mcp | Set ha-mcp network facts
+- name: deploy-ha-mcp | Set Home Assistant MCP network facts
   ansible.builtin.set_fact:
     ha_mcp_api_network_name: "{{ ha_mcp_api_network_name | default('home-assistant') }}"
     ha_mcp_open_webui_network_name: "{{ ha_mcp_open_webui_network_name | default('open-webui') }}"
 
-- name: deploy-ha-mcp | Set ha-mcp volume facts
+- name: deploy-ha-mcp | Set Home Assistant MCP volume facts
   ansible.builtin.set_fact:
     ha_mcp_volume_name: "{{ ha_mcp_volume_name | default(ha_mcp_service_name) }}"
 
-- name: deploy-ha-mcp | Set ha-mcp aggregated facts
+- name: deploy-ha-mcp | Set Home Assistant MCP aggregated facts
   ansible.builtin.set_fact:
     ha_mcp_fqdn: "{{ ha_mcp_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
 
-- name: deploy-ha-mcp | Set ha-mcp service facts
+- name: deploy-ha-mcp | Set Home Assistant MCP service facts
   ansible.builtin.set_fact:
     ha_mcp_command:
       - "ha-mcp-web"
@@ -31,7 +31,7 @@
     ha_mcp_networks:
       - { name: "{{ ha_mcp_open_webui_network_name }}", internal: true }
       # Reverse Proxy  network is used to expose applications via Traefik
-      # - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     ha_mcp_ports:
       # Published ports to expose outside the container
       # host port:container port
@@ -40,7 +40,7 @@
       # Volumes to mount into the container
       # volume:container path
 
-- name: deploy-ha-mcp | Log ha-mcp configuration
+- name: deploy-ha-mcp | Log Home Assistant MCP configuration
   ansible.builtin.debug:
     msg:
       - "ha-mcp image: {{ ha_mcp_image }}"
@@ -52,15 +52,22 @@
       - "ha-mcp mounts: {{ ha_mcp_mounts | default(omit) }}"
       - "ha-mcp volumes: {{ ha_mcp_volumes | default(omit) }}"
 
-- name: deploy-ha-mcp | Create CHANGE container labels
+- name: deploy-ha-mcp | Create Home Assistant MCP container labels
   ansible.builtin.set_fact:
     ha_mcp_container_labels: "{{ ha_mcp_container_labels | default({}) | combine({item.key: item.value}) }}"
   with_items:
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.http.routers.{{ ha_mcp_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ ha_mcp_service_name }}.rule", "value": "Host(`{{ ha_mcp_fqdn }}`)" }
+    - { "key": "traefik.http.routers.{{ ha_mcp_service_name }}.service", "value": "{{ ha_mcp_service_name }}" }
+    - { "key": "traefik.http.services.{{ ha_mcp_service_name }}.loadbalancer.server.port", "value": "{{ ha_mcp_service_port | int }}" }
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
     - { "key": "wud.link.template", "value": "https://github.com/homeassistant-ai/ha-mcp/releases/tag/v${major}.${minor}.${patch}" }
 
-- name: deploy-ha-mcp | Create ha-mcp networks
+- name: deploy-ha-mcp | Create Home Assistant MCP networks
   when: ha_mcp_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
@@ -69,7 +76,7 @@
     state: present
   loop: "{{ ha_mcp_networks }}"
 
-- name: deploy-ha-mcp | Create ha-mcp volumes
+- name: deploy-ha-mcp | Create Home Assistant MCP volumes
   when: ha_mcp_volumes is defined and (ha_mcp_volumes | length > 0)
   community.docker.docker_volume:
     name: "{{ item }}"
@@ -77,12 +84,12 @@
   loop:
     - "{{ ha_mcp_volume_name }}"
 
-- name: deploy-ha-mcp | Check if ha-mcp is running
+- name: deploy-ha-mcp | Check if Home Assistant MCP is running
   community.docker.docker_container_info:
     name: "{{ ha_mcp_service_name }}"
   register: ha_mcp_state
 
-- name: deploy-ha-mcp | Pull ha-mcp image
+- name: deploy-ha-mcp | Pull Home Assistant MCP image
   community.docker.docker_image:
     name: "{{ ha_mcp_image }}"
     source: pull
@@ -114,7 +121,7 @@
     # volumes: "{{ ha_mcp_mounts + ha_mcp_volumes }}"
   register: ha_mcp_container_state
 
-- name: deploy-ha-mcp | Wait for ha-mcp to accept connections
+- name: deploy-ha-mcp | Wait for Home Assistant MCP to accept connections
   when: false
   ansible.builtin.wait_for:
     host: "{{ ha_mcp_fqdn }}"
