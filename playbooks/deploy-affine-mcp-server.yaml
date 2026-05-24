@@ -1,0 +1,22 @@
+---
+- name: Deploy affine-mcp-server
+
+  hosts: ai
+
+  vars:
+
+    # affine-mcp-server facts
+    # renovate: datasource=docker depName=ghcr.io/dawncr0w/affine-mcp-server
+    affine_mcp_server_image: ghcr.io/dawncr0w/affine-mcp-server:latest
+
+  pre_tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+  tasks:
+
+    - name: Deploy a containerised instance of affine-mcp-server
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-affine-mcp-server.yaml

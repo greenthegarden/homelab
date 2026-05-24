@@ -1,0 +1,155 @@
+---
+# https://homeassistant-ai.github.io/ha-mcp/setup/
+# https://github.com/homeassistant-ai/ha-mcp
+
+- name: deploy-ha-mcp | Set ha-mcp facts
+  ansible.builtin.set_fact:
+    ha_mcp_image: "{{ ha_mcp_image | default('ghcr.io/homeassistant-ai/ha-mcp:latest') }}"
+    ha_mcp_service_name: "{{ ha_mcp_service_name | default('ha-mcp') }}"
+    ha_mcp_service_port: "{{ ha_mcp_service_port | default(8086) }}"
+
+- name: deploy-ha-mcp | Set ha-mcp network facts
+  ansible.builtin.set_fact:
+    ha_mcp_api_network_name: "{{ ha_mcp_api_network_name | default('home-assistant') }}"
+    ha_mcp_open_webui_network_name: "{{ ha_mcp_open_webui_network_name | default('open-webui') }}"
+
+- name: deploy-ha-mcp | Set ha-mcp volume facts
+  ansible.builtin.set_fact:
+    ha_mcp_volume_name: "{{ ha_mcp_volume_name | default(ha_mcp_service_name) }}"
+
+- name: deploy-ha-mcp | Set ha-mcp aggregated facts
+  ansible.builtin.set_fact:
+    ha_mcp_fqdn: "{{ ha_mcp_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-ha-mcp | Set ha-mcp service facts
+  ansible.builtin.set_fact:
+    ha_mcp_command:
+      - "ha-mcp-web"
+    ha_mcp_mounts:
+      - type: tmpfs
+        target: /tmp
+    ha_mcp_networks:
+      - { name: "{{ ha_mcp_open_webui_network_name }}", internal: true }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      # - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    ha_mcp_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ ha_mcp_service_port }}:8086"
+    ha_mcp_volumes: []
+      # Volumes to mount into the container
+      # volume:container path
+
+- name: deploy-ha-mcp | Log ha-mcp configuration
+  ansible.builtin.debug:
+    msg:
+      - "ha-mcp image: {{ ha_mcp_image }}"
+      - "ha-mcp service name: {{ ha_mcp_service_name }}"
+      - "ha-mcp FQDN: {{ ha_mcp_fqdn }}"
+      - "ha-mcp command: {{ ha_mcp_command | default(omit) }}"
+      - "ha-mcp networks: {{ ha_mcp_networks | default(omit) }}"
+      - "ha-mcp ports: {{ ha_mcp_ports | default(omit) }}"
+      - "ha-mcp mounts: {{ ha_mcp_mounts | default(omit) }}"
+      - "ha-mcp volumes: {{ ha_mcp_volumes | default(omit) }}"
+
+- name: deploy-ha-mcp | Create CHANGE container labels
+  ansible.builtin.set_fact:
+    ha_mcp_container_labels: "{{ ha_mcp_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    # ---------------------------------------------------------------
+    # Traefik labels
+    # - { "key": "traefik.enable", "value": "true" }
+    # - { "key": "traefik.http.routers.{{ ha_mcp_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    # - { "key": "traefik.http.routers.{{ ha_mcp_service_name }}.rule", "value": "Host(`{{ ha_mcp_fqdn }}`)" }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - { "key": "wud.link.template", "value": "https://github.com/homeassistant-ai/ha-mcp/releases/tag/v${major}.${minor}.${patch}" }
+
+- name: deploy-ha-mcp | Create ha-mcp networks
+  when: ha_mcp_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ ha_mcp_networks }}"
+
+- name: deploy-ha-mcp | Create ha-mcp volumes
+  when: ha_mcp_volumes is defined and (ha_mcp_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ ha_mcp_volume_name }}"
+
+- name: deploy-ha-mcp | Check if ha-mcp is running
+  community.docker.docker_container_info:
+    name: "{{ ha_mcp_service_name }}"
+  register: ha_mcp_state
+
+- name: deploy-ha-mcp | Pull ha-mcp image
+  community.docker.docker_image:
+    name: "{{ ha_mcp_image }}"
+    source: pull
+
+- name: deploy-ha-mcp | Remove ha-mcp container if changing version
+  when:
+    - ha_mcp_state.exists
+    - (ha_mcp_image | split(':') | last) != (ha_mcp_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-ha-mcp | Stop and remove existing ha-mcp container
+      community.docker.docker_container:
+        name: "{{ ha_mcp_service_name }}"
+        state: absent
+
+    - name: deploy-ha-mcp | Set update ha-mcp
+      ansible.builtin.set_fact:
+        ha_mcp_update: true
+
+# docker run -p 8000:8000 ghcr.io/open-webui/ha-mcp:main --api-key "top-secret" -- your_ha_mcp_command
+- name: deploy-ha-mcp | Deploy ha-mcp if not running
+  when:
+    - not ha_mcp_state.exists or (ha_mcp_update | default(false))
+  block:
+    - name: deploy-ha-mcp | Deploy ha-mcp
+      community.docker.docker_container:
+        name: "{{ ha_mcp_service_name }}"
+        image: "{{ ha_mcp_image }}"
+        cap_drop:
+          - ALL
+        command: "{{ ha_mcp_command | default(omit) }}"
+        detach: true
+        env:
+          HOMEASSISTANT_URL: "{{ home_assistant.url }}"
+          HOMEASSISTANT_TOKEN: "{{ home_assistant.ha_mcp.token }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ ha_mcp_container_labels | default(omit) }}"
+        memory: 256M
+        mounts: "{{ ha_mcp_mounts | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ ha_mcp_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        published_ports: "{{ ha_mcp_ports | default(omit) }}"
+        read_only: true
+        restart: true
+        restart_policy: unless-stopped
+        security_opts:
+          - "no-new-privileges:true"
+        state: started
+        # volumes: "{{ ha_mcp_mounts + ha_mcp_volumes }}"
+      register: ha_mcp_container_state
+
+- name: deploy-ha-mcp | Wait for ha-mcp to accept connections
+  when: false
+  ansible.builtin.wait_for:
+    host: "{{ ha_mcp_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: ha_mcp_running
+  retries: 10
+  until: ha_mcp_running is success

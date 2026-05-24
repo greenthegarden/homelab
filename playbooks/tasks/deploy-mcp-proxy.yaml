@@ -1,0 +1,139 @@
+---
+# https://github.com/sparfenyuk/mcp-proxy
+
+- name: deploy-mcp-proxy | Set mcp-proxy facts
+  ansible.builtin.set_fact:
+    mcp_proxy_image: "{{ mcp_proxy_image | default('ghcr.io/sparfenyuk/mcp-proxy:v0.12.0') }}"
+    mcp_proxy_service_name: "{{ mcp_proxy_service_name | default('mcp-proxy') }}"
+    mcp_proxy_service_port: "{{ mcp_proxy_service_port | default(8080) }}"
+
+- name: deploy-mcp-proxy | Set mcp-proxy network facts
+  ansible.builtin.set_fact:
+    mcp_proxy_network_name: "{{ mcp_proxy_network_name | default('open-webui') }}"
+
+- name: deploy-mcp-proxy | Set mcp-proxy volume facts
+  ansible.builtin.set_fact:
+    mcp_proxy_volume_name: "{{ mcp_proxy_volume_name | default(mcp_proxy_service_name) }}"
+
+- name: deploy-mcp-proxy | Set mcp-proxy aggregated facts
+  ansible.builtin.set_fact:
+    mcp_proxy_fqdn: "{{ mcp_proxy_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-mcp-proxy | Set mcp-proxy service facts
+  ansible.builtin.set_fact:
+    mcp_proxy_command:
+      - "--help"
+    mcp_proxy_networks:
+      - { name: "{{ mcp_proxy_network_name }}", internal: true }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      # - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    mcp_proxy_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ mcp_proxy_service_port }}:8080"
+    mcp_proxy_volumes: []
+      # Volumes to mount into the container
+      # volume:container path
+
+- name: deploy-mcp-proxy | Log mcp-proxy configuration
+  ansible.builtin.debug:
+    msg:
+      - "mcp-proxy image: {{ mcp_proxy_image }}"
+      - "mcp-proxy service name: {{ mcp_proxy_service_name }}"
+      - "mcp-proxy FQDN: {{ mcp_proxy_fqdn }}"
+      - "mcp-proxy command: {{ mcp_proxy_command | default(omit) }}"
+      - "mcp-proxy networks: {{ mcp_proxy_networks | default(omit) }}"
+      - "mcp-proxy ports: {{ mcp_proxy_ports | default(omit) }}"
+      - "mcp-proxy mounts: {{ mcp_proxy_mounts | default(omit) }}"
+      - "mcp-proxy volumes: {{ mcp_proxy_volumes | default(omit) }}"
+
+- name: deploy-mcp-proxy | Create CHANGE container labels
+  ansible.builtin.set_fact:
+    mcp_proxy_container_labels: "{{ mcp_proxy_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    # ---------------------------------------------------------------
+    # Traefik labels
+    # - { "key": "traefik.enable", "value": "true" }
+    # - { "key": "traefik.http.routers.{{ mcp_proxy_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    # - { "key": "traefik.http.routers.{{ mcp_proxy_service_name }}.rule", "value": "Host(`{{ mcp_proxy_fqdn }}`)" }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - { "key": "wud.link.template", "value": "https://github.com/sparfenyuk/mcp-proxy/releases/tag/v${major}.${minor}.${patch}" }
+
+- name: deploy-mcp-proxy | Create mcp-proxy networks
+  when: mcp_proxy_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ mcp_proxy_networks }}"
+
+- name: deploy-mcp-proxy | Create mcp-proxy volumes
+  when: mcp_proxy_volumes is defined and (mcp_proxy_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ mcp_proxy_volume_name }}"
+
+- name: deploy-mcp-proxy | Check if mcp-proxy is running
+  community.docker.docker_container_info:
+    name: "{{ mcp_proxy_service_name }}"
+  register: mcp_proxy_state
+
+- name: deploy-mcp-proxy | Pull mcp-proxy image
+  community.docker.docker_image:
+    name: "{{ mcp_proxy_image }}"
+    source: pull
+
+- name: deploy-mcp-proxy | Remove mcp-proxy container if changing version
+  when:
+    - mcp_proxy_state.exists
+    - (mcp_proxy_image | split(':') | last) != (mcp_proxy_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-mcp-proxy | Stop and remove existing mcp-proxy container
+      community.docker.docker_container:
+        name: "{{ mcp_proxy_service_name }}"
+        state: absent
+
+    - name: deploy-mcp-proxy | Set update mcp-proxy
+      ansible.builtin.set_fact:
+        mcp_proxy_update: true
+
+# docker run -p 8000:8000 ghcr.io/open-webui/mcp-proxy:main --api-key "top-secret" -- your_mcp_proxy_command
+- name: deploy-mcp-proxy | Deploy mcp-proxy if not running
+  when:
+    - not mcp_proxy_state.exists or (mcp_proxy_update | default(false))
+  block:
+    - name: deploy-mcp-proxy | Deploy mcp-proxy
+      community.docker.docker_container:
+        name: "{{ mcp_proxy_service_name }}"
+        image: "{{ mcp_proxy_image }}"
+        command: "{{ mcp_proxy_command | default(omit) }}"
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ mcp_proxy_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ mcp_proxy_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        # volumes: "{{ mcp_proxy_mounts + mcp_proxy_volumes }}"
+      register: mcp_proxy_container_state
+
+- name: deploy-mcp-proxy | Wait for mcp-proxy to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ mcp_proxy_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: mcp_proxy_running
+  retries: 10
+  until: mcp_proxy_running is success

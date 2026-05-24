@@ -23,7 +23,7 @@
 - name: deploy-open-webui | Set Open WebUI service facts
   ansible.builtin.set_fact:
     open_webui_networks:
-      - { name: "{{ open_webui_network_name }}" }
+      - { name: "{{ open_webui_network_name }}", internal: true }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     open_webui_ports:

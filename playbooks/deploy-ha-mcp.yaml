@@ -1,0 +1,22 @@
+---
+- name: Deploy ha-mcp
+
+  hosts: ai
+
+  vars:
+
+    # ha-mcp facts
+    # renovate: datasource=docker depName=ghcr.io/homeassistant-ai/ha-mcp
+    ha_mcp_image: ghcr.io/homeassistant-ai/ha-mcp:latest
+
+  pre_tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+  tasks:
+
+    - name: Deploy a containerised instance of ha-mcp
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-ha-mcp.yaml

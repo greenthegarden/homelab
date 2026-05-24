@@ -1,6 +1,7 @@
 ---
-####### DOCKHAND SECTION
 
+# https://dockhand.pro/
+# Github: https://github.com/Finsys/dockhand
 # https://dockhand.dev/guide/hub-installation
 
 - name: deploy-dockhand | Set Dockhand facts
@@ -116,7 +117,7 @@
     restart: true
     restart_policy: unless-stopped
     state: started
-    volumes: "{{ docker_host_volume + dockhand_volumes | default(omit) }}"
+    volumes: "{{ dockhand_volumes | default(omit) }}"
   register: dockhand_container_state
 
 - name: deploy-dockhand | Wait for Dockhand to accept connections

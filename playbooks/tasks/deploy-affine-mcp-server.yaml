@@ -1,0 +1,145 @@
+---
+# https://github.com/DAWNCR0W/affine-mcp-server
+
+- name: deploy-affine-mcp-server | Set affine-mcp-server facts
+  ansible.builtin.set_fact:
+    affine_mcp_server_image: "{{ affine_mcp_server_image | default('ghcr.io/dawncr0w/affine-mcp-server:latest') }}"
+    affine_mcp_server_service_name: "{{ affine_mcp_server_service_name | default('affine-mcp-server') }}"
+    affine_mcp_server_service_port: "{{ affine_mcp_server_service_port | default(3000) }}"
+
+- name: deploy-affine-mcp-server | Set affine-mcp-server network facts
+  ansible.builtin.set_fact:
+    affine_mcp_server_api_network_name: "{{ affine_mcp_server_api_network_name | default('affine') }}"
+    affine_mcp_server_open_webui_network_name: "{{ affine_mcp_server_open_webui_network_name | default('open-webui') }}"
+
+- name: deploy-affine-mcp-server | Set affine-mcp-server volume facts
+  ansible.builtin.set_fact:
+    affine_mcp_server_volume_name: "{{ affine_mcp_server_volume_name | default(affine_mcp_server_service_name) }}"
+
+- name: deploy-affine-mcp-server | Set affine-mcp-server aggregated facts
+  ansible.builtin.set_fact:
+    affine_mcp_server_fqdn: "{{ affine_mcp_server_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-affine-mcp-server | Set affine-mcp-server service facts
+  ansible.builtin.set_fact:
+    affine_mcp_server_networks:
+      - { name: "{{ affine_mcp_server_api_network_name }}", internal: true }
+      - { name: "{{ affine_mcp_server_open_webui_network_name }}", internal: true }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    affine_mcp_server_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ affine_mcp_server_service_port }}:3000"
+    affine_mcp_server_volumes: []
+      # Volumes to mount into the container
+      # volume:container path
+
+- name: deploy-affine-mcp-server | Log affine-mcp-server configuration
+  ansible.builtin.debug:
+    msg:
+      - "affine-mcp-server image: {{ affine_mcp_server_image }}"
+      - "affine-mcp-server service name: {{ affine_mcp_server_service_name }}"
+      - "affine-mcp-server FQDN: {{ affine_mcp_server_fqdn }}"
+      - "affine-mcp-server command: {{ affine_mcp_server_command | default(omit) }}"
+      - "affine-mcp-server networks: {{ affine_mcp_server_networks | default(omit) }}"
+      - "affine-mcp-server ports: {{ affine_mcp_server_ports | default(omit) }}"
+      - "affine-mcp-server mounts: {{ affine_mcp_server_mounts | default(omit) }}"
+      - "affine-mcp-server volumes: {{ affine_mcp_server_volumes | default(omit) }}"
+
+- name: deploy-affine-mcp-server | Create CHANGE container labels
+  ansible.builtin.set_fact:
+    affine_mcp_server_container_labels: "{{ affine_mcp_server_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.http.routers.{{ affine_mcp_server_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ affine_mcp_server_service_name }}.rule", "value": "Host(`{{ affine_mcp_server_fqdn }}`)" }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - { "key": "wud.link.template", "value": "https://github.com/DAWNCR0W/affine-mcp-server/releases/tag/v${major}.${minor}.${patch}" }
+
+- name: deploy-affine-mcp-server | Create affine-mcp-server networks
+  when: affine_mcp_server_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ affine_mcp_server_networks }}"
+
+- name: deploy-affine-mcp-server | Create affine-mcp-server volumes
+  when: affine_mcp_server_volumes is defined and (affine_mcp_server_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ affine_mcp_server_volume_name }}"
+
+- name: deploy-affine-mcp-server | Check if affine-mcp-server is running
+  community.docker.docker_container_info:
+    name: "{{ affine_mcp_server_service_name }}"
+  register: affine_mcp_server_state
+
+- name: deploy-affine-mcp-server | Pull affine-mcp-server image
+  community.docker.docker_image:
+    name: "{{ affine_mcp_server_image }}"
+    source: pull
+
+- name: deploy-affine-mcp-server | Remove affine-mcp-server container if changing version
+  when:
+    - affine_mcp_server_state.exists
+    - (affine_mcp_server_image | split(':') | last) != (affine_mcp_server_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-affine-mcp-server | Stop and remove existing affine-mcp-server container
+      community.docker.docker_container:
+        name: "{{ affine_mcp_server_service_name }}"
+        state: absent
+
+    - name: deploy-affine-mcp-server | Set update affine-mcp-server
+      ansible.builtin.set_fact:
+        affine_mcp_server_update: true
+
+# docker run -p 8000:8000 ghcr.io/open-webui/affine-mcp-server:main --api-key "top-secret" -- your_mcp_server_command
+- name: deploy-affine-mcp-server | Deploy affine-mcp-server if not running
+  when:
+    - not affine_mcp_server_state.exists or (affine_mcp_server_update | default(false))
+  block:
+    - name: deploy-affine-mcp-server | Deploy affine-mcp-server
+      community.docker.docker_container:
+        name: "{{ affine_mcp_server_service_name }}"
+        image: "{{ affine_mcp_server_image }}"
+        command: "{{ affine_mcp_server_command | default(omit) }}"
+        detach: true
+        env:
+          MCP_TRANSPORT: "http"
+          AFFINE_BASE_URL: "https://affine.lxc-productivity.homelab.greenthegarden.com"
+          AFFINE_EMAIL: "you@example.com"
+          AFFINE_PASSWORD:
+          AFFINE_MCP_AUTH_MODE: bearer
+          AFFINE_MCP_HTTP_TOKEN:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ affine_mcp_server_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ affine_mcp_server_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        # volumes: "{{ affine_mcp_server_mounts + affine_mcp_server_volumes }}"
+      register: affine_mcp_server_container_state
+
+- name: deploy-affine-mcp-server | Wait for affine-mcp-server to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ affine_mcp_server_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: affine_mcp_server_running
+  retries: 10
+  until: affine_mcp_server_running is success

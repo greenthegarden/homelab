@@ -209,15 +209,15 @@
     - name: deploy-traefik | Create acme configuration directory
       ansible.builtin.file:
         path: "{{ traefik_letsencrypt_dir }}"
-        mode: "644"
+        mode: "0644"
         state: directory
       register: acme_directory_creation
 
     - name: deploy-traefik | Create acme configuration file
       ansible.builtin.file:
         path: "{{ traefik_letsencrypt_dir }}/acme.json"
+        mode: "0600"
         state: touch
-        mode: "600"
       register: acme_configuration_creation
 
 - name: deploy-traefik | Pull Traefik image
