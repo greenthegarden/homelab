@@ -115,27 +115,23 @@
     source: pull
 
 # docker run -p 8000:8000 ghcr.io/open-webui/mcpo:main --api-key "top-secret" -- your_mcp_server_command
-- name: deploy-mcpo | Deploy mcpo if not running
-  when:
-    - not mcpo_state.exists or (mcpo_update | default(false))
-  block:
-    - name: deploy-mcpo | Deploy mcpo
-      community.docker.docker_container:
-        name: "{{ mcpo_service_name }}"
-        image: "{{ mcpo_image }}"
-        command: "{{ mcpo_command }}"
-        detach: true
-        env:
-          TZ: "{{ homelab.timezone | default('UTC') }}"
-        labels: "{{ mcpo_container_labels | default(omit) }}"
-        networks_cli_compatible: true
-        networks: "{{ mcpo_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
-        published_ports: "{{ mcpo_ports | default(omit) }}"
-        restart: true
-        restart_policy: unless-stopped
-        state: started
-        volumes: "{{ mcpo_mounts + mcpo_volumes | default(omit) }}"
-      register: mcpo_container_state
+- name: deploy-mcpo | Deploy mcpo
+  community.docker.docker_container:
+    name: "{{ mcpo_service_name }}"
+    image: "{{ mcpo_image }}"
+    command: "{{ mcpo_command }}"
+    detach: true
+    env:
+      TZ: "{{ homelab.timezone | default('UTC') }}"
+    labels: "{{ mcpo_container_labels | default(omit) }}"
+    networks_cli_compatible: true
+    networks: "{{ mcpo_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+    published_ports: "{{ mcpo_ports | default(omit) }}"
+    restart: true
+    restart_policy: unless-stopped
+    state: started
+    volumes: "{{ mcpo_mounts + mcpo_volumes | default(omit) }}"
+  register: mcpo_container_state
 
 - name: deploy-mcpo | Wait for mcpo to accept connections
   when: false
