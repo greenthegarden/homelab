@@ -79,6 +79,9 @@
     - { "key": "traefik.enable", "value": "true" }
     - { "key": "traefik.http.routers.{{ dockhand_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
     - { "key": "traefik.http.routers.{{ dockhand_service_name }}.rule", "value": "Host(`{{ dockhand_fqdn }}`)" }
+    - { "key": "traefik.http.routers.{{ dockhand_service_name }}.service", "value": "{{ dockhand_service_name }}" }
+    - { "key": "traefik.http.services.{{ dockhand_service_name }}.loadbalancer.server.port", "value": "{{ dockhand_service_port | int }}" }
+
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }

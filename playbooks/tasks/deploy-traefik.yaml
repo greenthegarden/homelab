@@ -132,7 +132,7 @@
       # - "--metrics.prometheus.addEntryPointsLabels=true"
 
     traefik_networks:
-      - { name: "{{ traefik_network_name }}", internal: true }
+      # - { name: "{{ traefik_network_name }}", internal: true }
       - { name: "{{ socket_proxy_network_name }}", internal: true }
       # - { name: "{{ monitoring_network_name | default('monitoring') }}" # not needed without prometheus }
       # Reverse Proxy  network is used to expose applications via Traefik
@@ -257,7 +257,7 @@
       - "no-new-privileges:true"
     state: started
     # user: "65530:65530"
-    volumes: "{{ default_host_volumes + traefik_volumes | default(omit) }}"
+    volumes: "{{ traefik_volumes | default(omit) }}"
   register: traefik_container_state
 
 - name: deploy-traefik | Wait for Traefik to accept connections

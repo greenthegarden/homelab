@@ -74,6 +74,9 @@
       "key": "traefik.http.routers.{{ open_webui_service_name }}.rule",
       "value": "Host(`{{ open_webui_fqdn }}`)",
     }
+    - { "key": "traefik.http.routers.{{ open_webui_service_name }}.service", "value": "{{ open_webui_service_name }}" }
+    - { "key": "traefik.http.services.{{ open_webui_service_name }}.loadbalancer.server.port", "value": "{{ open_webui_service_port | int }}" }
+
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-slim$$' }
@@ -132,7 +135,7 @@
         image: "{{ open_webui_image }}"
         detach: true
         env:
-          OLLAMA_BASE_URL: "{{ ollama_base_url | default('http://lxc-ollama-cpu.localdomain:11434') }}"
+          OLLAMA_BASE_URL: "{{ ollama_base_url | default('http://lxc-ollama-gpu.localdomain:11434') }}"
           ENABLE_RAG_WEB_SEARCH: "True"
           RAG_WEB_SEARCH_ENGINE: "searxng"
           RAG_WEB_SEARCH_RESULT_COUNT: "3"
