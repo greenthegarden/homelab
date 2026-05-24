@@ -112,7 +112,7 @@
     networks_cli_compatible: true
     networks: "{{ ha_mcp_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     published_ports: "{{ ha_mcp_ports | default(omit) }}"
-    read_only: true
+    # read_only: true
     restart: true
     restart_policy: unless-stopped
     security_opts:
