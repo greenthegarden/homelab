@@ -88,7 +88,7 @@
       - "--providers.docker.endpoint=tcp://{{ socket_proxy_service_name }}:{{ socket_proxy_service_port }}"
       # - "--providers.docker.endpoint='unix:///socket/traefik.sock'"
       - "--providers.docker.exposedByDefault=false"
-      - "--providers.docker.network={{ traefik_network_name }}"
+      - "--providers.docker.network={{ reverse_proxy_network_name | default('reverse-proxy') }}"
       - "--providers.docker.watch=true"
 
       ## Entrypoints Settings - https://docs.traefik.io/routing/entrypoints/#configuration ##
