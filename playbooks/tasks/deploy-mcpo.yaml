@@ -31,8 +31,8 @@
       - "--config"
       - "/app/config.json"
       - "--hot-reload"
-      - "--root-path"
-      - "/"
+      # - "--root-path"
+      # - "/"
       # - "--api-key"
       # - "top-secret"
     mcpo_mounts:
