@@ -216,7 +216,7 @@
       AUTHENTIK_LOG_LEVEL: warning # debug, info, warning, error, trace
       AUTHENTIK_SECRET_KEY: "{{ authentik.secret_key | default('dummy') }}"
     labels:
-      wud.watch: false
+      wud.watch: "false"
     networks_cli_compatible: true
     networks: "{{ authentik_worker_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
     restart: true
