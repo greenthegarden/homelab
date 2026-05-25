@@ -1,7 +1,7 @@
 ---
 - name: Deploy OmniTools
 
-  hosts: ansible
+  hosts: productivity
 
   vars:
 
@@ -9,11 +9,13 @@
     # renovate: datasource=docker depName=iib0011/omni-tools
     omnitools_image: iib0011/omni-tools:0.6.0
 
-  tasks:
+  pre_tasks:
 
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     - name: Deploy a containerised instance of OmniTools
       ansible.builtin.include_tasks:
