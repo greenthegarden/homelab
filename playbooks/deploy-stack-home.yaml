@@ -7,7 +7,7 @@
 
     # Authentik facts
     # renovate: datasource=docker depName=ghcr.io/goauthentik/server
-    # authentik_image: ghcr.io/goauthentik/server:2026.2.3
+    # authentik_image: ghcr.io/goauthentik/server:2026.5.0
 
     # Homepage facts
     # renovate: datasource=docker depName=ghcr.io/gethomepage/homepage
@@ -15,7 +15,7 @@
 
     # SearXNG facts
     # renovate: datasource=docker depName=searxng/searxng
-    searxng_image: searxng/searxng:2026.5.17-d7e8b7cd1
+    searxng_image: searxng/searxng:2026.5.23-323ce7600
 
     # Vaultwarden facts
     # renovate: datasource=docker depName=vaultwarden/server

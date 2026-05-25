@@ -41,5 +41,6 @@
 
     ########### Deploy Ntfy
     - name: Deploy a containerised instance of Ntfy
+      when: false
       ansible.builtin.include_tasks:
         file: tasks/deploy-ntfy.yaml
