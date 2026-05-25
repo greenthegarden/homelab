@@ -43,7 +43,7 @@
     authentik_worker_networks:
       - { name: "{{ authentik_network_name }}", internal: true }
       # Socket Proxy External provide access to exposed Docker APIs
-      - { name: "{{ authentik_socket_proxy_network_name }}" }
+      - { name: "{{ authentik_worker_socket_proxy_network_name }}" }
     authentik_ports:
       - "{{ authentik_service_port_http }}:9000"
     authentik_volumes:
@@ -63,7 +63,7 @@
       - "Authentik networks: {{ authentik_networks | default(omit) }}"
       - "Authentik ports: {{ authentik_ports | default(omit) }}"
       - "Authentik volumes: {{ authentik_volumes | default(omit) }}"
-      - "Authentik Worker networks: {{ authentik_networks | default(omit) }}"
+      - "Authentik Worker networks: {{ authentik_worker_networks | default(omit) }}"
 
 - name: deploy-authentik | Create Authentik container labels
   ansible.builtin.set_fact:
