@@ -1,4 +1,6 @@
 ---
+# https://docs.frigate.video/configuration/reference
+#
 {% if mqtt_broker is defined %}
 mqtt:
   enabled: true
@@ -11,6 +13,21 @@ mqtt:
   stats_interval: 60
 {% endif %}
 
+# Optional: Detectors configuration. Defaults to a single CPU detector
+detectors:
+  cpu1:
+    type: cpu
+
+# Optional: TLS configuration
+# Setup for reverse proxy
+# https://docs.frigate.video/guides/reverse_proxy/
+tls:
+  enabled: false
+
+# Optional: Authentication configuration
+auth:
+  reset_admin_password: false
+
 # Optional: logger verbosity settings
 logger:
   # Optional: Default log verbosity (default: shown below)
@@ -19,52 +36,65 @@ logger:
   logs:
     frigate.event: debug
 
-# Setup for reverse proxy
-# https://docs.frigate.video/guides/reverse_proxy/
-tls:
-  enabled: False
+# Optional: birdseye configuration
+# NOTE: Can (enabled, mode) be overridden at the camera level
+birdseye:
+  enabled: false
 
-auth:
-  reset_admin_password: False
+# Optional: ffmpeg configuration
+# More information about presets at https://docs.frigate.video/configuration/ffmpeg_presets
+ffmpeg:
+  # Optional: global hwaccel args (default: auto detect)
+  # NOTE: See hardware acceleration docs for your specific device
+  # hwaccel_args: preset-intel-qsv-h264
+  input_args: preset-http-reolink
+  output_args:
+    record: preset-record-generic-audio-copy
+
+# Optional: Detect configuration
+# NOTE: Can be overridden at the camera level
+detect:
+  # Optional: enables detection for the camera (default: shown below)
+  enabled: true
+
+# Optional: Record configuration
+# NOTE: Can be overridden at the camera level
+record:
+  # Optional: Enable recording (default: shown below)
+  # WARNING: If recording is disabled in the config, turning it on via
+  #          the UI or MQTT later will have no effect.
+  enabled: true
+  retain:
+    days: 3
+    mode: all
+  alerts:
+    retain:
+      days: 10
+  detections:
+    retain:
+      days: 10
 
 # Optional: Restream configuration
-# https://docs.frigate.video/configuration/camera_specific/
-# Uses https://github.com/AlexxIT/go2rtc (v1.2.0)
-# Based on https://github.com/blakeblackshear/frigate/issues/3235
+# Uses https://github.com/AlexxIT/go2rtc (v1.9.10)
+# NOTE: The default go2rtc API port (1984) must be used,
+#       changing this port for the integrated go2rtc instance is not supported.
 go2rtc:
-
   streams:
-
     # username: "admin"
-
     # Reolink Video Doorbell PoE
     doorbell:
       - ffmpeg:{{ cameras.doorbell.url }}/flv?port=1935&app=bcs&stream=channel0_main.bcs&user={{ frigate.cameras.doorbell.username }}&password={{ frigate.cameras.doorbell.password }}#video=copy#audio=copy#audio=opus
       - rtsp://camera-doorbell.{{ lan_domain }}/Preview_01_sub
     doorbell_sub:
       - ffmpeg:{{ cameras.doorbell.url }}/flv?port=1935&app=bcs&stream=channel0_ext.bcs&user={{ frigate.cameras.doorbell.username }}&password={{ frigate.cameras.doorbell.password }}
-
     # Reolink RLC-520A camera
     fronthall:
       - ffmpeg:{{ cameras.fronthall.url }}/flv?port=1935&app=bcs&stream=channel0_main.bcs&user={{ frigate.cameras.fronthall.username }}&password={{ frigate.cameras.fronthall.password }}#video=copy#audio=copy#audio=opus
     fronthall_sub:
       - ffmpeg:{{ cameras.fronthall.url }}/flv?port=1935&app=bcs&stream=channel0_ext.bcs&user={{ frigate.cameras.fronthall.username }}&password={{ frigate.cameras.fronthall.password }}
 
-ffmpeg:
-
-  # hwaccel_args: preset-intel-qsv-h264
-  input_args: preset-http-reolink
-  output_args:
-    record: preset-record-generic-audio-copy
-
-detectors:
-
-  cpu1:
-    type: cpu
-
 # Required
 cameras:
-
   doorbell:
     enabled: true
     ffmpeg:
@@ -77,9 +107,8 @@ cameras:
           input_args: preset-rtsp-restream
           roles:
             - detect
-
   fronthall:
-    enabled: true
+    enabled: false
     ffmpeg:
       inputs:
         - path: rtsp://127.0.0.1:8554/fronthall
@@ -90,29 +119,3 @@ cameras:
           input_args: preset-rtsp-restream
           roles:
             - detect
-
-birdseye:
-
-  enabled: false
-  mode: continuous
-  restream: false
-  width: 1920
-  height: 1080
-  quality: 4
-
-record:
-
-  enabled: true
-  retain:
-    days: 3
-    mode: all
-  alerts:
-    retain:
-      days: 10
-  detections:
-    retain:
-      days: 10
-
-version: 0.16-0
-detect:
-  enabled: true
