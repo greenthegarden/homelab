@@ -137,7 +137,9 @@
         image: "{{ grist_image }}"
         detach: true
         env:
-          GRIST_APP_URL: "https://{{ grist_fqdn }}/"
+          # https://github.com/gristlabs/grist-core?tab=readme-ov-file#environment-variables
+          APP_HOME_URL: "https://{{ grist_fqdn }}/"
+          # GRIST_APP_URL: "https://{{ grist_fqdn }}/"
           GRIST_SESSION_SECRET: "{{ grist.admin_password | default('dummy') }}"
           GRIST_DEFAULT_EMAIL: "{{ grist.admin_email | default('admin@' + grist_fqdn) }}"
           # OIDC Settings
