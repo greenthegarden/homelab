@@ -149,7 +149,7 @@
           HBOX_OIDC_ENABLED: 'true'
           HBOX_OIDC_ISSUER_URL: "https://authentik.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}/application/o/homebox/"
           HBOX_OIDC_CLIENT_ID: "{{ homebox.authentik.oidc_client_id | default('dummy') }}"
-          HBOX_OIDC_CLIENT_SECRET: "{{ homebox.authentik.oidc_client_id | default('dummy') }}"
+          HBOX_OIDC_CLIENT_SECRET: "{{ homebox.authentik.oidc_client_secret | default('dummy') }}"
           HBOX_OPTIONS_TRUST_PROXY: 'true'
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ homebox_container_labels | default(omit) }}"
