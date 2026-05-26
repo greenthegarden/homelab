@@ -150,7 +150,22 @@
           TUDUDI_SESSION_SECRET: "{{ tududi.session_secret | default('dummy') }}"
           # Variables specified in https://github.com/chrisvel/tududi
           TUDUDI_ALLOWED_ORIGINS: "http://{{ tududi_fqdn }},https://{{ tududi_fqdn }}"
+          BASE_URL: "https://{{ tududi_fqdn }}"
           TUDUDI_TRUST_PROXY: 'true'
+          ### OIDC configuration
+          # Enable OIDC
+          OIDC_ENABLED: 'true'
+          # Provider Configuration
+          OIDC_PROVIDER_NAME: Authentik
+          OIDC_PROVIDER_SLUG: authentik
+          OIDC_ISSUER_URL: "https://authentik.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}/application/o/tududi/"
+          OIDC_CLIENT_ID: "{{ tududi.authentik.oidc_client_id | default('dummy') }}"
+          OIDC_CLIENT_SECRET: "{{ tududi.authentik.oidc_client_secret | default('dummy') }}"
+          OIDC_SCOPE: "openid profile email"
+          # Auto-provisioning (recommended)
+          OIDC_AUTO_PROVISION: 'true'
+          # Optional: Auto-assign admin role to specific email domains
+          OIDC_ADMIN_EMAIL_DOMAINS: "{{ homelab.certificate_domain | default('localdomain') }}"
         labels: "{{ tududi_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ tududi_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
