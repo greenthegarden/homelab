@@ -197,6 +197,13 @@
           DATABASE_URL: "{{ affine_postgres_url }}?schema=public"
           REDIS_SERVER_HOST: "{{ affine_redis_host }}"
           TZ: "{{ homelab.timezone | default('UTC') }}"
+          # --- Generic OIDC (Authelia as IdP) ---
+          # OAUTH_OIDC_ISSUER: "https://auth.example.com"
+          # OAUTH_OIDC_CLIENT_ID: "${OIDC_CLIENT_ID}"
+          # OAUTH_OIDC_CLIENT_SECRET: "${OIDC_CLIENT_SECRET}"
+          # OAUTH_OIDC_SCOPE: "openid email profile offline_access"
+          # OAUTH_OIDC_CLAIM_MAP_ID: preferred_username
+          # OAUTH_OIDC_CLAIM_MAP_EMAIL: email
         networks_cli_compatible: true
         networks: "{{ affine_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
         state: started

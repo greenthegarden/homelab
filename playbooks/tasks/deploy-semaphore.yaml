@@ -146,18 +146,6 @@
         name: "{{ semaphore_image }}"
         source: pull
 
-    # docker run --name semaphore \
-    # -p 3000:3000 \
-    # -e SEMAPHORE_DB_DIALECT=bolt \
-    # -e SEMAPHORE_ADMIN=admin \
-    # -e SEMAPHORE_ADMIN_PASSWORD=changeme \
-    # -e SEMAPHORE_ADMIN_NAME="Admin" \
-    # -e SEMAPHORE_ADMIN_EMAIL=admin@localhost \
-    # -v semaphore_data:/var/lib/semaphore \
-    # -v semaphore_config:/etc/semaphore \
-    # -v semaphore_tmp:/tmp/semaphore \
-    # -d semaphoreui/semaphore:v2.12.4
-
     - name: deploy-semaphore | Deploy Semaphore
       community.docker.docker_container:
         name: "{{ semaphore_service_name }}"
@@ -170,6 +158,7 @@
           SEMAPHORE_ADMIN_NAME: "{{ semaphore.admin_name | default('Admin') }}"
           SEMAPHORE_ADMIN_EMAIL: "{{ semaphore.admin_email | default('admin@localhost') }}"
           # SEMAPHORE_MAX_TASKS_PER_TEMPLATE: "{{ 10 | quote | default(omit) }}"
+          SEMAPHORE_WEB_ROOT: "/"
         labels: "{{ semaphore_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ semaphore_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
