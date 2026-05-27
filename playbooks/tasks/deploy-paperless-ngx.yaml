@@ -196,6 +196,13 @@
           # See https://packages.debian.org/search?keywords=tesseract-ocr-&searchon=names
           # for available languages.
           # PAPERLESS_OCR_LANGUAGES=tur ces
+          # OIDC Configuration
+          # https://integrations.goauthentik.io/documentation/paperless-ngx/
+          PAPERLESS_APPS: allauth.socialaccount.providers.openid_connect
+          PAPERLESS_SOCIALACCOUNT_PROVIDERS: {"openid_connect": {"OAUTH_PKCE_ENABLED": true, "APPS": [{"provider_id": "authentik", "name": "authentik", "client_id": "{{ paperless_ngx.authentik.oidc_client_id | default('dummy') }}", "secret": "{{ paperless_ngx.authentik.oidc_client_secret | default('dummy') }}", "settings": {"server_url": "https://authentik.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}/application/o/paperless-ngx/.well-known/openid-configuration", "fetch_userinfo": true}}], "SCOPE": ["openid", "profile", "email"]}}
+          PAPERLESS_LOGOUT_REDIRECT_URL: "https://authentik.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}/application/o/paperless-ngx/end-session/"
+          PAPERLESS_SOCIAL_AUTO_SIGNUP: 'true'
+          PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS: 'true'
         labels: "{{ paperless_ngx_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ paperless_ngx_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"

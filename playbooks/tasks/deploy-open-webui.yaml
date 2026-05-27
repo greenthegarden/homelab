@@ -136,11 +136,24 @@
         detach: true
         env:
           OLLAMA_BASE_URL: "{{ ollama_base_url | default('http://lxc-ollama-gpu.localdomain:11434') }}"
+          WEBUI_URL: "https://{{ open_webui_fqdn }}"
           ENABLE_RAG_WEB_SEARCH: "True"
           RAG_WEB_SEARCH_ENGINE: "searxng"
           RAG_WEB_SEARCH_RESULT_COUNT: "3"
           RAG_WEB_SEARCH_CONCURRENT_REQUESTS: "10"
           SEARXNG_QUERY_URL: "http://searxng:8080/search?q=<query>"
+          # OIDC Configuration
+          # https://integrations.goauthentik.io/miscellaneous/open-webui/
+          OAUTH_CLIENT_ID: "{{ open_webui.authentik.oidc_client_id | default('dummy') }}"
+          OAUTH_CLIENT_SECRET: "{{ open_webui.authentik.oidc_client_secret | default('dummy') }}"
+          OAUTH_PROVIDER_NAME: authentik
+          OPENID_PROVIDER_URL: "https://authentik.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}/application/o/open-webui/.well-known/openid-configuration"
+          OPENID_REDIRECT_URI: "https://{{ open_webui_fqdn }}/oauth/oidc/callback"
+          # Allows auto-creation of new users using OAuth. Must be paired with ENABLE_LOGIN_FORM=false.
+          ENABLE_OAUTH_SIGNUP: 'true'
+          # Disables user/password login form. Required when ENABLE_OAUTH_SIGNUP=true.
+          ENABLE_LOGIN_FORM: 'false'
+          OAUTH_MERGE_ACCOUNTS_BY_EMAIL: 'true'
         etc_hosts:
           host.docker.internal: host-gateway
         labels: "{{ open_webui_container_labels | default(omit) }}"
