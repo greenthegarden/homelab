@@ -75,21 +75,12 @@
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.routers.{{ tududi_service_name }}.entrypoints",
-      "value": "websecure",
-    }
-    - {
-      "key": "traefik.http.routers.{{ tududi_service_name }}.rule",
-      "value": "Host(`{{ tududi_fqdn }}`)",
-    }
+    - { "key": "traefik.http.routers.{{ tududi_service_name }}.entrypoints", "value": "websecure" }
+    - { "key": "traefik.http.routers.{{ tududi_service_name }}.rule", "value": "Host(`{{ tududi_fqdn }}`)" }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/chrisvel/tududi/releases/tag/v${major}.${minor}.${patch}",
-    }
+    - { "key": "wud.link.template", "value": "https://github.com/chrisvel/tududi/releases/tag/v${major}.${minor}.${patch}" }
 
 - name: deploy-tududi | Create Tududi networks
   when: tududi_networks is defined
@@ -118,7 +109,6 @@
     - tududi_state.exists
     - (tududi_image | split(':') | last) != (tududi_state.container.Config.Image | split(':') | last)
   block:
-
     - name: deploy-tududi | Stop and remove existing Tududi container
       community.docker.docker_container:
         name: "{{ tududi_service_name }}"
@@ -132,7 +122,6 @@
   when:
     - not tududi_state.exists or (tududi_update | default(false))
   block:
-
     - name: deploy-tududi | Pull Tududi image
       community.docker.docker_image:
         name: "{{ tududi_image }}"
@@ -144,17 +133,16 @@
         image: "{{ tududi_image }}"
         detach: true
         env:
-          TZ: "{{ homelab.timezone | default('UTC') }}"
+          BASE_URL: "https://{{ tududi_fqdn }}"
           TUDUDI_USER_EMAIL: "{{ tududi.admin_email | default('admin@' + tududi_fqdn) }}"
           TUDUDI_USER_PASSWORD: "{{ tududi.admin_password | default('dummy') }}"
           TUDUDI_SESSION_SECRET: "{{ tududi.session_secret | default('dummy') }}"
           # Variables specified in https://github.com/chrisvel/tududi
           TUDUDI_ALLOWED_ORIGINS: "http://{{ tududi_fqdn }},https://{{ tududi_fqdn }}"
-          BASE_URL: "https://{{ tududi_fqdn }}"
-          TUDUDI_TRUST_PROXY: 'true'
+          TUDUDI_TRUST_PROXY: "true"
           ### OIDC configuration
           # Enable OIDC
-          OIDC_ENABLED: 'true'
+          OIDC_ENABLED: "true"
           # Provider Configuration
           OIDC_PROVIDER_NAME: Authentik
           OIDC_PROVIDER_SLUG: authentik
@@ -163,9 +151,10 @@
           OIDC_CLIENT_SECRET: "{{ tududi.authentik.oidc_client_secret | default('dummy') }}"
           OIDC_SCOPE: "openid profile email"
           # Auto-provisioning (recommended)
-          OIDC_AUTO_PROVISION: 'true'
+          OIDC_AUTO_PROVISION: "true"
           # Optional: Auto-assign admin role to specific email domains
           OIDC_ADMIN_EMAIL_DOMAINS: "{{ homelab.certificate_domain | default('localdomain') }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ tududi_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ tududi_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"

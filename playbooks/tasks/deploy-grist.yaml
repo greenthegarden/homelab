@@ -1,5 +1,4 @@
 ---
-
 - name: deploy-grist | Ensure required Grist variables are set
   ansible.builtin.assert:
     that:
@@ -68,21 +67,12 @@
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.routers.{{ grist_service_name }}.entrypoints",
-      "value": "{{ traefik_entrypoint_secure_name }}",
-    }
-    - {
-      "key": "traefik.http.routers.{{ grist_service_name }}.rule",
-      "value": "Host(`{{ grist_fqdn }}`)",
-    }
+    - { "key": "traefik.http.routers.{{ grist_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ grist_service_name }}.rule", "value": "Host(`{{ grist_fqdn }}`)" }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/gristlabs/grist-core/releases/tag/v${major}.${minor}.${patch}",
-    }
+    - { "key": "wud.link.template", "value": "https://github.com/gristlabs/grist-core/releases/tag/v${major}.${minor}.${patch}" }
 
 - name: deploy-grist | Create Grist networks
   when: grist_networks is defined
@@ -111,7 +101,6 @@
     - grist_state.exists
     - (grist_image | split(':') | last) != (grist_state.container.Config.Image | split(':') | last)
   block:
-
     - name: deploy-grist | Stop and remove existing Grist container
       community.docker.docker_container:
         name: "{{ grist_service_name }}"
@@ -125,7 +114,6 @@
   when:
     - not grist_state.exists or (grist_update | default(false))
   block:
-
     - name: deploy-grist | Pull Grist image
       community.docker.docker_image:
         name: "{{ grist_image }}"
@@ -147,7 +135,7 @@
           GRIST_OIDC_IDP_ISSUER: "https://authentik.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}/application/o/grist/"
           GRIST_OIDC_IDP_CLIENT_ID: "{{ grist.authentik.oidc_client_id | default('dummy') }}"
           GRIST_OIDC_IDP_CLIENT_SECRET: "{{ grist.authentik.oidc_client_secret | default('dummy') }}"
-          GRIST_OIDC_IDP_SCOPES: "openid profile email"
+          GRIST_OIDC_IDP_SCOPES: "openid profile check_verified_email"
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ grist_container_labels | default(omit) }}"
         networks_cli_compatible: true
@@ -179,7 +167,6 @@
     docker_volume_backup_backup_label: "{{ grist_volume_name }}"
     docker_volume_backup_backup_retention_days: 7
   block:
-
     - name: deploy-grist | Deploy a containerised instance of Docker Volume Backup
       ansible.builtin.include_tasks:
         file: tasks/deploy-docker-volume-backup.yaml
