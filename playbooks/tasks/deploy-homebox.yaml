@@ -135,22 +135,24 @@
         name: "{{ homebox_image }}"
         source: pull
 
-    # docker run -d -p 3000:3000 homebox/homebox
     - name: deploy-homebox | Deploy Homebox
       community.docker.docker_container:
         name: "{{ homebox_service_name }}"
         image: "{{ homebox_image }}"
         detach: true
         env:
+          # https://homebox.software/en/quick-start/configure/
           HBOX_LOG_LEVEL: "info"
           HBOX_LOG_FORMAT: "json"
+          HBOX_OPTIONS_HOSTNAME: "{{ homebox_fqdn }}"
+          HBOX_OPTIONS_TRUST_PROXY: 'true'
           HBOX_WEB_MAX_UPLOAD_SIZE: "10"
           # OIDC Setup
           HBOX_OIDC_ENABLED: 'true'
+          HBOX_OIDC_SCOPE: 'openid profile email'
           HBOX_OIDC_ISSUER_URL: "https://authentik.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}/application/o/homebox/"
           HBOX_OIDC_CLIENT_ID: "{{ homebox.authentik.oidc_client_id | default('dummy') }}"
           HBOX_OIDC_CLIENT_SECRET: "{{ homebox.authentik.oidc_client_secret | default('dummy') }}"
-          HBOX_OPTIONS_TRUST_PROXY: 'true'
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ homebox_container_labels | default(omit) }}"
         networks_cli_compatible: true
