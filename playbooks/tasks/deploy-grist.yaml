@@ -135,7 +135,7 @@
           GRIST_OIDC_IDP_ISSUER: "https://authentik.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}/application/o/grist/"
           GRIST_OIDC_IDP_CLIENT_ID: "{{ grist.authentik.oidc_client_id | default('dummy') }}"
           GRIST_OIDC_IDP_CLIENT_SECRET: "{{ grist.authentik.oidc_client_secret | default('dummy') }}"
-          GRIST_OIDC_IDP_SCOPES: "openid profile check_verified_email"
+          GRIST_OIDC_IDP_SCOPES: "openid profile email"
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ grist_container_labels | default(omit) }}"
         networks_cli_compatible: true

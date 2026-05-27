@@ -7,7 +7,7 @@
 
     # ha-mcp facts
     # renovate: datasource=docker depName=ghcr.io/homeassistant-ai/ha-mcp
-    ha_mcp_image: ghcr.io/homeassistant-ai/ha-mcp:latest
+    ha_mcp_image: ghcr.io/homeassistant-ai/ha-mcp:7.5.0
 
   pre_tasks:
 
