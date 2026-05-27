@@ -1,0 +1,27 @@
+---
+# To use:
+#   Copy file to /playbooks and rename to 'deploy-project-name.yaml'
+#   Search and replace the following with 'Match Case Sensitivity' enabled:
+#     'ChangeMe' -> 'Project Name'
+#     'changeme_' -> 'project_name_'
+#   ' '-changeme' -> '-project-name'
+#   Update hosts value
+
+- name: Deploy ChangeMe
+
+  hosts: home
+
+  vars:
+    # ChangeMe facts
+    # renovate: datasource=docker depName=changeme/changeme
+    changeme_image: changeme/changeme:v1.0.29
+
+  pre_tasks:
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+  tasks:
+    - name: Deploy a containerised instance of ChangeMe
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-changeme.yaml

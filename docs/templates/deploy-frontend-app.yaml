@@ -1,5 +1,10 @@
 ---
-####### CHANGEME SECTION
+# To use:
+#   Copy file to /playbooks/tasks and rename to 'deploy-project-name.yaml'
+#   Search and replace the following with 'Match Case Sensitivity' enabled:
+#     'ChangeMe' -> 'Project Name'
+#     'changeme_' -> 'project_name_'
+#   ' '-changeme' -> '-project-name'
 
 # Website: https://changeme.com/
 # Github: https://github.com/changeme/changeme
@@ -35,6 +40,7 @@
     changeme_volumes: []
       # Local paths to mount into the container
       # local path:container path
+      # - "{{ changeme_volume_name }}:/app/data"
 
 - name: deploy-changeme | Log ChangeMe configuration
   ansible.builtin.debug:
@@ -70,7 +76,7 @@
     - { "key": "wud.link.template", "value": "https://github.com/changeme/changeme/releases/tag/v${major}.${minor}.${patch}" }
 
 - name: deploy-changeme | Create ChangeMe networks
-  when: changeme_networks is defined
+  when: changeme_networks is defined and (changeme_networks | length > 0)
   community.docker.docker_network:
     name: "{{ item.name }}"
     driver: "{{ item.driver | default('bridge') }}"
@@ -79,12 +85,17 @@
   loop: "{{ changeme_networks }}"
 
 - name: deploy-changeme | Create ChangeMe volumes
-  when: changeme_volume_cache_name is defined and changeme_volume_config_name is defined and (changeme_volumes | length > 0)
+  when: changeme_volumes is defined and (changeme_volumes | length > 0)
   community.docker.docker_volume:
     name: "{{ item }}"
     state: present
   loop:
     - "{{ changeme_volume_name }}"
+
+- name: deploy-changeme | Pull ChangeMe image
+  community.docker.docker_image:
+    name: "{{ changeme_image }}"
+    source: pull
 
 - name: deploy-changeme | Check if ChangeMe is running
   community.docker.docker_container_info:
@@ -109,23 +120,33 @@
   when:
     - not changeme_state.exists or (changeme_update | default(false))
   block:
-    - name: deploy-changeme | Pull ChangeMe image
-      community.docker.docker_image:
-        name: "{{ changeme_image }}"
-        source: pull
-
     - name: deploy-changeme | Deploy ChangeMe
       community.docker.docker_container:
         name: "{{ changeme_service_name }}"
         image: "{{ changeme_image }}"
+        cap_drop:
+          - ALL
+        command: "{{ changeme_args | default(omit) }}"
+        deploy:
+          resources:
+            limits:
+              cpus: "0.5"
+              memory: 128M
         detach: true
         env:
           TZ: "{{ homelab.timezone | default('UTC') }}"
+        healthcheck:
+          test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+          interval: 30s
+          retries: 3
+          timeout: 3s
         labels: "{{ changeme_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ changeme_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
+        security_opt:
+          - no-new-privileges:true
         state: started
         volumes: "{{ changeme_volumes | default(omit) }}"
       register: changeme_container_state

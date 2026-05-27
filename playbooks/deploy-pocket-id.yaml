@@ -1,0 +1,19 @@
+---
+- name: Deploy Pocket ID
+
+  hosts: home
+
+  vars:
+    # Pocket ID facts
+    # renovate: datasource=docker depName=pocket-id/pocket-id
+    pocket_id_image: ghcr.io/pocket-id/pocket-id:v2.7.0
+
+  pre_tasks:
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+  tasks:
+    - name: Deploy a containerised instance of Pocket ID
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-pocket-id.yaml

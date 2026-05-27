@@ -1,0 +1,169 @@
+---
+# Website: https://changeme.com/
+# Github: https://github.com/changeme/changeme
+# Docker:
+
+- name: deploy-pocket-id | Set Pocket ID facts
+  ansible.builtin.set_fact:
+    pocket_id_image: "{{ pocket_id_image | default('ghcr.io/pocket-id/pocket-id:latest') }}"
+    pocket_id_service_name: "{{ pocket_id_service_name | default('pocket-id') }}"
+    pocket_id_service_port: "{{ pocket_id_service_port | default(1411) }}"
+
+- name: deploy-pocket-id | Set Pocket ID network facts
+  ansible.builtin.set_fact:
+    pocket_id_network_name: "{{ pocket_id_network_name | default(pocket_id_service_name) }}"
+
+- name: deploy-pocket-id | Set Pocket ID volume facts
+  ansible.builtin.set_fact:
+    pocket_id_volume_name: "{{ pocket_id_volume_name | default(pocket_id_service_name) }}"
+
+- name: deploy-pocket-id | Set Pocket ID aggregated facts
+  ansible.builtin.set_fact:
+    pocket_id_fqdn: "{{ pocket_id_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-pocket-id | Set Pocket ID service facts
+  ansible.builtin.set_fact:
+    pocket_id_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    pocket_id_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ pocket_id_service_port }}:1411"
+    pocket_id_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ pocket_id_volume_name }}:/app/data"
+
+- name: deploy-pocket-id | Log Pocket ID configuration
+  ansible.builtin.debug:
+    msg:
+      - "Pocket ID image: {{ pocket_id_image }}"
+      - "Pocket ID service name: {{ pocket_id_service_name }}"
+      - "Pocket ID FQDN: {{ pocket_id_fqdn }}"
+      - "Pocket ID command: {{ pocket_id_command | default(omit) }}"
+      - "Pocket ID networks: {{ pocket_id_networks | default(omit) }}"
+      - "Pocket ID ports: {{ pocket_id_ports | default(omit) }}"
+      - "Pocket ID volumes: {{ pocket_id_volumes | default(omit) }}"
+
+- name: deploy-pocket-id | Create Pocket ID container labels
+  ansible.builtin.set_fact:
+    pocket_id_container_labels: "{{ pocket_id_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "System" }
+    - { "key": "homepage.name", "value": "Pocket ID" }
+    - { "key": "homepage.description", "value": "A simple and easy-to-use OIDC provider that allows users to authenticate with their passkeys to your services." }
+    - { "key": "homepage.icon", "value": "pocket-id.png" }
+    - { "key": "homepage.href", "value": "https://{{ pocket_id_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ pocket_id_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.http.routers.{{ pocket_id_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ pocket_id_service_name }}.rule", "value": "Host(`{{ pocket_id_fqdn }}`)" }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - { "key": "wud.link.template", "value": "https://github.com/pocket-id/pocket-id/releases/tag/v${major}.${minor}.${patch}" }
+
+- name: deploy-pocket-id | Create Pocket ID networks
+  when: pocket_id_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ pocket_id_networks }}"
+
+- name: deploy-pocket-id | Create Pocket ID volumes
+  when: pocket_id_volumes is defined and (pocket_id_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ pocket_id_volume_name }}"
+
+- name: deploy-pocket-id | Check if Pocket ID is running
+  community.docker.docker_container_info:
+    name: "{{ pocket_id_service_name }}"
+  register: pocket_id_state
+
+- name: deploy-pocket-id | Pull Pocket ID image
+  community.docker.docker_image:
+    name: "{{ pocket_id_image }}"
+    source: pull
+
+- name: deploy-pocket-id | Remove Pocket ID container if changing version
+  when:
+    - pocket_id_state.exists
+    - (pocket_id_image | split(':') | last) != (pocket_id_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-pocket-id | Stop and remove existing Pocket ID container
+      community.docker.docker_container:
+        name: "{{ pocket_id_service_name }}"
+        state: absent
+
+    - name: deploy-pocket-id | Set update Pocket ID
+      ansible.builtin.set_fact:
+        pocket_id_update: true
+
+- name: deploy-pocket-id | Deploy Pocket ID if not running
+  when:
+    - not pocket_id_state.exists or (pocket_id_update | default(false))
+  block:
+    - name: deploy-pocket-id | Deploy Pocket ID
+      community.docker.docker_container:
+        name: "{{ pocket_id_service_name }}"
+        image: "{{ pocket_id_image }}"
+        # cap_drop:
+        #   - ALL
+        command: "{{ pocket_id_args | default(omit) }}"
+        # deploy:
+        #   resources:
+        #     limits:
+        #       cpus: "0.5"
+        #       memory: 128M
+        detach: true
+        env:
+          APP_URL: "https://{{ pocket_id_fqdn }}"
+          # Encryption key (choose one method):
+          # Method 1: Direct key (simple but less secure)
+          # Generate with: openssl rand -base64 32
+          ENCRYPTION_KEY: "{{ pocket_id.encryption_key | default('dummy') }}"
+          # Method 2: File-based key (recommended)
+          # Put the base64 key in a file and point to it here.
+          # ENCRYPTION_KEY_FILE=/path/to/encryption_key
+          # These variables are optional but recommended to review:
+          TRUST_PROXY: 'true'
+          # MAXMIND_LICENSE_KEY:
+          # PUID: '1000'
+          # PGID: '1000'
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        healthcheck:
+          test: ["CMD", "/app/pocket-id", "healthcheck"]
+          interval: 1m30s
+          timeout: 5s
+          retries: 2
+          start_period: 10s
+        labels: "{{ pocket_id_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ pocket_id_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ pocket_id_volumes | default(omit) }}"
+      register: pocket_id_container_state
+
+- name: deploy-pocket-id | Wait for Pocket ID to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ pocket_id_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: pocket_id_running
+  retries: 10
+  until: pocket_id_running is success
