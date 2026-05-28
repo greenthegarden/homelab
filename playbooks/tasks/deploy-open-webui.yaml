@@ -150,9 +150,9 @@
           OPENID_PROVIDER_URL: "https://authentik.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}/application/o/open-webui/.well-known/openid-configuration"
           OPENID_REDIRECT_URI: "https://{{ open_webui_fqdn }}/oauth/oidc/callback"
           # Allows auto-creation of new users using OAuth. Must be paired with ENABLE_LOGIN_FORM=false.
-          ENABLE_OAUTH_SIGNUP: 'true'
+          ENABLE_OAUTH_SIGNUP: 'false'
           # Disables user/password login form. Required when ENABLE_OAUTH_SIGNUP=true.
-          ENABLE_LOGIN_FORM: 'false'
+          ENABLE_LOGIN_FORM: 'true'
           OAUTH_MERGE_ACCOUNTS_BY_EMAIL: 'true'
         etc_hosts:
           host.docker.internal: host-gateway

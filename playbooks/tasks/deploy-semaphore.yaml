@@ -153,19 +153,21 @@
         detach: true
         env:
           SEMAPHORE_DB_DIALECT: "{{ semaphore_db_dialect }}"
-          SEMAPHORE_ADMIN: "{{ semaphore.admin_username | default('admin') }}"
-          SEMAPHORE_ADMIN_PASSWORD: "{{ semaphore.admin_password | default('changeme') }}"
-          SEMAPHORE_ADMIN_NAME: "{{ semaphore.admin_name | default('Admin') }}"
-          SEMAPHORE_ADMIN_EMAIL: "{{ semaphore.admin_email | default('admin@localhost') }}"
-          # SEMAPHORE_MAX_TASKS_PER_TEMPLATE: "{{ 10 | quote | default(omit) }}"
+          SEMAPHORE_SCHEDULE_TIMEZONE: "{{ homelab.timezone | default('UTC') }}"
           SEMAPHORE_WEB_ROOT: "/"
+          # SEMAPHORE_ADMIN: "{{ semaphore.admin_username | default('admin') }}"
+          # SEMAPHORE_ADMIN_PASSWORD: "{{ semaphore.admin_password | default('changeme') }}"
+          # SEMAPHORE_ADMIN_NAME: "{{ semaphore.admin_name | default('Admin') }}"
+          # SEMAPHORE_ADMIN_EMAIL: "{{ semaphore.admin_email | default('admin@localhost') }}"
+          # SEMAPHORE_MAX_TASKS_PER_TEMPLATE: "{{ 10 | quote | default(omit) }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ semaphore_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ semaphore_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
         state: started
-        volumes: "{{ default_host_volumes + semaphore_volumes | default(omit) }}"
+        volumes: "{{ semaphore_volumes | default(omit) }}"
       register: semaphore_container_state
 
 - name: deploy-semaphore | Wait for Semaphore to accept connections
