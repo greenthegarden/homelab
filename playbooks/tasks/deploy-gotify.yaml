@@ -131,6 +131,7 @@
         name: "{{ gotify_service_name }}"
         image: "{{ gotify_image }}"
         detach: true
+        # https://gotify.net/docs/config#environment-variables
         env:
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ gotify_container_labels | default(omit) }}"
