@@ -77,21 +77,12 @@
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.routers.{{ paperless_ngx_service_name }}.entrypoints",
-      "value": "websecure",
-    }
-    - {
-      "key": "traefik.http.routers.{{ paperless_ngx_service_name }}.rule",
-      "value": "Host(`{{ paperless_ngx_fqdn }}`)",
-    }
+    - { "key": "traefik.http.routers.{{ paperless_ngx_service_name }}.entrypoints", "value": "websecure" }
+    - { "key": "traefik.http.routers.{{ paperless_ngx_service_name }}.rule", "value": "Host(`{{ paperless_ngx_fqdn }}`)" }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/paperless-ngx/paperless-ngx/releases/tag/v${major}.${minor}.${patch}",
-    }
+    - { "key": "wud.link.template", "value": "https://github.com/paperless-ngx/paperless-ngx/releases/tag/v${major}.${minor}.${patch}" }
 
 - name: deploy-paperless-ngx | Create Paperless-ngx networks
   when: paperless_ngx_networks is defined
@@ -112,7 +103,6 @@
 - name: deploy-paperless-ngx | Create Paperless-ngx mounts
   when: paperless_ngx_mounts is defined and (paperless_ngx_mounts | length > 0)
   block:
-
     - name: deploy-paperless-ngx | Create Paperless-ngx mount directories
       ansible.builtin.file:
         path: "{{ item }}"
@@ -143,7 +133,6 @@
     - paperless_ngx_state.exists
     - (paperless_ngx_image | split(':') | last) != (paperless_ngx_state.container.Config.Image | split(':') | last)
   block:
-
     - name: deploy-paperless-ngx | Stop and remove existing Paperless-ngx container
       community.docker.docker_container:
         name: "{{ paperless_ngx_service_name }}"
@@ -157,7 +146,6 @@
   when:
     - not paperless_ngx_state.exists or (paperless_ngx_update | default(false))
   block:
-
     - name: deploy-paperless-ngx | Pull Paperless-ngx image
       community.docker.docker_image:
         name: "{{ paperless_ngx_image }}"
@@ -199,10 +187,10 @@
           # OIDC Configuration
           # https://integrations.goauthentik.io/documentation/paperless-ngx/
           PAPERLESS_APPS: allauth.socialaccount.providers.openid_connect
-          PAPERLESS_SOCIALACCOUNT_PROVIDERS: {"openid_connect": {"OAUTH_PKCE_ENABLED": true, "APPS": [{"provider_id": "authentik", "name": "authentik", "client_id": "{{ paperless_ngx.authentik.oidc_client_id | default('dummy') }}", "secret": "{{ paperless_ngx.authentik.oidc_client_secret | default('dummy') }}", "settings": {"server_url": "https://authentik.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}/application/o/paperless-ngx/.well-known/openid-configuration", "fetch_userinfo": true}}], "SCOPE": ["openid", "profile", "email"]}}
+          PAPERLESS_SOCIALACCOUNT_PROVIDERS: '{"openid_connect": {"OAUTH_PKCE_ENABLED": true, "APPS": [{"provider_id": "authentik", "name": "authentik", "client_id": "{{ paperless_ngx.authentik.oidc_client_id }}", "secret": "{{ paperless_ngx.authentik.oidc_client_secret }}", "settings": {"server_url": "https://authentik.lxc-home.{{ homelab.certificate_domain }}/application/o/paperless-ngx/.well-known/openid-configuration", "fetch_userinfo": true}}], "SCOPE": ["openid", "profile", "email"]}}'
           PAPERLESS_LOGOUT_REDIRECT_URL: "https://authentik.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}/application/o/paperless-ngx/end-session/"
-          PAPERLESS_SOCIAL_AUTO_SIGNUP: 'true'
-          PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS: 'true'
+          PAPERLESS_SOCIAL_AUTO_SIGNUP: "true"
+          PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS: "true"
         labels: "{{ paperless_ngx_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ paperless_ngx_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
