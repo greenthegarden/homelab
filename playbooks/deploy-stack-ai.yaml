@@ -4,13 +4,10 @@
   hosts: ai
 
   vars:
-
     # Assumes Ollama is already deployed
     # ollama_base_url: "{{ ollama_base_url | default('http://lxc-ollama-cpu.localdomain:11434') }}"
 
     # SearXNG facts
-    # renovate: datasource=docker depName=searxng/searxng
-    searxng_image: searxng/searxng:2026.5.17-d7e8b7cd1
     searxng_homepage_hide: true
 
     # Open WebUI facts
@@ -23,7 +20,6 @@
     n8n_image: n8nio/n8n:2.22.2
 
   pre_tasks:
-
     - name: Ensure base environment is configured
       ansible.builtin.include_tasks:
         file: tasks/configure-containerised-base.yaml
@@ -33,7 +29,6 @@
         file: vars/homelab_env.yaml
 
   tasks:
-
     - name: Deploy a containerised instance of SearXNG
       ansible.builtin.include_tasks:
         file: tasks/deploy-searxng.yaml

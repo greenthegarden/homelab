@@ -1,5 +1,4 @@
 ---
-
 ####### OPEN WEBUI SECTION
 
 - name: deploy-open-webui | Set Open WebUI facts
@@ -59,33 +58,21 @@
     - { "key": "homepage.description", "value": "User-friendly AI interface" }
     - { "key": "homepage.icon", "value": "open-webui.png" }
     - { "key": "homepage.href", "value": "https://{{ open_webui_fqdn }}/" }
-    - {
-      "key": "homepage.siteMonitor",
-      "value": "https://{{ open_webui_fqdn }}/",
-    }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ open_webui_fqdn }}/" }
     # ---------------------------------------------------------------
     # Traefik labels
     - { "key": "traefik.enable", "value": "true" }
-    - {
-      "key": "traefik.http.routers.{{ open_webui_service_name }}.entrypoints",
-      "value": "websecure",
-    }
-    - {
-      "key": "traefik.http.routers.{{ open_webui_service_name }}.rule",
-      "value": "Host(`{{ open_webui_fqdn }}`)",
-    }
+    - { "key": "traefik.http.routers.{{ open_webui_service_name }}.entrypoints", "value": "websecure" }
+    - { "key": "traefik.http.routers.{{ open_webui_service_name }}.rule", "value": "Host(`{{ open_webui_fqdn }}`)" }
     - { "key": "traefik.http.routers.{{ open_webui_service_name }}.service", "value": "{{ open_webui_service_name }}" }
     - { "key": "traefik.http.services.{{ open_webui_service_name }}.loadbalancer.server.port", "value": "{{ open_webui_service_port | int }}" }
 
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+-slim$$' }
-    - {
-      "key": "wud.link.template",
-      "value": "https://github.com/open-webui/open-webui/releases/tag/v${major}.${minor}.${patch}",
-    }
+    - { "key": "wud.link.template", "value": "https://github.com/open-webui/open-webui/releases/tag/v${major}.${minor}.${patch}" }
 
-- name: deploy-open-webui | Create Open WebUI networks  # noqa: syntax-check[unknown-module]
+- name: deploy-open-webui | Create Open WebUI networks # noqa: syntax-check[unknown-module]
   when: open_webui_networks is defined
   community.docker.docker_network:
     name: "{{ item.name }}"
@@ -109,7 +96,6 @@
     - open_webui_state.exists
     - (open_webui_image | split(':') | last) != (open_webui_state.container.Config.Image | split(':') | last)
   block:
-
     - name: deploy-open-webui | Stop and remove existing Open-webui container
       community.docker.docker_container:
         name: "{{ open_webui_service_name }}"
@@ -122,7 +108,6 @@
 - name: deploy-open-webui | Deploy Open WebUI if not running
   when: not open_webui_state.exists or (open_webui_update | default(false))
   block:
-
     - name: deploy-open-webui | Pull Open WebUI image
       community.docker.docker_image:
         name: "{{ open_webui_image }}"
@@ -147,13 +132,13 @@
           OAUTH_CLIENT_ID: "{{ open_webui.authentik.oidc_client_id | default('dummy') }}"
           OAUTH_CLIENT_SECRET: "{{ open_webui.authentik.oidc_client_secret | default('dummy') }}"
           OAUTH_PROVIDER_NAME: authentik
-          OPENID_PROVIDER_URL: "https://authentik.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}/application/o/open-webui/.well-known/openid-configuration"
+          OPENID_PROVIDER_URL: "{{ authentik.url }}/application/o/open-webui/.well-known/openid-configuration"
           OPENID_REDIRECT_URI: "https://{{ open_webui_fqdn }}/oauth/oidc/callback"
           # Allows auto-creation of new users using OAuth. Must be paired with ENABLE_LOGIN_FORM=false.
-          ENABLE_OAUTH_SIGNUP: 'false'
+          ENABLE_OAUTH_SIGNUP: "false"
           # Disables user/password login form. Required when ENABLE_OAUTH_SIGNUP=true.
-          ENABLE_LOGIN_FORM: 'true'
-          OAUTH_MERGE_ACCOUNTS_BY_EMAIL: 'true'
+          ENABLE_LOGIN_FORM: "true"
+          OAUTH_MERGE_ACCOUNTS_BY_EMAIL: "true"
         etc_hosts:
           host.docker.internal: host-gateway
         labels: "{{ open_webui_container_labels | default(omit) }}"

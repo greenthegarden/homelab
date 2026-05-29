@@ -146,7 +146,7 @@
           # Provider Configuration
           OIDC_PROVIDER_NAME: Authentik
           OIDC_PROVIDER_SLUG: tududi
-          OIDC_ISSUER_URL: "https://authentik.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}/application/o/tududi/"
+          OIDC_ISSUER_URL: "{{ authentik.url }}/application/o/tududi/"
           OIDC_CLIENT_ID: "{{ tududi.authentik.oidc_client_id | default('dummy') }}"
           OIDC_CLIENT_SECRET: "{{ tududi.authentik.oidc_client_secret | default('dummy') }}"
           OIDC_SCOPE: openid+profile+email

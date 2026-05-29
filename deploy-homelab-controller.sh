@@ -68,15 +68,21 @@ PLAYBOOK_FILE="playbooks/deploy-stack-controller.yaml"
 #
 function parse_args {
     # parse CLI flags
-    while getopts "p:vh" opt ; do
+    while getopts "p:fvh" opt ; do
         case "${opt}" in
-            p)
-                PLAYBOOK_FILE="${OPTARG}"
+            p)  PLAYBOOK_FILE="${OPTARG}"
                 print_info "Running playbook '${OPTARG}'"
                 ;;
-            v) print_info "Verbose mode enabled" ;;
-            h) print_success "Usage: $0 [-p 'playbook'] [-v] [-h]"; exit 0 ;;
-            *) print_error "Not a valid option"; exit 1 ;;
+            f)  print_info "Getting facts"
+                ansible_print_facts
+                exit 0
+                ;;
+            v)  print_info "Getting hostvars"
+                ansible_print_hostvars
+                exit 0
+                ;;
+            h)  print_success "Usage: $0 [-p 'playbook'] [-f] [-v] [-h]"; exit 0 ;;
+            *)  print_error "Not a valid option"; exit 1 ;;
         esac
     done
 }
@@ -101,6 +107,30 @@ function ansible_install_dependencies {
     print_info "Installing Ansible dependencies from ${REQUIREMENTS_FILE}"
     "${ANSIBLE_GALAXY_BIN}" install -r "${REQUIREMENTS_FILE}"
     print_success "Ansible dependencies installed"
+}
+
+function ansible_print_facts {
+    check_executable_exists "${ANSIBLE_PLAYBOOK_BIN}"
+    check_file_exists "${INVENTORY_FILE}"
+    check_file_exists "${VAULT_FILE}"
+    print_info "Gettng Ansible facts"
+    "${ANSIBLE_BIN}" \
+        --inventory "${INVENTORY_FILE}" \
+        --vault-password-file "${VAULT_FILE}" \
+        "$(hostname)" \
+        -m ansible.builtin.setup
+}
+
+function ansible_print_hostvars {
+    check_executable_exists "${ANSIBLE_PLAYBOOK_BIN}"
+    check_file_exists "${INVENTORY_FILE}"
+    check_file_exists "${VAULT_FILE}"
+    print_info "Gettng Ansible hostvars"
+    "${ANSIBLE_BIN}" \
+        --inventory "${INVENTORY_FILE}" \
+        --vault-password-file "${VAULT_FILE}" \
+        "$(hostname)" \
+        -m ansible.builtin.debug -a "var=hostvars['$(hostname)']"
 }
 
 function ansible_run_playbook {

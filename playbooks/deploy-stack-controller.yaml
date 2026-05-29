@@ -1,10 +1,9 @@
 ---
 - name: Deploy Homelab Controller Node
 
-  hosts: controller
+  hosts: lxc-controller
 
   vars:
-
     # Dockhand facts
     # renovate: datasource=docker depName=fnsys/dockhand
     dockhand_image: fnsys/dockhand:v1.0.29
@@ -30,12 +29,17 @@
     # TODO
     #
     # Add:
-      # HomeLabInfo
-      # Homelable
+    # HomeLabInfo
+    # Homelable
 
   pre_tasks:
+    - name: Print hostvars
+      when: false
+      ansible.builtin.debug:
+        var: hostvars['lxc-controller']
 
     - name: Ensure base environment is configured
+      when: true
       ansible.builtin.include_tasks:
         file: tasks/configure-containerised-base.yaml
 
@@ -44,24 +48,33 @@
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 
-  tasks:
+    - name: Print hostvars
+      when: false
+      ansible.builtin.debug:
+        var: hostvars['lxc-controller']
 
+  tasks:
     - name: Deploy a containerised instance of Dockhand
+      when: false
       ansible.builtin.include_tasks:
         file: tasks/deploy-dockhand.yaml
 
     - name: Deploy a containerised instance of Termix
+      when: false
       ansible.builtin.include_tasks:
         file: tasks/deploy-termix.yaml
 
     - name: Deploy a containerised instance of Semaphore
+      when: false
       ansible.builtin.include_tasks:
         file: tasks/deploy-semaphore.yaml
 
     - name: Deploy a containerised instance of IT-Tools
+      when: false
       ansible.builtin.include_tasks:
         file: tasks/deploy-it_tools.yaml
 
     - name: Deploy a containerised instance of Networking Toolbox
+      when: false
       ansible.builtin.include_tasks:
         file: tasks/deploy-networking-toolbox.yaml

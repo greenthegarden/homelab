@@ -132,7 +132,7 @@
           GRIST_DEFAULT_EMAIL: "{{ grist.admin_email | default('admin@' + grist_fqdn) }}"
           # OIDC Settings
           GRIST_OIDC_SP_HOST: "https://{{ grist_fqdn }}/"
-          GRIST_OIDC_IDP_ISSUER: "https://authentik.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}/application/o/grist/"
+          GRIST_OIDC_IDP_ISSUER: "{{ authentik.url }}/application/o/grist/"
           GRIST_OIDC_IDP_CLIENT_ID: "{{ grist.authentik.oidc_client_id | default('dummy') }}"
           GRIST_OIDC_IDP_CLIENT_SECRET: "{{ grist.authentik.oidc_client_secret | default('dummy') }}"
           GRIST_OIDC_IDP_SCOPES: "openid profile email"

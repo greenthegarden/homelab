@@ -187,8 +187,8 @@
           # OIDC Configuration
           # https://integrations.goauthentik.io/documentation/paperless-ngx/
           PAPERLESS_APPS: allauth.socialaccount.providers.openid_connect
-          PAPERLESS_SOCIALACCOUNT_PROVIDERS: '{"openid_connect": {"OAUTH_PKCE_ENABLED": true, "APPS": [{"provider_id": "authentik", "name": "authentik", "client_id": "{{ paperless_ngx.authentik.oidc_client_id }}", "secret": "{{ paperless_ngx.authentik.oidc_client_secret }}", "settings": {"server_url": "https://authentik.lxc-home.{{ homelab.certificate_domain }}/application/o/paperless-ngx/.well-known/openid-configuration", "fetch_userinfo": true}}], "SCOPE": ["openid", "profile", "email"]}}'
-          PAPERLESS_LOGOUT_REDIRECT_URL: "https://authentik.lxc-home.{{ homelab.certificate_domain | default('localdomain') }}/application/o/paperless-ngx/end-session/"
+          PAPERLESS_SOCIALACCOUNT_PROVIDERS: '{"openid_connect": {"OAUTH_PKCE_ENABLED": true, "APPS": [{"provider_id": "authentik", "name": "authentik", "client_id": "{{ paperless_ngx.authentik.oidc_client_id }}", "secret": "{{ paperless_ngx.authentik.oidc_client_secret }}", "settings": {"server_url": "{{ authentik.url }}/application/o/paperless-ngx/.well-known/openid-configuration", "fetch_userinfo": true}}], "SCOPE": ["openid", "profile", "email"]}}'
+          PAPERLESS_LOGOUT_REDIRECT_URL: "{{ authentik.url }}/application/o/paperless-ngx/end-session/"
           PAPERLESS_SOCIAL_AUTO_SIGNUP: "true"
           PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS: "true"
         labels: "{{ paperless_ngx_container_labels | default(omit) }}"

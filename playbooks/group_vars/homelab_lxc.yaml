@@ -49,6 +49,9 @@ prometheus_image: prom/prometheus:v3.11.0
 # Redis facts
 # renovate: datasource=docker depName=redis
 redis_image: redis:8.6-alpine
+# SearXNG facts
+# renovate: datasource=docker depName=searxng/searxng
+searxng_image: searxng/searxng:2026.5.29-4ea5c57a8
 # Socket Proxy facts
 # renovate: datasource=docker depName=wollomatic/socket-proxy
 socket_proxy_image: wollomatic/socket-proxy:1.12.1

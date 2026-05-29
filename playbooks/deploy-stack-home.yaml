@@ -4,7 +4,6 @@
   hosts: home
 
   vars:
-
     # Authentik facts
     # renovate: datasource=docker depName=ghcr.io/goauthentik/server
     authentik_image: ghcr.io/goauthentik/server:2026.5.2
@@ -13,17 +12,12 @@
     # renovate: datasource=docker depName=ghcr.io/gethomepage/homepage
     homepage_image: ghcr.io/gethomepage/homepage:v1.13.1
 
-    # SearXNG facts
-    # renovate: datasource=docker depName=searxng/searxng
-    searxng_image: searxng/searxng:2026.5.23-323ce7600
-
     # Vaultwarden facts
     # renovate: datasource=docker depName=vaultwarden/server
     vaultwarden_image: vaultwarden/server:1.36.0-alpine
     vaultwarden_deploy_docker_volume_backup: true
 
   pre_tasks:
-
     - name: Ensure base environment is configured
       ansible.builtin.include_tasks:
         file: tasks/configure-containerised-base.yaml
@@ -33,7 +27,6 @@
         file: vars/homelab_env.yaml
 
   tasks:
-
     - name: Deploy a containerised instance of Authentik
       ansible.builtin.include_tasks:
         file: tasks/deploy-authentik.yaml
