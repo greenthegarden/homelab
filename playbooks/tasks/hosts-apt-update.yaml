@@ -1,5 +1,4 @@
 ---
-
 - name: hosts-apt-update | Check package manager is apt
   ansible.builtin.assert:
     that:
@@ -7,10 +6,14 @@
       - ansible_facts['pkg_mgr'] == 'apt'
     fail_msg: "These tasks are only for systems using the apt package manager."
 
-- name: hosts-apt-update | Update packages with apt
+- name: hosts-apt-update | Update apt cache
   ansible.builtin.apt:
     update_cache: true
 
 - name: hosts-apt-update | Upgrade packages with apt
   ansible.builtin.apt:
-    upgrade: dist
+    upgrade: true
+
+- name: hosts-apt-update | Remove dependencies that are no longer required
+  ansible.builtin.apt:
+    autoremove: true

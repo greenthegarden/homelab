@@ -146,11 +146,15 @@
       WUD_WATCHER_MONITOR_PORT: "{{ wud_socket_proxy_service_port | quote }}"
       WUD_WATCHER_PRODUCTIVITY_HOST: "lxc-productivity.{{ lan_domain }}"
       WUD_WATCHER_PRODUCTIVITY_PORT: "{{ wud_socket_proxy_service_port | quote }}"
-      # # Authentik integration
-      # WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ wud.oauth_client_id | default('dummy') }}"
-      # WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ wud.oauth_client_secret | default('dummy') }}"
-      # WUD_AUTH_OIDC_AUTHENTIK_DISCOVERY: "{{ authentik.url }}/application/o/wud/.well-known/openid-configuration"
-      # WUD_AUTH_OIDC_AUTHENTIK_REDIRECT: "false" # Set to true to skip internal login page
+      # Gotify trigger
+      WUD_TRIGGER_GOTIFY_HOMELAB_URL: "{{ gotify.url }}"
+      WUD_TRIGGER_GOTIFY_HOMELAB_TOKEN: "{{ whatsupdocker.gotify.token }}"
+      WUD_TRIGGER_GOTIFY_HOMELAB_PRIORITY: "0"
+      # OIDC integration
+      WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ wud.authentik.oidc_client_id | default('dummy') }}"
+      WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ wud.authentik.oidc_client_secret | default('dummy') }}"
+      WUD_AUTH_OIDC_AUTHENTIK_DISCOVERY: "{{ authentik.url }}/application/o/wud/.well-known/openid-configuration"
+      WUD_AUTH_OIDC_AUTHENTIK_REDIRECT: "false" # Set to true to skip internal login page
     healthcheck:
       test: ["curl", "--fail", "http://localhost:{{ wud_service_port }}/health", "||", "exit 1"]
       interval: 30s
