@@ -48,7 +48,7 @@
     file: tasks/deploy-socket-proxy.yaml
   vars:
     socket_proxy_service_name: "socket-proxy-{{ traefik_service_name }}"
-    socket_proxy_service_port: 2375
+    socket_proxy_service_port: "{{ (socket_proxy_ports.traefik | default(2375)) | int }}"
     socket_proxy_network_name: "socket-proxy-{{ traefik_service_name }}"
     socket_proxy_network_internal: true
     socket_proxy_command_service:
@@ -99,7 +99,7 @@
       - "--providers.docker.endpoint=tcp://{{ socket_proxy_service_name }}:{{ socket_proxy_service_port }}"
       # - "--providers.docker.endpoint='unix:///socket/traefik.sock'"
       - "--providers.docker.exposedByDefault=false"
-      - "--providers.docker.network={{ traefik_network_name }}"
+      - "--providers.docker.network={{ reverse_proxy_network_name | default('reverse-proxy') }}"
       - "--providers.docker.watch=true"
 
       ## File Provider Settings
