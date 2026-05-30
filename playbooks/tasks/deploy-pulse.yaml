@@ -1,0 +1,160 @@
+---
+
+# Website: https://pulserelay.pro/
+# Github: https://github.com/rcourtman/pulse
+# Docker:
+
+- name: deploy-pulse | Set Pulse facts
+  ansible.builtin.set_fact:
+    pulse_image: "{{ pulse_image | default('rcourtman/pulse:latest') }}"
+    pulse_service_name: "{{ pulse_service_name | default('pulse') }}"
+    pulse_service_port: "{{ pulse_service_port | default(7655) }}"
+
+- name: deploy-pulse | Set Pulse network facts
+  ansible.builtin.set_fact:
+    pulse_network_name: "{{ pulse_network_name | default(pulse_service_name) }}"
+
+- name: deploy-pulse | Set Pulse volume facts
+  ansible.builtin.set_fact:
+    pulse_volume_name: "{{ pulse_volume_name | default(pulse_service_name) }}"
+
+- name: deploy-pulse | Set Pulse aggregated facts
+  ansible.builtin.set_fact:
+    pulse_fqdn: "{{ pulse_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-pulse | Set Pulse service facts
+  ansible.builtin.set_fact:
+    pulse_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    pulse_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ pulse_service_port }}:7655"
+    pulse_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ pulse_volume_name }}:/data"
+
+- name: deploy-pulse | Log Pulse configuration
+  ansible.builtin.debug:
+    msg:
+      - "Pulse image: {{ pulse_image }}"
+      - "Pulse service name: {{ pulse_service_name }}"
+      - "Pulse FQDN: {{ pulse_fqdn }}"
+      - "Pulse command: {{ pulse_command | default(omit) }}"
+      - "Pulse networks: {{ pulse_networks | default(omit) }}"
+      - "Pulse ports: {{ pulse_ports | default(omit) }}"
+      - "Pulse volumes: {{ pulse_volumes | default(omit) }}"
+
+- name: deploy-pulse | Create Pulse container labels
+  ansible.builtin.set_fact:
+    pulse_container_labels: "{{ pulse_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Monitoring" }
+    - { "key": "homepage.name", "value": "Pulse" }
+    - { "key": "homepage.description", "value": "Real-time monitoring for Proxmox, Docker, and Kubernetes with AI-powered insights, smart alerts, and a beautiful unified dashboard" }
+    - { "key": "homepage.icon", "value": "pulse.png" }
+    - { "key": "homepage.href", "value": "https://{{ pulse_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ pulse_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.http.routers.{{ pulse_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ pulse_service_name }}.rule", "value": "Host(`{{ pulse_fqdn }}`)" }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - { "key": "wud.link.template", "value": "https://github.com/rcourtman/Pulse/releases/tag/v${major}.${minor}.${patch}" }
+
+- name: deploy-pulse | Create Pulse networks
+  when: pulse_networks is defined and (pulse_networks | length > 0)
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ pulse_networks }}"
+
+- name: deploy-pulse | Create Pulse volumes
+  when: pulse_volumes is defined and (pulse_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ pulse_volume_name }}"
+
+- name: deploy-pulse | Pull Pulse image
+  community.docker.docker_image:
+    name: "{{ pulse_image }}"
+    source: pull
+
+- name: deploy-pulse | Check if Pulse is running
+  community.docker.docker_container_info:
+    name: "{{ pulse_service_name }}"
+  register: pulse_state
+
+- name: deploy-pulse | Remove Pulse container if changing version
+  when:
+    - pulse_state.exists
+    - (pulse_image | split(':') | last) != (pulse_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-pulse | Stop and remove existing Pulse container
+      community.docker.docker_container:
+        name: "{{ pulse_service_name }}"
+        state: absent
+
+    - name: deploy-pulse | Set update Pulse
+      ansible.builtin.set_fact:
+        pulse_update: true
+
+- name: deploy-pulse | Deploy Pulse if not running
+  when:
+    - not pulse_state.exists or (pulse_update | default(false))
+  block:
+    - name: deploy-pulse | Deploy Pulse
+      community.docker.docker_container:
+        name: "{{ pulse_service_name }}"
+        image: "{{ pulse_image }}"
+        # cap_drop:
+        #   - ALL
+        command: "{{ pulse_args | default(omit) }}"
+        # deploy:
+        #   resources:
+        #     limits:
+        #       cpus: "0.5"
+        #       memory: 128M
+        detach: true
+        env:
+          PULSE_AUTH_USER: "{{ pulse.username | default('dummy') }}"
+          PULSE_AUTH_PASS: "{{ pulse.password | default('dummy') }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        # healthcheck:
+        #   test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+        #   interval: 30s
+        #   retries: 3
+        #   timeout: 3s
+        labels: "{{ pulse_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ pulse_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        # security_opt:
+        #   - no-new-privileges:true
+        state: started
+        volumes: "{{ pulse_volumes | default(omit) }}"
+      register: pulse_container_state
+
+- name: deploy-pulse | Wait for Pulse to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ pulse_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: pulse_running
+  retries: 10
+  until: pulse_running is success
