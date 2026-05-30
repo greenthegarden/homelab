@@ -117,6 +117,10 @@ layout:
       tab: Websites
       style: row
       columns: 3
+  - Cloud Applications:
+      tab: Websites
+      style: row
+      columns: 3
   - Social:
       tab: Websites
       style: row
