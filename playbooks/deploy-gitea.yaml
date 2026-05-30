@@ -1,19 +1,21 @@
 ---
 - name: Deploy Gitea
 
-  hosts: ansible
+  hosts: lxc-controller
 
   vars:
 
     # Gitea facts
     # renovate: datasource=docker depName=docker.gitea.com/gitea
-    gitea_image: docker.gitea.com/gitea:1.25.5
+    gitea_image: docker.gitea.com/gitea:1.26.2
 
-  tasks:
+  pre_tasks:
 
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     - name: Deploy a containerised instance of Gitea
       ansible.builtin.include_tasks:

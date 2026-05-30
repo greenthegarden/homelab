@@ -53,7 +53,7 @@
   with_items:
     # ---------------------------------------------------------------
     # Homepage labels
-    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.group", "value": "System" }
     - { "key": "homepage.name", "value": "Gitea" }
     - { "key": "homepage.description", "value": "Private, Fast, Reliable DevOps Platform" }
     - { "key": "homepage.icon", "value": "gitea.png" }

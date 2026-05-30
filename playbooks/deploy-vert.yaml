@@ -1,19 +1,21 @@
 ---
 - name: Deploy VERT
 
-  hosts: ansible
+  hosts: lxc-productivity
 
   vars:
 
     # Vert facts
     # renovate: datasource=docker depName=ghcr.io/vert-sh/vert
-    vert_image: ghcr.io/vert-sh/vert:sha-438f91a
+    vert_image: ghcr.io/vert-sh/vert:latest
 
-  tasks:
+  pre_tasks:
 
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
+
+  tasks:
 
     - name: Deploy a containerised instance of VERT
       ansible.builtin.include_tasks:

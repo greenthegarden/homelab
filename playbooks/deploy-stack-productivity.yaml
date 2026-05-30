@@ -28,6 +28,10 @@
     tududi_image: chrisvel/tududi:1.0.0
     tududi_deploy_docker_volume_backup: true
 
+    # Vert facts
+    # renovate: datasource=docker depName=ghcr.io/vert-sh/vert
+    vert_image: ghcr.io/vert-sh/vert:latest
+
   pre_tasks:
 
     - name: Ensure base environment is configured
@@ -59,3 +63,7 @@
     - name: Deploy a containerised instance of Tududi
       ansible.builtin.include_tasks:
         file: tasks/deploy-tududi.yaml
+
+    - name: Deploy a containerised instance of VERT
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-vert.yaml
