@@ -13,6 +13,10 @@
     # renovate: datasource=docker depName=getwud/wud
     wud_image: getwud/wud:8.2.2
 
+    # Pulse facts
+    # renovate: datasource=docker depName=rcourtman/pulse
+    pulse_image: rcourtman/pulse:v5.1.33
+
   pre_tasks:
     - name: Ensure base environment is configured
       ansible.builtin.include_tasks:
@@ -31,3 +35,7 @@
     - name: Deploy a containerised instance of What's up Docker?
       ansible.builtin.include_tasks:
         file: tasks/deploy-wud.yaml
+
+    - name: Deploy a containerised instance of Pulse
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-pulse.yaml
