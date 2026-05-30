@@ -1,0 +1,19 @@
+---
+- name: Deploy Oulse
+
+  hosts: monitor
+
+  vars:
+    # Pulse facts
+    # renovate: datasource=docker depName=rcourtman/pulse
+    pulse_image: rcourtman/pulse:v5.1.33
+
+  pre_tasks:
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+  tasks:
+    - name: Deploy a containerised instance of Pulse
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-pulse.yaml
