@@ -6,7 +6,8 @@
   ansible.builtin.set_fact:
     nextcloud_aio_mastercontainer_image: "ghcr.io/nextcloud-releases/all-in-one:latest"
     nextcloud_aio_mastercontainer_service_name: "nextcloud-aio-mastercontainer"
-    nextcloud_aio_mastercontainer_volume_name: "nextcloud-aio-mastercontainer"
+    # Do not change the following line
+    nextcloud_aio_mastercontainer_volume_name: "nextcloud_aio_mastercontainer"
 
 - name: deploy-nextcloud-aio-mastercontainer | Set Nextcloud All-in-One service facts
   ansible.builtin.set_fact:
