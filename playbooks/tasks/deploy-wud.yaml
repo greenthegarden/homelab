@@ -147,7 +147,7 @@
       WUD_WATCHER_PRODUCTIVITY_PORT: "{{ wud_socket_proxy_service_port | quote }}"
       # Gotify trigger
       WUD_TRIGGER_GOTIFY_HOMELAB_URL: "{{ gotify.url }}"
-      WUD_TRIGGER_GOTIFY_HOMELAB_TOKEN: "{{ whatsupdocker.gotify.token }}"
+      WUD_TRIGGER_GOTIFY_HOMELAB_TOKEN: "{{ wud.gotify.token }}"
       WUD_TRIGGER_GOTIFY_HOMELAB_PRIORITY: "0"
       # OIDC integration
       WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ wud.authentik.oidc_client_id | default('dummy') }}"
