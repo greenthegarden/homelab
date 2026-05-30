@@ -115,7 +115,6 @@
     image: "{{ wud_image }}"
     detach: true
     env:
-      TZ: "{{ homelab.timezone | default('UTC') }}"
       # Add Registries
       # By default supports: 'Docker Hub (HUB)', 'Github (GHCR)'
       # Publish to MQTT broker when updates are available
@@ -155,6 +154,7 @@
       WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ wud.authentik.oidc_client_secret | default('dummy') }}"
       WUD_AUTH_OIDC_AUTHENTIK_DISCOVERY: "{{ authentik.url }}/application/o/wud/.well-known/openid-configuration"
       WUD_AUTH_OIDC_AUTHENTIK_REDIRECT: "false" # Set to true to skip internal login page
+      TZ: "{{ homelab.timezone | default('UTC') }}"
     healthcheck:
       test: ["curl", "--fail", "http://localhost:{{ wud_service_port }}/health", "||", "exit 1"]
       interval: 30s
