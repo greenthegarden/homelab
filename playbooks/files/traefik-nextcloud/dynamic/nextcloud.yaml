@@ -1,7 +1,7 @@
 http:
   routers:
     nextcloud:
-      rule: "Host(`nextcloud.nextcloud.homelab.greenthegarden.com`)"
+      rule: "Host(`nextcloud.lxc-nextcloud.homelab.greenthegarden.com`)"
       entrypoints:
         - "websecure"
       service: nextcloud

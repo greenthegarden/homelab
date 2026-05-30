@@ -104,7 +104,7 @@
           NEXTCLOUD_DATADIR: "/mnt/nextcloud_data"
           APACHE_PORT: "11000"
           APACHE_IP_BINDING: "127.0.0.1"
-          APACHE_ADDITIONAL_NETWORK: ""
+          APACHE_ADDITIONAL_NETWORK: "reverse-proxy"
           SKIP_DOMAIN_VALIDATION: "true" # "{{ true | quote }}"
         init: true
         labels: "{{ nextcloud_aio_mastercontainer_container_labels | default(omit) }}"
