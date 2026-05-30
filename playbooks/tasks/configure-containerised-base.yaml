@@ -85,23 +85,3 @@
   when: deploy_tinyauth | default(false)
   ansible.builtin.include_tasks:
     file: tasks/deploy-tinyauth.yaml
-
-# Use Prometheus stack to monitor host metrics
-
-- name: configure-containerised-base | Deploy Prometheus stack services
-  when: deploy_prometheus_stack | default(false) # Disable for now as not needed with Dozzle
-  block:
-    - name: configure-containerised-base | Deploy a containerised instance of Node Exporter
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-node-exporter.yaml
-
-    - name: configure-containerised-base | Deploy a containerised instance of Prometheus
-      ansible.builtin.include_tasks:
-        file: tasks/deploy-prometheus.yaml
-
-# Use Atlas to visualise Docker network topology
-
-- name: configure-containerised-base | Deploy a containerised instance of Atlas
-  when: deploy_atlas | default(false)
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-atlas.yaml
