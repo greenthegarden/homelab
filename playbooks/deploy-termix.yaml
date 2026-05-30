@@ -1,13 +1,13 @@
 ---
 - name: Deploy Termix
 
-  hosts: controller
+  hosts: lxc-controller
 
   vars:
 
     # Termix facts
     # renovate: datasource=docker depName=ghcr.io/lukegus/termix
-    termix_image: ghcr.io/lukegus/termix:release-2.3.0
+    termix_image: ghcr.io/lukegus/termix:release-2.3.1
     termix_deploy_docker_volume_backup: true
 
   pre_tasks:

@@ -6,7 +6,7 @@
   ansible.builtin.set_fact:
     nextcloud_aio_mastercontainer_image: "ghcr.io/nextcloud-releases/all-in-one:latest"
     nextcloud_aio_mastercontainer_service_name: "nextcloud-aio-mastercontainer"
-    nextcloud_aio_mastercontainer_volume_name: "nextcloud_aio_mastercontainer"
+    nextcloud_aio_mastercontainer_volume_name: "nextcloud-aio-mastercontainer"
 
 - name: deploy-nextcloud-aio-mastercontainer | Set Nextcloud All-in-One service facts
   ansible.builtin.set_fact:
@@ -100,6 +100,7 @@
         image: "{{ nextcloud_aio_mastercontainer_image }}"
         detach: true
         env:
+          NEXTCLOUD_DATADIR: "/mnt/nextcloud_data"
           APACHE_PORT: "11000"
           APACHE_IP_BINDING: "127.0.0.1"
           APACHE_ADDITIONAL_NETWORK: ""

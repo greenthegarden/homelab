@@ -62,6 +62,11 @@
       "key": "traefik.http.routers.{{ it_tools_service_name }}.rule",
       "value": "Host(`{{ it_tools_fqdn }}`)",
     }
+    # Add login support via TinyAuth
+    - {
+      "key": "traefik.http.routers.{{ it_tools_service_name }}.middlewares",
+      "value": "tinyauth",
+    }
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }

@@ -11,11 +11,16 @@ homeassistant
 homelab
 hortusfox
 hwaccel
+icecream
+jmespath
 localtime
 memoryusage
 mqtt
+netaddr
 Nextcloud
 offen
+paramiko
+pylibssh
 Reolink
 REPLACEME
 rtsp

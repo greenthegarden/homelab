@@ -9,6 +9,10 @@
     tinyauth_service_name: "{{ tinyauth_service_name | default('tinyauth') }}"
     tinyauth_service_port: "{{ tinyauth_service_port | default(3000) }}"
 
+- name: deploy-tinyauth | Set Tinyauth mount facts
+  ansible.builtin.set_fact:
+    tinyauth_users_file: "{{ tinyauth_users_file | default(tinyauth_service_name + '/users_file') }}"
+
 - name: deploy-tinyauth | Set Tinyauth network facts
   ansible.builtin.set_fact:
     tinyauth_network_name: "{{ tinyauth_network_name | default(tinyauth_service_name) }}"
@@ -72,6 +76,21 @@
       "value": "https://github.com/tinyauth/tinyauth/releases/tag/v${major}.${minor}.${patch}",
     }
 
+- name: deploy-tinyauth | Create Tinyauth mounts
+  when: false and (tinyauth_users_file is defined)
+  block:
+    - name: deploy-tinyauth | Create Tinyauth configuration directory
+      ansible.builtin.file:
+        path: "{{ '/root/' + tinyauth_service_name }}"
+        state: directory
+        mode: "0644"
+
+    - name: deploy-tinyauth | Create Tinyauth users file
+      ansible.builtin.template:
+        src: "files/tinyauth/users"
+        dest: "{{ '/root/' + tinyauth_service_name }}"
+        mode: "0666"
+
 - name: deploy-tinyauth | Create Tinyauth networks
   when: tinyauth_networks is defined
   community.docker.docker_network:
@@ -100,8 +119,11 @@
     image: "{{ tinyauth_image }}"
     detach: true
     env:
-      APP_URL: "https://{{ tinyauth_fqdn }}"
-      USERS: "{{ tinyauth.username }}:{{ tinyauth.password_hash }}"
+      TINYAUTH_APPURL: "https://{{ tinyauth_fqdn }}"
+      TINYAUTH_LOG_LEVEL: "info"
+      # SECRET: "{{ tinyauth.secret }}"
+      # USERS_FILE: users_file
+      TINYAUTH_AUTH_USERS: "{{ tinyauth.username }}:{{ tinyauth.password_hash }}"
       # USERS: "{{ tinyauth.username }}:{{ tinyauth.password_hash | default(tinyauth.password | password_hash('bcrypt')) }}"
     labels: "{{ tinyauth_container_labels | default(omit) }}"
     networks_cli_compatible: true

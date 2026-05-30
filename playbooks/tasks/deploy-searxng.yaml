@@ -1,6 +1,9 @@
 ---
 
-####### SEARXNG SECTION
+# Github:
+# Docer:
+# Info:
+  # https://www.youtube.com/watch?v=5vNegD0Lgt4
 
 - name: deploy-searxng | Set SearXNG facts
   ansible.builtin.set_fact:

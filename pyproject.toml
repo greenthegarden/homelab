@@ -7,6 +7,7 @@ requires-python = ">=3.14"
 dependencies = [
   "ansible==13.5.*",
   "ansible-core==2.20.*",
+  "ansible-lint>=26.4.0",
   "ansible-pylibssh",
   "jmespath",
   "netaddr",
@@ -35,3 +36,9 @@ lint.ignore = ["COM812", "D203", "D212", "D415", "FIX002", "TD003"]
 [tool.uv]
 # Disable Windows as some packages are not compiled for that system
 environments = ["platform_system != 'Windows'"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.15",
+    "ty>=0.0.40",
+]

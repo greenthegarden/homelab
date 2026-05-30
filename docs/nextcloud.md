@@ -85,7 +85,7 @@ Following [Jeff's Garage guide][youtube-jeff-garage-nas]
   # Via Proxmox server shell
   nano /etc/pve/lxc/400.conf
   # add the line
-  mp0: /mnt/truenas/nextcloud_data,mp=/mnt/nextcloud_data
+  mp0: /mnt/truenas-nfs/nextcloud-data,mp=/mnt/nextcloud_data
   ```
 
 - Start the LXC
