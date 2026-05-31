@@ -1,0 +1,295 @@
+---
+- name: deploy-traefik-haos | Ensure a containerised instance of Traefik is not present
+  community.docker.docker_container:
+    name: traefik
+    state: absent
+
+- name: deploy-traefik-haos | Ensure a containerised instance of Socket Proxy for Traefik is not present
+  community.docker.docker_container:
+    name: socket-proxy-traefik
+    state: absent
+
+####### TRAEFIK SECTION
+
+# https://stackoverflow.com/questions/58554731/traefik-v2-0-metrics-with-prometheus
+# https://doc.traefik.io/traefik/reference/static-configuration/env/
+# https://medium.com/@joshuaavalon/setup-traefik-v2-step-by-step-fae44ed8f76d
+# https://github.com/scafer/traefik-duckdns-letsencrypt/tree/main
+# https://community.traefik.io/t/failing-to-get-certs-over-dns-challenge/25653
+
+- name: deploy-traefik-haos | Set Traefik facts
+  ansible.builtin.set_fact:
+    traefik_image: "{{ traefik_image | default('traefik:latest') }}"
+    traefik_service_name: "{{ traefik_service_name | default('traefik') }}"
+    traefik_service_port_http: "{{ traefik_service_port_http | default(80) }}"
+    traefik_service_port_https: "{{ traefik_service_port_https | default(443) }}"
+    traefik_provider: "{{ traefik_provider | default('docker') }}"
+
+- name: deploy-traefik-haos | Set Traefik network facts
+  ansible.builtin.set_fact:
+    traefik_network_name: "{{ traefik_network_name | default(traefik_service_name) }}"
+
+- name: deploy-traefik-haos | Set Traefik mount facts
+  ansible.builtin.set_fact:
+    traefik_config_dir: "{{ traefik_config_dir | default('/root/' + 'traefik') }}"
+    traefik_letsencrypt_dir: "{{ traefik_letsencrypt_dir | default('/root/' + 'letsencrypt') }}"
+
+# - name: deploy-traefik-haos | Set Traefik volume facts
+#   ansible.builtin.set_fact: []
+
+- name: deploy-traefik-haos | Set Traefik aggregated facts
+  ansible.builtin.set_fact:
+    traefik_fqdn: "{{ traefik_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-traefik-haos | Set Traefik entrypoint facts
+  ansible.builtin.set_fact:
+    traefik_entrypoint_name: "{{ traefik_entrypoint_name | default('web') }}"
+
+# Deploy Docker Socket Proxy at this stage to ensure vars are set correctly
+# To check proxy and port is open use `nc -zv docker-socket-proxy-traefik 2375`
+- name: deploy-traefik-haos | Deploy a containerised instance of Docker Socket Proxy configured for Traefik
+  ansible.builtin.include_tasks:
+    file: tasks/deploy-socket-proxy.yaml
+  vars:
+    socket_proxy_service_name: "socket-proxy-{{ traefik_service_name }}"
+    socket_proxy_service_port: "{{ (socket_proxy_ports.traefik | default(2375)) | int }}"
+    socket_proxy_network_name: "socket-proxy-{{ traefik_service_name }}"
+    socket_proxy_network_internal: true
+    socket_proxy_command_service:
+      - "-allowfrom=traefik"
+      - '-allowGET=/v1\..{1,2}/(version|containers/.*|events.*)' # this regexp allows readonly access only for requests that traefik needs
+      - "-allowHEAD=/_ping"
+
+- name: deploy-traefik-haos | Set Traefik service facts
+  ansible.builtin.set_fact:
+    traefik_command:
+      #### These are the CLI commands that will configure Traefik and tell it how to work! ####
+
+      ## API Settings - https://docs.traefik.io/operations/api/, endpoints - https://docs.traefik.io/operations/api/#endpoints ##
+      ## ---------------------------------------------------------------
+      - "--api.dashboard=true" # <== Enabling the dashboard to view services, middlewares, routers, etc...
+      - "--api.insecure=true" # <== Enabling insecure api, NOT RECOMMENDED FOR PRODUCTION
+      - "--api.debug=true" # <== Enabling additional endpoints for debugging and profiling
+
+      ## Certificate Settings (Let's Encrypt) -  https://docs.traefik.io/https/acme/#configuration-examples ##
+      ## ---------------------------------------------------------------
+      - "--certificatesResolvers.letsencrypt.acme.email={{ acme.email }}"
+      - "--certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+
+      - "--certificatesresolvers.letsencrypt.acme.dnsChallenge=true"
+      - "--certificatesResolvers.letsencrypt.acme.dnsChallenge.provider={{ acme.provider }}"
+      - "--certificatesresolvers.letsencrypt.acme.dnsChallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
+      - "--certificatesresolvers.letsencrypt.acme.dnsChallenge.propagation.delayBeforeChecks=30s"
+
+      # CA server to use.
+      # Uncomment the line to use Let's Encrypt's staging server,
+      # leave commented to go to prod.
+      #
+      # Optional
+      # Default: "https://acme-v02.api.letsencrypt.org/directory"
+      # - "--certificatesResolvers.letsencrypt.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
+
+      ## Docker Provider Settings - https://docs.traefik.io/providers/docker/#provider-configuration ##
+      ## https://medium.com/@containeroo/traefik-2-0-paranoid-about-mounting-var-run-docker-sock-22da9cb3e78c
+      ## https://github.com/wollomatic/socket-proxy/wiki
+      ## ---------------------------------------------------------------
+      - "--providers.docker=true"
+      # - "--providers.docker.endpoint=tcp://socket-proxy-external:2375"
+      - "--providers.docker.endpoint=tcp://{{ socket_proxy_service_name }}:{{ socket_proxy_service_port }}"
+      # - "--providers.docker.endpoint='unix:///socket/traefik.sock'"
+      - "--providers.docker.exposedByDefault=false"
+      - "--providers.docker.network={{ reverse_proxy_network_name | default('reverse-proxy') }}"
+      - "--providers.docker.watch=true"
+
+      ## File Provider Settings
+      ## https://github.com/techworks-id/nextcloud_aio-traefik/blob/main/docker-compose-traefik.yml
+      ## ---------------------------------------------------------------
+      - "--providers.file.directory=/dynamic"
+      - "--providers.file.watch=true"
+
+      ## Entrypoints Settings - https://docs.traefik.io/routing/entrypoints/#configuration ##
+      ## ---------------------------------------------------------------
+      ## insecure (http) entrypoints
+      - "--entryPoints.{{ traefik_entrypoint_insecure_name }}.address=:10080" # <== Define an insecure entrypoint for port :80
+      - "--entryPoints.{{ traefik_entrypoint_insecure_name }}.http.redirections.entryPoint.to={{ traefik_entrypoint_secure_name }}"
+      - "--entryPoints.{{ traefik_entrypoint_insecure_name }}.http.redirections.entryPoint.scheme=https"
+      - "--entryPoints.{{ traefik_entrypoint_insecure_name }}.http.redirections.entrypoint.permanent=true"
+      # Required for Nextcloud to correctly handle encoded URL characters (%2F, %3F and %25 in this case) in newer Traefik versions (v3.6.4+).
+      # - "--entryPoints.{{ traefik_entrypoint_insecure_name }}.http.encodedCharacters.allowEncodedSlash=true"
+      # - "--entryPoints.{{ traefik_entrypoint_insecure_name }}.http.encodedCharacters.allowEncodedQuestionMark=true"
+      # - "--entryPoints.{{ traefik_entrypoint_insecure_name }}.http.encodedCharacters.allowEncodedPercent=true"
+      ## secure (https) entrypoints
+      - "--entrypoints.{{ traefik_entrypoint_secure_name }}.address=:10443" # <== Define a secure entrypoint for port :443
+      - "--entrypoints.{{ traefik_entrypoint_secure_name }}.asDefault=true" # <== Set secure entrypoint as the default
+      # The default NEXTCLOUD_MAX_TIME value is 3600 seconds.
+      # By setting readTimeout 10 seconds higher than that, we make sure that always Nextcloud times out and not Traefik.
+      # If you increased NEXTCLOUD_MAX_TIME, increase the timeout below accordingly.
+      - "--entrypoints.{{ traefik_entrypoint_secure_name }}.transport.respondingTimeouts.readTimeout=3610s"
+      ## Set up the TLS configuration for the secure entrypoint
+      - "--entryPoints.{{ traefik_entrypoint_secure_name }}.http.tls=true" # <== Enabling TLS for the websecure entrypoint
+      - "--entryPoints.{{ traefik_entrypoint_secure_name }}.http.tls.certResolver=letsencrypt" # <== Using the Let's Encrypt resolver for TLS certificates
+      - "--entryPoints.{{ traefik_entrypoint_secure_name }}.http.tls.domains[0].main={{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain }}" # <== Main domain for TLS
+      - "--entryPoints.{{ traefik_entrypoint_secure_name }}.http.tls.domains[0].sans=*.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain }}" # <== Subject Alternative Names for TLS
+
+      ## Global settings
+      ## ---------------------------------------------------------------
+      - "--global.checkNewVersion=false"
+      - "--global.sendAnonymousUsage=false"
+
+      ## Log Settings (options: ERROR, DEBUG, PANIC, FATAL, WARN, INFO) - https://docs.traefik.io/observability/logs/ ##
+      ## ---------------------------------------------------------------
+      - "--log.level=INFO" # <== Setting the level of the logs from traefik
+      - "--log.format=json"
+
+      # Configure ping for health check
+      ## ---------------------------------------------------------------
+      - "--ping=true"
+
+    traefik_networks:
+      - { name: "{{ socket_proxy_network_name }}", internal: true }
+      # - { name: "{{ monitoring_network_name | default('monitoring') }}" # not needed without prometheus }
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+
+    traefik_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      # use high ports inside the container so
+      # we don't need to be root to bind the ports
+      - "{{ traefik_service_port_http }}:10080"
+      - "{{ traefik_service_port_https }}:10443"
+
+    traefik_mounts:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ traefik_config_dir }}:/dynamic:ro"
+      - "{{ traefik_letsencrypt_dir }}:/letsencrypt:rw"
+
+    traefik_volumes: []
+      # Volumes to mount into the container
+      # volume:container path
+      # - socket/socket/:ro
+
+- name: deploy-traefik-haos | Log Traefik configuration
+  ansible.builtin.debug:
+    msg:
+      - "Traefik image: {{ traefik_image }}"
+      - "Traefik service name: {{ traefik_service_name }}"
+      - "Traefik FQDN: {{ traefik_fqdn }}"
+      - "Traefik command: {{ traefik_command | default(omit) }}"
+      - "Traefik networks: {{ traefik_networks | default(omit) }}"
+      - "Traefik ports: {{ traefik_ports | default(omit) }}"
+      - "Traefik mounts: {{ traefik_mounts | default(omit) }}"
+      - "Traefik volumes: {{ traefik_volumes | default(omit) }}"
+
+- name: deploy-traefik-haos | Create Traefik container labels
+  ansible.builtin.set_fact:
+    traefik_container_labels: "{{ traefik_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Traefik configuration labels to override default static configuration
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.http.middlewares.traefik-auth.basicauth.users", "value": "{{ traefik.dashboard_credentials }}" }
+    - { "key": "traefik.http.routers.{{ traefik_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ traefik_service_name }}.rule", "value": "Host(`{{ traefik_fqdn }}`)" }
+    - { "key": "traefik.http.routers.{{ traefik_service_name }}.service", "value": "api@internal" }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - { "key": "wud.link.template", "value": "https://github.com/traefik/traefik/releases/tag/${major}.${minor}.${patch}" }
+
+- name: deploy-traefik-haos | Create Traefik networks
+  when: traefik_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ traefik_networks }}"
+
+- name: deploy-traefik-haos | Create dynamic configuration
+  when: traefik_config_dir is defined
+  block:
+    - name: deploy-traefik-haos | Create dynamic configuration directory
+      ansible.builtin.file:
+        path: "{{ traefik_config_dir }}"
+        mode: "644"
+        state: directory
+      register: dynamic_directory_creation
+
+    - name: deploy-traefik-haos | Create dynamic configuration file
+      ansible.builtin.copy:
+        src: files/traefik-haos/dynamic/haos.yaml
+        dest: "{{ traefik_config_dir }}/dynamic.yml"
+        mode: "0644"
+      register: dynamic_configuration_creation
+
+- name: deploy-traefik-haos | Create acme configuration
+  when: traefik_letsencrypt_dir is defined
+  block:
+    - name: deploy-traefik-haos | Create acme configuration directory
+      ansible.builtin.file:
+        path: "{{ traefik_letsencrypt_dir }}"
+        mode: "644"
+        state: directory
+      register: acme_directory_creation
+
+    - name: deploy-traefik-haos | Create acme configuration file
+      ansible.builtin.file:
+        path: "{{ traefik_letsencrypt_dir }}/acme.json"
+        state: touch
+        mode: "600"
+      register: acme_configuration_creation
+
+- name: deploy-traefik-haos | Pull Traefik image
+  community.docker.docker_image:
+    name: "{{ traefik_image }}"
+    source: pull
+
+- name: deploy-traefik-haos | Deploy Traefik with Docker as provider
+  when: traefik_provider == "docker"
+  community.docker.docker_container:
+    name: "{{ traefik_service_name }}"
+    image: "{{ traefik_image }}"
+    # cap_drop:
+    #   - ALL
+    command: "{{ traefik_command }}"
+    detach: true
+    env:
+      # Cloudflare API credentials for DNS challenge
+      ## For details see https://go-acme.github.io/lego/dns/cloudflare/
+      CF_DNS_API_TOKEN: "{{ acme.cloudflare.dns_api_token }}"
+      CF_API_EMAIL: "{{ acme.cloudflare.api_email }}" # <== Should not need this if using token
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    labels: "{{ traefik_container_labels | default(omit) }}"
+    memory: "2G"
+    networks: "{{ traefik_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+    published_ports: "{{ traefik_ports | default(omit) }}"
+    # read_only: true
+    recreate: true # Recreate to ensure any configuration changes are used
+    restart: true
+    restart_policy: unless-stopped
+    security_opts:
+      - "no-new-privileges:true"
+    state: started
+    # user: "65530:65530"
+    volumes: "{{ traefik_mounts + traefik_volumes | default(omit) }}"
+  register: traefik_container_state
+
+- name: deploy-traefik-haos | Wait for Traefik to accept connections
+  when: false # Temporarily disable as no DNS entry for Traefik on all hosts
+  ansible.builtin.wait_for:
+    host: "{{ traefik_fqdn }}"
+    port: "{{ traefik_service_port }}"
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: traefik_running
+  retries: 10
+  until: traefik_running is success

@@ -1,0 +1,16 @@
+http:
+  routers:
+    homeassistant:
+      rule: "Host(`homeassistant.{{ homelab.certificate_domain }}`)"
+      entrypoints:
+        - "websecure"
+      service: homeassistant
+      tls:
+        certresolver: "letsencrypt"
+
+  services:
+    homeassistant:
+      loadBalancer:
+        servers:
+          - url: "{{ homeassistant_url }}"
+        # passHostHeader: "true"

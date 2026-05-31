@@ -1,0 +1,31 @@
+---
+# Deploys Traefik as a reverse proxy for Home Assistant Operating System (HAOS)
+#
+# https://github.com/nextcloud/all-in-one/blob/main/reverse-proxy.md
+# https://heiden.io/2023/11/27/setting-up-nextcloud-all-in-one-aio-with-a-traefik-v3-reverse-proxy/
+
+- name: Deploy Nextcloud AIO stack
+
+  hosts: lxc-homeassistant
+
+  vars:
+    homeassistant_url: http://haos200605:8123
+
+  pre_tasks:
+    - name: Ensure base environment is configured
+      ansible.builtin.include_tasks:
+        file: tasks/configure-containerised-base.yaml
+
+  tasks:
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+    - name: Deploy a containerised instance of Traefik for Home Assistant Operating System (HAOS)
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-traefik-haos.yaml
+
+    - name: Deploy a containerised instance of Traefik Manager
+      when: false
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-traefik-manager.yaml
