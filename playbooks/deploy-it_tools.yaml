@@ -1,7 +1,7 @@
 ---
 - name: Deploy IT-Tools
 
-  hosts: controller
+  hosts: lxc-controller
 
   vars:
 

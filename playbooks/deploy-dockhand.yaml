@@ -1,13 +1,13 @@
 ---
 - name: Deploy Dockhand
 
-  hosts: controller
+  hosts: lxc-controller
 
   vars:
 
     # Dockhand facts
     # renovate: datasource=docker depName=fnsys/dockhand
-    dockhand_image: fnsys/dockhand:v1.0.29
+    dockhand_image: fnsys/dockhand:v1.0.31
 
   pre_tasks:
 

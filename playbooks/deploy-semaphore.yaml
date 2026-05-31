@@ -1,7 +1,7 @@
 ---
 - name: Deploy Semaphore
 
-  hosts: controller
+  hosts: lxc-controller
 
   vars:
 

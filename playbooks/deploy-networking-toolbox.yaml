@@ -1,7 +1,7 @@
 ---
 - name: Deploy Networking Toolbox
 
-  hosts: controller
+  hosts: lxc-controller
 
   vars:
 
