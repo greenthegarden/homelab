@@ -1,6 +1,7 @@
 activeusers
 Airthings
 authentik
+certresolver
 containerised
 cpuload
 crond
@@ -13,6 +14,7 @@ hortusfox
 hwaccel
 icecream
 jmespath
+letsencrypt
 localtime
 memoryusage
 mqtt
@@ -35,4 +37,5 @@ vaultwarden
 visualisation
 wazuh
 Wazuh
+websecure
 zoneinfo

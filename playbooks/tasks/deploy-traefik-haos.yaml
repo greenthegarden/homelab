@@ -219,7 +219,7 @@
 
     - name: deploy-traefik-haos | Create dynamic configuration file
       ansible.builtin.copy:
-        src: files/traefik-haos/dynamic/haos.yaml
+        src: templates/traefik-haos/dynamic/haos.yaml.j2
         dest: "{{ traefik_config_dir }}/dynamic.yml"
         mode: "0644"
       register: dynamic_configuration_creation
