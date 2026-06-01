@@ -119,10 +119,10 @@
       # https://getwud.github.io/wud/#/configuration/authentications/
       # OIDC integration
       # https://getwud.github.io/wud/#/configuration/authentications/oidc/
-      WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ wud.authentik.oidc_client_id | default('dummy') }}"
-      WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ wud.authentik.oidc_client_secret | default('dummy') }}"
-      WUD_AUTH_OIDC_AUTHENTIK_DISCOVERY: "{{ authentik.url }}/application/o/wud/.well-known/openid-configuration"
-      WUD_AUTH_OIDC_AUTHENTIK_REDIRECT: "false" # Set to true to skip internal login page
+      # WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ wud.authentik.oidc_client_id | default('dummy') }}"
+      # WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ wud.authentik.oidc_client_secret | default('dummy') }}"
+      # WUD_AUTH_OIDC_AUTHENTIK_DISCOVERY: "{{ authentik.url }}/application/o/wud/.well-known/openid-configuration"
+      # WUD_AUTH_OIDC_AUTHENTIK_REDIRECT: "false" # Set to true to skip internal login page
       # Triggers
       # https://getwud.github.io/wud/#/configuration/triggers/
       # Gotify trigger
