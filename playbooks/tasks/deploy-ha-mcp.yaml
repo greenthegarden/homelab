@@ -100,11 +100,13 @@
     image: "{{ ha_mcp_image }}"
     # cap_drop:
     #   - ALL
-    command: "{{ ha_mcp_command | default(omit) }}"
+    # command: "{{ ha_mcp_command | default(omit) }}"
+    command: ["python", "-u", "-c", "import logging; logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(name)s %(levelname)s: %(message)s'); from ha_mcp.__main__ import main_web; main_web()"]
     detach: true
     env:
       HOMEASSISTANT_URL: "{{ home_assistant.url }}"
       HOMEASSISTANT_TOKEN: "{{ home_assistant.tokens.ha_mcp }}"
+      ENABLED_TOOL_MODULES: "tools_config_automations,tools_search"
       TZ: "{{ homelab.timezone | default('UTC') }}"
     labels: "{{ ha_mcp_container_labels | default(omit) }}"
     # memory: 256M

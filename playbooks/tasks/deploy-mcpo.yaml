@@ -128,9 +128,12 @@
   community.docker.docker_container:
     name: "{{ mcpo_service_name }}"
     image: "{{ mcpo_image }}"
-    command: "{{ mcpo_command }}"
+    # command: "{{ mcpo_command }}"
+    command: ["--port", "8000", "--", "uvx", "ha-mcp@latest"]
     detach: true
     env:
+      HOMEASSISTANT_URL: "{{ home_assistant.url }}"
+      HOMEASSISTANT_TOKEN: "{{ home_assistant.tokens.ha_mcp }}"
       TZ: "{{ homelab.timezone | default('UTC') }}"
     labels: "{{ mcpo_container_labels | default(omit) }}"
     networks_cli_compatible: true
