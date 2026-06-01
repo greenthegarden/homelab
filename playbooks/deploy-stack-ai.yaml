@@ -19,6 +19,18 @@
     # renovate: datasource=docker depName=docker.n8n.io/n8nio/n8n
     n8n_image: n8nio/n8n:2.22.2
 
+    # mcpo facts
+    # renovate: datasource=docker depName=ghcr.io/open-webui/mcpo
+    mcpo_image: ghcr.io/open-webui/mcpo:main
+
+    # ha-mcp facts
+    # renovate: datasource=docker depName=ghcr.io/homeassistant-ai/ha-mcp
+    ha_mcp_image: ghcr.io/homeassistant-ai/ha-mcp:7.5.0
+
+    # affine-mcp-server facts
+    # renovate: datasource=docker depName=ghcr.io/dawncr0w/affine-mcp-server
+    affine_mcp_server_image: ghcr.io/dawncr0w/affine-mcp-server:latest
+
   pre_tasks:
     - name: Ensure base environment is configured
       ansible.builtin.include_tasks:
@@ -45,3 +57,17 @@
     - name: Deploy a containerised instance of n8n
       ansible.builtin.include_tasks:
         file: tasks/deploy-n8n.yaml
+
+    # Deplpy MCP Servers
+    #
+    - name: Deploy a containerised instance of mcpo
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-mcpo.yaml
+
+    - name: Deploy a containerised instance of Home Assistant MCP
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-ha-mcp.yaml
+
+    - name: Deploy a containerised instance of affine-mcp-server
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-affine-mcp-server.yaml
