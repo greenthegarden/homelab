@@ -6,9 +6,9 @@
 
 # Note bridge networks are external by default unless 'internal: true' is set
 
-# Docker Socker Proxy External is an external network which services that connect to Docker APIs on external hosts need to be on
-# Services include Homepage, Uptime Kuma and What's Up Docker?
-docker_socket_proxy_external_network_name: docker-socket-proxy-external
+# # Docker Socker Proxy External is an external network which services that connect to Docker APIs on external hosts need to be on
+# # Services include Homepage, Uptime Kuma and What's Up Docker?
+# docker_socket_proxy_external_network_name: docker-socket-proxy-external
 
 # Reverse Proxy Network is an external network that all applications hosted behind the reverse proxy (in this case Traefik) need to be on
 reverse_proxy_network_name: reverse-proxy
