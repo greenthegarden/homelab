@@ -4,6 +4,7 @@ authentik
 certresolver
 containerised
 cpuload
+creds
 crond
 danielbrendel
 endraw
