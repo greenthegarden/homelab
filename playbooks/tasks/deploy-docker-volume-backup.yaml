@@ -146,7 +146,7 @@
         name: "{{ docker_volume_backup_service_name }}"
         image: "{{ docker_volume_backup_image }}"
         env:
-          TZ: "Australia/Adelaide"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
         env_file: "{{ docker_volume_backup_env_file }}"
         labels: "{{ docker_volume_backup_container_labels | default(omit) }}"
         networks: "{{ docker_volume_backup_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
