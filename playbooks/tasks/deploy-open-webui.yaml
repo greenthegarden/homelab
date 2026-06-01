@@ -127,7 +127,7 @@
           RAG_WEB_SEARCH_RESULT_COUNT: "3"
           RAG_WEB_SEARCH_CONCURRENT_REQUESTS: "10"
           SEARXNG_QUERY_URL: "http://searxng:8080/search?q=<query>"
-          TOOL_SERVER_CONNECTIONS: [{"url":"http://ha-mcp:8086/mcp", "path":"", "type":"mcp", "auth_type":"none", "key":"", "config":{"enable":true}, "info":{"id":"ha-mcp", "name":"Home Assistant", "description":"Control your smart home"}}]
+          TOOL_SERVER_CONNECTIONS: [{"url":"http://ha-mcp:8086/mcp", "path":"", "type":"mcp", "auth_type":"none", "key":"", "config":{"enable":"true"}, "info":{"id":"ha-mcp", "name":"Home Assistant", "description":"Control your smart home"}}]
           # OIDC Configuration
           # https://integrations.goauthentik.io/miscellaneous/open-webui/
           OAUTH_CLIENT_ID: "{{ open_webui.authentik.oidc_client_id | default('dummy') }}"
