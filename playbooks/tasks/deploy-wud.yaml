@@ -115,18 +115,23 @@
     image: "{{ wud_image }}"
     detach: true
     env:
-      # Add Registries
-      # By default supports: 'Docker Hub (HUB)', 'Github (GHCR)'
-      # Publish to MQTT broker when updates are available
-      # WUD_TRIGGER_MQTT_MOSQUITTO_URL: "mqtt://{{ emqx.broker_address }}:{{ emqx.broker_port | default(1883) }}"
-      # WUD_TRIGGER_MQTT_MOSQUITTO_USER: "{{ wud.broker_username }}"
-      # WUD_TRIGGER_MQTT_MOSQUITTO_PASSWORD: "{{ wud.broker_password }}"
-      # WUD_TRIGGER_MQTT_MOSQUITTO_HASS_ENABLED: "true"
-      # # Local host to watch
-      # WUD_WATCHER_DOCKER_HOST: "docker-socket-proxy-external"
-      # WUD_WATCHER_DOCKER_PORT: "2375"
-      # WUD_WATCHER_DOCKER_SOCKET: "tcp://docker-socket-proxy-external"
-      # Remote hosts to watch
+      # Authentication
+      # https://getwud.github.io/wud/#/configuration/authentications/
+      # OIDC integration
+      # https://getwud.github.io/wud/#/configuration/authentications/oidc/
+      WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ wud.authentik.oidc_client_id | default('dummy') }}"
+      WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ wud.authentik.oidc_client_secret | default('dummy') }}"
+      WUD_AUTH_OIDC_AUTHENTIK_DISCOVERY: "{{ authentik.url }}/application/o/wud/.well-known/openid-configuration"
+      WUD_AUTH_OIDC_AUTHENTIK_REDIRECT: "false" # Set to true to skip internal login page
+      # Triggers
+      # https://getwud.github.io/wud/#/configuration/triggers/
+      # Gotify trigger
+      # https://getwud.github.io/wud/#/configuration/triggers/gotify/
+      WUD_TRIGGER_GOTIFY_HOMELAB_URL: "{{ gotify.url }}"
+      WUD_TRIGGER_GOTIFY_HOMELAB_TOKEN: "{{ gotify.tokens.wud }}"
+      WUD_TRIGGER_GOTIFY_HOMELAB_PRIORITY: "0"
+      # Docker Watchers
+      # https://getwud.github.io/wud/#/configuration/watchers/
       WUD_WATCHER_AI_HOST: "lxc-ai.{{ lan_domain }}"
       WUD_WATCHER_AI_PORT: "{{ wud_socket_proxy_service_port | quote }}"
       WUD_WATCHER_CONTROLLER_HOST: "lxc-controller.{{ lan_domain }}"
@@ -145,15 +150,8 @@
       WUD_WATCHER_MONITOR_PORT: "{{ wud_socket_proxy_service_port | quote }}"
       WUD_WATCHER_PRODUCTIVITY_HOST: "lxc-productivity.{{ lan_domain }}"
       WUD_WATCHER_PRODUCTIVITY_PORT: "{{ wud_socket_proxy_service_port | quote }}"
-      # Gotify trigger
-      WUD_TRIGGER_GOTIFY_HOMELAB_URL: "{{ gotify.url }}"
-      WUD_TRIGGER_GOTIFY_HOMELAB_TOKEN: "{{ gotify.tokens.wud }}"
-      WUD_TRIGGER_GOTIFY_HOMELAB_PRIORITY: "0"
-      # OIDC integration
-      WUD_AUTH_OIDC_AUTHENTIK_CLIENTID: "{{ wud.authentik.oidc_client_id | default('dummy') }}"
-      WUD_AUTH_OIDC_AUTHENTIK_CLIENTSECRET: "{{ wud.authentik.oidc_client_secret | default('dummy') }}"
-      WUD_AUTH_OIDC_AUTHENTIK_DISCOVERY: "{{ authentik.url }}/application/o/wud/.well-known/openid-configuration"
-      WUD_AUTH_OIDC_AUTHENTIK_REDIRECT: "false" # Set to true to skip internal login page
+      # Timezone
+      # https://getwud.github.io/wud/#/configuration/timezone/
       TZ: "{{ homelab.timezone | default('UTC') }}"
     healthcheck:
       test: ["curl", "--fail", "http://localhost:{{ wud_service_port }}/health", "||", "exit 1"]
