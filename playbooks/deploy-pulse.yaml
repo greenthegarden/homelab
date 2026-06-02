@@ -6,7 +6,7 @@
   vars:
     # Pulse facts
     # renovate: datasource=docker depName=rcourtman/pulse
-    pulse_image: rcourtman/pulse:v5.1.33
+    pulse_image: rcourtman/pulse:v5.1.34
 
   pre_tasks:
     - name: Load homelab vars
