@@ -118,8 +118,8 @@
         env:
           MCP_TRANSPORT: "http"
           AFFINE_BASE_URL: "https://affine.lxc-productivity.{{ homelab.certificate_domain | default('localdomain') }}"
-          AFFINE_EMAIL: "{{ affine.user.email }}"
-          AFFINE_PASSWORD: "{{ affine.user.password }}"
+          AFFINE_EMAIL: "{{ affine.user.email | string }}"
+          AFFINE_PASSWORD: "{{ affine.user.password | string }}"
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ affine_mcp_server_container_labels | default(omit) }}"
         networks_cli_compatible: true
