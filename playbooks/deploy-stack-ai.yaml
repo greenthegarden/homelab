@@ -55,19 +55,23 @@
         file: tasks/deploy-open-webui.yaml
 
     - name: Deploy a containerised instance of n8n
+      when: true
       ansible.builtin.include_tasks:
         file: tasks/deploy-n8n.yaml
 
     # Deplpy MCP Servers
     #
     - name: Deploy a containerised instance of mcpo
+      when: true
       ansible.builtin.include_tasks:
         file: tasks/deploy-mcpo.yaml
 
     - name: Deploy a containerised instance of Home Assistant MCP
+      when: true
       ansible.builtin.include_tasks:
         file: tasks/deploy-ha-mcp.yaml
 
     - name: Deploy a containerised instance of affine-mcp-server
+      when: false
       ansible.builtin.include_tasks:
         file: tasks/deploy-affine-mcp-server.yaml
