@@ -23,7 +23,7 @@
 - name: deploy-affine-mcp-server | Set affine-mcp-server service facts
   ansible.builtin.set_fact:
     affine_mcp_server_networks:
-      - { name: "{{ affine_mcp_server_api_network_name }}", internal: true }
+      # - { name: "{{ affine_mcp_server_api_network_name }}", internal: true }
       - { name: "{{ affine_mcp_server_open_webui_network_name }}", internal: true }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
@@ -116,10 +116,22 @@
         command: "{{ affine_mcp_server_command | default(omit) }}"
         detach: true
         env:
-          MCP_TRANSPORT: "http"
-          AFFINE_BASE_URL: "https://affine.lxc-productivity.{{ homelab.certificate_domain | default('localdomain') }}"
-          AFFINE_EMAIL: "{{ affine.user.email | string }}"
-          AFFINE_PASSWORD: "{{ affine.user.password | string }}"
+          # HTTP Mode
+          # https://github.com/DAWNCR0W/affine-mcp-server/blob/main/docs/configuration-and-deployment.md#http-mode-1
+          # Exposes:
+          #   /mcp - Streamable HTTP MCP endpoint
+          #   /sse - SSE endpoint for older-compatible clients
+          #   /messages - message endpoint for older-compatible clients
+          #   /healthz - liveness probe
+          #   /readyz - readiness probe
+          # Bearer Mode
+          # https://github.com/DAWNCR0W/affine-mcp-server/blob/main/docs/configuration-and-deployment.md#bearer-mode
+          # MCP_TRANSPORT: "http"
+          # AFFINE_MCP_AUTH_MODE: bearer
+          # AFFINE_MCP_HTTP_TOKEN="your-super-secret-token"
+          # AFFINE_BASE_URL: "https://affine.lxc-productivity.{{ homelab.certificate_domain | default('localdomain') }}"
+          # AFFINE_API_TOKEN="ut_xxx"
+          # AFFINE_TOOL_PROFILE: "core"
           TZ: "{{ homelab.timezone | default('UTC') }}"
         labels: "{{ affine_mcp_server_container_labels | default(omit) }}"
         networks_cli_compatible: true

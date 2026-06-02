@@ -4,19 +4,16 @@
   hosts: ai
 
   vars:
-
     # Open WebUI facts
     # renovate: datasource=docker depName=ghcr.io/open-webui/open-webui
-    open_webui_image: ghcr.io/open-webui/open-webui:main
+    open_webui_image: ghcr.io/open-webui/open-webui:0.9.6-slim
 
   pre_tasks:
-
     - name: Load homelab vars
       ansible.builtin.include_vars:
         file: vars/homelab_env.yaml
 
   tasks:
-
     # Open WebUI is configured to use Ollama as its backend LLM provider
     # and SearXNG as its search engine provider.
     # Expects Ollama and SearXNG to be running on the same network.
