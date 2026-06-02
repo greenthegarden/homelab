@@ -1,7 +1,7 @@
 ---
 - name: Deploy EMQX
 
-  hosts: broker
+  hosts: messaging
 
   vars:
 
