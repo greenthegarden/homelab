@@ -7,7 +7,7 @@
 
     # Semaphore facts
     # renovate: datasource=docker depName=semaphoreui/semaphore
-    semaphore_image: semaphoreui/semaphore:v2.18.8
+    semaphore_image: semaphoreui/semaphore:v2.18.9
     semaphore_deploy_docker_volume_backup: true
 
   pre_tasks:
