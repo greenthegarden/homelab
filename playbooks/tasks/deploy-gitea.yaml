@@ -9,6 +9,7 @@
     gitea_image: "{{ gitea_image | default('docker.gitea.com/gitea:latest') }}"
     gitea_service_name: "{{ gitea_service_name | default('gitea') }}"
     gitea_service_port: "{{ gitea_service_port | default(3000) }}"
+    gitea_service_port_ssh: 2222
 
 - name: deploy-gitea | Set Gitea network facts
   ansible.builtin.set_fact:
@@ -31,7 +32,7 @@
       # Published ports to expose outside the container
       # host port:container port
       # - "{{ gitea_service_port }}:3000"
-      - "{{ gitea_service_port | int + 1 }}:22"
+      - "{{ gitea_service_port_ssh }}:22"
     gitea_volumes:
       # Local paths to mount into the container
       # local path:container path
@@ -142,7 +143,7 @@
         labels: "{{ gitea_container_labels | default(omit) }}"
         networks_cli_compatible: true
         networks: "{{ gitea_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
-        # published_ports: "{{ gitea_ports | default(omit) }}"
+        published_ports: "{{ gitea_ports | default(omit) }}" # for ssh access
         restart: true
         restart_policy: unless-stopped
         state: started
