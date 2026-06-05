@@ -6,7 +6,7 @@
   vars:
     # n8n facts
     # renovate: datasource=docker depName=n8nio/n8n
-    n8n_image: n8nio/n8n:2.25.1
+    n8n_image: n8nio/n8n:2.25.3
 
   pre_tasks:
     - name: Load homelab vars
