@@ -60,7 +60,7 @@ socket_proxy_image: wollomatic/socket-proxy:1.12.1
 tinyauth_image: ghcr.io/steveiliop56/tinyauth:v5.0.7
 # Traefik facts
 # renovate: datasource=docker depName=traefik
-traefik_image: traefik:3.7.1
+traefik_image: traefik:3.7.3
 traefik_entrypoint_insecure_name: web
 traefik_entrypoint_secure_name: "{{ traefik_entrypoint_insecure_name | default('web') }}secure"
 
