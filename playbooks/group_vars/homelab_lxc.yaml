@@ -19,9 +19,6 @@ socket_proxy_external_network_name: socket-proxy-external
 
 # Containerised service facts
 
-# Atlas facts
-# renovate: datasource=docker depName=keinstien/atlas
-atlas_image: keinstien/atlas:3.3.4
 # Beszel Agent facts
 # renovate: datasource=docker depName=henrygd/beszel-agent
 beszel_agent_image: henrygd/beszel-agent:0.18.7
@@ -57,7 +54,7 @@ searxng_image: searxng/searxng:2026.6.5-26fa181b8
 socket_proxy_image: wollomatic/socket-proxy:1.12.1
 # Tinyauth facts
 # renovate: datasource=docker depName=ghcr.io/steveiliop56/tinyauth
-tinyauth_image: ghcr.io/steveiliop56/tinyauth:v5.0.7
+tinyauth_image: github ghcr.io/steveiliop56/tinyauth:v5.0.7
 # Traefik facts
 # renovate: datasource=docker depName=traefik
 traefik_image: traefik:3.7.3
