@@ -35,18 +35,6 @@
     - dockhand
     - hawser
 
-- name: configure-containerised-base | Deploy a containerised instance of a Beszel Agent
-  when: deploy_beszel_agent | default(false)
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-beszel-agent.yaml
-  tags: beszel
-
-- name: configure-containerised-base | Deploy a containerised instance of a Dozzle Agent
-  when: deploy_dozzle_agent | default(false)
-  ansible.builtin.include_tasks:
-    file: tasks/deploy-dozzle-agent.yaml
-  tags: dozzle
-
 # Use the following socket proxies to provide controlled access to the Docker socket for services that require it
 # Consider also https://blog.foxxmd.dev/posts/restricting-socket-proxy-by-container/
 
