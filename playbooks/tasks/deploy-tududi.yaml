@@ -149,7 +149,7 @@
           OIDC_ISSUER_URL: "{{ authentik.url }}/application/o/tududi/"
           OIDC_CLIENT_ID: "{{ tududi.authentik.oidc_client_id | default('dummy') }}"
           OIDC_CLIENT_SECRET: "{{ tududi.authentik.oidc_client_secret | default('dummy') }}"
-          OIDC_SCOPE: openid+profile+email
+          OIDC_SCOPE: "openid profile email"
           # Auto-provisioning (recommended)
           OIDC_AUTO_PROVISION: "true"
           # Optional: Auto-assign admin role to specific email domains
