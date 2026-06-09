@@ -1,0 +1,160 @@
+---
+# Website: https://volumevault.darkdragon14.dev/
+# Github: https://github.com/Darkdragon14/VolumeVault
+# Docker:
+
+- name: deploy-volumevault | Set VolumeVault facts
+  ansible.builtin.set_fact:
+    volumevault_image: "{{ volumevault_image | default('ghcr.io/darkdragon14/volumevault:latest') }}"
+    volumevault_service_name: "{{ volumevault_service_name | default('volumevault') }}"
+    volumevault_service_port: "{{ volumevault_service_port | default(8080) }}"
+
+- name: deploy-volumevault | Set VolumeVault network facts
+  ansible.builtin.set_fact:
+    volumevault_network_name: "{{ volumevault_network_name | default(volumevault_service_name) }}"
+
+- name: deploy-volumevault | Set VolumeVault volume facts
+  ansible.builtin.set_fact:
+    volumevault_volume_name: "{{ volumevault_volume_name | default(volumevault_service_name) }}"
+
+- name: deploy-volumevault | Set VolumeVault aggregated facts
+  ansible.builtin.set_fact:
+    volumevault_fqdn: "{{ volumevault_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-volumevault | Set VolumeVault service facts
+  ansible.builtin.set_fact:
+    volumevault_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    volumevault_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ volumevault_service_port }}:8080"
+    volumevault_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ volumevault_volume_name }}:/app/storage"
+
+- name: deploy-volumevault | Log VolumeVault configuration
+  ansible.builtin.debug:
+    msg:
+      - "VolumeVault image: {{ volumevault_image }}"
+      - "VolumeVault service name: {{ volumevault_service_name }}"
+      - "VolumeVault FQDN: {{ volumevault_fqdn }}"
+      - "VolumeVault command: {{ volumevault_command | default(omit) }}"
+      - "VolumeVault networks: {{ volumevault_networks | default(omit) }}"
+      - "VolumeVault ports: {{ volumevault_ports | default(omit) }}"
+      - "VolumeVault volumes: {{ volumevault_volumes | default(omit) }}"
+
+- name: deploy-volumevault | Create VolumeVault container labels
+  ansible.builtin.set_fact:
+    volumevault_container_labels: "{{ volumevault_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "System" }
+    - { "key": "homepage.name", "value": "VolumeVault" }
+    - { "key": "homepage.description", "value": "A self-hosted Laravel application for managing Docker volume and host path backups with safe restores powered by offen/docker-volume-backup" }
+    - { "key": "homepage.icon", "value": "changeme.png" }
+    - { "key": "homepage.href", "value": "https://{{ volumevault_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ volumevault_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.http.routers.{{ volumevault_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ volumevault_service_name }}.rule", "value": "Host(`{{ volumevault_fqdn }}`)" }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - { "key": "wud.link.template", "value": "https://github.com/Darkdragon14/VolumeVault/releases/tag/v${major}.${minor}.${patch}" }
+
+- name: deploy-volumevault | Create VolumeVault networks
+  when: volumevault_networks is defined and (volumevault_networks | length > 0)
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ volumevault_networks }}"
+
+- name: deploy-volumevault | Create VolumeVault volumes
+  when: volumevault_volumes is defined and (volumevault_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ volumevault_volume_name }}"
+
+- name: deploy-volumevault | Pull VolumeVault image
+  community.docker.docker_image:
+    name: "{{ volumevault_image }}"
+    source: pull
+
+- name: deploy-volumevault | Check if VolumeVault is running
+  community.docker.docker_container_info:
+    name: "{{ volumevault_service_name }}"
+  register: volumevault_state
+
+- name: deploy-volumevault | Remove VolumeVault container if changing version
+  when:
+    - volumevault_state.exists
+    - (volumevault_image | split(':') | last) != (volumevault_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-volumevault | Stop and remove existing VolumeVault container
+      community.docker.docker_container:
+        name: "{{ volumevault_service_name }}"
+        state: absent
+
+    - name: deploy-volumevault | Set update VolumeVault
+      ansible.builtin.set_fact:
+        volumevault_update: true
+
+- name: deploy-volumevault | Deploy VolumeVault if not running
+  when:
+    - not volumevault_state.exists or (volumevault_update | default(false))
+  block:
+    - name: deploy-volumevault | Deploy VolumeVault
+      community.docker.docker_container:
+        name: "{{ volumevault_service_name }}"
+        image: "{{ volumevault_image }}"
+        # cap_drop:
+        #   - ALL
+        command: "{{ volumevault_args | default(omit) }}"
+        # deploy:
+        #   resources:
+        #     limits:
+        #       cpus: "0.5"
+        #       memory: 128M
+        detach: true
+        env:
+          APP_KEY: "{{ volumevault.key | default('dummy') }}"
+          APP_TIMEZONE: "{{ homelab.timezone | default('UTC') }}"
+          APP_URL: "https:{{ volumevault_fqdn }}"
+          TRUSTED_PROXIES: "*"
+        # healthcheck:
+        #   test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+        #   interval: 30s
+        #   retries: 3
+        #   timeout: 3s
+        labels: "{{ volumevault_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ volumevault_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        security_opts:
+          - "no-new-privileges:true"
+        state: started
+        volumes: "{{ docker_host_volume + volumevault_volumes | default(omit) }}"
+      register: volumevault_container_state
+
+- name: deploy-volumevault | Wait for VolumeVault to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ volumevault_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: volumevault_running
+  retries: 10
+  until: volumevault_running is success

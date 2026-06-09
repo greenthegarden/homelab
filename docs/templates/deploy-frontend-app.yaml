@@ -145,8 +145,8 @@
         networks: "{{ changeme_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
         restart: true
         restart_policy: unless-stopped
-        security_opt:
-          - no-new-privileges:true
+        security_opts:
+          - "no-new-privileges:true"
         state: started
         volumes: "{{ changeme_volumes | default(omit) }}"
       register: changeme_container_state

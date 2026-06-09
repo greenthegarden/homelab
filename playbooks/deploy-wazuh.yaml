@@ -1,0 +1,19 @@
+---
+- name: Deploy Wazuh
+
+  hosts: lxc-wazuh
+
+  vars:
+    # Wazuh facts
+    # renovate: datasource=docker depName=getwud/wud
+    wazuh_tag: 5.0.0
+
+  pre_tasks:
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+  tasks:
+    - name: Deploy a containerised instance of Wazuh
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-wazuh-single-node.yaml

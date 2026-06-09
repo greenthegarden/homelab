@@ -133,8 +133,8 @@
         read_only: true
         restart: true
         restart_policy: unless-stopped
-        security_opt:
-          - no-new-privileges:true
+        security_opts:
+          - "no-new-privileges:true"
         state: started
         # tmpfs:
         #   - /tmp

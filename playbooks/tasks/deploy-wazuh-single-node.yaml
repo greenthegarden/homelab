@@ -1,0 +1,164 @@
+---
+# To use:
+#   Copy file to /playbooks/tasks and rename to 'deploy-project-name.yaml'
+#   Search and replace the following with 'Match Case Sensitivity' enabled:
+#     'Wazuh' -> 'Project Name'
+#     'wazuh_' -> 'project_name_'
+#   ' '-wazuh' -> '-project-name'
+
+# Website: https://wazuh.com/
+# Github: https://github.com/wazuh/wazuh
+# Docker:
+
+- name: deploy-wazuh-single-node | Set Wazuh facts
+  ansible.builtin.set_fact:
+    wazuh_image: "{{ wazuh_image | default('ghcr.io/wazuh/wazuh:latest') }}"
+    wazuh_service_name: "{{ wazuh_service_name | default('wazuh') }}"
+    wazuh_service_port: "{{ wazuh_service_port | default(8080) }}"
+
+- name: deploy-wazuh-single-node | Set Wazuh network facts
+  ansible.builtin.set_fact:
+    wazuh_network_name: "{{ wazuh_network_name | default(wazuh_service_name) }}"
+
+- name: deploy-wazuh-single-node | Set Wazuh volume facts
+  ansible.builtin.set_fact:
+    wazuh_volume_name: "{{ wazuh_volume_name | default(wazuh_service_name) }}"
+
+- name: deploy-wazuh-single-node | Set Wazuh aggregated facts
+  ansible.builtin.set_fact:
+    wazuh_fqdn: "{{ wazuh_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-wazuh-single-node | Set Wazuh service facts
+  ansible.builtin.set_fact:
+    wazuh_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    wazuh_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      - "{{ wazuh_service_port }}:8080"
+    wazuh_volumes: []
+      # Local paths to mount into the container
+      # local path:container path
+      # - "{{ wazuh_volume_name }}:/app/data"
+
+- name: deploy-wazuh-single-node | Log Wazuh configuration
+  ansible.builtin.debug:
+    msg:
+      - "Wazuh image: {{ wazuh_image }}"
+      - "Wazuh service name: {{ wazuh_service_name }}"
+      - "Wazuh FQDN: {{ wazuh_fqdn }}"
+      - "Wazuh command: {{ wazuh_command | default(omit) }}"
+      - "Wazuh networks: {{ wazuh_networks | default(omit) }}"
+      - "Wazuh ports: {{ wazuh_ports | default(omit) }}"
+      - "Wazuh volumes: {{ wazuh_volumes | default(omit) }}"
+
+- name: deploy-wazuh-single-node | Create Wazuh container labels
+  ansible.builtin.set_fact:
+    wazuh_container_labels: "{{ wazuh_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.name", "value": "Wazuh" }
+    - { "key": "homepage.description", "value": "Description of Wazuh" }
+    - { "key": "homepage.icon", "value": "wazuh.png" }
+    - { "key": "homepage.href", "value": "https://{{ wazuh_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ wazuh_fqdn }}/" }
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - { "key": "traefik.http.routers.{{ wazuh_service_name }}.entrypoints", "value": "{{ traefik_entrypoint_secure_name }}" }
+    - { "key": "traefik.http.routers.{{ wazuh_service_name }}.rule", "value": "Host(`{{ wazuh_fqdn }}`)" }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    - { "key": "wud.link.template", "value": "https://github.com/wazuh/wazuh/releases/tag/v${major}.${minor}.${patch}" }
+
+- name: deploy-wazuh-single-node | Create Wazuh networks
+  when: wazuh_networks is defined and (wazuh_networks | length > 0)
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ wazuh_networks }}"
+
+- name: deploy-wazuh-single-node | Create Wazuh volumes
+  when: wazuh_volumes is defined and (wazuh_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ wazuh_volume_name }}"
+
+- name: deploy-wazuh-single-node | Pull Wazuh image
+  community.docker.docker_image:
+    name: "{{ wazuh_image }}"
+    source: pull
+
+- name: deploy-wazuh-single-node | Check if Wazuh is running
+  community.docker.docker_container_info:
+    name: "{{ wazuh_service_name }}"
+  register: wazuh_state
+
+- name: deploy-wazuh-single-node | Remove Wazuh container if changing version
+  when:
+    - wazuh_state.exists
+    - (wazuh_image | split(':') | last) != (wazuh_state.container.Config.Image | split(':') | last)
+  block:
+    - name: deploy-wazuh-single-node | Stop and remove existing Wazuh container
+      community.docker.docker_container:
+        name: "{{ wazuh_service_name }}"
+        state: absent
+
+    - name: deploy-wazuh-single-node | Set update Wazuh
+      ansible.builtin.set_fact:
+        wazuh_update: true
+
+- name: deploy-wazuh-single-node | Deploy Wazuh if not running
+  when:
+    - not wazuh_state.exists or (wazuh_update | default(false))
+  block:
+    - name: deploy-wazuh-single-node | Deploy Wazuh
+      community.docker.docker_container:
+        name: "{{ wazuh_service_name }}"
+        image: "{{ wazuh_image }}"
+        cap_drop:
+          - ALL
+        command: "{{ wazuh_args | default(omit) }}"
+        deploy:
+          resources:
+            limits:
+              cpus: "0.5"
+              memory: 128M
+        detach: true
+        env:
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        healthcheck:
+          test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+          interval: 30s
+          retries: 3
+          timeout: 3s
+        labels: "{{ wazuh_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ wazuh_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        restart: true
+        restart_policy: unless-stopped
+        security_opt:
+          - no-new-privileges:true
+        state: started
+        volumes: "{{ wazuh_volumes | default(omit) }}"
+      register: wazuh_container_state
+
+- name: deploy-wazuh-single-node | Wait for Wazuh to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ wazuh_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: wazuh_running
+  retries: 10
+  until: wazuh_running is success
