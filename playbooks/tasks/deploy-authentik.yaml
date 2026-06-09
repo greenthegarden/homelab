@@ -71,7 +71,7 @@
   with_items:
     # ---------------------------------------------------------------
     # Homepage labels
-    - { "key": "homepage.group", "value": "System" }
+    - { "key": "homepage.group", "value": "Applications" }
     - { "key": "homepage.name", "value": "Authentik" }
     - { "key": "homepage.description", "value": "Centralised logins" }
     - { "key": "homepage.icon", "value": "authentik.png" }
