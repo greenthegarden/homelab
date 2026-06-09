@@ -7,9 +7,9 @@
 
 - name: deploy-homelable | Set Homelable facts
   ansible.builtin.set_fact:
-    homelable_image: "{{ homelable_image | default('ghcr.io/homelable/homelable:latest') }}"
+    homelable_image: "{{ homelable_image | default('ghcr.io/pouzor/homelable-frontend:latest') }}"
     homelable_service_name: "{{ homelable_service_name | default('homelable') }}"
-    homelable_service_port: "{{ homelable_service_port | default(8080) }}"
+    homelable_service_port: "{{ homelable_service_port | default(3000) }}"
 
 - name: deploy-homelable | Set Homelable network facts
   ansible.builtin.set_fact:
@@ -26,12 +26,13 @@
 - name: deploy-homelable | Set Homelable service facts
   ansible.builtin.set_fact:
     homelable_networks:
+      - { name: "{{ homelable_network_name }}", internal: true }
       # Reverse Proxy  network is used to expose applications via Traefik
       - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
     homelable_ports:
       # Published ports to expose outside the container
       # host port:container port
-      - "{{ homelable_service_port }}:8080"
+      - "{{ homelable_service_port }}:80"
     homelable_volumes: []
       # Local paths to mount into the container
       # local path:container path
@@ -53,9 +54,9 @@
   with_items:
     # ---------------------------------------------------------------
     # Homepage labels
-    - { "key": "homepage.group", "value": "Applications" }
+    - { "key": "homepage.group", "value": "Monitoring" }
     - { "key": "homepage.name", "value": "Homelable" }
-    - { "key": "homepage.description", "value": "Description of Homelable" }
+    - { "key": "homepage.description", "value": "Self-hosted homelab infrastructure visualizer — interactive network diagram with live status monitoring" }
     - { "key": "homepage.icon", "value": "homelable.png" }
     - { "key": "homepage.href", "value": "https://{{ homelable_fqdn }}/" }
     - { "key": "homepage.siteMonitor", "value": "https://{{ homelable_fqdn }}/" }
