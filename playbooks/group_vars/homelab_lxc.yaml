@@ -30,7 +30,7 @@ hawser_image: ghcr.io/finsys/hawser:0.2.44
 postgres_image: postgres:16-alpine
 # Redis facts
 # renovate: datasource=docker depName=redis
-redis_image: redis:8.6-alpine
+redis_image: redis:8.8-alpine
 # SearXNG facts
 # renovate: datasource=docker depName=searxng/searxng
 searxng_image: searxng/searxng:2026.6.8-f3fab143b
