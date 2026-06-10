@@ -16,7 +16,7 @@
 
     # Grist facts
     # renovate: datasource=docker depName=gristlabs/grist
-    grist_image: gristlabs/grist:1.7.14
+    grist_image: gristlabs/grist:1.7.15
     grist_deploy_docker_volume_backup: false
 
     # OmniTools facts
