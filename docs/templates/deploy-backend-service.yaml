@@ -40,7 +40,7 @@
       # Local paths to mount into the container
       # local path:container path
       # set to '[]' is not volumes to be used
-      #- "{{ changeme_volume_name }}:/data"
+      # - "{{ changeme_volume_name }}:/data"
 
 - name: deploy-changeme | Log ChangeMe configuration
   ansible.builtin.debug:
