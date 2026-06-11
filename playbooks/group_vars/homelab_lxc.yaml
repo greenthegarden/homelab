@@ -39,7 +39,7 @@ searxng_image: searxng/searxng:2026.6.8-f3fab143b
 socket_proxy_image: wollomatic/socket-proxy:1.12.2
 # Tinyauth facts
 # renovate: datasource=docker depName=ghcr.io/steveiliop56/tinyauth
-tinyauth_image: github ghcr.io/steveiliop56/tinyauth:v5.0.7
+tinyauth_image: ghcr.io/steveiliop56/tinyauth:v5.0.7
 # Traefik facts
 # renovate: datasource=docker depName=traefik
 traefik_image: traefik:3.7.5
