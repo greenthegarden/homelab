@@ -4,10 +4,9 @@
   hosts: productivity
 
   vars:
-
     # Tududi facts
     # renovate: datasource=docker depName=chrisvel/tududi
-    tududi_image: chrisvel/tududi:1.1.0
+    tududi_image: chrisvel/tududi:1.1.1
     tududi_deploy_docker_volume_backup: true
 
   pre_tasks:
