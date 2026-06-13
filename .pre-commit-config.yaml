@@ -68,7 +68,7 @@ repos:
   ### Markdown ###
 
   - repo: https://github.com/thlorenz/doctoc
-    rev: v2.4.1
+    rev: v2.5.0
     hooks:
       - id: doctoc
         name: "📝 markdown · Generate table of contents"
@@ -127,7 +127,7 @@ repos:
   ### Python ###
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.15.16
+    rev: v0.15.17
     hooks:
       # Run the linter.
       - id: ruff-check
@@ -170,7 +170,7 @@ repos:
 
   ### Renovate ###
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 43.218.0
+    rev: 43.220.0
     hooks:
       - id: renovate-config-validator
         # args: [--strict]
