@@ -142,6 +142,7 @@
         detach: true
         env:
           # https://homebox.software/en/quick-start/configure/
+          HBOX_AUTH_API_KEY_PEPPER: "{{ homebox.api_key_pepper | default('dummy') }}"
           HBOX_LOG_LEVEL: "info"
           HBOX_LOG_FORMAT: "json"
           HBOX_OPTIONS_HOSTNAME: "{{ homebox_fqdn }}"
