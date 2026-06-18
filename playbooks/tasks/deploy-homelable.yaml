@@ -68,7 +68,7 @@
     # ---------------------------------------------------------------
     # What's up Docker? labels
     - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
-    - { "key": "wud.link.template", "value": "https://github.com/homelable/homelable/releases/tag/v${major}.${minor}.${patch}" }
+    - { "key": "wud.link.template", "value": "https://github.com/pouzor/homelable/releases/tag/v${major}.${minor}.${patch}" }
 
 - name: deploy-homelable | Create Homelable networks
   when: homelable_networks is defined
