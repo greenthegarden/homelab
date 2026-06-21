@@ -6,7 +6,7 @@
   vars:
     # Gitea facts
     # renovate: datasource=docker depName=docker.gitea.com/gitea
-    gitea_image: docker.gitea.com/gitea:1.26.2
+    gitea_image: docker.gitea.com/gitea:1.26.4
 
     # Dockhand facts
     # renovate: datasource=docker depName=fnsys/dockhand
@@ -19,7 +19,7 @@
 
     # Termix facts
     # renovate: datasource=docker depName=ghcr.io/lukegus/termix
-    termix_image: ghcr.io/lukegus/termix:2.4.0
+    termix_image: ghcr.io/lukegus/termix:2.4.1
     termix_deploy_docker_volume_backup: true
 
     # IT-Tools facts
