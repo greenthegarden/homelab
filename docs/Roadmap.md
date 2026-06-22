@@ -27,7 +27,10 @@
 - [ShipShipShip](https://github.com/GauthierNelkinsky/ShipShipShip)
 - [Cr*nMaster](https://github.com/fccview/cronmaster)
 - [HarborGuard](https://github.com/HarborGuard/HarborGuard)
-- [Mediqux](https://github.com/DMJoh/Mediqux):
+- [Mediqux](https://github.com/DMJoh/Mediqux)
+- [Forgejo](https://forgejo.org/)
+- [Gatus](https://github.com/TwiN/gatus)
+- [Stalwart](https://github.com/stalwartlabs/stalwart)
 
 A privacy-first, locally-hosted medical record system for individuals,
   families, and small healthcare practices - featuring comprehensive patient management, lab result processing, and medication tracking with complete data sovereignty.

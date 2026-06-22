@@ -21,7 +21,7 @@ socket_proxy_external_network_name: socket-proxy-external
 
 # Docker Volume Backup facts
 # renovate: datasource=docker depName=offen/docker-volume-backup
-docker_volume_backup_image: offen/docker-volume-backup:v2.48.0
+docker_volume_backup_image: offen/docker-volume-backup:v2.48.1
 # Hawser facts
 # renovate: datasource=docker depName=ghcr.io/finsys/hawser
 hawser_image: ghcr.io/finsys/hawser:0.2.45
@@ -33,7 +33,7 @@ postgres_image: postgres:16-alpine
 redis_image: redis:8.8-alpine
 # SearXNG facts
 # renovate: datasource=docker depName=searxng/searxng
-searxng_image: searxng/searxng:2026.6.17-4dfdc822c
+searxng_image: searxng/searxng:2026.6.20-fd42d4fda
 # Socket Proxy facts
 # renovate: datasource=docker depName=wollomatic/socket-proxy
 socket_proxy_image: wollomatic/socket-proxy:1.12.2
