@@ -33,7 +33,7 @@ postgres_image: postgres:16-alpine
 redis_image: redis:8.8-alpine
 # SearXNG facts
 # renovate: datasource=docker depName=searxng/searxng
-searxng_image: searxng/searxng:2026.6.20-fd42d4fda
+searxng_image: searxng/searxng:2026.6.28-8605230eb
 # Socket Proxy facts
 # renovate: datasource=docker depName=wollomatic/socket-proxy
 socket_proxy_image: wollomatic/socket-proxy:1.12.2
