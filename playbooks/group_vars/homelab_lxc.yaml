@@ -24,7 +24,7 @@ socket_proxy_external_network_name: socket-proxy-external
 docker_volume_backup_image: offen/docker-volume-backup:v2.48.2
 # Hawser facts
 # renovate: datasource=docker depName=ghcr.io/finsys/hawser
-hawser_image: ghcr.io/finsys/hawser:0.2.45
+hawser_image: ghcr.io/finsys/hawser:0.2.46
 # Postgres facts
 # renovate: datasource=docker depName=postgres
 postgres_image: postgres:16-alpine
