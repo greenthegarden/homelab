@@ -6,7 +6,7 @@
   vars:
     # Pocket ID facts
     # renovate: datasource=docker depName=pocket-id/pocket-id
-    pocket_id_image: ghcr.io/pocket-id/pocket-id:v2.7.0
+    pocket_id_image: ghcr.io/pocket-id/pocket-id:v2.9.0
 
   pre_tasks:
     - name: Load homelab vars
