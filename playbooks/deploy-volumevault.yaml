@@ -7,7 +7,7 @@
 
     # Termix facts
     # renovate: datasource=docker depName=ghcr.io/darkdragon14/volumevault
-    volumevault_image: ghcr.io/darkdragon14/volumevault:v1.8.0
+    volumevault_image: ghcr.io/darkdragon14/volumevault:v1.16.1
 
   pre_tasks:
     - name: Load homelab vars

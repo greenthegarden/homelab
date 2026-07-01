@@ -1,0 +1,162 @@
+---
+# https://forgejo.org/
+# https://codeberg.org/forgejo/forgejo
+
+- name: deploy-forgejo | Set Forgejo facts
+  ansible.builtin.set_fact:
+    forgejo_image: "{{ forgejo_image | default('codeberg.org/forgejo/forgejo:latest') }}"
+    forgejo_service_name: "{{ forgejo_service_name | default('forgejo') }}"
+    forgejo_service_port: "{{ forgejo_service_port | default(3000) }}"
+    forgejo_service_port_ssh: 22222
+
+- name: deploy-forgejo | Set Forgejo network facts
+  ansible.builtin.set_fact:
+    forgejo_network_name: "{{ forgejo_network_name | default(forgejo_service_name) }}"
+
+- name: deploy-forgejo | Set Forgejo volume facts
+  ansible.builtin.set_fact:
+    forgejo_volume_name: "{{ forgejo_volume_name | default(forgejo_service_name) }}"
+
+- name: deploy-forgejo | Set Forgejo aggregated facts
+  ansible.builtin.set_fact:
+    forgejo_fqdn: "{{ forgejo_service_name }}.{{ ansible_facts['hostname'] }}.{{ homelab.certificate_domain | default('localdomain') }}"
+
+- name: deploy-forgejo | Set Forgejo service facts
+  ansible.builtin.set_fact:
+    forgejo_networks:
+      # Reverse Proxy  network is used to expose applications via Traefik
+      - { name: "{{ reverse_proxy_network_name | default('reverse-proxy') }}" }
+    forgejo_ports:
+      # Published ports to expose outside the container
+      # host port:container port
+      # - "{{ forgejo_service_port }}:3000"
+      - "{{ forgejo_service_port_ssh }}:22"
+    forgejo_volumes:
+      # Local paths to mount into the container
+      # local path:container path
+      - "{{ forgejo_volume_name }}:/data"
+
+- name: deploy-forgejo | Log Forgejo configuration
+  ansible.builtin.debug:
+    msg:
+      - "Forgejo image: {{ forgejo_image }}"
+      - "Forgejo service name: {{ forgejo_service_name }}"
+      - "Forgejo FQDN: {{ forgejo_fqdn }}"
+      - "Forgejo networks: {{ forgejo_networks | default(omit) }}"
+      - "Forgejo ports: {{ forgejo_ports | default(omit) }}"
+      - "Forgejo volumes: {{ forgejo_volumes | default(omit) }}"
+
+- name: deploy-forgejo | Create Forgejo container labels
+  ansible.builtin.set_fact:
+    forgejo_container_labels: "{{ forgejo_container_labels | default({}) | combine({item.key: item.value}) }}"
+  with_items:
+    # ---------------------------------------------------------------
+    # Homepage labels
+    - { "key": "homepage.group", "value": "System" }
+    - { "key": "homepage.name", "value": "Forgejo" }
+    - { "key": "homepage.description", "value": "Self-hosted lightweight software forge." }
+    - { "key": "homepage.icon", "value": "forgejo.png" }
+    - { "key": "homepage.href", "value": "https://{{ forgejo_fqdn }}/" }
+    - { "key": "homepage.siteMonitor", "value": "https://{{ forgejo_fqdn }}/" }
+    # https://gethomepage.dev/widgets/services/forgejo/
+    # ---------------------------------------------------------------
+    # Traefik labels
+    - { "key": "traefik.enable", "value": "true" }
+    - {
+      "key": "traefik.http.routers.{{ forgejo_service_name }}.entrypoints",
+      "value": "{{ traefik_entrypoint_secure_name }}",
+    }
+    - {
+      "key": "traefik.http.routers.{{ forgejo_service_name }}.rule",
+      "value": "Host(`{{ forgejo_fqdn }}`)",
+    }
+    - {
+      "key": "traefik.http.services.{{ forgejo_service_name }}.loadbalancer.server.port",
+      "value": "{{ forgejo_service_port | quote }}",
+    }
+    # ---------------------------------------------------------------
+    # What's up Docker? labels
+    # - { "key": "wud.tag.include", "value": '^\d+\.\d+\.\d+$$' }
+    # - {
+    #   "key": "wud.link.template",
+    #   "value": "https://github.com/go-forgejo/forgejo/releases/tag/v${major}.${minor}.${patch}",
+    # }
+
+- name: deploy-forgejo | Create Forgejo networks
+  when: forgejo_networks is defined
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    internal: "{{ item.internal | default(false) }}"
+    state: present
+  loop: "{{ forgejo_networks }}"
+
+- name: deploy-forgejo | Create Forgejo volumes
+  when: forgejo_volume_name is defined and (forgejo_volumes | length > 0)
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ forgejo_volume_name }}"
+
+
+- name: deploy-forgejo | Pull Forgejo image
+  community.docker.docker_image:
+    name: "{{ forgejo_image }}"
+    source: pull
+
+- name: deploy-forgejo | Check if Forgejo is running
+  community.docker.docker_container_info:
+    name: "{{ forgejo_service_name }}"
+  register: forgejo_state
+
+- name: deploy-forgejo | Remove Forgejo container if changing version
+  when:
+    - forgejo_state.exists
+    - (forgejo_image | split(':') | last) != (forgejo_state.container.Config.Image | split(':') | last)
+  block:
+
+    - name: deploy-forgejo | Stop and remove existing Forgejo container
+      community.docker.docker_container:
+        name: "{{ forgejo_service_name }}"
+        state: absent
+
+    - name: deploy-forgejo | Set update Forgejo
+      ansible.builtin.set_fact:
+        forgejo_update: true
+
+- name: deploy-forgejo | Deploy Forgejo if not running
+  when:
+    - not forgejo_state.exists or (forgejo_update | default(false))
+  block:
+
+    - name: deploy-forgejo | Deploy Forgejo
+      community.docker.docker_container:
+        name: "{{ forgejo_service_name }}"
+        image: "{{ forgejo_image }}"
+        detach: true
+        env:
+          USER_UID: "{{ 1000 | quote }}"
+          USER_GID: "{{ 1000 | quote }}"
+          TZ: "{{ homelab.timezone | default('UTC') }}"
+        labels: "{{ forgejo_container_labels | default(omit) }}"
+        networks_cli_compatible: true
+        networks: "{{ forgejo_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
+        published_ports: "{{ forgejo_ports | default(omit) }}" # for ssh access
+        restart: true
+        restart_policy: unless-stopped
+        state: started
+        volumes: "{{ default_host_volumes + forgejo_volumes | default(omit) }}"
+      register: forgejo_container_state
+
+- name: deploy-forgejo | Wait for Forgejo to accept connections
+  ansible.builtin.wait_for:
+    host: "{{ forgejo_fqdn }}"
+    port: 80
+    connect_timeout: 1
+    delay: 10
+    state: started
+    timeout: 30
+  register: forgejo_running
+  retries: 10
+  until: forgejo_running is success

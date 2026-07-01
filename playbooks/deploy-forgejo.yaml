@@ -1,0 +1,33 @@
+---
+- name: Deploy Forgejo
+
+  hosts: lxc-controller
+
+  vars:
+
+    # Forgejo facts
+    # renovate: datasource=docker depName=codeberg.org/forgejo/forgejo
+    forgejo_image: codeberg.org/forgejo/forgejo:15.0.3
+
+  pre_tasks:
+
+    - name: Load homelab vars
+      ansible.builtin.include_vars:
+        file: vars/homelab_env.yaml
+
+  tasks:
+
+    - name: Deploy a containerised instance of Forgejo
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-forgejo.yaml
+
+    - name: Deploy a containerised instance of Docker Volume Backup
+      when: forgejo_deploy_docker_volume_backup | default(false)
+      ansible.builtin.include_tasks:
+        file: tasks/deploy-docker-volume-backup.yaml
+      vars:
+        docker_volume_backup_service_name: "docker-volume-backup_{{ forgejo_service_name }}"
+        docker_volume_backup_volume_to_backup:
+          - "{{ forgejo_volume_name }}:/backup/{{ forgejo_service_name }}_backup:ro"
+        docker_volume_backup_backup_label: "{{ forgejo_service_name }}"
+        docker_volume_backup_backup_retention_days: 7
