@@ -109,6 +109,7 @@
     detach: true
     env:
       STACKS_DIR: "{{ hawser_stacks_dir }}"
+      ALLOW_INSECURE_NO_AUTH: "true"
     labels: "{{ hawser_container_labels | default(omit) }}"
     networks_cli_compatible: true
     networks: "{{ hawser_networks | ansible.utils.remove_keys(target=['internal']) | default(omit) }}"
